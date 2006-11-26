@@ -1,0 +1,22 @@
+.mclookupNormal {
+	color: WindowText;
+	background-color: Window;
+}
+.mclookupSelected {
+	color: HighlightText;
+	background-color: Highlight;
+}
+.mclookupHover {
+	color: WindowText;
+	background-color: ThreeDFace;
+}
+.mclookupTable {
+}
+.mclookupTable td, .mclookupTable th {
+	font-family: MS Shell Dlg, Helvetica, Arial, sans-serif;
+	font-size: 13px;
+}
+.mclookupTable th {
+	color: WindowText;
+	background-color: ThreeDFace;
+}
