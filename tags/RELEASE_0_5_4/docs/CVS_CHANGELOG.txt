@@ -1,0 +1,1595 @@
+PHP2Go Web Development Framework - CHANGELOG
+=============================================
+
+	Last Project Version - 0.5.4
+	--------------------------------
+	http://www.php2go.com.br
+
+	Copyright (C) 2002-2006 Marcos Pont <mpont@users.sourceforge.net>
+
+	2006-11-25 - mpont
+		* PHP2Go 0.5.4 released!
+	2006-11-24 - mpont
+		* javascript/ajax.js - force onStateChange after send on synchronous connections
+		* javascript/dom.js - added 2 new methods: Element.isEmpty and Element.isVisible; added document.getElementsByXPath (Mozilla only)
+		* javascript/php2go.js - mustn't apply Element methods on text nodes inside $E function
+	2006-11-22 - mpont
+		* Changes in global configuration array
+			* New entry AUTH.REGENID_ON_LOGIN (whether to regenerate session id upon login)
+			* New entry AUTH.DESTROY_ON_LOGOUT (whether to destroy session data upon logout)
+			* SESSION settings converted into a hash array (old SESSION_* keys will still be supported)
+			* New entry SESSION.COOKIES_ONLY (force session cookies or enable trans_sid)
+		* Init.class.php - changed _initSession to process new global settings
+		* php2go.auth.Auth - changed to process new configuration settings
+		* php2go.net.HttpRequest - 2 new boolean methods: isGet and isPost (thx to Rafael Souza/Brazil)
+		* php2go.session.SessionManager - destroy method improved (correctly unset session cookie, call session_unset)
+	2006-11-19 - mpont
+		* php2go.net.HttpRequest - new method added: request (retrive full $_REQUEST contents)
+	2006-11-18 - mpont
+		* php2go.form.SearchForm - new method added: setCallbackObject
+			* this object can be used to hold value and SQL callbacks
+		* php2go.template.Template - added onPreRender method (calls onPreRender on all assigned Component instances)
+		* php2go.template.TemplateParser - changed variables parsing to accept method calls without parameters
+			* patterns now accepted: {$obj->method()}, <!-- IF $obj->method() -->
+			* PHP5 only: {$obj->getAnotherObj()->method()}
+	2006-11-17 - mpont
+		* php2go.util.Spreadsheet - new optional parameter $mimeType in download()
+	2006-11-13 - mpont
+		* javascript/ajax.js - bugfix: bad processing of container argument inside AjaxUpdater ctor
+		* javascript/form.js - changed Form.ajaxify to expect a function instead of an object (see examples/resources/ajaxcrudlayout.example.tpl)
+	2006-11-09 - mpont
+		* javascript/php2go.js - new parameter in Function.extend: propName
+		* javascript/form/autocompletefield.js - bugfix: choices container was hiding upon scroll
+		* php2go.form.field.AutoCompleteField - new attributes: AJAXFIELD, AJAXTHROBBER, CHOICEVALUENODE, HEIGHT
+		* php2go.form.listener.FormAjaxListener - fixed bug while building AJAX parameters JS code
+	2006-11-02 - mpont
+		* PHP2Go 0.5.3 released!
+	2006-11-01 - mpont
+		* php2go.form.field.FormField - added ignore boolean attribute for search node (ignore the field while building search clauses with SearchForm class)
+	2006-10-31 - mpont
+		* php2go.form.field.CheckGroup, php2go.form.field.DbCheckGroup - new boolean attribute: SHORTCUTS (whether to display or not shortcuts for checking/unchecking/inverting all checkboxes)
+		* php2go.template.templateModifiers - new modifiers added: replace, regex_replace, camelize, count_chars, count_words, count_sentences, count_paragraphs, anchor
+		* php2go.text.StringUtils - 3 new methods added: replace, regexReplace and countParagraphs
+		* javascript/form.js - Added GroupField.prototype.invert and GroupField.prototype.setAll
+		* Added a new JS class: CheckboxController (included in form.js)
+	2006-10-28 - mpont
+		* added a new form component: AutoCompleteField (text input with type ahead autocomplete support)
+		* php2go.form.field.ColorPickerField - new attribute added: MODE (FLAT or POPUP)
+		* php2go.form.field.DbField - DATASOURCE parsing routine moved to parent class (FormField), on a new method called parseDataSource
+		* php2go.form.field.EditField - moved setAlign method from parent class (EditableField)
+		* php2go.xml.XmlNode - moved getElementsByTagName from XmlDocument class
+	2006-10-27 - mpont
+		* php2go.form.Form - expanded XML specification to cover general, style and error settings
+			* form node: method, action, target, backurl, accesskeyhighlight
+			* new style node: input, label, button, fieldset, sectiontitle, width, align, tablepadding, tablespacing, labelwidth, labelalign
+			* new errors node: style, listmode, headerstyle, headertext, clientmode, clientcontainer, tplplaceholder
+		* php2go.text.StringUtils - new method added: camelize
+		* javascript/ajax.js - new method: addParam; changed to send X-Requested-With HTTP header
+		* javascript/dom.js - Added Event.prototype.findElement
+	2006-10-26 - mpont
+		* new configuration entry: TEMPLATES
+			* allows to define tag delimiter type and cache settings for all templates
+			* allows to define global custom modifiers
+	2006-10-25 - mpont
+		* php2go.base.Document - removed internal buffers; call onPreRender for Component elements
+		* php2go.form.Form - added onPreRender method: process XML file and call onPreRender on fields and buttons
+		* php2go.form.field.* - renamed getCode() to display(); moved routines that modify the owner document to onPreRender
+		* php2go.form.field.DataGrid - new attribute: HEADERS (comma separated list of table headers, accepts i18n)
+	2006-10-24 - mpont
+		* Changed to require PHP 4.3.0 or higher
+		* New constant: IS_PHP5 (boolean)
+		* New class added: php2go.base.Component - base class for all renderable classes (Form, FormField, FormButton, Menu, Report, Template)
+		* ClassLoader.class.php - use correct class extensions when using __autoload (thx to Rafael Souza/Brazil)
+		* php2go.template.Template - new methods: addModifier (register a custom modifier), setTagDelimiter (change tags delimiter: TEMPLATE_DELIM_COMMENT or TEMPLATE_DELIM_BRACE)
+		* php2go.template.TemplateParser - performance improvements
+			* generate PHP+HTML and use ob_* functions instead of PHP+output stacks
+			* print all variables through the new __v function, so that components can be rendered through display() method
+	2006-10-23 - mpont
+		* php2go.base.PHP2Go - removed objectName property; new method getClassName; deprecated getObjectName; renamed toString to __toString
+		* php2go.text.StringUtils - new method: explode
+		* php2go.template.templateModifiers - new modifier added: explode
+	2006-10-20 - mpont
+		* php2go.form.field.DbField - new method: setRecordSet
+		* php2go.form.field.EditSearchField - rebuild record set inside onDataBind, when owner form is posted
+		* php2go.form.field.DbGroupField, php2go.form.field.GroupField - changed to generate HTML code inside the class
+	2006-10-19 - mpont
+		* php2go.template.Template - support was added for custom modifiers, through a new method called addModifier
+		* new configuration entry: REPORTS; through this new entry, it's possible to define global settings for reports (pagination settings, style properties, icons, mask handlers)
+	2006-10-18 - mpont
+		* static method Form::resolveI18nEntry moved to p2gLib.php as a procedural function
+		* php2go.data.Report - feature enhancements
+			* new XML element: listener (onChangePage, onSort, onSearch)
+			* new global template variables: {$order_options_combo} and {$order_options_links}
+			* added internationalization support for: column.alias, column.help and datafilter.label
+	2006-10-17 - mpont
+		* new Javascript class added: javascript/util/throbber.js
+		* javascript/ajax.js - changed to accept Throbber instances in the throbber argument
+	2006-10-16 - mpont
+		* php2go.form.field.GroupField - fixed bug with global listeners (thx to Lenon Scortegagna/Brazil)
+	2006-10-15 - mpont
+		* PHP2Go 0.5.2 released!
+	2006-10-14 - mpont
+		* ADOdb : upgrade to version 4.93
+	2006-10-12 - mpont
+		* javascript/inputmask.js - improved CurrencyMask performance under IE
+	2006-10-11 - mpont
+		* php2go.form.field.EditSearchField, javascript/form/editsearchfield.js - changed to support multiple instances in a single form
+		* php2go.util.service.ServiceJSRS - new static method: getInstance
+	2006-10-10 - mpont
+		* php2go.form.field.RangeField - changed to support COMBOFIELD, LOOKUPFIELD or DATEPICKERFIELD as interval members
+		* added a new form component: ColorPickerField (color selection tool based on the color picker widget used by EditorField)
+		* php2go.form.Form, docs/dtd/php2go_forms.dtd - changed to suite ColorPickerField
+		* javascript/widgets/colorpicker.js - new methods: setDisabled, setColor; renamed select to colorClick
+	2006-10-09 - mpont
+		* javascript/validator.js - fixed bug inside RuleValidator.prototype.compare
+	2006-10-06 - mpont
+		* php2go.form.field.DataGrid - wasn't handling masks, listeners and rules correctly - thx to Herman Sandoval/Colombia
+		* added support for custom events inside some form fields
+			* registered onAdd and onRemove event listeners for EditSelectionField and LookupSelectionField components
+			* the listener is called from inside the component class (this is accessible) and receive a single parameter called args (array)
+			* any exceptions thrown from inside the listener will cancel the current action, and the message will be displayed in an alert box
+			* php2go.form.FormEventListener - changed to support the new feature
+	2006-10-05 - mpont
+		* javascript/ajax.js - removed use of 'undefined' constant
+		* javascript/dom.js - changed update, insertHTML and replace to use evalScriptsDelayed instead of evalScripts
+		* javascript/inputmask.js - register intSize and decSize properties in the FloatMask objects
+		* javascript/php2go.js - added String.prototype.evalScriptsDelayed (IE5 workaround)
+		* javascript/widgets/calculator.js - added int part size validation when copying result to the linked field
+		* added a new example: js.example.php
+	2006-10-03 - mpont
+		* php2go.net.MailMessage - removed Bcc header from message header (must be included in the recipients but mustn't be visible)
+	2006-09-29 - mpont
+		* added dependency check and duplicated inclusion prevention inside all Javascript source files
+		* changed some classes to add only main JS files (these ones in turn will include their dependancies)
+		* javascript/php2go.js - new properties: PHP2Go.baseUrl, PHP2Go.locale; new methods: PHP2Go.load (internal only), PHP2Go.include
+	2006-09-28 - mpont
+		* php2go.data.Report - added OPTIMIZECOUNT attribute in DATASOURCE node of XML specification
+			* Total record count is retrieved by transforming the original query and performing a "count(*)" query
+			* These statements are supposed to be optimized, then the existent order by clauses are stripped off aiming a better performance
+			* OPTIMIZECOUNT="F" means that we need (or want) to preserve all existent order by clauses when building "count(*)" queries
+		* php2go.data.adapter.DataSetDb - added new parameter: optimizeCount
+		* php2go.db.Db - changed getCount to accept a new $optimize boolean parameter (default=TRUE)
+	2006-09-27 - mpont
+		* javascript/php2go.js - new method added: Date.fromString; fixed bug in Date.toDays
+		* javascript/structures.js - new method added: Hash.unset
+		* php2go.datetime.Date - added dateToTime method; fixed conversion methods (returning wrong values when $preserveTime=TRUE)
+		* added a new form component: DatePickerField (a single or multiple date selection tool based on the JSCalendar widget)
+		* php2go.form.Form - changed to suite DatePickerField
+		* docs/dtd/php2go_forms.dtd - added DATEPICKERFIELD component and ACCESSKEY attribute for BUTTON and for almost all fields
+	2006-09-26 - mpont
+		* php2go.form.field.FormButton, php2go.form.field.FormField - added support for ACCESSKEY attribute
+		* php2go.form.field.* - changed to understand and render new ACCESSKEY attribute
+		* php2go.form.Form - new method added: setAccessKeyHighlight
+		* php2go.template.TemplateParser - New interval variable: $p2g.conf (allows to read global configuration settings)
+		* php2go.util.HtmlUtils - new option parameter in anchor method: $accessKey
+		* Conf.class.php - new method added: getAll
+	2006-09-25 - mpont
+		* php2go.db.Db - changed getCount to use nested queries when using mysql 4.1+
+	2006-09-20 - mpont
+		* ADOdb : upgrade to version 4.92a
+	2006-09-19 - mpont
+		* php2go.db.QueryBuilder - trim query components before building full SQL code
+	2006-09-14 - mpont
+		* javascript/ajax.js - new config property for AjaxRequest: encoding
+		* template/simplesearch.tpl - fixed typo
+	2006-09-13 - mpont
+		* examples/ajaxcrud.example.php - added example of deleting multiple records via Ajax
+	2006-09-12 - mpont
+		* added a new form component: MultiColumnLookupField (a lookup field that displays options in the form of a table with N columns)
+		* docs/dtd/php2go_forms.dtd - added new component MULTICOLUMNLOOKUPFIELD and ID attribute for all fields
+	2006-09-11 - mpont
+		* php2go.db.Db - Fixed invalid variable reference inside getInstance method
+		* javascript/ajax.js - added support to array request arguments
+	2006-09-05 - mpont
+		* javascript/ajax.js - fixed bug inside createResponse method - thx to Herman Sandoval/Colombia
+		* javascript/form.js - Field.fromFormElement wasn't handling grouped fields correctly
+	2006-08-28 - mpont
+		* php2go.template.TemplateParser - added a new attribute in FUNCTION tags: output (boolean)
+		* php2go.template.templateModifiers - new modifier added: json
+	2006-08-24 - mpont
+		* php2go.form.field.MemoField - changed to always generate HTML code inside the class (remove external template file)
+		* javascript/form/memofield.js - fixed bugs inside keyHandler method
+	2006-08-23 - mpont
+		* php2go.form.field.EditField - position adjustments in calendar/calculator icons
+		* php2go.form.FormButton - new attribute: ID; new methods: getId and setId
+	2006-08-21 - mpont
+		* static method Form::resolveBooleanChoice moved to p2gLib.php as a procedural function
+		* php2go.data.Report - extended XML structure to understand a set of configuration settings
+			* general settings (title, debug, base URI, mode, printable, page break, sortable, empty block, empty template)
+			* pagination settings (rows per page, pages per screen, paging style, paging style parameters)
+			* style properties (links, filters, buttons, alternate style, highlight colors, help tips attributes)
+			* customize icons used inside the class
+			* columns specification (sizes, grouping, aliases, help tips, alignment)
+			* variables (same implementation and XML structure used by the forms specification)
+		* report usage example (report.example.php) totally rewritten
+		* docs/dtd/php2go_reports.dtd - updated to reflect all changes and inclusions
+	2006-08-18 - mpont
+		* php2go.auth.User - Fixed typo inside getInstance method
+		* php2go.form.field.FormField - new search attribute: DESCSOURCE (VALUE | DISPLAY)
+		* php2go.form.field.FormField - new method: getDisplayValue (readable representation of the field's value)
+		* added specialized implementations of getDisplayValue for some field classes
+			* CheckField, ComboField, DbGroupField, GroupField, LookupField, RangeField
+		* php2go.form.SearchForm - changed to automatically build a readable representation of the search clause
+			* persistable in the session scope (when autoRedirect=TRUE and useSession=TRUE) using $paramName . '_description'
+			* new method: getSearchDescription
+		* docs/dtd/php2go_forms.dtd - included DESCSOURCE attribute for SEARCH element
+	2006-08-17 - mpont
+		* PHP2Go 0.5.1 released!
+	2006-08-12 - mpont
+		* php2go.template.TemplateParser - parser wasn't handling nested LOOP tags
+	2006-08-11 - mpont
+		* ADOdb : upgrade to version 4.91
+	2006-07-28 - mpont
+		* php2go.template.TemplateParser - parser was changed to be case-insensitive while parsing tags (if, loop, capture, assign, block, function, widget, ...)
+	2006-07-25 - mpont
+		* php2go.db.QueryBuilder - new method added: loadFromXml
+		* php2go.form.SearchForm - added support for form fields persistence in the session scope
+			* new methods added: setFilterPersistence, clearFilterPersistence
+			* see examples/searchform.example.php for more details
+		* php2go.util.Spreadsheet - new method added: writeArray
+	2006-07-18 - mpont
+		* A new subpackage called "storage" was created under php2go.cache package, containing 2 new classes: AbstractCache and FileCache
+		* php2go.cache.CacheManager - Moved most part of the methods to the storage layer
+			* added factory method; constructor and getInstance were changed
+			* storage layer can be accessed through a property called "Storage" of the CacheManager class
+			* getBaseDir, loadMemoryState and saveMemoryState were deprecated and removed
+			* setBaseDir, setLifeTime, setLastValidTime, setReadChecksum, setAutoClean, setAutoSerialize, setMemoryCache were moved to storage layer
+			* added setFileLocking method inside FileCache class
+		* added a new example: cachemanager.example.php
+	2006-07-17 - mpont
+		* php2go.form.field.FormField - new attribute added: ID; 3 new methods added: getId, setId and getFocusId
+		* php2go.form.field.* - components changed to use the new attribute ID; focus element is now defined through getFocusId
+		* docs/dtd/php2go_forms.dtd - included ID attribute in all form components
+	2006-07-07 - mpont
+		* php2go.auth.* - added support for multiple sessions through an optional $sessionName parameter in class constructors and singleton getters
+	2006-07-06 - mpont
+		* php2go.form.field.EditorField - removed dependancy between EditorField and MemoField; EditorField now extends FormField
+		* php2go.form.field.EditorField - 2 new attributes added:
+			* STYLESHEET: loads an external stylesheet in the editor's document
+			* RESIZEMODE: added resize support on the editor's area; save custom dimensions in a browser cookie
+		* php2go.template.TemplateParser - parser wasn't handling "ELSE LOOP" tag correctly
+		* docs/dtd/php2go_forms.dtd - updated MEMOFIELD and EDITORFIELD specs
+		* javascript/widgets/calculator.js, javascript/widgets/colorpicker.js - must close widget when user clicks outside its area
+	2006-07-03 - mpont
+		* php2go.xml.XmlParser - wasn't correctly handling nodes with children *and* CDATA-section
+	2006-06-28 - mpont
+		* php2go.form.FormBasic, php2go.form.FormDataBind, php2go.form.FormTemplate - code optimizations
+		* php2go.form.field.EditSearchField - the component will try to recover the last selected option when AUTODISPATCHIF is enabled
+		* php2go.form.field.RangeField - added setMask method
+		* 2 new parameters in the database connection settings: FETCH_MODE and TRANSACTION_MODE (see userConfig.php for more details)
+		* added 2 new examples: ajaxcrud.example.php and formcomponents.example.php
+	2006-06-27 - mpont
+		* added support for "AJAX" listeners inside forms
+			* a new class called php2go.form.listener.FormAjaxListener was added to handle these listeners
+			* valid attributes for this listener are: event, autodispatchif, url, class and formsubmit
+			* ajax arguments can be defined through a set of <param> tags, or by writing JS code that returns a hash of arguments in the listener's cdata-section
+		* docs/dtd/php2go_forms.dtd - updated LISTENER specs
+	2006-06-26 - mpont
+		* JS and JSRS listeners were separated in 2 different classes: php2go.form.FormEventListener and php2go.form.listener.FormJSRSListener
+	2006-06-22 - mpont
+		* added 2 new classes: JSONEncoder and JSONDecoder, inside a new package called php2go.util.json
+		* added a new example: json.example.php
+	2006-06-21 - mpont
+		* php2go.template.TemplateParser - internal changes in the parser engine
+			* parser wasn't correctly handling vars by reference
+			* small changes in the internal structure that holds information about variables and block instances
+			* added support for constants access using $p2g.const.CONSTANT_NAME
+		* php2go.template.Template - changes in the internal storage structures; the method setShowUnassigned was removed
+		* php2go.util.TypeUtils - changed isHashArray implementation; minor enhancements/optimizations
+		* Init.class.php - add missing path while setting/unsetting lang code cookie
+	2006-06-20 - mpont
+		* php2go.session.* - removed calls to session_register and session_unregister
+		* added Javascript classes to deal with AJAX and XML HTTP requests
+			* adaptable with browsers that support XMLHttpRequest or ActiveX objects
+			* AjaxRequest - base class for XMLHTTP requests, highly flexible and customizable; supports events like onSuccess, onFailure, onJSONResult and onXMLResult
+			* AjaxUpdater - use a given HTML element as target of the returned response
+		* added a new example: ajax.example.php
+	2006-06-19 - mpont
+		* php2go.db.Db - getCount() wasn't handling correctly functions that use the "from" reserved word, like extract( ) and substring( )
+	2006-06-16 - mpont
+		* php2go.data.DataSet, php2go.data.PagedDataSet - added factory method (creates a new instance based on the given arguments)
+		* php2go.db.QueryBuilder - new method added: setLimit
+		* php2go.template.TemplateParser - small fixes in variables parsing
+		* php2go.template.templateModifiers - added colorize modifier
+		* php2go.util.HtmlUtils - new method added: colorize
+	2006-06-15 - mpont
+		* php2go.data.Report - new paging style parameter: hideInvalid (default: TRUE; FALSE: display invalid navigation actions as disabled)
+	2006-06-14 - mpont
+		* added 2 new examples: examples/db.example.php and examples/helloworld.example.php
+		* php2go.form.FormDataBind - all JS code was moved to a new JS component called FormDataBind and to the component's template;
+		* php2go.form.FormDataBind - component's template was rewritten and optimized; new method added: setDataSetQuery
+	2006-06-13 - mpont
+		* php2go.template.templateModifiers - added status_bar modifier
+	2006-06-12 - mpont
+		* JS and PHP language files were unified; the JS language entries will now be loaded from resources/javascript/lang.php
+		* php2go.base.Document - new optional parameter $charset in addScript and addStyle methods
+	2006-06-11 - mpont
+		* php2go.net.HttpRequest - new option parameter $full in uri method
+	2006-06-10 - mpont
+		* all the framework's Javascript libraries and components were dropped and replaced by a new Javascript framework
+			* the new framework reorganizes the current features and adds new features and possibilities
+			* php2go.js, dom.js and structures.js (plus the language hash) will be included in every HTML page built with php2go.base.Document
+			* the form/ folder contains JS classes used by form components
+			* the widget/ and util/ folders contain auxiliary/utility classes
+		* php2go.base.Document - changed script files added by default for every HTML page
+		* php2go.data.Report - the template file of the simple search tool was rewritten
+		* php2go.form.Form - buildScriptCode method was rewritten to fit the new JS framework; appendScript method was removed
+		* php2go.form.FormEventListener - changed getScriptCode to use new $F function while building auto dispatch call
+		* php2go.form.FormRule - the getScriptCode method was changed to fit the new JS framework (FormValidator class)
+		* php2go.form.FormButton - clear/reset calls were changed to use the new JS methods
+		* php2go.form.field.EditorField - 3 new editor buttons: "selectall", "removeformat" and "inserthorizontalrule"
+		* Many form components were changed to fit the new JS framework
+			* CheckField - removed checkBoxChange listener inside onLoadNode (function dropped)
+			* EditableField - mask validation, minlength/maxlength validation, upper/lower transformations
+			* EditField - calculator widget, autotrim/capitalize transformations
+			* EditorField, EditSearchField, EditSelectionField, LookupChoiceField, LookupSelectionField, MemoField - these form components had their JS classes and templates totally rewritten
+			* FormField - rule/mandatory validation JS setup code
+		* php2go.util.HtmlUtils - window and focus methods were changed to fit the new JS framework
+	2006-06-10 - mpont
+		* php2go.base.AbstractNode - changed getAttribute to return by reference; doc comment fixes
+	2006-06-08 - mpont
+		* PHP2Go 0.4.3 released!
+	2006-06-08 - mpont
+		* Minor fixes and improvements in many bundled examples
+		* javascript/libs/string.js - base64Encode and base64Decode functions were deprecated and removed
+		* javascript/masks/url.js - encodeURL and decodeURL functions were deprecated and removed
+		* ADOdb : upgrade to version 4.90
+		* php2go.db.Db - new method added: setTransactionMode
+		* php2go.db.Db - new optional parameter $assoc in getColumnNames method; new optional parameter $bind in date method
+		* php2go.db.Db - fix reference return problems inside execute, query, limitQuery and getActiveRecords methods
+		* php2go.form.FormDataBind - some fixes and optimizations in the internal JS code
+		* p2gLib.php - fixed notices thrown inside getPhp2GoOffset - thx to Lenon Scortegagna/Brazil
+	2006-06-07 - mpont
+		* php2go.template.TemplateParser - fixed bug in internal variable resolution ($p2g.item.$var)
+	2006-06-02 - mpont
+		* php2go.template.TemplateParser - added support for variables in variable modifier arguments
+	2006-05-29 - mpont
+		* php2go.form.field.FormField - wrong lowercase class names passed to TypeUtils::isInstanceOf inside onDataBind method
+		* php2go.validation.RuleValidator - wrong lowercase class name passed to TypeUtils::isInstanceOf inside execute method
+	2006-05-22 - mpont
+		* ClassLoader.class.php - added slashes normalization inside _registerIncludePath method
+		* php2go.form.field.DbField - code optimizations
+		* php2go.form.field.DataGrid, php2go.form.field.DbGroupField, php2go.form.field.LookupField - moved query execution code from onPreRender to onDataBind
+		* php2go.form.field.GroupField - fixed wrong empty() call inside addOption method
+		* php2go.form.field.FormField - link label and field manually using JS for SELECT inputs under MSIE (<label for="id"></label> always resets the SELECT value)
+		* php2go.net.MailTransport - Smtp class constant was being used before the class inclusion by __autoload (PHP5 only) - thx to Eduardo Antunez/Brazil
+		* php2go.text.StringUtils - comment fixes, code optimizations, change ereg/ereg_replace calls to preg_match/preg_replace
+		* examples/stringutils.example.php - improved class usage examples
+	2006-05-12 - mpont
+		* php2go.gui.Menu - wrong lowercase class name passed to TypeUtils::isInstanceOf inside the class constructor
+	2006-05-07 - mpont
+		* PHP2Go 0.4.2 released!
+	2006-05-07 - mpont
+		* php2go.validation.RequiredValidator - the required validator wasn't working with checkboxes
+		* php2go.xml.XmlNode - fixed bug in _renderAttributeString() when the node has no attributes
+	2006-05-04 - mpont
+		* php2go.form.field.CaptchaField, php2go.form.field.EditableField - revalidate readonly property inside onPreRender()
+		* php2go.form.FormButton, php2go.form.field.FormField - revalidatate disabled property inside onPreRender()
+		* php2go.form.FormSection - property "show" renamed to "visible"; property "condition" renamed to "conditional"; methods isConditional, isVisible and onLoadNode were reviewed and optimized
+		* php2go.form.FormDataBind - Moved persistence code to inside the class (new methods _saveRecord and _deleteRecord); jsrs/csvdbpersist.php was removed from the project
+	2006-04-28 - mpont
+		* php2go.text.StringUtils - fixed bug in map method
+	2006-04-27 - mpont
+		* php2go.base.PHP2Go - changed internal implementation of isA()
+		* php2go.util.TypeUtils - changed internal implementation of isInstanceOf()
+	2006-04-17 - mpont
+		* php2go.template.Template - new method added: assignByRef
+		* php2go.template.TemplateParser - added support for function calls
+			* <!-- FUNCTION name="myFunction" p1=2 p2=$var p3="str" -->
+			* <!-- START FUNCTION name="obj->method" --> block content <!-- END FUNCTION -->
+		* php2go.template.TemplateParser - added support for CAPTURE tag; fixed bugs in variables handling
+	2006-04-05 - mpont
+		* All the HTML tags and attributes built by the framework were changed to lowercase
+		* new configuration entry: BASE_URL; defines the base URL for all links and images in the pages generated by PHP2Go; it's used to render a <base href=""> tag
+		* changed all calls to document.getElementById to $
+	2006-03-31 - mpont
+		* php2go.util.HtmlUtils - fixed bug in flashMovie method - thx to Eduardo Antunez/Brazil
+		* php2go.file.DirectoryManager - fixed bug in _readSimple method - thx to Eduardo Antunez/Brazil
+	2006-03-25 - mpont
+		* PHP2Go 0.4.1 released!
+	2006-03-22 - mpont
+		* ADOdb : upgrade to version 4.80
+		* php2go.db.Db - new method added: getActiveRecords
+	2006-03-17 - mpont
+		* added a new example to show the new features of the template engine: examples/template2.example.php
+		* Init.class.php - set cookie_lifetime=0, gc-probability=1 and cache_limiter=must-revalidate when session is initialized
+	2006-03-16 - mpont
+		* php2go.base.Document - 3 new methods: createElement, assign e assignByRef
+		* php2go.base.Document - changed to accept any object that contains a method called "getContent", and not only Template instances or instances of Template's subclasses
+		* php2go.template.DocumentElement - new static method added: factory
+		* php2go.form.FormEventListener - changed JS listener type to accept a function body in the CDATA section of the node
+		* php2go.form.FormRule - added new rule type: JSFUNC
+			* this rule type consists in an user defined JavaScript block written in the CDATA section of the RULE node
+			* the class defines a name to this function and adds it in the document HEAD section
+			* this rule type is only executed in the client side; in the server validation, it will always return TRUE
+		* php2go.net.FileSystem - getFileExtension wasn't correctly handling files with a dot in the file name; small fixes and optimizations in other methods
+		* php2go.template.TemplateParser - recurse into _parseTemplate when the parser finds an invalid variable or tag definition; this fixes the problem of defining variables inside JavaScript blocks and HTML comments
+		* javascript/libs/object.js - added $() function: an alias to document.getElementById; compatibility with other JavaScript frameworks
+		* javascript/libs/div.js, javascript/modules/advancededitor.js, javascript/modules/colorselection.js, javascript/modules/editsearch.js - changed calls to getDocumentObject() to $()
+	2006-03-15 - mpont
+		* php2go.net.HttpResponse - new static method added: addHeaders; removed getInstance method
+		* added a new form component: DbCheckGroup (a group of checkboxes whose values and captions are loaded from the database)
+		* added php2go.form.field.DbGroupField (parent class for DbRadioField and DbCheckGroup)
+		* php2go.form.field.RadioField, php2go.form.field.CheckGroup - Moved template generation to parent class (GroupField), added renderGroup method (build group elements data that is used by the template)
+		* template/radiofield.tpl, template/checkgroup.tpl - changed to use the new LOOP template tag
+		* p2gLib.php - new function added: highlightPHP
+		* php2go.template.templateModifiers - added highlight_php modifier
+	2006-03-14 - mpont
+		* new class added: ClassLoader
+			* import and importFile functions were changed to use the new class
+			* getRealPath and importDirectory functions (p2gLib.php) were removed
+		* Changed file include process to store paths in PHP's include_path
+		* p2gLib.php - Changed third parameter of import function
+			* The third parameter is now called $isClass, defaults to TRUE and indicates that the resource that must be imported is a class
+		* p2gLib.php - Added __autoload function in p2gLib.php. This functions is automatically used when PHP2Go detects PHP5
+	2006-03-10 - mpont
+		* ADOdb : upgrade to version 4.72
+	2006-03-09 - mpont
+		* php2go.text.StringUtils - added 2 new escape types in escape method: javascript and mail
+		* php2go.template.templateModifiers - 3 new modifiers added: i18n, _ and gettext
+		* php2go.template.Template - showUnassigned (property) and setShowUnassigned (method) were deprecated;
+		* php2go.template.TemplateParser - added template internal/special variables
+			* current server time/microtime: {$p2g.time} and {$p2g.microtime}
+			* superglobals: {$p2g.request}, {$p2g.get.paramname}, {$p2g.post.paramname}, {$p2g.cookie.name}, {$p2g.session.varname}, {$p2g.server.key}, {$p2g.env.key}
+			* registry, session objects: {$p2g.registry.varname}, {$p2g.sessionobject.objname.propname}
+			* active user: {$p2g.user->properties.propname}, {$p2g.user->username}
+		* php2go.template.TemplateParser - added parserVersion key in the cache data, to prevent invalid cached templates when the class structure changes
+		* p2gLib.php - added __ function, an alias to PHP2Go::getLangVal accepting an arbitrary number of arguments
+		* language packages - added new entries needed by the new TemplateParser features
+	2006-03-08 - mpont
+		* php2go.template.TemplateParser - the handling of variables was highly improved
+			* added support to apply modifiers in strings: {"my text"|upper}
+			* variables can now be accessed as {var} or {$var}. The first mode was kept for backwards compatibility reasons
+			* read array members: {$array.key}, {$array.key.0}, {$array.1}
+			* read object member: {$obj->property}, {$obj->array.key}
+			* dynamic variable resolution: {$array.$dynamicKey}, {$obj->$dynamicProperty}
+		* php2go.util.Spreadsheet - fixed bug in _transformDate in windows servers - thx to Valdir Stiebe/Brazil
+	2006-03-01 - mpont
+		* template/basicform.tpl - changed to use a single block (section_item) and IF/ELSE IF tags; fixed bug when a button was the first element of a section
+	2006-02-28 - mpont
+		* php2go.gui.Menu - verifyRootSql and verifyChildSql methods were rewritten and now are called inside buildTreeFromDatabase - thx to Flávio Fagundes/Brazil
+		* php2go.form.FormButton - added a new button type: BACK
+			* BACK buttons contain an onClick JS event listener pointing to the previous URL
+			* the back URL can be customized through the setBackUrl method of the Form class
+			* moved configuration code to a new method called onPreRender (protected), executed in the beginning of getCode()
+			* renamed _buttonListeners() (private) to renderListeners() (protected)
+		* php2go.form.Form - added new property: backUrl; added new method: setBackUrl - may be used to define the target URL of all BACK buttons included in the form
+		* php2go.data.Report - a set of template global variables was created; they're accessible from any context in the report template
+			* all the variables use the "report.variable_name" format
+			* the available variables are: base_uri, total_rows, page_rows, page_size, current_page, total_pages, at_first_page, at_last_page, search_sent
+			* the style mappings are also assigned: report.style.link, report.style.filter, report.style.button, report.style.title, report.style.header
+			* in empty template files, only report.base_uri, report.search_sent and report.style.* are available
+		* php2go.data.Report - added a method called disableEmptyTemplate - disables the use of a secondary template when the report is empty
+	2006-02-14 - mpont
+		* php2go.net.HttpRequest - Change $searchOrder param default value to EGPCSOR, removed integration with variables_order ini variable
+			* PHP 5.x doesn't allow different char combinations in variables_order ini variable
+	2006-01-28 - mpont
+		* php2go.template.TemplateParser - added support for template widgets
+			* widgets are external components that can be used to generate pieces of code in the templates
+			* they can be "include" widgets or "block" widgets
+		* added a new package called php2go.template.widget; this package contains the base widget class (php2go.template.widget.Widget)
+		* new widgets: php2go.template.widget.TemplateContainer, php2go.template.widget.Toolbar
+	2006-01-26 - mpont
+		* userConfig.php - added support for different ports in $P2G_USER_CFG['ABSOLUTE_URI'] definition
+	2006-01-24 - mpont
+		* php2go.template.TemplateParser - the code of the parser was fully reviewed to improve existent features and add another ones
+			* changed compiler to compile template as pure PHP code
+			* improve compile/execute performance
+			* added support for IF/ELSE IF/ELSE/END IF tags
+				* <!-- IF $variable eq true --> ... <!-- END IF -->
+				* <!-- IF $variable is not empty --> ... <!-- END IF -->
+				* <!-- IF $variable is odd --> ... <!-- END IF -->
+				* operator aliases, special functions (empty, odd, even), enable PHP functions and complex expressions
+			* added support for LOOP/ELSE LOOP/END LOOP tags
+				* <!-- LOOP var=$loop_data item="loop_item" name="sample_loop" --> ... <!-- END LOOP -->
+				* loop variable access: $item.variable
+				* loop interval variables (accessed using $p2g.loop.loop_name.*) : total, iteration, rownum, first, last, prev, next
+			* added support for ASSIGN tag
+				* <!-- ASSIGN var=$variable -->
+				* <!-- ASSIGN var="value" -->
+			* added support for template comments
+				* <!--* this is a comment *-->
+		* php2go.template.Template - changed cache engine to allow cache validity test based on the modified time of the template source
+		* php2go.template.Template - new method added: getCurrentBlockName
+		* php2go.template.Template, php2go.template.DocumentElement - several internal changes to support new parser features
+	2006-01-23 - mpont
+		* php2go.util.TypeUtils - new method added: isEmpty
+	2005-12-12 - mpont
+		* PHP2Go 0.3.4 released!
+	2005-12-09 - mpont
+		* php2go.data.Report - new method added: setUnsortableColumns (defines which columns must NOT be used to sort the list through links in the table headers) - thx to Herman Sandoval/Colombia
+	2005-12-08 - mpont
+		* php2go.form.SearchForm - 3 new methods added: setPreserveSession, getIgnoreFields and setIgnoreFields
+			* setPreserveSession allows to define if the search filter must be removed from the session each time the search form is renderer/displayed
+			* using setIgnoreFields, you can define a set of form fields that must be ignored by the class when the search string is built
+	2005-12-03 - mpont
+		* php2go.db.Db - the developer can now create its own connection class, extending php2go.db.Db, and register its path in the $P2G_USER_CFG array
+			* Db::getInstance will create and return a singleton of the subclass created by the developer, if defined so, or just a singleton of php2go.db.Db (normal behaviour until now)
+			* the configuration entries AFTERCONNECT and BEFORECLOSE were deprecated/removed and transformed into abstract methods of php2go.db.Db: onAfterConnect and onBeforeClose
+			* right after the execution of a query or statement, the class will store the statement in a property called lastStatement; it will be useful when handling and logging query/statement errors
+		* userConfig.php - AFTERCONNECT and BEFORECLOSE entries were removed; new entry added: DATABASE.CONNECTION_CLASS_PATH (see bundled INSTALL.txt for more details)
+	2005-12-02 - mpont
+		* ADOdb : upgrade to version 4.68
+		* php2go.form.SearchForm - new paramater $tplIncludes added in the constructor: define include files to the form, only when a base template is provided
+	2005-12-01 - mpont
+		* added a new example: examples/treemenu.example.php
+		* php2go.form.field.DataGrid - new attribute added: SHOWHEADER (use F to hide the headers of the grid) - thx to Valdir Stiebe/Brazil
+		* php2go.form.field.EditorField - added 2 new command buttons: "strikethrough" and "justifyfull"; apply a CSS gray() filter in the command buttons when the form is readonly
+	2005-11-28 - mpont
+		* php2go.data.Report - fixed bug in _dataColumns: a non-breaking space (&nbsp;) was being added after the contents of each report cell - thx to Flávio Fagundes/Brazil
+	2005-11-22 - mpont
+		* Changed all destructor method names to __destruct. In PHP4, the object destruction process remains unchanged, but in PHP5 they'll be automatically called by the Zend Engine
+		* php2go.net.MailTransport - new method added: getErrorMessage; fixed error handling problems when using smtp to send messages
+		* php2go.net.Smtp - documentation fixes, small optimizations
+	2005-11-19 - mpont
+		* php2go.base.Document - added addAlternateLink method; small fixes/changes in addScript, addStyle and addScriptCode; added $position parameter in appendBodyContent
+	2005-11-13 - mpont
+		* php2go.db.Db - added updateLob method, internally calling UpdateBlob and UpdateBlobFile methods of ADODb
+	2005-11-10 - mpont
+		* php2go.db.Db - changed behaviour of date method, in order to handle d/m/Y and Y/m/d dates better
+	2005-11-09 - mpont
+		* php2go.datetime.Date - isEuroDate, isUsDate and isSqlDate were not correctly handling datetime values
+		* php2go.auth.Auth, php2go.datetime.Date, ph2pgo.db.DMLBuilder - documentation fixes
+		* php2go.form.field.FormField - added special behaviour for checkboxes in onDataBind method
+		* php2go.validation.ZipCodeValidator - fixed regular expression used in the validation
+	2005-11-08 - mpont
+		* javascript/jsrsclient.js - changed to send the contextObj as second argument of the callback function
+			* the contextObj contains information about the request: url, function name, parameter(s) and visibility
+	2005-11-04 - mpont
+ 		* Typo fixes: Init (resetLocale), php2go.cache.CacheManager (_clearCache), php2go.graphImage (getTransparency), php2go.net.MailTransport (_mailSend)
+		* php2go.file.GzFile - use of undefined methods StringUtils::strLeft and StringUtils::strRight
+		* php2go.util.Properties - use of undefined methods readKey and writeKey
+		* php2go.util.Spreadsheet - use of undefined property triggerErrors
+	2005-11-03 - mpont
+		* PHP2Go 0.3.3 released!
+	2005-11-03 - mpont
+		* php2go.gui.LayerMenu - new method added: setCharWidth
+		* php2go.gui.Menu - added support for TARGET attribute when loading menu from database; fixed bug in _verifyRootSql when LINK column was empty
+	2005-10-27 - mpont
+		* php2go.file.FileUpload - changed addHandler to use getcwd() when $savePath parameter is empty
+		* php2go.net.HttpResponse - addHeader wasn't correctly handling "0" in header values
+	2005-10-26 - mpont
+		* php2go.auth.Auth - getAuthState method added: return the user's authentication state
+	2005-10-25 - mpont
+		* php2go.datetime.Date - added optional parameter $unsigned in getDiff method
+	2005-10-24 - mpont
+		* php2go.form.field.EditableField - changed call to FloatValidator to send "." as the default decimal point
+		* php2go.validation.FloatValidator - added new optional parameter: decimalPoint (the decimal point that must be used to validate the value)
+	2005-10-23 - mpont
+		* php2go.form.SearchForm - validation of range search fields was evaluating "0" as an empty value
+	2005-10-22 - mpont
+		* php2go.data.Report - new method added: setBaseUri; define the URI that must act as base for all links built inside the class
+		* php2go.text.StringUtils - new method added: map; define translation values for a base string; ex: $a=1 -> StringUtils::map($a, 0, 'yes', 1, 'no')
+		* php2go.template.templateModifiers - new modifier added: map
+	2005-10-21 - mpont
+		* php2go.auth.Authorizer - 2 new methods added: authorizeModule and authorizeModuleAction
+		* php2go.db.Db - changed internal behaviour of insert method: "select * from table where 1=0" doesn't work in some database drivers - thx to Flávio Fagundes/Brazil
+		* php2go.form.field.EditSelectionField - changed to apply UPPER, LOWER, AUTOTRIM and CAPITALIZE modifiers when inserting a new item in the list
+		* php2go.form.field.EditorField - new attribute added: HEIGHT (HTML editor height, in pixels)
+		* php2go.net.HttpRequest - getVar was not handling 3-dimension arrays in request variables (used by DataGrid)
+	2005-10-20 - mpont
+		* php2go.db.DMLBuilder - added optional parameter $clauseBindVars in prepare method (bind vars for the condition clause)
+	2005-10-19 - mpont
+		* php2go.form.Form - loadGlobalSettings was not applying error display options correctly
+	2005-10-18 - mpont
+		* php2go.form.FormEventListener - changed JSRS listeners to use REQUEST_URI when FILE attribute is empty
+	2005-10-15 - mpont
+		* php2go.db.Db, Conf.class.php - added support for db connections using a DSN (Data Source Name)
+			* a DSN value describes the connection data in an URI form: driver://username:password@hostname/database?options[=value]
+			* for more details about connecting using DSN, please consult ADODb docs at http://phplens.com/lens/adodb/docs-adodb.htm#dsnsupport
+		* new class added in the php2go.db package: DMLBuilder - this class has the ability of building INSERT and UPDATE statements, based on user settings and database meta data
+	2005-10-14 - mpont
+		* php2go.data.Report - "go to page" form was not working in MSIE - thx to Flávio Fagundes/Brazil
+		* ph2pgo.net.HttpRequest - missing port in uri and url methods when server uses non-default ports - thx to Dieison Depra/Brazil
+	2005-10-13 - mpont
+		* php2go.xml.XmlParser - inverted parameter order in createParser method: srcEncoding <=> xmlSource
+	2005-10-12 - mpont
+		* php2go.util.Number - fixed bug in fromDecimalToFraction when locale's decimal point is ','
+	2005-10-11 - mpont
+		* p2gLib.php - added deep option parameter in dumpArray function (recurse into multi dimensional arrays or objects)
+		* php2go.cache.CacheManager - new method added: setLastValidTime
+		* php2go.form.Form - new method added: getButton (retrieve a FormButton object by name)
+		* php2go.form.FormButton - structural changes: removed _parseButton and getAttribute methods, added setName and onLoadNode (internal only) methods
+		* php2go.form.FormSection - structural changes: added setName, setId, isConditional, isVisible, setRequiredFlag, setRequiredText, setRequiredColor methods, _parseSection method removed (code moved to onLoadNode), getAttribute method removed
+		* php2go.net.FtpClient - send timeout information when calling ftp_connect
+		* php2go.template.TemplateParser - T_BYFILE and T_BYVAR constants were moved to p2gConfig.php
+		* php2go.xml.XmlDocument - new method added: setNamespaceAwareness
+		* php2go.xml.XmlParser - added namespace support (use xml_parser_create or xml_parser_create_ns)
+		* 2 new classes added in the php2go.xml package: AbstractSAXParser and CacheableSAXParser
+			* the AbstractSAXParser is an abstract XML parser that uses PHP's expat parser and is based on events (startElement, endElement, characterData, ...)
+			* CacheableSAXParser extends AbstractSAXParser adding caching funcionality to the contents retrieved from the XML file or string
+			* in order to use one of these classes, the developer must create a child class and implement the abstract methods
+	2005-10-10 - mpont
+		* ADOdb : upgrade to version 4.66
+		* userConfig.php - 3 new keys added: FORMS.SECTION_REQUIRED_TEXT, FORMS.SECTION_REQUIRED_COLOR and AUTH.AUTHORIZER_PATH
+		* new class added in the php2go.auth package: Authorizer
+			* the Authorizer class contains abstract methods (empty implementation) to perform access control operations
+			* the developer must creeate an Authorizer child class and provide its path in the global configuration (AUTH.AUTHORIZER_PATH)
+		* php2go.auth.User - added 3 abstract methods to deal with RBAC: isInRole, getActiveRole, setActiveRole
+		* php2go.util.HtmlUtils - changed button method to generate BUTTON tag instead of INPUT tag
+	2005-10-10 - mpont
+		* PHP2Go 0.3.2 released!
+	2005-10-06 - mpont
+		* php2go.form.field.EditSearchField - 2 new attributes added: AUTODISPATCH (auto execute search if filter isn't empty) and URL (define the URL used to submit the query)
+		* javascript/modules/editsearch.js - changed to support 2 new properties: autoDispatch and url
+		* javascript/jsrsclient.js - fixed bug in request URL construction, when base URL has a non empty query string
+	2005-10-05 - mpont
+		* php2go.net.HttpRequest - checkEncoding, isBrowser, getBrowserName and getBrowserInfo methods were removed (previously deprecated in version 0.2.6); this kind of information must be retrived using the UserAgent class
+		* php2go.net.Url - documentation fixes
+		* php2go.validation.IntegerValidator - added an optional parameter: unsigned (accept all integer numbers or only positive numbers)
+		* php2go.validation.RequiredValidator - fixed bug: "0" was been evaluated as empty
+	2005-10-04 - mpont
+		* javascript/masks/integer.js, javascript/masks/float.js - added full support for signed numbers (key '-')
+		* new mask added: DIGIT; this mask can be used in forms (EDITFIELD, EDITSEARCHFIELD/DATAFILTER) and reports (DATAFILTER)
+		* php2go.data.ReportSimpleSearch, php2go.form.field.EditableField - changed to accept the new mask DIGIT
+	2005-10-01 - mpont
+		* php2go.form.Form - documentation fixes
+		* php2go.validation.RuleValidator - added _isEmpty method, to perform better empty tests on values
+	2005-09-30 - mpont
+		* php2go.form.field.ComboField, php2go.form.field.LookupField - fixed bug in getCode method ("0" was been recognized as an empty value)
+	2005-09-29 - mpont
+		* php2go.form.field.FormField - minor fix in onDataBind method
+	2005-09-28 - mpont
+		* php2go.data.Report - 2 new methods added: setStartPageHandler and setEndPageHandler; these callbacks are called before and after the page generation, and receive the instance of the Report by reference
+	2005-09-25 - mpont
+		* php2go.auth.Auth - getSession, getActiveUser and setSessionKeyName methods were removed (previously deprecated in version 0.2.6)
+		* Added new element in the forms XML specification: VARIABLE; it can be used to define default values and search order for variables declared in the form XML file
+		* php2go.form.Form - added evaluateStatement method: centralizes the evaluation of expression and variables declared in field attributes and properties
+		* php2go.form.Form - added setVariable method; this method can be used to statically define a value for a variable declared in the XML specification
+		* php2go.form.field.FormField - added onDataBind method; this new method aggregates the tasks of determining a value for the field and evaluating variables and expressions in the field's properties
+		* php2go.form.field.FileField - added onDataBind method (overloading FormField::onDataBind) - evaluation of variables in the SAVENAME attribute
+		* php2go.form.field.EditField - added onDataBind method (overloading FormField::onDataBind) - evaluation of date expressions in VALUE and DEFAULT attributes
+		* php2go.form.field.DbField - added onDataBind method (overloading FormField::onDataBind) - evaluation of variables in the DATASOURCE elements
+		* php2go.util.Callback - fixed pass-by-reference bug in invokeByRef method
+	2005-09-24 - mpont
+		* php2go.util.Statement - new methods added: getVariablesCount, isPrepared, getVariableValue, bindFromRequest; added optional parameter $replace in bindVariables method
+	2005-09-23 - mpont
+		* php2go.net.FtpClient - new method added: setTimeout; all methods were reviewed: some minor bugs and inconsistencies were fixed
+		* new configuration entry: SESSION_AUTO_START; enables or disables automatic session start during the framework startup; if this entry is set to FALSE, PHP2Go user and authentication features will not work
+	2005-09-17 - mpont
+		* Fixed all return reference warnings thrown in PHP 4.4.0. In the list below, the affected classes and methods
+			* php2go.base.AbstractNode - getFirstChild, getLastChild, getChild
+			* php2go.db.Db - emptyRecordSet
+			* php2go.file.DirectoryManager - getParentDirectory, getContentTree
+			* php2go.form.Form - getField
+			* php2go.form.FormEventListener - fromNode
+			* php2go.form.FormRule - fromNode, getOwnerForm
+			* php2go.form.FormSection - getChild, getField, getSubSection
+			* php2go.form.field.EditSearchField - getLookupField
+			* php2go.form.field.EditSelectionField - getEditField, getLookupField
+			* php2go.form.field.LookupSelectionField - getSourceLookup, getTargetLookup
+			* php2go.form.field.RangeField - getStartEdit, getEndEdit
+			* php2go.graph.Image - create, loadFromFile
+			* php2go.security.OpenSSLCrypt - getCertificate
+			* php2go.session.SessionObject - getPropertyValueByRef, getTimeCounter
+			* php2go.util.AbstractList - get
+	2005-09-14 - mpont
+		* Conf.class.php - added option parameter $fallback in getConfig method (default value when the requested entry is missing)
+	2005-09-01 - mpont
+		* PHP2Go 0.3.1 released!
+	2005-09-01 - mpont
+		* php2go.util.Statement - fixed bug in _prepareStatement
+	2005-08-31 - mpont
+		* php2go.data.DataSetProvider was renamed to php2go.data.adapter.DataAdapter
+		* php2go.data.DataSetDb, php2go.data.DataSetCsv, php2go.data.DataSetXml and php2go.data.DataSetArray were moved to the php2go.data.adapter package and reassigned to the new parent php2go.data.adapter.DataAdapter
+		* php2go.data.DataSet - the "provider" property was renamed to "adapter"; little documentation fixes
+	2005-08-30 - mpont
+		* php2go.graph.ImageUtils - 2 new static methods added: ttfSupported and jpgSupported
+		* php2go.form.field.DbField - added optional parameter $debug=FALSE in processDbQuery method
+		* php2go.util.service.ServiceJSRS - new static method added: debugEnabled
+	2005-08-28 - mpont
+		* new configuration entry: FORMS; through this new entry, it's possible to define global presentation settings for forms (styles, error settings, help settings and FormBasic interface configuration)
+		* php2go.form.Form, php2go.form.FormBasic, php2go.form.FormTemplate - changed to read presentation settings from global configuration array, if possible
+	2005-08-27 - mpont
+		* added a new form component: EDITSEARCHFIELD; it expects a set of DATAFILTER elements, a DATASOURCE (base query) and a LOOKUPFIELD
+			* the EDITSEARCHFIELD is a quick search tool;
+			* the DATAFILTER elements are rendered as a SELECT input; the search is performed based on the choosen filter and the search term entered in a TEXT input;
+			* the query is sent using JSRS; a JS script populates the LOOKUPFIELD with the search results
+	2005-08-26 - mpont
+		* php2go.data.Report - changes in the handling/validation of masks in the data filters
+		* php2go.data.ReportSimpleSearch - the list of supported masks in the data filters now is the same of editable form fields: STRING, INTEGER, DATE, TIME, LOGIN, EMAIL, URL, CURRENCY, CPFCNPJ, ZIP+limiters, FLOAT(+limiters)?
+		* php2go.util.System - fixed bug in isPHP5 method - thx to Edison Azambuja/Brazil
+		* php2go.validation.Validator - added new static method addError; small fixes and optimizations
+	2005-08-24 - mpont
+		* php2go.base.PHP2GoError - the log format was adapted to the ini format - request information and trace elements now are part of one single error section
+		* p2gLib.php - dumpArray was changed to use single quotes in array entries
+	2005-08-23 - mpont
+		* the server side of the JSRS library was transformed in a new class: ServiceJSRS; the class is inside a new package called php2go.util.service
+		* p2gLib.php - the jsrsDispatch function was moved to p2gLib.php, to maintain backwards compatibility with the old jsrsLib.php
+		* examples/formbasic.example.php, examples/formtemplate.example.php - added examples of HELP attribute and a new example of a JSRS event listener
+	2005-08-22 - mpont
+		* php2go.form.field.EditableField, php2go.form.field.EditField - small changes to support multiple date formats
+		* javascript/masks/date.js - the date validation was changed to support "d/m/Y" and "Y/m/d" date formats
+		* javascript/masks/* - small fixes and optimizations in all the mask validation scripts
+		* javascript/modules/* - the JavaScript classes were changed to use the prototype syntax: "ClassName.prototype.methodName = function"	2005-08-21 - mpont
+	2005-08-19 - mpont
+		* new class added in the php2go.graph package: CaptchaImage; this class builds a security image used to perform CAPTCHA tests
+		* new form component: CAPTCHAFIELD; the component generates a security image and a text input, where the user must type the code inside the image
+		* added a new example: examples/image.example.php
+	2005-08-18 - mpont
+		* php2go.form.Form - added support for inline help for all form fields, using floating popups (overlib) or a simple tex; new method: setHelpDisplayOptions
+		* php2go.form.field.FormField - 2 new methods added: setHelp and getHelpCode
+		* Init.class.php - added random seed initialization in _checkPhpVersion method
+		* p2gLib.php - small optimizations in import and includeFile
+	2005-08-17 - mpont
+		* added a new package called php2go.graph; this package contains a set of classes to deal with images, using the GD library
+		* the php2go.graph package contains a subpackage called php2go.graph.shape; the package contains classes that represent drawable objects: line, rectangle, arc, circle, polygon, text, ttf text
+	2005-08-15 - mpont
+		* php2go.form.field.ComboField, php2go.form.field.CheckGroup, php2go.form.field.GroupField, php2go.form.field.RadioField - added support for ALT attribute in the OPTION tag
+	2005-08-09 - mpont
+		* PHP2Go 0.2.7 released!
+	2005-08-09 - mpont
+		* ADOdb : upgrade to version 4.65
+	2005-08-08 - mpont
+		* php2go.db.Db - reconnect and setConnectionParameter methods were removed
+	2005-08-04 - mpont
+		* php2go.util.HtmlUtils - added option parameter $cssClass in scrollableArea method
+	2005-08-02 - mpont
+		* docs/dtd/php2go_forms.dtd - added support for procedure calls in the DATASOURCE element
+		* docs/dtd/php2go_forms.dtd, docs/dtd/php2go_reports.dtd - added CURSORNAME attribute, used to define the name of the cursor bind variable (oci8 database)
+		* php2go.form.field.DbField, php2go.data.Report, php2go.data.DataSetDb - minor changes related to stored procedure calls and the new CURSORNAME attribute
+	2005-07-22 - mpont
+		* new class added in the php2go.util package - Properties, a reader/writer of configuration files based on the ".ini" format
+		* p2gLib.php - new function added: findArrayPath
+		* Conf.class.php - changed getConfig to use the new function findArrayPath
+		* LanguageBase.class.php - added new config entry - LANGUAGE.MESSAGES_PATH - used to define the folder where the user translation domains are located
+		* php2go.form.Form - new method added: resolveI18nEntry; this method translates I18n messages used in free text attributes of form elements (fields, sections and buttons)
+		* php2go.form.FormButton, php2go.form.FormRule, php2go.form.FormSection, php2go.form.field.* - added support for internacionalization in all free text attributes of form elements
+		* php2go.template.TemplateParser - added support for internacionalization in the template files, using the pattern #i18n:domain:key#; see template.example.php for more details
+	2005-07-20 - mpont
+		* php2go.datetime.TimeCounter - the interval property was removed
+		* php2go.session.SessionManager - the startSession method was removed (session initialization code was moved); the setSessionId, setSessionName and setSessionSavePath were removed ($P2G_USER_CFG must be used to set session settings)
+		* php2go.session.SessionObject - changed to serialize only the properties and not the whole object (avoid "incomplete class" errors in session_start); statements property, getStatement and createStatement methods were removed
+		* php2go.util.Number - minor fixes in fromDecimalToCurrency and randomize methods
+	2005-07-19 - mpont
+		* php2go.base.Document - added the optional parameter $docIncludes in the constructor, to allow assignment of include blocks in the document layout
+		* php2go.template.TemplateParser - throw an error when an ignore tag is unbalanced (START|END IGNORE)
+		* php2go.util.Statement - removed use of AbstractList class as variable container to improve performance
+	2005-07-18 - mpont
+		* new class added: LocaleNegotiator
+		* the LANGUAGE configuration entry was changed to a hash array with multiple configurations: default language, auto detection flag, supported languages and request parameter for dynamic language change
+		* new configuration entry: CHARSET; accepts valid charset identifiers or "auto" (auto detection based on the Accept-Charset HTTP header)
+		* Init.class.php - the _initLanguage method was renamed to _initLocale; the setLanguage method was renamed to setLocale; added _initSession method; added resetLocale method (remove user defined language stored in cookie/session)
+		* INSTALL.txt - the documentation about the framework configuration array was updated and improved
+		* some core classes were changed to read default charset from the configuration settings when needed
+		* php2go.net.UserAgent - changed _detectAccept method to retrieve supported languages and charsets using the LocaleNegotiator class
+		* php2go.template.Template - added "ldelim" and "rdelim" global variables; you must use them to include the delimiters "{" and "}" in the template files
+	2005-07-17 - mpont
+		* 2 new authenticators were added in the php2go.auth package: php2go.auth.AuthIMAP and php2go.auth.AuthPop3
+	2005-07-16 - mpont
+		* php2go.base.Document - changed _buildBodyContent to accept Template instances in direct assignments to a document element (i.e.: $this->elements['name'] =& $tpl->getContent();)
+		* php2go.util.TypeUtils - fixed bug in isInstanceOf method
+	2005-07-15 - mpont
+		* php2go.LanguageBase - added $domain parameter in clearLanguageBase, loadLanguageTableByValue and loadLanguageTableByFile methods; added support for "domain.key" searches in getLanguageValue method
+		* php2go.base.PHP2Go - version property removed; changes in getLangVal method (variable substitution routine was moved to the LanguageBase class); fixed documentation bugs
+		* examples/template.example.php - this example was totally rebuilt, to include use cases of the new template features (variable modifiers)
+	2005-07-14 - mpont
+		* php2go.template.TemplateParser - added support for variable modifiers, using Smarty syntax; some examples: {var|capitalize}, {var|trim|truncate:40}, {time|format_time:DATE_FORMAT_CUSTOM:"d/m/Y"}
+		* php2go.cache.CacheManager - removed use of FileManager class to improve performance
+		* php2go.text.StringUtils - 4 new methods added: ifEmpty, concat, surround and implode; fixed bug in truncate method
+		* php2go.util.HtmlUtils - added 4 new utility methods: scrollableArea, itemList, definitionList and table; fixed some documentation bugs
+		* the path to external PHP libraries was changed: PHP2GO_ROOT/modules/ -> PHPGO_ROOT/external/
+	2005-07-13 - mpont
+		* new class added - due to license incompatibilities, the TemplatePower library was removed from PHP2Go; the template parser/manager was replaced by a new class: php2go.template.TemplateParser
+		* php2go.template.Template - almost all methods were reviewed or rewritten; many aspects of implementation changed, in order to provide the same results produced by TemplatePower, without creating performance issues
+		* php2go.template.Template - setSerializedTpl and getRawContent methods were removed
+		* php2go.template.DocumentElement - changed implementation to support changes made in the parent class (Template)
+	2005-07-11 - mpont
+		* PHP2Go 0.2.6 released!
+	2005-07-10 - mpont
+		* ADOdb : upgrade to version 4.64
+	2005-06-30 - mpont
+		* php2go.net.MailMessage - new method added: reset (clear information of the message: recipients, headers, body, attachments, embedded files)
+		* javascript/modules/advancededitor.js - fixed bug while applying forecolor/backcolor to a text selection in IE
+	2005-06-29 - mpont
+		* php2go.net.FtpClient - added a new optional parameter $resume in the get method (resume position if a partial file already exists)
+	2005-06-26 - mpont
+		* php2go.data.Report - fixed bug in _highlightSearch method
+		* php2go.session.SessionManager - new method added: getInstance (return a singleton of the SessionManager class)
+		* language packages - 2 new entries related with the new class php2go.form.SearchForm were added
+	2005-06-25 - mpont
+		* php2go.form.field.ComboField - the obligatoriness of OPTION tags in the XML specification was removed
+		* php2go.form.field.FileField - when the upload is validated and executed automatically, the submitted value for a FileField will be the content of the upload handler array (tmp_name, name, save_name, save_path, save_mode)
+		* php2go.template.Template - changed isBlockDefined to accept verification of nested blocks (e.g.: "OUTER_BLOCK.INNER_BLOCK")
+	2005-06-24 - mpont
+		* new class added in the php2go.form package - SearchForm - a form processor that builds an SQL search criteria based on the search settings of each field
+		* added a new example: examples/searchform.example.php
+		* php2go.db.Db - 2 new methods added: quoteString (add quotes in a string according with the database settings) and date (generate a date string compatible with the database connection)
+		* docs/dtd/php2go_forms.dtd - added specification of the new entity SEARCH (child node that contain search configurations for the form field)
+		* docs/dtd/php2go_forms.dtd - added choice values for COMPARETYPE attribute in the RULE element (documentation request #1223005 at SF.net)
+	2005-06-23 - mpont
+		* php2go.datetime.Date - fromEuroToSqlDate, fromEuroToUsDate, fromSqlToEuroDate, fromUsToEuroDate - added option boolean parameter $preserveTime
+		* php2go.form.Form - added new option parameter $headerStyle in the setErrorStyle method
+		* php2go.form.FormRule - fixed bug #1225808 (SF.net) - using zeros in the "value" attribute of a RULE element
+		* php2go.form.field.FormField - new method added: getSearchData (get raw search information: field value and search settings)
+		* php2go.form.field.EditableField - bypass length server validation on non required fields
+		* php2go.validation.MaxLengthValidator, php2go.validation.MinLengthValidator - added $bypassEmpty parameter, to skip the length validation if the value is empty
+	2005-06-17 - mpont
+		* php2go.form.FormTemplate - fixed bug #1222917 (SF.net) - the error CSS style wasn't been correctly used
+	2005-06-16 - mpont
+		* p2gLib.php - added stringLimit option parameter in dumpArray function
+	2005-06-15 - mpont
+		* errorHandler.php - obey @ protocol (error_reporting==0) in dbErrorHandler function
+		* p2gLib.php - exportVariable - call toString if $var is an object and the method exists
+		* php2go.auth.User - added toString method
+		* php2go.base.PHP2Go - removed <PRE> tags in toString method
+		* structural changes were made in all classes of the php2go.form.field package; the pre-render operations were unified in one single method
+		* php2go.form.Form - changed property name: _Document => Document; construct and _openXml methods were removed
+		* php2go.form.field.CheckField - new method added: getLabel (override parent implementation to return the checkbox caption when the label is empty)
+		* php2go.form.field.EditableField - fixed bug in MASK attribute validation; maskCheck, lengthCheck and valueConvert methods were removed and unified in the new onPreRender method
+		* php2go.form.field.EditSelectionField, php2go.form.field.LookupSelectionField - new method added: setButtonImages
+		* php2go.form.field.FormField - the login inside fieldListeners was moved to a new method called renderListeners
+		* php2go.form.field.FormField - processRequired and fieldRules methods were removed; added onLoadNode and onPreRender methods
+	2005-06-13 - mpont
+		* php2go.util.Hashmap - new method added: assertGet
+	2005-06-08 - mpont
+		* php2go.base.PHP2Go - changes in getLangVal and registerShutdownFunc
+		* php2go.file.FileSystem - new method added: getContents - shortcut method to read the contents of a regular file
+		* php2go.template.DocumentElement, php2go.xml.XmlParser - these classes were changed to use FileSystem::getContents to read files
+		* examples/authdb.example.php - example updated; it's strongly recommended that you read it to understand all the changes made in the php2go.auth package
+	2005-06-07 - mpont
+		* added 2 new configuration sections: AUTH and USER; to see more details, please read /docs/INSTALL.txt and the example config file /userConfig.php
+		* new class added in the php2go.auth package - User - a user container that extends SessionObject and can be derived to add properties and methods related with the scope of the application
+		* php2go.auth.Auth - 3 new methods: getInstance, getCurrentUser and getCurrentUsername; getSession and getActiveUser were deprecated; the property _Session was replaced by a new property called User
+		* php2go.auth.Auth - new method added setValidSessionCallback, an event handler that's called when a valid, non expired and non idled session is detected
+		* php2go.auth.AuthDb - the class was simplified; the authenticate method must return the user credentials that must be saved in the session, or FALSE in case of any error or fault
+		* php2go.session.SessionObject - changes in register, unregister an isRegistered methods; added 2 new methods: getPropertyValueByRef and comparePropertyValue
+		* php2go.util.Callback - added invokeByRef method (accepts 1 byref parameter), renamed _exportFunction to toString
+		* p2gLib.php - new function added: classForPath
+		* fixed bug #1215779 (SF.net) - Call-time pass-by-reference has been deprecated (object destructor registration)
+	2005-06-06 - mpont
+		* the configuration array was changed to support multiple database connections; the old-style "DATABASE_*" entries still work, but must be replaced; read the default configuration file (/userConfig.php) for more details
+		* Conf.class.php - renamed getDatabaseParameters to getConnectionParameters
+		* Conf.class.php - changed getConfig method to accept "path queries" - e.g.: getConfig("DATABASE/CONNECTIONS") means $P2G_USER_CFG['DATABASE']['CONNECTIONS']
+		* php2go.db.Db - changes in getInstance and in the constructor method to fit the new multiple database model
+		* php2go.db.Db - setConnectionParameter and reconnect methods were deprecated
+		* php2go.base.Document - added $connectionId parameter in setTitleFromDb and appendTitleFromDb methods
+		* php2go.db.QueryBuilder - added $connectionId parameter in executeQuery method
+		* php2go.data.DataSet, php2go.data.DataSetDb, php2go.data.Report, php2go.form.field.DbField - minor changes to support different database connections
+		* php2go.gui.Menu - added $connectionId parameter in loadMenuFromDatabase method
+		* php2go.template.DocumentElement - added $connectionId parameter in assignFromQuery and generateFromQuery methods
+		* php2go.xml.XmlNode - added $connectionId parameter in addFromQuery method
+		* docs/dtd/php2go_forms.dtd - added new attribute CONNECTION in the DATASOURCE entity
+		* docs/dtd/php2go_reports.dtd - added new attribute CONNECTION in the DATASOURCE entity
+	2005-06-05 - mpont
+		* php2go.form.FormEventListener - new class added in the php2go.form package; this class concentrates the logic to create and maintain button and field event listeners
+		* php2go.form.FormButton - added 2 new methods: getOwnerForm and addEventListener; added destructor method; changes in _parseButton and _buttonListeners private methods
+		* php2go.form.field.CheckField, php2go.form.field.MemoField - changes caused by the new FormEventListener class
+		* php2go.form.field.GroupField - groupListeners method was removed; added fieldListeners method, overriding parent implementation; added addEventListener method
+		* php2go.form.field.FormField - added addEventListener method; evalStatement method was removed
+	2005-06-04 - mpont
+		* added french translation files, by James Williams
+	2005-06-03 - mpont
+		* PHP2Go 0.2.5 released!
+	2005-06-03 - mpont
+		* added a new example: examples/feedcreator.example.php
+		* php2go.gui.LayerMenu - fixed invalid offset bug in vertical menus - thx to Joel Leon
+	2005-06-02 - mpont
+		* php2go.form.Form - new method added: getSubmittedValues - returns a hash array with the submitted value of each field, plus the pressed submit button, if exists
+		* php2go.form.field.FormField - changed implementation details in setValue and _parseField methods
+		* php2go.form.field.CheckField - minor changes in setValue and setChecked methods
+		* php2go.form.field.DataGrid - changes in getCode method: show submitted data instead of database data when the form is posted
+		* php2go.form.field.EditSelectionField, php2go.form.field.LookupSelectionField - setInsertedFieldName and setRemovedFieldName methods were removed
+		* php2go.net.HttpRequest - changed getVar to find array entry variables, like "myform[myfield]", "date[start]", "date[end]"
+		* javascript/modules/formvalidator.js - added routine to disable hidden fields associated with disabled checkboxes
+	2005-06-01 - mpont
+		* php2go.xml.feed.FeedReader, php2go.xml.feed.FeedNode, php2go.xml.feed.FeedChannel, php2go.xml.feed.FeedItem - changed naming convention: attribute => element (properties, methods)
+		* 30 new emoticons and 1 removed in the HTML wysiwyg editor (php2go.form.field.EditorField)
+	2005-05-31 - mpont
+		* minor bugfixes in the italian language package, sent by Andrea Fazzi (Italy)
+		* php2go.base.Document - removed automatic onLoad event "initCrossbrowserLib()"
+		* php2go.xml.feed.Feed - new methods added: getChannelElementNames, getItemElementNames, setSyndicationURL, renderRootProperties, renderChannelElements, renderItems
+		* php2go.xml.feed.FeedNode - new method added: buildDate
+		* php2go.xml.feed.FeedChannel - new method added: itemIterator
+		* javascript/libs/div.js - removed initCrossbrowserLib function; added hideCoveredElements function
+		* javascript/libs/object.js - new function added: getStyleAttribute
+		* javascript/modules/advancededitor.js - fixed emoticons/color selection show/hide problem in IE5; changed emoticon layer CSS style; fixed events initialization in IE5
+		* javascript/modules/colorselection.js - changed color table; changed CSS style; fixed show/hide problem in IE5
+		* javascript/modules/visibilitycontrol.js - new method added: showAtPosition
+	2005-05-30 - mpont
+		* php2go.base.Document - removed private methods _sendCompressedContents and _canCompress; changed implementation of setFocus method
+		* php2go.datetime.Date - added 2 new params in formatDate method: $fmtType (int) and $fmtString (string)
+		* php2go.datetime.Date - new method added: formatTime - format a unix timestamp using one of the class predefined formats or a custom format
+		* php2go.xml.XmlRender - new method added: addContentAt (attach content to a given node, instead of adding always to the root node); new add option: arrayEntryAsRepeat; new parameter in the download method: $mimeType (default value: text/xml)
+	2005-05-29 - mpont
+		* php2go.net.UserAgent - new component added: extract information about the remote client: browser, OS, accept information (mime types, charsets, encodings and languages)
+		* php2go.form.Form, php2go.form.FormBasic, php2go.data.Report, php2go.net.HttpResponse, php2go.util.HtmlUtils - these classes were adapted to use the new UserAgent class
+		* php2go.net.HttpRequest - 3 methods were deprecated: getBrowserInfo, getBrowserName and isBrowser; please use the new UserAgent class
+		* php2go.xml.XmlDocument - added a new optional parameter $type in addStylesheet (default value: text/css)
+	2005-05-28 - mpont
+		* minor bugfixes in the german language package, sent by Stefan Riedel
+	2005-05-27 - mpont
+		* php2go.gui.Menu, php2go.gui.LayerMenu - added support for TARGET attribute (only when loading from a XML file)
+	2005-05-23 - mpont
+		* PHP2Go 0.2.5 Beta released!
+	2005-05-23 - mpont
+		* ADOdb : upgrade to version 4.63
+	2005-05-22 - mpont
+		* added a new package called php2go.xml.feed; this package contains a set of classes to deal with information feeds (RSS, ATOM)
+		* new class php2go.xml.feed.Feed - represents the main feed (stores type, version, last modified date)
+		* new class php2go.xml.feed.FeedChannel - represents the channel (stores title, and other attrs)
+		* new class php2go.xml.feed.FeedItem - an item of the feed channel (title, link, description, date members, author, contributors, ...)
+		* new class php2go.xml.feed.FeedNode - parent class for Feed, FeedChannel and FeedItem
+		* new class php2go.xml.feed.FeedReader - implementation a feed reader/parser/aggregator, with full cache support using CacheManager
+		* added a new example: examples/feedreader.example.php
+		* php2go.data - new provider added: DataSetArray (array based data set); this provider is available in the DataSet and PagedDataSet classes
+		* examples/dataset.example.php - added use case of the new DataSetArray provider
+		* php2go.net.Url - added optional $prefix parameter in getQueryString method - enables or disables the '?' prefix in the returned query string
+	2005-05-21 - mpont
+		* php2go.datetime.Date - added 2 new methods: isValidTZ (validate a time zone string) and getTZDiff (calculate offset in seconds of a given time zone)
+		* 1 new entry was added in the configuration hash : LOCAL_TIME_ZONE (see INSTALL.txt and userConfig.php for more details, default is "GMT")
+	2005-05-20 - mpont
+		* php2go.net.CurlClient - bugfix in parseResponse method
+		* php2go.xml.XmlParser - added new static method createParser - creates an expat parser using a given source encoding
+		* php2go.xml.XmlDocument - added 2 new parameters in the parseXml - $srcEncoding (encoding to be used in the XML source parsing) and $trgEncoding (encoding to be used when passing data to the callback functions)
+	2005-05-19 - mpont
+		* a new package called php2go.cache was created; this package includes a new class called CacheManager, a cache controller similar to PEAR's Cache_Lite
+		* php2go.template.Template - _findCache and _writeCache methods were removed and replaced by a routine that uses the new php2go.cache.CacheManager class
+		* php2go.template.Template - the second parameter in setCache method ($cachePrefix) was removed
+		* php2go.file.DirectoryManager - added a new method called getFileNames, to retrieve only the names of the directory entries (don't instantiate or return DirectoryEntry objects)
+	2005-05-18 - mpont
+		* php2go.data.DataSetDb - changes in load and loadSubSet methods (apply php2go.db.Db new features, optimization)
+		* php2go.data.DataSetProvider - added setParameter method (used to configure specific provider options)
+		* php2go.data.Report - changes in _buildDataSet method (apply php2go.db.Db/php2go.data.DataSetDb new features)
+		* php2go.file.FileSystem - added new static method lastModified
+	2005-05-17 - mpont
+		* php2go.data.DataSetDb - fixed bug #1199686 (SF.net) - DataSetDb::_buildFieldNames was not reseting the fieldNames array
+		* php2go.data.ReportSimpleSearch - fixed bug #1203460 (SF.net) - invalid return value in the private _containsField method
+		* php2go.db.Db - fixed bug #1200851 (SF.net) - return value of delete method was changed to bool
+		* php2go.db.Db - removed the boolean parameter $execute=TRUE from insert, update and delete methods; changed update and delete to return FALSE when $table or $clause is empty
+		* php2go.db.Db - added new parameter $cursorName in the execute method - using this parameter, it's possible to auto execute oci8 ref cursors
+		* php2go.db.Db - removed setAutoCommit method; added 3 new methods: getDatabaseType (return the current ADODb db type), setDebug (enables/disables debug in the db connection) and getProcedureSQL (apply database dependant format in a procedure call)
+		* javascript/libs/window.js - changed implementation of getCenterPosition and getFromSrcElement functions
+	2005-05-16 - mpont
+		* php2go.db.Db - the setAutoCommit method was removed; to keep using this feature, please set $Db->AdoDb->autoCommit = (TRUE|FALSE)
+		* php2go.util.Number - fixed bug in fromDecimalToCurrency in locales having decimal_point=','
+		* php2go.util.TypeUtils - fixed bug in isFloat and parseFloat in locales having decimal_point=','
+	2005-05-15 - mpont
+		* p2gLib.php - added a new utility function: println
+		* php2go.base.PHP2Go - changed getLangVal to use vsprintf instead of eval when the argument list is an array
+		* added 2 new classes in the php2go.security package: DistinguishedName (implement X.500 DN structure) and UnixCrypt (simple wrapper for the PHP crypt function)
+		* php2go.security.OpenSSLCertificate - subject and issuer information was moved to instances of php2go.security.DistinguishedName (ownerDN and issuerDN properties)
+		* php2go.text.StringUtils - changed encode method (added new encode type: quoted-printable); added a new method (decode); added $glue parameter in addLineNumbers method
+		* php2go.util.Hashmap - new class added in the php2go.util package. It's a simple hashmap implementation, performing get, put, merge, swap and remove operations
+		* php2go.util.AbstractList - the display method was renamed to toString, and returns a string representation of the list instead of printing its contents
+		* added 2 new examples: opensslcertificate.example.php and stringutils.example.php
+	2005-05-13 - mpont
+		* examples/resources/form.example.xml - an example of RANGEFIELD was added in the sample form
+	2005-05-09 - mpont
+		* added a new form component: RangeField - accepts two EDITFIELD child inputs, post the range value as an array (input[start], input[end]) and automatically adds comparison rule
+		* docs/dtd/php2go_forms.dtd - added new entity RANGEFIELD
+	2005-05-08 - mpont
+		* added german translation files, by Stefan Riedel
+		* Init.class.php - the language setting now is used to set the default locale of the application (PHP setlocale function) and the language to be used in the ADODB library
+		* php2go.base.Document - changed Content-Language header to use an RFC 3066 locale value
+		* php2go.util.Number - changed fromDecimalToCurrency and formatByteAmount to use locale settings as default values to the parameters
+		* php2go.db.Db - fixed bug #1196001 (SF.net) - bug in the value returned by Db::insert method; added $tableType parameter in getTables method (ADODB compat)
+		* php2go.form.field.CheckField - changed setValue to accept [T,on,1] as "true" values, and [F,0] as "false" values
+		* php2go.form.field.EditableField - added a new property: readOnly (boolean)
+		* php2go.form.field.FileField - changes in setSaveFunction, setSaveName and setSaveMode methods (add default values to the attributes, store save mode in octal representation)
+		* php2go.validation.UploadValidator - the validator was simplified and optimized (remove duplicated property declarations/validations)
+		* php2go.form.field.FormField - added a new property: composite (used to indicate a composite field)
+		* all field classes: added TITLE attribute in the HTML output of the input, containing the field label
+		* javascript/libs/form.js - added new function getFormFieldAttribute
+		* javascript/libs/object.js - fixed bug in the getElementAttribute function
+		* Added a new example: number.example.php
+	2005-05-07 - mpont
+		* php2go.form.FormRule - new class added in the php2go.form package
+		* php2go.validation.RuleValidator - the validator was adapted/changed to use the new FormRule class
+		* php2go.form.field.FormField - the rule registration/validation logic was moved to FormRule class
+		* php2go.form.field.FormField - added 3 new methods: addRule, getOwnerForm and getLabelCode; the label rendering code was moved from Form child classes to FormField
+		* php2go.form.FormBasic, php2go.form.FormTemplate, php2go.form.FormDataBind - the old _buildFieldLabel was removed from these 3 classes
+		* php2go.file.FileUpload - added an optional parameter in the 'upload' method, to allow upload operation in only one handler
+	2005-05-06 - mpont
+		* php2go.util.TypeUtils - fixed bug in toArray method
+		* php2go.util.Statement - added a new static method - evaluate - to parse and return the result of PHP2Go statements
+		* php2go.form.Form - the old evalStatement method was deprecated
+		* php2go.data.Report - changed DATASOURCE parsing to use Statement::evalute; the old _evalStatement method was removed
+		* php2go.form.field.DbField - changed DATASOURCE parsing to use the new Statement::evaluate method
+		* javascript/libs/report.js - fixed bug in the goToPage function
+	2005-05-04 - mpont
+		* added feature request #1194886 (SF.net) - show the MEMOFIELD maxlength in the CHARCOUNT text field when a CLEAR button is clicked
+		* fixed bug #1194939 (SF.net) - examples/authdb.example.php was using an undefined property
+	2005-05-01 - mpont
+		* fixed bug #1193143 (SF.net) - buttons rollover was working only with submit type buttons
+		* php2go.form.FormButton - added control to avoid duplicated button names (the same existent control for field name and section ID)
+		* fixed bug #1192832 (SF.net) - XML form definition was accepting 2 or more buttons with the same name
+	2005-04-30 - mpont
+		* php2go.base.Document, php2go.form.Form, php2go.form.field.FormField, php2go.template.Template - added destructor method
+		* php2go.datetime.Date - changed implementation of localDate method: return date and time when a timestamp is provided		* php2go.file.FileManager - added a new method: closeAll (close all opened file pointeres)
+		* php2go.file.DirectoryManager - added 2 new methods: getParentDirectory and isOpen
+		* php2go.file.FileSystem - added new static method getAbsolutePath
+		* php2go.file.FileUpload - added support for a user callback function that handles the copy of the uploaded file
+		* php2go.net.CurlClient - added 3 new methods: parseResponse, reset and setUserAgent
+		* php2go.text.StringUtils - added utf8 encoding type in encode method; added blank filter in filter method
+		* Added new examples: examples/curlclient.example.php, examples/directorymanager.example.php, examples/filemanager.example.php, examples/ftpclient.example.php
+		* examples/document.example.php, examples/pop3.example.php - examples were improved: new feature demonstrations and comments
+	2005-04-29 - mpont
+		* php2go.form.field.FileField, php2go.validation.UploadValidator - added support for a custom save function
+		* docs/dtd/php2go_forms.dtd - added new attribute SAVEFUNCTION in the entity FILEFIELD
+		* examples/formservervalidation.example.php - changed FILEFIELD included in this example to use a user callback function
+	2005-04-24 - mpont
+		* PHP2Go 0.2.1 released!
+	2005-04-24 - mpont
+		* javascript/libs/form.js - added a new function: getCheckboxValue (retrieve the value of a checkbox or the selected values in a checkbox group)
+	2005-04-23 - mpont
+		* javascript/libs/string.js - ltrim and ltrim functions were removed
+		* php2go.form.field.CheckField - added setValue, overriding FormField implementation
+		* php2go.form.field.EditorField - now it's possible to define RULEs for this component
+	2005-04-21 - mpont
+		* updated JS Calendar to version 1.0
+		* p2gLib.php - changed implementation of getPhp2GoOffset function
+		* php2go.base.PHP2Go - changed implementation of generateUniqueID method - now there's a ID counter for each given prefix
+		* php2go.form.Form - added 2 new methods: addError (add a validation error message to the form); setErrorStyle (configure CSS style, display mode and header text for the error messages)
+		* php2go.form.FormBasic - removed setError method; added setErrorDisplayOptions method (configure the client-side errors display mode)
+		* php2go.form.FormTemplate - added setErrorDisplayOptions method (configure the client-side errors display mode and the server-side errors template variable)
+		* php2go.form.field.EditField - changed calendar and calculator from HTML images to HTML buttons; when a date field has focus, now you can type alt+C and open the calendar
+		* php2go.form.field.GroupField - fixed bug: options weren't been disabled in a readonly form
+		* php2go.form.field.MemoField - fixed bug: the listeners weren't been parsed if the field had one or more defined rules in the XML file
+		* php2go.text.StringUtils - added new method capitalize
+		* php2go.validation.RuleValidator - changed implementation of execute method; REQIF(EQ|NEQ|LT|GT|LOET|GOET) rules were not working
+		* php2go.validation.Validator - fixed bug with fields which value is an array
+		* php2go.util.HtmlUtils - added 10th parameter $cssClass, the CLASS attribute for the image; fixed bug in mailToAnchor method - thx to Herman Sandoval/Colombia
+		* javascript/libs/object.js - added new function getElementAttribute (cross-browser implementation)
+		* javascript/modules/formvalidator.js - the module was completely rewritten, keeping the same functionality and features
+		* examples/formbasic.example.php, examples/formtemplate.example.php, examples/formservervalidation.example.php - the examples were improved and reviewed: new functionalities, comments and feature examples
+	2005-04-19 - mpont
+		* php2go.form.field.FileField - added getValue method, overriding FormField::getValue
+	2005-04-14 - mpont
+		* php2go.db.Db - changed return type of update method to bool; update() will not return the affected rows anymore
+		* php2go.validation.RuleValidator - bug fix in validation execution when the field type is not EDITFIELD
+	2005-04-13 - mpont
+		* php2go.base.Document - added preventRobots method
+		* php2go.form.field.FormField - fixed bug in fieldRules method when using REGEX rules
+		* examples/formservervalidation.example.php, examples/forms.example.xml - these examples were updated and several comments and explanations were added
+	2005-04-12 - mpont
+		* php2go.form.Form - added getFormErrors method - retrieve collected error messages after isValid() is called
+		* php2go.validation.RuleValidator - fixed bugs with date expressions and variables in the comparation values
+		* Added new example: examples/formservervalidation.example.php
+	2005-04-04 - mpont
+		* ADOdb : upgrade to version 4.62
+		* examples/layermenu.example.php - added example of how to build a layer menu from a database (includes table creation script examples/resources/menu.sql)
+		* php2go.net.Pop3 - fixed bug in login method
+	2005-04-01 - mpont
+		* added support of automatic file upload in the sever form validation process (the upload is triggered inside Form::isValid call); added a new validator: php2go.validation.UploadValidator
+		* php2go.file.FileUpload - added validation of the errors reported by PHP (UPLOAD_ERR_* constants); changed setMaxFileSize to accept values in the pattern 2M, 100K, 1024K
+		* php2go.form.field.FileField - added new attribute setters: setMaxFileSize, setAllowedTypes, setSavePath, setSaveName, setSaveMode and setOverwrite
+		* docs/dtd/php2go_forms.dtd - added new attributes in the FILEFIELD entity: MAXFILESIZE, ALLOWEDTYPES, SAVEPATH, SAVENAME, SAVEMODE, OVERWRITE and UPLOADONVALIDATE
+		* these attributes must be set to configure the upload, when executed by the form API; to prevent PHP2Go from automatically executing the upload, set UPLOADONVALIDATE="F" in the FILEFIELD tag
+	2005-03-31 - mpont
+		* php2go.util.System - added 3 new methods: getIni, setIni and isGlobalsOn
+		* php2go.base.Document, php2go.net.HttpRequest, php2go.session.SessionObject, php2go.session.SessionManager, php2go.util.Environment - changed references to ini entries to use the new methods described above
+	2005-03-29 - mpont
+		* p2gLib.php - added function dumpArray - dumps the content of the first dimension of indexed or hash arrays
+		* php2go.base.PHP2GoError - changed _buildStackTrace to show best information about array and resource arguments
+	2005-03-21 - mpont
+		* php2go.base.Document - added third parameter "position" in addScriptCode method; SCRIPT_START = script will be included in the HEAD tag, SCRIPT_END = script will be included in the end of the BODY tag
+		* php2go.net.HttpResponse - added 4th parameter $contentDisp in donwload method, that allows to define the value of the Content-disposition header
+	2005-03-10 - mpont
+		* php2go.net.Url - fixed bug #1120758 (SF.net) - regular expression in removeParameter method
+		* minor fixes in the italian and czech language packages, to fit the new php2go.data.Report paging features
+	2005-02-02 - mpont
+		* ADOdb: upgrade to version 4.60
+		* php2go.db.Db - fixed bug in getCount method
+		* php2go.data.Report - added setPagingStyle; this new method sets up the paging style of the report; for more details, please consult the API/class documentation
+		* examples/report.example.php, language packages - files updated because of the new feature described above
+	2005-02-01 - mpont
+		* php2go.net.DirectoryManager - added $includeRegExp parameter in read method, to act like a file filter; added $sort parameter in getFiles method, to apply sort in the results
+		* php2go.net.FtpClient - fixed bug in put method (parameters passed to ftp_put)
+		* php2go.net.MailMessage - fixed bug with non empty textBody + empty htmlBody
+	2005-01-31 - mpont
+		* php2go.db.Db - added hasFailedTransaction method
+		* php2go.file.FileManager - added replaceInFiles method (replace values matching a given pattern in a set of files)
+		* php2go.file.FileCompress - changed saveExtractedFiles to return an array containing the saved files in case of success
+	2005-01-24 - mpont
+		* php2go.form.Form - added 2 new methos: getFields (returning all the form fields by reference) and getFieldNames (returning the names of all fields in the form)
+	2005-01-23 - mpont
+		* php2go.form.Form - changed getField method to accept only field names as parameter, besides the full path (section.subsection.path)
+		* php2go.form.Form - added 3 new methods: getSignature (returns the form signature that will be submitted), isPosted (verify if the form was posted) and isValid (validate the submitted data using the validation package, if existent)
+		* php2go.form.FormBasic - added isValid method, to validate the submitted data and display the found errors in the basic template
+		* php2go.form.FormBasic, php2go.form.FormTemplate, php2go.form.FormDataBind - removed construct method (moved to parent class), changed form declaration (inclusion of form signature hidden field)
+		* php2go.form.field.FormField - added isValid method, that performs obligatoriness and rule validations
+		* php2go.form.field.EditableField - added 2 new methods: getMask (returning the field's mask name) and isValid (override the parent's implementation, performing mask and length validation if necessary)
+		* php2go.form.field.ComboField - fixed bug when the value of the field is an array
+		* php2go.validation.Validator - added 2 new methods: validateField (used by form field classes to execute validations) and clearErrors;
+		* php2go.validation.Validator - changes in the validate method: added reference in the $value parameter, added support for custom messages ($userMessage parameter)
+		* php2go.validation.* - add support for form field validation in all the existent validators, using the language table to retrieve the error messages
+		* php2go.validation - added new validators: CPFCNPJValidator, CurrencyValidator, FloatValidator, IntegerValidator, LoginValidator, MaxLengthValidator, MinLengthValidator, RequiredValidator, RuleValidator, TimeValidator, ZipCodeValidator
+		* language packages - the language files were updated to support the form server validation, using the same messages used by the client validation
+		* php2go.datetime.Date - fixed regexp bugs in isEuroDate, isSqlDate and isUsDate methods
+		* php2go.net.HttpRequest - added a new method (HttpRequest::method) to retrieve the REQUEST_METHOD of the current request
+		* php2go.util.HtmlUtils - added 2 new methods: mailtoAnchor (build mailto anchors protecting the address against robots) and tagRepeat (repeat the same tag N times)
+		* examples/htmlutils.example.php, examples/httprequest.example.php - examples update with the new methods
+	2005-01-22 - mpont
+		* php2go.base.PHP2GoError, errorHandler.php - changed error handling to consider E_STRICT as an ignore error
+		* php2go.form.field.DbRadioField - fixed bug with the initial index of the option ID values
+		* php2go.form.field.FormField - added variables support in the VALUE attribute of the field rules
+		* php2go.util.Statement - using the pattern [prefix]#code#[sufix], the class can evaluate PHP code
+		* javascript/libs/form.js - added 4 new utility functions: enableField, disableField, enableFieldList, disableFieldList
+		* template/basicform.tpl [template used by FormBasic to build forms] - removed the NOWRAP attribute of the field labels - thx to Herman Sandoval/Colombia
+		* due to the change in the php2go.util.Statement class, the variables in the forms/reports XML specification file now accept PHP code
+		* the default pattern is ~variable~, and the pattern for PHP code is ~#php code#~
+	2005-01-21 - mpont
+		* php2go.db.Db - added 2 new methods: getCount (return the total record count for some SQL instruction or prepared statement) and getServerInfo (retrieve information about the database server)
+		* php2go.data.DataSetDb - fixed total record count bug in loadSubSet when using "distinct" or "group by" in postgres and oracle databases
+	2005-01-20 - mpont
+		* php2go.data.DataSetXml - added getRootAttributes method, to retrive the attributes of the dataset's root tag
+		* javascript/masks/integer.js - chkINTEGER function (using only parseInt) was validating non-integer values, like "10393949 0", "3939  333"; included a regular expression test in the validation
+	2005-01-18 - mpont
+		* php2go.form.field.FormField - added a new attribute in the RULE element: COMPARETYPE;
+		* the COMPARETYPE attribute is mandatory when a REQIF(EQ|NEQ|GT|LT|LOET|GOET) rule is used; otherwise, it's ignored;
+		* without this attribute, the comparison will be based on the data type of the source field, and that's wrong
+		* javascript/modules/formvalidator.js - fixed bug in formCompareFields and formCompareFieldToValue functions, when only one of the sides of the comparison was an empty value - thx to Herman Sandoval/Colombia
+		* docs/dtd/php2go_forms.dtd - EDITFIELD and RULE attributes were updated
+	2005-01-14 - mpont
+		* Conf.class.php - the DATABASE_BEFORECONNECT config entry was changed to DATABASE_AFTERCONNECT, because most of the common operations that could be performed by this function need a valid database connection
+		* php2go.db.Db - changed bConnect property to aConnect
+		* php2go.base.PHP2GoError - the HTTP_USER_AGENT server variable is now included in the request snapshot that is logged when an error occurs
+		* php2go.datetime.Date - changed isEuroDate to accept '/', '.' or '-' as date elements separator
+		* php2go.form.field.EditField - added a new attribute: AUTOTRIM, to remove trailing whitespaces when the form is submitted
+	2005-01-13 - mpont
+		* php2go.form.FormBasic, php2go.form.FormTemplate, php2go.form.FormDataBind - include return keyword in the onReset event handler - thx to Herman Sandoval/Colombia
+		* php2go.form.field.GroupField - added AUTODISPATCHIF implementation in the group listeners - thx to Herman Sandoval/Colombia
+	2005-01-11 - mpont
+		* php2go.base.Document - fixed bug with p2g_page_onLoad function - thx to Herman Sandoval/Colombia
+		* javascript/libs/form.js - isEmpty will now return true if the field doesn't exists
+	2005-01-06 - mpont
+		* php2go.net.MailTransport - don't include reply-to addresses as recipients
+	2004-12-28 - mpont
+		* php2go.net.HttpRequest - changed getVar to perform strict comparisons with NULL when searching for a variable
+		* php2go.util.Environment - changed get method to return NULL when the variable doesn't exists
+	2004-12-22 - mpont
+		* php2go.form.FormSection - fixed bug with the REQUIRED_FLAG attribute when using sections and inner conditional sections
+	2004-12-20 - mpont
+		* php2go.form.FormBasic - added getFieldsetStyle/setFieldsetStyle methods to define the CSS style of the sections; added getSectionTitleStyle/setSectionTitleStyle methods to define the CSS style of the sections' titles
+		* php2go.form.FormBasic - added setError method; receives a message (or HTML code) representing the errors occurred in the form processing; this message will be displayed in the top of the form
+		* php2go.form.FormDataBind, php2go.form.FormTemplate, php2go.form.FormBasic - changed classes to force empty labels if the value of the LABEL attribute is "empty"
+	2004-12-18 - mpont
+		* php2go.util.HtmlUtils - bugfix in the window method (the new window was always been centralized in the screen)
+	2004-12-17 - mpont
+		* PHP2Go 0.1.10 released!
+	2004-12-15 - mpont
+		* javascript/modules/simplesearch.js - changed search tool to show the inserted filters when a search is submitted
+		* php2go.util.Spreadsheet - fixed bug in the _buildFormat method (center property)
+		* php2go.util.Number - fixed 2 bugs in fromArabicToRoman method
+	2004-12-13 - mpont
+		* php2go.form.FormSection - fixed array index bug in getField and getSubSection methods
+	2004-12-09 - mpont
+		* errorHandler.php - changed php2goErrorHandler to obey @ protocol (error_reporting == 0)
+		* Added new example: examples/layermenu.example.php
+		* php2go.form.field.EditField, php2go.form.field.GroupField, php2go.form.FormSection, php2go.util.Statement - removed UNDEFINED INDEX warnings
+	2004-12-07 - mpont
+		* php2go.form.field.EditField - changed _parseEdit method to correctly get the field value when the field is part of an array (i.e.: arr[field], fields[name])
+	2004-12-01 - mpont
+		* php2go.base.Document - added addOnloadCode method (receives as parameter a javascript instruction that must be executed when the page loads)
+		* php2go.base.Document - changed _sendCompressedContents to use ob_start("ob_gzhandler") instead of compressing the page manually with gzcompress + crc32 + pack; the compressionDebug parameter was removed from setCompression method
+		* using the old compression method under mozilla family, the body "onLoad" event wasn't been triggered (very strange behaviour...); now, using ob_gzhandler, this bug is fixed
+	2004-11-30 - mpont
+		* php2go.form.field.FormField, php2go.form.FormButton - added AUTODISPATCHIF attribute in the event listeners
+		* the AUTODISPATCHIF attribute may contain an expression that will be evaluated when the page loads; if the expression returns true, the event is triggered
+		* docs/dtd/php2go_forms.dtd - the LISTENER entity attributes were updated
+	2004-11-29 - mpont
+		* 2 new entries were added in the configuration hash : SESSION_PATH and SESSION_LIFETIME (see INSTALL.txt and userConfig.php for more details)
+		* php2go.session.SessionManager - added routine to parse the new session settings in the class initialization
+		* added httpConstants.php, an include file containing all the constants used by the php2go.net package to deal with the HTTP protocol
+		* php2go.net.HttpResponse, php2go.net.HttpClient - changed classes to use the new include file mentioned above
+		* p2gLib.php - bugfix in the import function, when a different file extension is provided
+	2004-11-26 - mpont
+		* php2go.form.FormBasic - bugfix in the _buildFormCode method (reference to inexistent property actionTarget)
+	2004-11-19 - mpont
+		* php2go.form.field.EditableField - the value is truncated when its length exceeds the maximum length of the field
+	2004-11-17 - mpont
+		* php2go.form.field.FormField - bugfix in the setValue method, when the value of the field is an array
+	2004-11-15 - mpont
+		* ADOdb: upgrade to version 4.54
+		* JSRS: upgrade to version 2.3
+		* Conf.class.php - added getConnectionParameters method; this method contains the section that searches for the database connection parameters; this routine was moved from php2go.db.Db
+		* two new entries were added in the user configuration: DATABASE_BEFORECONNECT and DATABASE_BEFORECLOSE; these entries must point to a function or static method that will be called when a database connection is created or destroyed
+		* php2go.db.Db - the database connection class now supports two callbacks: onBeforeConnect and onBeforeClose; these callbacks must be defined in the user configuration hash map
+		* php2go.base.PHP2Go - added $path parameter in the store method
+		* php2go.form.field.EditField - added CAPITALIZE attribute, that enables the capitalization of the field's value on the submit event
+		* php2go.util.HtmlUtils - added the utility method window, that builds calls to the JS function createWindow
+		* php2go.util.TypeUtils - added ifFalse method, a method that handles false as ifNull handles null
+		* javascript/libs/string.js - added capitalizeWords function
+		* examples/htmlutils.example.php - the example was updated to use the new window method
+		* examples/resources/form.example.xml, examples/formbasic.example.php, examples/formtemplate.example.php - added a JSRS event handler
+	2004-11-14 - mpont
+		* php2go.data.Report - added an optional param called $header in the setStyleMapping method, to customize the CSS style of the column headers
+		* php2go.datetime.Date - added parseFieldExpression method;
+		* The attributes VALUE in the fields that use the DATE mask and in the rules of a date field now support a date expression like TODAY-10D, TODAY+1M, TODAY-18Y
+		* php2go.form.field.FormField - added new types of the RULE element: REGEX, NEQ, GOET, LOET, REQIFEQ, REQIFNEQ, REQIFGT, REQIFLT, REQIFGOET, REQIFLOET; added support for comparisons with static values, besides the existent comparison with other fields
+		* php2go.form.field.FormField, php2go.form.field.FormButton - changed JSRS listeners to accept an empty parameter string
+		* javascript/libs/form.js - changed memoFieldCharControl function, to fix a bug when the content was pasted from the clipboard
+		* javascript/modules/formvalidator.js - added support to the new types of validation rules
+		* language packages - the language files were updated to support the new RULE types and to fix a missing entry (ERR_VALUE_OUT_OF_BOUNDS)
+	2004-11-09 - mpont
+		* php2go.net.HttpResponse - added an optional parameter called $mimeType, in the download method; in some cases, the user may want to overwrite the default mime-type for the file extension
+	2004-11-03 - mpont
+		* php2go.data.Report - added disableOrderByLinks method, that disables the links that change the sort clause in the report headers
+	2004-10-21 - mpont
+		* php2go.db.Db - added getErrorCode method, to retrieve the code of the error; the getError method returns the full message of the exception
+		* php2go.net.MailMessage - bugfix in _buildHeaders method
+	2004-10-19 - mpont
+		* php2go.data.DataSetDb - bugfix in loadSubSet method: the generation of the record count sql was not working with sub queries
+	2004-10-11 - mpont
+		* php2go.auth.Auth - bugfix in logout method: the logout callback was not called if the PHP session was expired
+	2004-10-06 - mpont
+		* php2go.form.FormField - besides the DEFAULT attribute, the VALUE attribute now accepts variables, using the pattern ~variable_name~
+	2004-09-28 - mpont
+		* php2go.gui.LayerMenu, php2go.gui.TreeMenu, php2go.gui.Menu - several bugfixes and general improvements
+		* php2go.form.FormDataBind - several bugfixes and general improvements
+	2004-09-27 - mpont
+		* PHP2Go 0.1.9 released!
+	2004-09-27 - mpont
+		* php2go.base.Document - added addMetaData method; added automatic CODE_LANGUAGE and TIMESPENT meta tags; removed IDENTIFIER-URL meta tag; some general changes and optimizations were made
+		* php2go.form.FormButton - added setImage, setStyle, setTabIndex, setAltText and setDisabled methods
+		* php2go.form.FormButton - added SWPIMG attribute in the BUTTON xml specification, to implement image swapping together with the existing IMG attribute
+		* docs/dtd/php2go_forms.dtd - the BUTTON entity attributes were updated
+	2004-09-26 - mpont
+		* javascript/libs/object.js - added getAbsolutePos (get x,y position of any element), findParentElementByTag (find a parent having a certain tagName) and addEvent (add an event listener) functions
+		* javascript/modules/colorselection.js - the older procedural functions were replaced by the new JS component ColorSelection
+		* javascript/modules/advancededitor.js - the older WYSIWYG "Editor" object were totally rewritten, reviwed and renamed to AdvancedEditor
+		* javascript/modules/formvalidator.js - the module was adapted to the new WYSIWYG editor
+		* php2go.form.field.EditorField - the class was updated to the new WYSIWYG editor; many changes in getCode and _parseEditor methods
+		* language packages - all the language files were updated because of the changes in the WYSIWYG editor and in the color selection tool
+	2004-09-25 - mpont
+		* php2go.form.field.MemoField - added setWidth method (defines the width of the textarea input, in pixels)
+		* php2go.util.TypeUtils - bugfix in TypeUtils::parseFloat : floatval() function not available in PHP <= 4.2.0
+	2004-09-21 - mpont
+		* php2go.db.Db - added bindVars parameter in getAll, getFirstCol, getFirstRow and getFirstCell methods
+	2004-09-18 - mpont
+		* php2go.base.PHP2Go - remove non-static calls to raiseError method
+		* php2go.base.PHP2GoError - bugfix in _buildStackTrace running on PHP5
+		* php2go.form.FormBasic, php2go.form.FormTemplate, php2go.form.FormDataBind, php2go.form.FormSection - bugfix with required_flag, required_color and required_text attributes in form sections
+		* php2go.net.Url - added 2 new methods: addParameter and removeParameter, to manipulate the parameters of the query string
+		* docs/dtd/php2go_forms.dtd - changed attribute required_char to required_text in section and condsection entities
+	2004-09-17 - mpont
+		* php2go.form.field.EditField - added support to integer part and decimal part limiters, that can be used in the MASK attribute of EDITFIELD in the XML specification (example: FLOAT-10:4). The use of limiters is optional.
+		* php2go.form.field.EditableField - added support to integer part and decimal part limiters; when using limiters, the max length won't be greater than (integer part + decimal part + 1)
+		* javascript/libs/form.js - added getEditCaretPos, setEditCaretPos and getSelectionEnd functions, to manipulate the caret position in an EditField
+		* javascript/masks/float.js - the chkMaskFLOAT was rewritten to accept integer part and decimal part limiters and improve funcionality
+		* added phpJSO in the modules directory - a tool to remove comments and empty chars of JavaScript files
+		* p2gConfig.php - the constant PHP2GO_JAVASCRIPT_PATH (path to the framework JavaScript files) now point to "PHP2GO_ABSOLUTE_URI/resources/jsrun", instead of "PHP2GO_ABSOLUTE_URI/resources/javascript". The former directory stores the original js source code and the newer contains the stripped scripts, to improve page response time
+	2004-09-16 - mpont
+		* php2go.data.DataSetDb - fixed bug in loadSubSet method (total record count query using PostgreSQL) - thx to Edson Azambuja/Brazil
+	2004-09-11 - mpont
+		* p2gConfig.php - changed order of the setup routine, to fix problem with custom error handler under PHP 5.0.0
+		* php2go.base.AbstractNode - added method addAttributes
+		* php2go.data.DataSetDb - bugfix in load and loadSubSet: the connection must use ADODB_FETCH_ASSOC mode
+		* php2go.xml.XmlDocument - changes in setDoctype (heavily changed) and render (indentation + line breaks) methods
+		* php2go.xml.XmlNode - the render method was reviewed and some fixes where made (e.g. : indentation, line breaks, CDATA sections)
+		* php2go.xml.XmlRender - added addContent and addDataSet methods; the first can be insert objects, arrays or scalar values in the XML tree; the second can be used to transform DataSets to XML
+		* php2go.xml.XmlRender - changes in render method; added support for indentation and line breaks
+		* examples/xmlparserrender.example.php - the example was updated to use the new "add" methods
+	2004-09-08 - mpont
+		* php2go.base.AbstractNode - bugfix in addChild method
+		* php2go.data.DataSetCsv - bugfix in load method
+		* php2go.data.DataSetXml - fixed loadSubSet method, that was using the old way of parsing XML files
+		* php2go.db.QueryBuilder - added executeQuery and createDataSet methods, which are quick shortcuts to execute the query in the application DBMS
+		* php2go.net.SocketClient - bugfix in _checkHostAddress (wasn't validating host names with letters and digits)
+		* php2go.net.Url - the class was generating many warnings in PHP 4.1.2 (direct access to unset properties)
+		* php2go.file.GzFile - the compression level is now initialized with the value 9
+		* php2go.net.HttpCookie - changes in isExpired and set methods; changed method name : setExpiryDate => setExpiryTime
+		* javascript/masks/url.js - fixed bug #1022203 (SF.net) - error in the URL validation pattern
+	2004-09-03 - mpont
+		* PHP2Go 0.1.8 released!
+	2004-09-02 - mpont
+		* php2go.net.MailTransport - added setMessage method so that the message included in the class can be redefined
+		* php2go.net.MailMessage - minor bugfixes in the message build routine
+	2004-08-30 - mpont
+		* php2go.file.FileUpload - minor bugfixes (added boolean "uploaded" key in the handler data)
+	2004-08-29 - mpont
+		* php2go.base.PHP2Go - added logError method, to send an exception or error to the application error log; added $extra parameter in the raiseError method, that represents an additional description of the error
+		* php2go.base.PHP2Go, php2go.base.PHP2GoError, errorHandler.php - the error handling and error logging routines were rewritten, to improve funcionality
+		* Summary of the changes in the error handler:
+			* a method that logs an error (instead of raising it) was added
+			* the log format was completely changed. the logs were changed to the ini format
+			* the error logs now saves additional information about the request : cookies and session variables
+			* the error code 0 (E_DATABASE_ERROR) now represents the database errors thrown by the ADODB library
+	2004-08-28 - mpont
+		* minor bugfixes in the italian language package, sent by Andrea Fazzi (Italy)
+	2004-08-22 - mpont
+		* javascript/libs/window.js - added an optional boolean parameter called return, that enables the return of the created Window object
+	2004-08-19 - mpont
+		* php2go.data.Report -	the setColumnSizes method was update to accept, besides the array containing the customized sizes, two different values: REPORT_COLUMN_SIZES_FREE (the class doesn't define width of the columns) and REPORT_COLUMN_SIZES_FIXED (the same width for all columns)
+	2004-08-18 - mpont
+		* php2go.data.Report - added getFirstPageUrl and getLastPageUrl methods
+	2004-08-14 - mpont
+		* php2go.file.FileCompress - added factory method getInstance, to create an instance of a compression/decompression class (TarFile, ZipFile, GzFile)
+		* php2go.file.FileCompress - added new extraction methods: extractFiles and saveExtractedFiles
+		* php2go.file.FileManager - added 2 new methods: getAttributes and touch (overrides FileSystem::touch)
+		* php2go.file.FileSystem - added createPath method
+		* php2go.file.GzFile - the extractData method was reviewed (several bug fixes)
+		* php2go.file.TarFile - the extractData and addFile methods were rewritten; added extractGzip method
+		* php2go.file.ZipFile - the extractData method was rewritten; added _redCentralDirectory, _readCentralFileHeader and _readLocalFileHeader methods
+	2004-08-11 - mpont
+		* php2go.db.Db - added getNextId method, to get the next value from a sequence (calls the GenID method in ADOConnection class)
+	2004-08-09 - mpont
+		* javascript/libs/form.js - add subset parameter in the clearForm function, to clear the form partially
+		* javascript/masks/url.js - bugfix in the URL validation regexp: the pattern was generating an error in older IE versions
+	2004-08-04 - mpont
+		* php2go.template.DocumentElement - changes in assignFromQuery and generateFromQuery methods (optimization)
+		* php2go.validation.UrlValidator - few changes in the URL validation pattern
+	2004-07-30 - mpont
+		* php2go.template.Template - added cache control to store/retrieve compiled templates and save execution time; the cache can be enabled using the setCache method
+	2004-07-29 - mpont
+		* php2go.template.Template - added resetTemplate method, that clear all the created blocks and assigned variables. the template is changed to the state after the parse() call
+	2004-07-23 - mpont
+		* added Callback.class.php in the package php2go.util - a tool to validate and execute functions and class methods (static or not)
+		* php2go.auth.Auth, php2go.form.FormSection, php2go.data.DataSetDb, php2go.data.ReportSimpleSearch - changes in the callback routines to use the new Callback component
+		* php2go.data.Report - changes and adaptations to the new component Callback; added setColumnAlias method (change the caption/alias of a column or a group of columns)
+		* php2go.net.HttpRequest - added 3 new methods: serverHostName, queryString and url (same as uri, but without the query string); the method remoteHostByAddress was removed
+		* php2go.net.HttpResponse - the method redirect was changed to send the "moved permanently" status header
+		* php2go.net.Url - added 2 new methods: setFromCurrent e getAnchor
+		* php2go.session.SessionManager - changes in destroy method
+		* php2go.util.System - added method getServerAPIName
+	2004-07-21 - mpont
+		* javascript/modules/visibilitycontrol.js - added centralize parameter in the visControlShow function (centralize the element before showing it)
+	2004-07-20 - mpont
+		* php2go.util.Number - added parameter precision in the method fromDecimalToCurrency
+	2004-07-19 - mpont
+		* PHP2Go 0.1.7 released!
+	2004-07-16 - mpont
+		* php2go.util.HtmlUtils - bugfix with statusBarText and JS events in the method anchor
+	2004-07-15 - mpont
+		* ADOdb: upgrade to version 4.50
+		* php2go.db.Db - added getConnectionId method, to retrieve the DB connection handle
+		* php2go.util.Statement - bugfix in isAllBound method; added debugVariables method, an useful way of debugging bind variables
+		* javascript/libs/div.js - added hideSelectBoxes function: hide SELECT elements that collide with the passed coordinates
+		* javascript/modules/visibilitycontrol.js - a new object called VisibilityControl, to show/hide document elements, hiding/showing the SELECT boxes that collide with the element area
+	2004-07-13 - mpont
+		* php2go.base.AbstractNode - fixed bug in the method hasAttribute, when the node has no attributes
+		* php2go.util.HtmlUtils - added id (attribute) and swpImage (automatic swap and restore) parameters in the image method
+	2004-07-08 - mpont
+		* php2go.form.field.TextField - fixed bug while retrieving the field value; dynamic value was not been parsed from the DEFAULT parameter
+	2004-07-07 - mpont
+		* php2go.util.Spreadsheet - added fileMode parameter to the method toFile; buffix with the initial value of the panes property
+	2004-07-05 - mpont
+		* php2go.form.FormSection - bugfix in EVALFUNCTION validation when running PHP5 (case sensitive class names)
+		* php2go.util.System - added static method isPHP5
+	2004-07-04 - mpont
+		* The most useful examples were updated and improved: added more funcionalities, added bundled .sql file to test database integration, improved documentation
+		* Grammar/typo fixes in the english language files, sent by Matthieu Thullier
+	2004-07-02 - mpont
+		* errorHandler.php - fixed bug with E_STRICT errors in PHP 5.0.0 RC3
+		* Init.class.php - changed ABSOLUTE_URL validation to accept the char "~"
+	2004-06-30 - mpont
+		* Small corrections in the spanish language files, sent by Herman Manrique
+	2004-06-20 - mpont
+		* added czech translation files, by Jiri Vasina
+	2004-06-18 - mpont
+		* php2go.form.FormSection - update in the evalfunction process to accept static method calls and the "!" operator (negates the function/method return value)
+		* php2go.form.field.FormField, php2go.form.field.GroupField - added control to prevent field listeneres reconstruction when the fields are included in a DataGrid
+		* php2go.form.field.CheckField - bugfix with the HIDDEN field that carries the current value of the checkbox
+	2004-06-15 - mpont
+		* php2go.form.FormButton - bugfix with IMG attribute and listeners in buttons of type BUTTON
+		* php2go.form.field.RadioField - almost all methods were moved to php2go.form.field.GroupField
+		* added a new form component: CheckGroup (implements a group of checkboxes)
+		* added php2go.form.field.GroupField (parent class for RadioField and CheckGroup)
+		* javascript/masks/date.js, javascript/masks/zip.js - fixed problem with replacement of selected chars in a date or zip value
+		* javascript/libs/form.js - changed isRadioSelected to isGroupSelected, updates and improvements in other functions
+	2004-06-13 - mpont
+		* PHP2Go 0.1.6 released!
+	2004-06-08 - mpont
+		* php2go.form.Form - the method setFormAlign was moved to php2go.form.FormBasic
+		* php2go.form.FormBasic - added setFormAlign and setFormWidth methods
+		* php2go.form.FormTemplate, php2go.form.FormDataBind - as the method setFormAlign was moved from the parent class Form to FormBasic, theses classes are unable to call it
+	2004-06-07 - mpont
+		* php2go.data.Report - changes in _pageLinks method: underline the browseable pages; removed the underline from the current page
+		* php2go.form.field.RadioField, php2go.form.field.DbRadioField, php2go.form.field.CheckField - changed field captions to use the HTML tag LABEL
+		* javascript/masks/float.js - bugfix in chkFLOAT function: the value 0 was throwing the "invalid decimal value" error
+		* javascript/libs/form.js, javascript/modules/formvalidator.js - changes in requestFocus function (bug with radio fields)
+	2004-06-05 - mpont
+		* php2go.form.FormDataBind - removed fixed portuguese text in toolbar generation
+	2004-05-31 - mpont
+		* p2gConfig.inc, Init.class.php - removed use of putenv(), to avoid problems with safe_mode
+		* php2go.util.Environment - safe_mode test before executing putenv() in the method Environment::set
+	2004-05-30 - mpont
+		* added new spanish translation, by Herman Manrique (Colombia)
+		* docs/dtd/php2go_forms.dtd - updated attribute modifications and added new elements
+		* php2go.form.field.LookupField - added getOptionCount method
+		* php2go.form.FormBasic, php2go.form.FormTemplate, php2go.form.FormDataBind - added call to onReset event handler
+		* php2go.form.FormButton - changed RESET button action to call the default reset() function; added CLEAR type, to clear all form fields
+		* javascript/modules/editselection.js, javascript/modules/lookupselection.js, php2go.form.field.EditSelectionField, php2go.form.field.LookupSelectionField - several bugfixes with form reset and form reconstrution after a "back" browser operation
+		* javascript/masks/date.js - added dateToDays function, to allow date comparisons
+	2004-05-29 - mpont
+		* javascript/libs/string.js - added stringReplace function, an emulation of sprintf accepting only string replacements
+		* javascript/libs/form.js - added getFormFieldValue and getSelectedRadioOption functions
+		* javascript/modules/formvalidator.js - added the rule validation module, which attributes are defined in the new RULE element in the forms XML definition
+		* php2go.base.Document - changes in appendBodyContent method
+		* php2go.form.field.FormField - added the new RULE element, that allows to perform field comparisons and conditional obligatoriness tests
+		* php2go.form.field.* - all the FormField child classes were updated to support the new RULE element
+		* php2go.form.FormBasic, php2go.form.FormTemplate, php2go.form.FormDataBind - changed _buildFieldLabel implementations to use the <LABEL FOR=""></LABEL> tag instead of <SPAN></SPAN> in form labels
+		* php2go.util.HtmlUtils - updated in overPopup method
+		* php2go.xml.XmlRender - added missing import statement of the class php2go.xml.XmlDocument
+	2004-05-28 - mpont
+		* included JS Calendar package to the external Javascript components, as the new PHP2Go bundled calendar widget
+		* php2go.form.field.EditField - changes in ctor and getCode methods to fit the new calendar widget
+		* php2go.base.Document - added importStyle and addStyleCode methods
+		* Init.class.php - changes in setLanguage method to define the language file to be used in JS Calendar
+	2004-05-27 - mpont
+		* php2go.session.SessionManager - change the modifier of the startSession method to static, to allow multiple instances of SessionManager without throwing the "session has already been started" error
+	2004-05-24 - mpont
+		* PHP2Go 0.1.5 released!
+		* php2go.data.Report - bugfix with alternate style and grouping when in cell mode
+		* examples/report.example.php - improved funcionality, layout and help tips, to turn the example into a "real" use case
+	2004-05-23 - mpont
+		* p2gLib.php - added exportVariable function
+		* javascript/modules/formvalidator.js - bugfix while checking fields when they're empty
+		* javascript/libs/window.js - bugfix with window size when the opener is also a window
+		* updated formbasic.example.php, formtemplate.example.php and documentelement.example.php (bugfixes and new features demonstration)
+	2004-05-22 - mpont
+		* php2go.data.Report - added setEmptyBlock method, to define the block to be used in empty cells that are created to fill the lines of the report
+		* php2go.form.FormBasic, php2go.form.FormTemplate, php2go.form.FormDataBind - bugfix in ENCTYPE attribute, that was been included only in IE (??)
+	2004-05-18 - mpont
+		* added Registry.class.php in the package php2go.base - a key-value pair storage class available in all scopes of the script
+		* errorHandler.php, php2go.db.Db, php2go.util.Assertion - updates to use the new storage class Registry
+		* php2go.base.PHP2Go - update in raiseError method to allow error raising from a procedural script
+		* php2go.base.PHP2GoError - update in _buildMessage method to allow error raising from a procedural script
+		* php2go.data.Report - update in evalStatement method
+		* php2go.form.field.FormField - update in evalStatement and _parseField methods (new HttpRequest::getVar implementation)
+		* php2go.net.HttpRequest - changes in getVar implementation, to search for variables in the Registry and in the user session objects
+		* php2go.session.SessionManager - added static method getObjectProperty (session_name:session_variable pattern)
+		* php2go.session.SessionObject - bugfix in class constructor while copying the session properties to the class
+		* php2go.util.Statement - the method bindAllFromGlobals was replaced by the new method bindVariables, which uses HttpRequest::getVar to fetch the bind variables
+	2004-04-30 - mpont
+		* php2go.data.DataSetDb, php2go.data.Report - added boolean debug property
+		* php2go.data.Report - added go_to_page global variable, containing a text input that allows explicit page fetch
+		* p2gLib.php - added dumpVariable utility function
+	2004-04-26 - mpont
+		* php2go.data.PagedDataSet - added getNextPage, getPreviousPage and setCurrentPage methods, to improve navigation
+		* php2go.data.Report - added getNextPageUrl, getPreviousPageUrl and build methods, to allow custom navigation links
+	2004-04-01 - mpont
+		* php2go.base.PHP2Go - update in isA method to PHP5 case sensitive class names; changed clone() method to cloneObject(), because clone is a reserved word in PHP 5
+		* php2go.file.FileUpload - bugfix in uploaded files save path
+		* php2go.util.TypeUtils - update in isInstanceOf method to accept PHP5 case sensitive class names
+		* php2go.xml.XmlParser - changed external entities syntax parsed in DOCTYPE tag
+	2004-03-27 - mpont
+		* javascript/libs/form.js - bugfix in checkBoxChange function
+	2004-03-15 - mpont
+		* php2go.data.Report - changed XML spec to accept procedures instead of raw queries
+		* php2go.data.Report - added bind method, to add bind variables to the procedure defined in the XML file
+		* php2go.data.Report - added setHidden method, to hide one or more columns of the result set
+	2004-03-13 - mpont
+		* php2go.db.Db - changed isDbQuery and toGlobals methods. toGlobals now accepts a new parameter - bindVars - to send bind variables to the SQL query
+	2004-03-10 - mpont
+		* php2go.util.HtmlUtils - bugfix in focus method
+	2004-03-08 - mpont
+		* PHP2Go 0.1.4 released!
+	2004-03-07 - mpont
+		* added statement.example.php, formbasic.example.php and typeutils.example.php in the examples folder
+		* bugs and inconsistencies fixed and new comments added in some files in the examples folder
+		* php2go.base.PHP2Go - changes in getConfigVal method
+		* php2go.db.Db - changes in constructor
+		* php2go.security.Crypt - removed call to deprecated function mcrypt_generic_end
+		* php2go.db.QueryBuilder - changes in _displayQuery method
+		* php2go.util.HtmlUtils - bug fix in parseLinks method
+		* php2go.form.field.FormField - bug fix in fieldListeners method
+	2004-03-04 - mpont
+		* php2go.datetime.Date : bug fixes in isValid, daysToDate and printDate methods
+		* added date.example.php in examples folder
+		* Changed extension of errorHandler.inc, p2gConfig.inc, userConfig.inc and p2gLib.inc from .inc to .php (thx synace)
+	2004-03-01 - mpont
+		* php2go.db.Db - changes in prepare method to be compatible with ADOdb 4.20
+		* ADOdb: upgrade to version 4.20
+	2004-01-23 - mpont
+		* PHP2Go 0.1.3 released!
+		* ADOdb: upgrade to version 4.10
+	2004-01-18 - mpont
+		* javascript/modules/formvalidator.js - added addLookupCheck function, to check if the  LOOKUPSELECTION and EDITSELECTION fields are empty when marked as required
+		* php2go.form.field.LookupSelectionField, php2go.form.field.EditSelectionField - changes in obligatoriness control to use the FormValidator js object
+	2004-01-16 - mpont
+		* javascript/libs/form.js - changes in clearForm function: added the boolean parameter clearReadOnly, to tell the function if the read-only fields must be cleared
+	2004-01-15 - mpont
+		* php2go.form.field.FormField - the VALUE attribute must be set to "empty" to put an empty value in a form field
+		* php2go.form.field.RadioField, php2go.form.field.DbRadioField - added TABLEWIDTH attribute to the XML specification
+		* php2go.validation.Validator - added errorStack property and getErrors method, to retrieve the error messages generated by the validators
+	2004-01-14 - mpont
+		* php2go.session.SessionObject - bug fix in hasProperty method
+	2004-01-12 - mpont
+		* javascript/libs/string.js - added base64Encode and base64Decode functions
+		* javascript/masks/url.js - added encodeURL and decodeURL functions, to allow GET parameters encoding while building a URL with JavaScript
+	2004-01-08 - mpont
+		* The package xml was upgraded to be closer to the DOM implementation. See changes below
+		* php2go.base.PHP2Go - added generateUniqueID method
+		* php2go.base.AbstractNode - added support for parentNode, previousSibling, nextSibling
+		* php2go.base.AbstractNode - added getId, hasAttribute, getParentNode, getPreviousSibling, getNextSibling, getNodeIndex, removeAttribute, setParentNode
+		* php2go.xml.XmlNode - added support for prefix and localName (namespaces)
+		* php2go.xml.XmlNode - added getPrefix, getLocalName, getNamedItem, getOwnerDocument, setPrefix, setOwnerDocument, createClone methods
+		* php2go.xml.XmlParser - the class was rewritten. It is now dependant of XmlDocument class to parse files or strings; see examples/xmlparserrender.php to see the changes in action
+		* php2go.xml.XmlRender - the class was also rewrittem. Some of the methods were moved to XmlDocument
+		* php2go.xml.XmlDocument - new class added to php2go.xml
+	2004-01-06 - mpont
+		* PHP2Go 0.1.2 released!
+	2004-01-05 - mpont
+		* ADOdb: upgrade to version 4.05
+		* added a new form component: DataGrid (used to generate a grid of fields fed by the result of a database query)
+		* php2go.form.field.DbField - new control added to guarantee that the query is executed only once when a DbField is used inside a DataGrid
+		* php2go.form.field.CheckField - the method setCaption accepts the word 'empty' to generate an empty caption in the CHECKBOX input
+	2004-01-04 - mpont
+		* javascript/libs/form.js - bugfixes in the util functions
+		* javascript/modules/formvalidator.js - the object FormValidator was created to encapsulate form validation (check required fields and another rules)
+		* php2go.form.Form - changes in buildScriptCode method (the validation function starts to use the FormValidator object)
+		* php2go.form.field.FormField - added setName method, changes in processRequired method
+		* php2go.form.field.EditableField - changes in maskCheck and lengthCheck methods
+	2003-12-31 - mpont
+		* php2go.base.Form - button & input styles available in Opera >= 7
+		* php2go.data.Report - button & input styles (search form) available in Opera >= 7
+	2003-12-29 - mpont
+		* javascript/modules/lookupchoice.js - bugfix in list startup function
+		* php2go.net.MailMessage - bugfix in setConfirmReading method
+		* php2go.base.Document - extra code (property extraBodyContent) moved to the tail of the body content
+	2003-12-19 - mpont
+		* php2go.net.MailMessage - new parameter in setHtmlTemplate, tplIncludes, to resolve template's include blocks
+	2003-12-15 - mpont
+		* php2go.form.FormTemplate, php2go.form.FormDataBind - new parameter in constructor (tplIncludes), to allow template includes in form templates
+		* javascript/libs/form.js - changes in isEmpty & isRadioSelected functions; added getRadioOptions function (get an array containing the options of a radio field); added selectOptionByCaption function (select a combo option using an option caption)
+	2003-12-10 - mpont
+		* php2go.form.field.MemoField - bugfix with char count - actual field size wasn't being decremented from maxlength
+		* php2go.gui.LayerMenu - changes in style declaration (w3c patterns: a tag named <style> must be inside the <head> tag)
+		* php2go.net.MailMessage - added new method setHtmlTemplate; changes in message body wrap operation
+		* php2go.text.StringUtils - the wrap method was rewritten; added wrapLine method
+		* php2go.util.HtmlUtils - add htmlentities call in all method that build URL strings (w3c patterns)
+	2003-12-08 - mpont
+		* php2go.base.AbstractNode - changes in getAttribute method (use array_key_exists instead of isset)
+		* php2go.data.DataSetDb - new changes in loadSubSet method: bug with queries containing the HAVING clause
+		* php2go.db.Db - changes in execute method: an error returns FALSE instead of an empty result set
+		* php2go.form.field.FormField - changes in fieldAttribute method
+		* php2go.form.field.LookupSelectionField - hidden fields that contain the inserted and removed values are initialized empty
+		* javascript/masks/integer.js - changes in chkINTEGER function
+		* javascript/libs/form.js - changes in isEmpty function (bug with input type FILE)
+	2003-12-04 - mpont
+		* php2go.form.field.EditorField - bug fix in getCode method (load content to the advanced editor)
+	2003-12-01 - mpont
+		* php2go.data.DataSetDb - changes in loadSubSet method
+		* php2go.auth.Auth - changes in logout method, to avoid previous execution of the init method
+	2003-11-28 - mpont
+		* php2go.data.Report - added setSearchTemplate method; XML root attrs is now available in $Report->rootAttrs; changes in setLineHandler/setColumnHandler methods to accept "Class::method" callbacks
+		* php2go.text.StringUtils - added cutBefore and cutLastOccurrence methods
+	2003-11-26 - mpont
+		* php2go.form.field.ComboField - bug fix in field value fetch operation
+		* php2go.form.field.FormField - changes in field value fetch operation
+		* php2go.file.FileUpload - form field not found doesn't throw an error anymore; added getHandlerByName method
+	2003-11-25 - mpont
+		* php2go.auth.AuthDb - added setExtraClause method
+		* javascript/masks/url.js - changed regexp pattern for URLs
+	2003-11-22 - mpont
+		* PHP2Go 0.1.1 released!
+	2003-11-21 - mpont
+		* Added CHARCOUNT attribute in MEMOFIELD (char control with regressive count)
+		* php2go.form.field.MemoField - Added charCount method
+		* php2go.form.field.EditableField - bug fix: invalid mask provided in the XML attribute 'MASK'
+		* javascript/libs/form.js - added memoFieldCharControl function (used in php2go.form.field.MemoField)
+	2003-11-18 - mpont
+		* calendar.php - bug fix with language parameter
+		* calculator.php - bug fix with language parameter
+		* added includeFile function (uses PHP function 'include')
+		* LanguageBase - Language file inclusion will use includeFile (include) instead of importFile (include_once)
+	2003-11-17 - mpont
+		* Package php2go.data was totally rebuilt. A class named DataSet was created, playing the main role in the package
+		* Added DataSet, DataSetProvider, DataSetDb, DataSetXml, DataSetCsv
+		* Added PagedDataSet, reviewed Report
+		* php2go.template.DocumentElement - added generateFromDataSet method
+	2003-11-13 - mpont
+		* php2go.db.Db - bug fix in reconnect/close methods
+		* php2go.util.ListIterator - changes in cursor control engine
+	2003-11-11 - mpont
+		* php2go.base.Document - added setShortcutIcon method
+		* php2go.validation package - new components added: ChoiceValidator and AlphaCharsValidator
+	2003-11-07 - mpont
+		* php2go.session.SessionObject - added hasProperty method
+		* php2go.auth.AuthDb - queryData method: private->protected
+		* php2go.base.PHP2GoError - bug fix in _buildStackTrace method
+		* php2go.form.Form - the XML root attributes are available before the constructor call
+		* javascript/masks/login.js - changed regular expression to parse and validate 'LOGIN' entries
+	2003-11-05 - mpont
+		* php2go.auth.Auth - Support for object/method callbacks; added setIdlenessCallback and setExpiryCallback methods; bug fix in login/logout methods
+		* php2go.auth.AuthDb - properties _Db and _QueryBuilder removed
+		* php2go.db.QueryBuilder - added distinct and condition properties; added setDistinct, addTable, joinTable, clearClause, addOrder and reset methods; changes in setClause, setGroup and _buildQUery methods
+		* php2go.net.Url - added getQueryStringArray & reset methods; changes in encode, decode & _parse methods
+		* php2go.session.SessionObject - added getProperties method
+		* php2go.template.DocumentElement - removed _Db and _Rs properties
+		* php2go.net.HttpResponse - changes in addHeader method; added addCookie & setStatus methods; redirect parameter changed to accept only an Url object
+		* php2go.net.HttpCookie - added secure property & isSecure method; changes in set method; changes in parseFromHeader method
+	2003-10-28 - mpont
+		* PHP2Go 0.1.1 Beta released!

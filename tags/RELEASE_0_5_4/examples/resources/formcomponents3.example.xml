@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- PHP2Go Examples : formcomponents.example.xml, used at formcomponents.example.php -->
+<!DOCTYPE form SYSTEM "..\..\docs\dtd\php2go_forms.dtd">
+<form>
+
+	<variable name="subset" default="1"/>
+
+	<section name="PHP2Go Form Components Part 3" id="section">
+
+		<combofield name="subset" label="Choose the Subset" default="~subset~">
+			<option value="1" caption="Subset 1"/>
+			<option value="2" caption="Subset 2"/>
+			<option value="3" caption="Subset 3"/>
+			<listener type="JS" event="onChange" action="window.location.href='?subset='+this.value"/>
+		</combofield>
+
+		<!--
+			autocompletefield is a text input (or textarea, when using multiple selection)
+			enhanced with autocomplete funcionality. Autocomplete choices can be stored locally
+			(inside the JS component) or retrieved in runtime using Ajax calls. The component
+			also supports customizing how search is made, layout settings and other parameters
+		-->
+		<autocompletefield
+			name="auto_complete" label="AutoCompleteField"
+			size="30" required="T" source="AJAX" multiple="F"
+			ignorecase="T" fullsearch="T" height="80"
+			minchars="1" maxchoices="10" autoselect="F"
+		>
+			<datasource>
+				<keyfield>client_id</keyfield>
+				<displayfield>name</displayfield>
+				<lookuptable>client</lookuptable>
+				<orderby>name</orderby>
+			</datasource>
+		</autocompletefield>
+
+		<!--
+			datepickerfield is a date selection tool (single or multiple) based
+			on the bundled JSCalendar (http://www.dynarch.com/projects/calendar/)
+		-->
+		<datepickerfield
+			name="date_picker" label="DatePickerField"
+			multiple="T" yearrange="2002,2008" required="T"
+		/>
+
+		<!--
+			colorpickerfield is a simple color selection tool. it's based on a palette
+			of 228 colors; selected value is stored in RGB format
+		-->
+		<colorpickerfield
+			name="color_picker" label="ColorPickerField" mode="POPUP" required="T"
+		/>
+
+		<!-- button group -->
+		<buttons>
+			<button name="submit" type="SUBMIT" value="Submit"/>
+			<!--
+				some form components execute special routines when form.reset() is called.
+				this button was inserted here so that you can check these behaviours
+			-->
+			<button name="reset" type="RESET" value="Reset"/>
+			<!--
+				demonstration of a button whose JS action is inside the node's CDATA-section
+				in this case, the JS code toggles enable state of all form fields
+			-->
+			<button name="disable" type="BUTTON" value="Disable">
+				<listener type="JS" event="onClick"><![CDATA[
+					if (typeof window.lastOp == 'undefined') {
+						window.lastOp = false;
+					} else {
+						window.lastOp = !window.lastOp;
+					}
+					if (window.lastOp === true) {
+						Form.enableAll('form');
+						this.value = "Disable";
+					} else {
+						Form.disableAll('form');
+						this.value = "Enable";
+					}
+				]]></listener>
+			</button>
+			<!-- back button -->
+			<button name="back" type="BACK" value="Back"/>
+		</buttons>
+
+	</section>
+
+</form>
