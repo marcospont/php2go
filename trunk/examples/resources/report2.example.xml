@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- PHP2Go Examples : report2.example.xml, used at report.example.php -->
+<report title="PHP2Go Examples - php2go.data.Report">
+	<layout grid="F" numcols="2" emptyblock="empty_cell">
+		<pagination pagesize="30" visiblepages="10" style="REPORT_FIRSTPREVNEXTLAST">
+			<param name="useButtons" value="T"/>
+			<param name="useSymbols" value="F"/>
+			<param name="hideInvalid" value="F"/>
+		</pagination>
+		<style link="links" filter="filters" button="buttons" title="title" header="col_header" altstyle="col_odd,col_even" highlight="#fff,#ff0000"/>
+		<columns group="category" groupdisplay="category">
+			<column name="name" alias="Name"/>
+			<column name="address" alias="Address"/>
+			<column name="category" alias="Category"/>
+			<column name="active" alias="Active"/>
+			<column name="client_id" alias="" align="center" sortable="F"/>		
+		</columns>
+	</layout>
+	<variable name="active" default="1" searchorder="G"/>
+	<datasource>
+		<fields>name, address, category, active, client_id</fields>
+		<tables>client</tables>
+		<clause>active = ~active~</clause>
+		<groupby/>
+		<orderby>name</orderby>
+	</datasource>
+	<datafilters>
+		<datafilter field="name" label="Client Name" mask="STRING" index="0"/>
+		<datafilter field="address" label="Client Address" mask="STRING" index="1"/>
+	</datafilters>
+</report>

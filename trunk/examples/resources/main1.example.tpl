@@ -1,0 +1,1 @@
+<br>{$data|table:true:"width=\"95%\" align=\"center\" class=\"sample_medium_text\"":"style=\"background-color:#b2b2b2\"":"style=\"background-color:#f2f2f2\"":"style=\"background-color:#000000;color:#ffffff\""}<br>

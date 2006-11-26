@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- PHP2Go Examples : form.people.xml, used at crud.example.php -->
+<!DOCTYPE form SYSTEM "..\..\docs\dtd\php2go_forms.dtd">
+<form method="POST" action="~REQUEST_URI~">
+	<!-- layout & style settings -->
+	<style
+		input="input_style" label="label_style" button="button_style"
+		width="550" labelwidth="0.2"
+	/>
+	<!-- error summary settings -->
+	<errors
+		style="error_style" listmode="FORM_ERROR_BULLET_LIST"
+		headertext="Some error(s) occurred while processing the form:"
+		headerstyle="error_header" clientmode="FORM_CLIENT_ERROR_DHTML"
+	/>
+	<section id="people" name="People Form">
+		<editfield name="name" label="Name" size="30" length="50" required="T"/>
+		<combofield name="sex" label="Sex" width="80" required="T">
+			<option value="M" caption="Male"/>
+			<option value="F" caption="Female"/>
+		</combofield>
+		<editfield name="birth_date" label="Birth Date" size="10" length="12" mask="DATE" required="T"/>
+		<editfield name="address" label="Address" size="40" length="100" required="T"/>
+		<lookupfield name="id_country" label="Country" width="200" required="T">
+			<datasource>
+				<keyfield>id_country</keyfield>
+				<displayfield>name</displayfield>
+				<lookuptable>country</lookuptable>
+				<orderby>name</orderby>
+			</datasource>
+		</lookupfield>
+		<memofield name="notes" label="Notes" rows="5" cols="50"/>
+		<checkfield name="active" caption="Is active" default="T"/>
+		<buttons>
+			<button name="send" value="Send" type="SUBMIT"/>
+			<button mame="cancel" value="Cancel" type="BACK"/>
+		</buttons>
+	</section>
+</form>
