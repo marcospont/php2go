@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE form SYSTEM "..\docs\dtd\php2go_forms.dtd">
+
+<!-- FORM : the root tag -->
+<form validatefunc="validateForm()">
+
+	<!-- SECTION : a PHP2Go form must have at least one SECTION, or a set of form elements -->
+	<section name="Test Section" id="section" required_flag="T" required_color="#ff0000" required_text="*">
+	
+		<!-- EDITFIELD : a simple TEXT input -->
+		<!-- * when mask="INTEGER" or mask="FLOAT" and calculator="T", a calculator icon will be shown; the icon opens a small calculator in a popup -->
+		<!-- * when mask="DATE", a calendar (date picker) will be automatically shown in the right side of the input -->
+		<editfield name="edit1" label="Edit 1">
+			<listener event="onClick" type="JS" action="functionA();functionB();"/>
+			<listener event="onKeyUp" type="JSRS" remote="get" callback="returnFunction" params="getParams()"/>
+			<rule type="REQIF" field="edit2" message="Edit 2 is not empty, so Edit 1 can't be empty"/> 
+		</editfield>
+		<editfield 
+			name="edit2" label="Edit 2" default="Test" size="20" length="20" 
+			maxlength="15" minlength="5" mask="INTEGER" align="RIGHT" style="v10black" 
+			tabindex="1" autocomplete="T" required="T" disabled="F" readonly="F" 
+			calculator="F" upper="T" lower="F" capitalize="F" autotrim="T"
+		/>
+		
+		<!-- EDITSELECTIONFIELD : a composite component containing a TEXT input and a SELECT input -->
+		<!-- * the TEXT input is used to type and insert values in the SELECT input -->
+		<!-- * the delta (inserted and removed values) are submitted in 2 hidden fiels, whose names can be customized through the INSFIELD and REMFIELD attributes -->
+		<editselectionfield name="editsel1" label="Edit Selection 1">
+			<editfield name="edit2" label="Edit 3" maxlength="10" mask="INTEGER"/>
+			<lookupfield name="lookup1" label="Lookup 1" default="1" first="Insert elements here..." nofirst="F" multiple="T" size="5" width="100" style="v10black"/>
+		</editselectionfield>
+		<editselectionfield name="editsel2" label="Edit Selection 2" insfield="inserted" remfield="removed" addimg="add.gif" remimg="rem.gif" remallimg="remall.gif">
+			<editfield name="edit4" label="Edit 4">
+				<listener event="onKeyUp" type="JS" action="chkMaskINTEGER(this.value, event);"/>
+				<listener event="onBlur" type="JS" action="chkMaskINTEGER(this.value, event);"/>
+			</editfield>			
+			<lookupfield name="lookup2" label="Lookup 2">
+				<datasource>
+					<keyfield>column1</keyfield>
+					<displayfield>column2</displayfield>
+					<lookuptable>table</lookuptable>
+					<clause>column1 &gt; 1</clause>
+					<groupby>column1</groupby>
+					<orderby>column1</orderby>
+					<limit>10</limit>
+				</datasource>
+				<listener event="onChange" type="JS" action="handleChange();"/>
+				<listener event="onFocus" type="JS" action="alert('onFocus!');"/>
+			</lookupfield>
+		</editselectionfield>		
+		
+		<!-- PASSWDFIELD : a PASSWORD input -->
+		<passwdfield name="password1" label="Password 1">
+			<listener event="onFocus" type="JS" action="this.value = '';"/>
+			<listener event="onBlur" type="JS" action="checkPasswd(this.value);"/>
+		</passwdfield>
+		<passwdfield name="password2" label="Password 2" size="15" length="15" maxlength="15" minlength="15" align="LEFT" style="v10black" tabindex="3" autocomplete="F" required="T" readonly="F" disabled="F" upper="T" lower="F">
+			<rule type="EQ" field="password1" message="Passwords 1 and 2 must be equal"/>
+		</passwdfield>
+		
+		<!-- MEMOFIELD : a TEXTAREA input -->
+		<memofield name="memo1" label="Memo 1">
+			<listener event="onClick" type="JS" action="function1();function2();"/>
+			<listener event="onKeyDown" type="JSRS" file="jsrs/jsrslib.php" remote="saveData" callback="handleReturn" params="getParams()"/>
+			<rule type="REGEX" value="/[^0-9]+/" message="Value can't contain numbers"/>
+		</memofield>
+		<memofield name="memo2" label="Memo 2" default="1" cols="40" rows="7" style="v10black" tabindex="5" maxlength="100" charcount="T" required="T" readonly="F" disabled="F" upper="F" lower="F"/>
+		
+		<!-- EDITORFIELD : a WYSIWYG HTML editor -->
+		<!-- * in older or non-compatible browsers, a TEXTAREA input will be generated instead -->
+		<editorfield name="editor1" label="Editor 1"/>
+		
+		<!-- CHECKFIELD : a simple check box -->
+		<checkfield name="check1" label="Check 1" caption="Click here to flag the checkbox">
+			<listener event="onClick" type="JS" action="handleChange(this.checked);"/>
+			<listener event="onClick" type="JS" action="postChanges(this.checked);"/>
+		</checkfield>
+		<checkfield name="check2" label="Check 2" default="T" caption="Click here" style="v10black" tabindex="6" required="T" disabled="T"/>
+	
+		<!-- FILEFIELD : FILE input or file upload control -->
+		<!-- * when using form server validation (Form::isValid), the upload task can be done automatically if you set UPLOADONVALIDATE to "T" -->
+		<filefield name="file1" label="File 1"/>
+		<filefield name="file2" label="File 2" size="20" length="60" style="v10black" uploadonvalidate="T" maxfilesize="100K" allowedtypes="image/jpeg" savepath="save/path/" savename="mypicture.jpg" savemode="0777" tabindex="7" required="T" disabled="F">
+			<listener event="onFocus" type="JS" action="return false;"/>
+		</filefield>
+		
+		<!-- DATAGRID : a grid of HTML inputs populated with the contents of a external datasource -->
+		<!-- * the query must contain an index column (KEYFIELD) and 1 or more display columns (DISPLAYFIELD) -->
+		<!-- * each display field will be mapped to an element of the FIELDSET of the DATAGRID -->
+		<datagrid name="dgrid1" label="Data Grid 1">
+			<datasource>
+				<keyfield>id</keyfield>
+				<displayfield>edit, pass, memo, check, lookup, radio, dbradio, combo, hidden</displayfield>
+				<lookuptable>table</lookuptable>
+			</datasource>
+			<fieldset>
+				<editfield name="edit_dgrid" label="Edit DGrid"/>
+				<passwdfield name="pass_dgrid" label="Pass DGrid"/>
+				<memofield name="memo_dgrid" label="Memo DGrid"/>
+				<checkfield name="check_dgrid" label="Check DGrid"/>
+				<filefield name="file_dgrid" label="File DGrid"/>
+				<lookupfield name="lookup_dgrid" label="Lookup DGrid">
+					<datasource>
+						<keyfield>id</keyfield>
+						<displayfield>column1, sum(amount)</displayfield>
+						<lookuptable>table</lookuptable>
+						<clause><![CDATA[ column1 > column2 and column3 >= column4 ]]></clause>
+						<groupby>column1 having amount > 0</groupby>
+						<orderby>column1</orderby>
+					</datasource>
+				</lookupfield>
+				<radiofield name="radio_dgrid" label="Radio DGrid">
+					<option value="radio_dgrid_option" caption="Option"/>
+				</radiofield>
+				<dbradiofield name="dbradio_dgrid" label="DB Radio DGrid">
+					<datasource>
+						<keyfield>id</keyfield>
+						<lookuptable>table</lookuptable>
+					</datasource>
+				</dbradiofield>
+				<combofield name="combo_dgrid" label="Combo DGrid">
+					<option value="combo_option_dgrid" caption="Option"/>
+				</combofield>
+				<hiddenfield name="hidden_dgrid"/>
+			</fieldset>
+		</datagrid>
+		<datagrid name="dgrid2" label="Data Grid 2" headerstyle="styleheader" cellstyle="stylecell" tablewidth="100" disabled="T" cellsizes="20,40,40">
+			<datasource>
+				<keyfield>id</keyfield>
+				<displayfield>edit, check</displayfield>
+				<lookuptable>table</lookuptable>
+			</datasource>
+			<fieldset>
+				<editfield name="edit_dgrid2" label="Edit DGrid"/>
+				<checkfield name="check_dgrid2" label="Check DGrid"/>
+			</fieldset>
+		</datagrid>
+		
+		<!-- LOOKUPFIELD : a SELECT element whose elements are loaded from an external datasource -->
+		<lookupfield name="lookup3" label="Lookup 3" default="A" first="Choose..." nofirst="F" multiple="F" size="5" width="400" style="v10black" tabindex="7" required="T" disabled="F">
+			<datasource>
+				<keyfield>column1</keyfield>
+				<lookuptable>table</lookuptable>
+			</datasource>
+			<listener event="onChange" type="JSRS" file="jsrs/get_itens.php" remote="getItens" callback="fillNextSelect" params="this.options[this.selectedIndex].value" debug="F" autodispatchif="this.selectedIndex > 0"/>
+		</lookupfield>		
+		
+		<!-- LOOKUPCHOICEFIELD : an extension to LOOKUPFIELD that contains a TEXT input that can be used to "filter" the SELECT options as the user types any characters -->
+		<lookupchoicefield name="lookupc1" label="LookupChoice 1" default="A" first="Filter the list..." nofirst="F" multiple="F" size="5" width="400" style="v10black" tabindex="7" required="T" disabled="F">
+			<datasource>
+				<keyfield>column1</keyfield>
+				<displayfield>
+					column2 as column
+				</displayfield>
+				<lookuptable>
+					table inner join
+					table2 on table.column1 = table2.column3
+				</lookuptable>
+			</datasource>
+		</lookupchoicefield>		
+		
+		<!-- LOOKUPSELECTIONFIELD : a component composed by 2 SELECT elements and 4 buttons that allow transferring elements from the first SELECT to the second -->
+		<!-- * the delta (inserted and removed values) will be sent in 2 HIDDEN inputs -->		
+		<!-- * the name of these hidden fields can be customized through the INSFIELD and REMFIELD attributes -->
+		<lookupselectionfield name="lookupsel1" label="Lookup Selection 1" insfield="inserted" remfield="removed" addimg="add.gif" addallimg="addall.img" remimg="rem.gif" remallimg="remall.gif">
+			<lookupfield name="available" label="Available">
+				<datasource>
+					<keyfield>column1</keyfield>
+					<lookuptable>table1</lookuptable>
+				</datasource>
+			</lookupfield>
+			<lookupfield name="choosen" label="Choosen">
+				<datasource>
+					<keyfield>column1</keyfield>
+					<lookuptable>table1</lookuptable>
+				</datasource>
+			</lookupfield>
+		</lookupselectionfield>
+		
+		<!-- RADIOFIELD : a simple radio button -->
+		<radiofield name="radio1" label="Radio 1">
+			<option value="1" caption="Test1">
+				<listener event="onClick" type="JS" action="functionC();"/>
+			</option>
+			<option value="2" caption="Test2">
+				<listener event="onClick" type="JS" action="functionC();"/>
+			</option>
+		</radiofield>
+		<radiofield name="radio2" label="Radio 2" default="2" cols="2" style="v10black" tabindex="8" required="T" disabled="F">
+			<option value="2" caption="Test"/>
+		</radiofield>
+		
+		<!-- DBRADIOFIELD : a set of radio buttons; the options are loaded from an external datasource -->
+		<dbradiofield name="dbradio1" label="DB Radio 1">
+			<datasource>
+				<keyfield>column1</keyfield>
+				<lookuptable>table1</lookuptable>
+			</datasource>
+		</dbradiofield>
+		<dbradiofield name="dbradio2" label="DB Radio 2" default="A" cols="2" style="v10black" tabindex="9" required="T" disabled="T">
+			<datasource>
+				<keyfield>column1</keyfield>
+				<lookuptable>table1</lookuptable>
+			</datasource>
+		</dbradiofield>
+		
+		<!-- CHECKGROUP : a group of check boxes, rendered in an HTML table with customized number of columns -->
+		<checkgroup name="checkgroup1" label="Check Group 1">
+			<option value="1" caption="Option 1"/>
+			<option value="2" caption="Option 2"/>
+			<option value="3" caption="Option 3" disabled="T"/>
+		</checkgroup>
+		<checkgroup name="checkgroup2" label="Check Group 2" default="1" cols="2" tablewidth="500" style="v12blue" tabindex="21" required="T" disabled="F">
+			<option value="1" caption="Option 1"/>
+			<option value="2" caption="Option 2"/>
+			<option value="3" caption="Option 3"/>
+			<option value="4" caption="Option 4"/>
+			<option value="5" caption="Option 5"/>
+			<option value="6" caption="Option 6">
+				<listener event="onClick" type="JS" action="disableRelatedField()"/>
+			</option>
+			<option value="7" caption="Option 7" disabled="T"/>
+		</checkgroup>
+		
+		<!-- COMBOFIELD : a SELECT input where the options are described manually in the XML file; accepts multiple choice -->
+		<combofield name="combo1" label="Combo 1">
+			<option value="1" caption="Test1"/>
+			<option value="2" caption="Test2"/>
+			<listener event="onChange" type="JS" action="functionD();"/>
+			<listener event="onClick" type="JSRS" file="jsrs/file.php" remote="saveData" callback="handleReturn" params="Array(1, 2)"/>
+		</combofield>
+		<combofield name="combo2" label="Combo 2" default="1" first="Escolha" nofirst="F" multiple="T" size="5" width="500" style="v10black" tabindex="10" required="T" disabled="F">
+			<option value="1" caption="Test1"/>
+			<option value="2" caption="Test2"/>
+		</combofield>
+		
+		<!-- HIDDENFIELD : a HIDDEN HTML input -->
+		<hiddenfield name="hidden1"/>
+		<hiddenfield name="hidden2" default="~codigo~"/>
+		
+		<!-- TEXTFIELD : a simple label or text value, just as a template variable; accepts variable and code parsing in the VALUE attribute -->
+		<textfield name="text" value="Texto"/>
+		<textfield name="text2" value="Texto 2" style="v10black"/>
+		
+		<!-- BUTTONS : this tag is required in FormBasic class if you want to see 2 or more buttons in the same line -->
+		<buttons>
+			<!-- example of SUBMIT, RESET and BUTTON inputs -->
+			<button name="send" value="Send" type="SUBMIT" alt="Submit form">
+				<listener event="onClick" type="JS" action="getItens();"/>
+				<listener event="onDblClick" type="JS" action="getDblItens();"/>
+			</button>
+			<button name="reset" value="Reset values" type="RESET"/>
+			<button name="click" value="Click here" type="BUTTON" img="btn_off.gif" swpimg="btn_on.gif" style="buttons" tabindex="11" disabled="F">
+				<listener event="onClick" type="JS" action="__doAction('save_data', this)"/>
+			</button>
+		</buttons>
+		
+	</section>
+	
+</form>

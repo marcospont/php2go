@@ -1,0 +1,73 @@
+.editorToolbar {
+	cursor: default;
+	padding: 3px;
+}
+.editorBtnCell {
+	padding-left: 1px;
+	padding-right: 1px;
+	padding-bottom: 1px;
+}
+img.editorBtn, img.editorBtnDisabled {
+	color: ButtonText;
+	margin: 0px;
+	border: none;
+}
+img.editorBtnDisabled {
+	filter: gray() alpha(opacity=30);
+	-moz-opacity: 0.30;
+	-khtml-opacity: 0.30;
+}
+a.editorBtn, a.editorBtnDisabled {
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	width: 18px;
+	height: 24px;
+	display: table-cell;
+	background: ButtonFace;
+	border: 1px solid;
+	border-color: ButtonHighlight ButtonShadow ButtonShadow ButtonHighlight;
+}
+a.editorBtnDisabled {
+	cursor: default;
+}
+a.editorBtn:hover {
+	border-color: #316ac5;
+	background-color: #c1d2ee;
+}
+.editorResize {
+	float: right;
+	cursor: se-resize;
+	width: 15px;
+	height: 18px;
+	background-repeat: no-repeat;
+	background-position: bottom;
+}
+.editorResizeBox {
+	display: none;
+	width: 1px;
+	height: 1px;
+	border: 1px dotted gray;
+	margin: 0;
+	padding: 0;	
+}
+.editorEmoticon {
+	cursor: pointer;
+	width: 19px;
+	height: 19px;
+	margin: 2px;
+}
+.editorDivEmoticons {
+	position: absolute;
+	display: none;
+	width: 180px;
+	left: 0px;
+	top: 0px;
+}
+.editorDivEmoticonsTitle {
+	font-family: tahoma,verdana,sans-serif;
+	font-weight: bold;
+	font-size: 11px;
+	background-color: ActiveCaption;
+	color: CaptionText;
+}
