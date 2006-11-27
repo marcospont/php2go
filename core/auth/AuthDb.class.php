@@ -1,104 +1,151 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/auth/AuthDb.class.php,v 1.18 2006/07/12 08:02:20 mpont Exp $
-// $Date: 2006/07/12 08:02:20 $
+/**
+ * PHP2Go Web Development Framework
+ * -----------------------------------------------------------------------
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * $Header$
+ * $Date$
+ */
 
-//------------------------------------------------------------------
 import('php2go.auth.Auth');
 import('php2go.db.QueryBuilder');
 import('php2go.text.StringUtils');
-//------------------------------------------------------------------
 
-// @const AUTH_DB_DEFAULT_TABLE "auth"
-// Nome padrão da tabela utilizada na consulta de autenticação
+/**
+ * Default authentication table
+ */
 define('AUTH_DB_DEFAULT_TABLE', 'auth');
 
-//!-----------------------------------------------------------------
-// @class		AuthDb
-// @desc		Classe de autenticação de usuários baseada em dados armazenados
-//				em uma tabela de um banco de dados
-// @package		php2go.auth
-// @uses		Db
-// @uses		QueryBuilder
-// @uses		StringUtils
-// @extends		Auth
-// @author		Marcos Pont
-// @version		$Revision: 1.18 $
-//!-----------------------------------------------------------------
+/**
+ * Authentication driver based on a database
+ *
+ * Based on the local properties {@link $tableName}, {@link $dbFields},
+ * {@link $extraClause} and the fetched login credentials, this authenticator
+ * will build and execute a database query to verify if the user is valid.
+ *
+ * If AUTH.AUTHENTICATOR_PATH is missing in the global configuration, this will be used
+ * as the default authenticator returned from calls to {@link Auth::getInstance}.
+ *
+ * @package auth
+ * @uses Db
+ * @uses QueryBuilder
+ * @uses StringUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class AuthDb extends Auth
 {
-	var $connectionId = NULL;	// @var connectionId string			"NULL" ID da conexão de banco de dados a ser utilizada
-	var $tableName;				// @var tableName string			Nome da tabela que armazena dados de usuários
-	var $dbFields = '';			// @var dbFields string				"" String contendo outros dados do usuário que devem ser consultados e armazenados
-	var $extraClause = '';		// @var extraClause string			Cláusula adicional a ser utilizada na consulta por usuários
-	var $cryptFunction = '';	// @var cryptFunction string		"" Função de criptografia aplicada na senha do usuário
-	
-	//!-----------------------------------------------------------------
-	// @function	AuthDb::AuthDb
-	// @desc		Construtor da classe
-	// @param		sessionName string	"NULL" Nome da variável de sessão
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Database connection ID
+	 *
+	 * @var string
+	 */
+	var $connectionId = NULL;
+
+	/**
+	 * Name of the table that must be used in the authentication query
+	 *
+	 * Defaults to {@link AUTH_DB_DEFAULT_TABLE}.
+	 *
+	 * @var string
+	 */
+	var $tableName;
+
+	/**
+	 * Database fields that must be used in the authentication query
+	 *
+	 * Defaults to '*' (all table fields)
+	 *
+	 * @var string
+	 */
+	var $dbFields = '';
+
+	/**
+	 * Extra condition clause to be used in the authentication query
+	 *
+	 * @var string
+	 */
+	var $extraClause = '';
+
+	/**
+	 * Crypt function that must be applied in the user password
+	 * when building the authentication query
+	 *
+	 * If ommited, plain text comparison will be used.
+	 *
+	 * @var string
+	 */
+	var $cryptFunction = '';
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $sessionName Session name
+	 * @return AuthDb
+	 */
 	function AuthDb($sessionName=NULL) {
 		parent::Auth($sessionName);
 		$this->tableName = AUTH_DB_DEFAULT_TABLE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	AuthDb::setConnectionId
-	// @desc		Seta o ID da conexão a banco de dados a ser utilizado
-	// @param		id string	ID da conexão
-	// @access		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Define the database connection ID to be used
+	 *
+	 * The ID must be one of the connection IDs defined inside
+	 * the DATABASE.CONNECTIONS configuration setting.
+	 *
+	 * This method should only be called when the connection ID
+	 * is not the default one (DATABASE.DEFAULT_CONNECTION)
+	 *
+	 * @param string $id
+	 */
 	function setConnectionId($id) {
 		$this->connectionId = $id;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	AuthDb::setTableName
-	// @desc		Define o nome da tabela que contém dados de usuários
-	// @param		tableName string	Nome da tabela
-	// @see			AuthDb::setDbFields
-	// @access		public	
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Set the table name that must be used in the authentication query
+	 *
+	 * @param string $tableName
+	 * @see setDbFields
+	 * @see setExtraClause
+	 */
 	function setTableName($tableName) {
 		if (trim($tableName) != '')
 			$this->tableName = $tableName;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	AuthDb::setDbFields
-	// @desc		Define outros campos que devem ser inseridos na consulta ao banco de dados
-	// @param		dbFields mixed	Vetor de campos ou string com o nome de um ou mais campos
-	// @note		Se forem adicionados campos à consulta, eles serão registrados
-	//				individualmente como propriedades da sessão
-	// @see			AuthDb::setTableName
-	// @access		public	
-	// @return		void		
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Set the field names that must be used in the authentication query
+	 *
+	 * Array or comma separated list of field names
+	 * <code>
+	 * $auth->setDbFields(array('name', 'address', 'phone', 'status', 'role'));
+	 * $auth->setDbFields('name,address,phone,status,role');
+	 * </code>
+	 *
+	 * @param string $dbFields
+	 * @see setTableName
+	 * @see setExtraClause
+	 */
 	function setDbFields($dbFields) {
 		if (TypeUtils::isArray($dbFields)) {
 			$dbFields = array_unique($dbFields);
@@ -110,37 +157,37 @@ class AuthDb extends Auth
 			$this->dbFields = $dbFields;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	AuthDb::setExtraClause
-	// @desc		Define uma expressão a ser utilizada em conjunto com a pesquisa
-	//				pelo login informado na consulta de autenticação de usuários
-	// @param		extraClause string	Cláusula extra	
-	// @note		Exemplo de uso:
-	//				<pre>
-	//
-	//				$auth->setTableName('users');
-	//				$auth->setDbFields(array('cod_user', 'name'));
-	//				$auth->setExtraClause('user_active = 1');
-	//
-	//				</pre>
-	// @access		public
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Set a condition clause to be used in the authentication query
+	 *
+	 * <code>
+	 * $auth->setTableName('users');
+	 * $auth->setDbFields('cod_user,name,role');
+	 * $auth->setExtraClause('active = 1');
+	 * </code>
+	 *
+	 * @param string $extraClause
+	 * @see setTableName
+	 * @see setDbFields
+	 */
 	function setExtraClause($extraClause) {
 		$this->extraClause = $extraClause;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	AuthDb::setCryptFunction
-	// @desc		Define a função ou método de criptografia da senha do usuário
-	// @param		cryptFunction string	Função ou método
-	// @note		A função fornecida pode ser uma dentre as implementadas
-	//				no PHP (md5, crypt), uma função definida pelo programador
-	//				ou um método da classe filha
-	// @access		public
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Define a function or method that must be used to crypt the
+	 * user password before running the authentication query
+	 *
+	 * The function could be a standard PHP function like md5 or crypt,
+	 * a user-defined function or the name of a method of the authenticator.
+	 * <code>
+	 * $auth->setCryptFunction('md5'); // standard PHP function
+	 * $auth->setCryptFunction('myCryptFunction'); // user-defined function or method
+	 * </code>
+	 *
+	 * @param string $cryptFunction
+	 */
 	function setCryptFunction($cryptFunction) {
 		$cryptFunction = trim($cryptFunction);
 		if ($cryptFunction != '' && function_exists($cryptFunction)) {
@@ -149,17 +196,16 @@ class AuthDb extends Auth
 			$this->cryptFunction = array($this, $cryptFunction);
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	AuthDb::authenticate
-	// @desc		Realiza a verificação de autenticação do usuário
-	// @note		Este método é executado em Auth::login
-	// @note		Se necessário, sobrescreva este método para alterar a forma como
-	//				os dados são consultados no banco, por exemplo, utilizando uma
-	//				stored procedure
-	// @return		array Dados do usuário ou FALSE em caso de falha na autenticação
-	// @access		public		
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Performs the authentication attempt against the database
+	 *
+	 * Builds and runs the authentication query. If a valid result
+	 * set is returned from the database, the first row is returned.
+	 * Otherwise, returns false.
+	 *
+	 * @return array|false
+	 */
 	function authenticate() {
 		$Db =& Db::getInstance($this->connectionId);
 		$Query = new QueryBuilder();
@@ -173,7 +219,7 @@ class AuthDb extends Auth
 		}
 		$Query->setClause($this->loginFieldName . " = " . $Db->quoteString($this->_login, get_magic_quotes_gpc()));
 		if (!empty($this->cryptFunction)) {
-			$password = call_user_func($this->cryptFunction, $this->_password);			
+			$password = call_user_func($this->cryptFunction, $this->_password);
 			$Query->addClause($this->passwordFieldName . " = " . $Db->quoteString($password, get_magic_quotes_gpc()));
 		} else {
 			$Query->addClause($this->passwordFieldName . " = " . $Db->quoteString($this->_password, get_magic_quotes_gpc()));
