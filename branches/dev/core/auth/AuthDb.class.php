@@ -1,7 +1,7 @@
 <?php
 /**
  * PHP2Go Web Development Framework
- * -----------------------------------------------------------------------
+ *
  * Copyright (c) 2002-2006 Marcos Pont
  *
  * LICENSE:
@@ -21,8 +21,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
- * $Header$
- * $Date$
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
  */
 
 import('php2go.auth.Auth');
@@ -42,7 +44,7 @@ define('AUTH_DB_DEFAULT_TABLE', 'auth');
  * will build and execute a database query to verify if the user is valid.
  *
  * If AUTH.AUTHENTICATOR_PATH is missing in the global configuration, this will be used
- * as the default authenticator returned from calls to {@link Auth::getInstance}.
+ * as the default authenticator returned from calls to {@link Auth::getInstance()}.
  *
  * @package auth
  * @uses Db

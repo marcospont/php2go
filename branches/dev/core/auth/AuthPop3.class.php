@@ -1,7 +1,7 @@
 <?php
 /**
  * PHP2Go Web Development Framework
- * -----------------------------------------------------------------------
+ *
  * Copyright (c) 2002-2006 Marcos Pont
  *
  * LICENSE:
@@ -21,8 +21,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
- * $Header$
- * $Date$
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
  */
 
 import('php2go.auth.Auth');
@@ -77,7 +79,7 @@ class AuthPop3 extends Auth
 	 * Class constructor
 	 *
 	 * If this is your default authenticator, always retrieve it
-	 * using {@link Auth::getInstance}.
+	 * using {@link Auth::getInstance()}.
 	 *
 	 * @param string $sessionName Session name
 	 * @return AuthPop3

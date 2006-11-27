@@ -1,7 +1,7 @@
 <?php
 /**
  * PHP2Go Web Development Framework
- * -----------------------------------------------------------------------
+ *
  * Copyright (c) 2002-2006 Marcos Pont
  *
  * LICENSE:
@@ -21,8 +21,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
- * $Header$
- * $Date$
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
  */
 
 import('php2go.session.SessionObject');
@@ -41,14 +43,16 @@ import('php2go.session.SessionObject');
  * and you'll get a singleton of the user container. Doing it by reference also allows
  * you to modify user session in a simple and easy way.
  * <code>
- * // reading user info
+ * /* reading user info {@*}
  * $user =& User::getInstance();
  * if ($user->isRegistered()) {
  *   print $user->getUsername();
  *   print $user->getLastAccess('d/m/Y H:i:s');
  * }
- * // modifying user info: adding or changing properties
- * // all changes are saved in the session scope when script shuts down
+ * /**
+ *  * modifying user info: adding or changing properties
+ *  * all changes are saved in the session scope when script shuts down
+ *  {@*}
  * $user =& User::getInstance();
  * $user->createProperty('new_prop', $value);
  * $user->setPropertyValue('last_seen_uri', HttpRequest::uri());
@@ -130,7 +134,7 @@ class User extends SessionObject
 			), 'PHP2GO_USER'
 		);
 		if (!isset($instances[$sessionName])) {
-			// busca o container definido na configuração
+			// tries to load the custom container using the configuration settings
 			if ($userClassPath = PHP2Go::getConfigVal('USER.CONTAINER_PATH', FALSE, FALSE)) {
 				if ($userClass = classForPath($userClassPath)) {
 					$instances[$sessionName] = new $userClass($sessionName);
@@ -140,7 +144,7 @@ class User extends SessionObject
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_USERCONTAINER_PATH', $userClassPath), E_USER_ERROR, __FILE__, __LINE__);
 				}
 			}
-			// usa o container padrão (php2go.auth.User)
+			// user the default user container
 			else {
 				$instances[$sessionName] = new User($sessionName);
 			}
@@ -192,7 +196,7 @@ class User extends SessionObject
 	 * user's {@link $loginTime}, {@link $lastAccess}, {@link $username}
 	 * and {@link $properties} are initialized.
 	 *
-	 * This method is used by {@link Auth::login} when a successful
+	 * This method is used by {@link Auth::login()} when a successful
 	 * login attempt is made.
 	 *
 	 * @param string $username Username
@@ -239,8 +243,7 @@ class User extends SessionObject
 	 * Allows to verify if the user is assigned to a given role.
 	 *
 	 * The {@link $activeRole} property and the {@link isInRole}, {@link getActiveRole} and {@link setActiveRole}
-	 * methods could be used to implement <a href="http://en.wikipedia.org/wiki/Role-based_access_control" target="_blank">RABC</a>
-	 * (role-based access control) in your applications
+	 * methods could be used to implement RABC (role-based access control) in your applications
 	 *
 	 * @param mixed $role
 	 * @return bool
