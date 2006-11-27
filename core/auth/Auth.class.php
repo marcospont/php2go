@@ -1,7 +1,7 @@
 <?php
 /**
  * PHP2Go Web Development Framework
- * -----------------------------------------------------------------------
+ *
  * Copyright (c) 2002-2006 Marcos Pont
  *
  * LICENSE:
@@ -21,8 +21,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
- * $Header$
- * $Date$
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
  */
 
 import('php2go.auth.User');
@@ -113,49 +115,49 @@ class Auth extends PHP2Go
 	/**
 	 * Callback that handles {@link AUTH_STATE_INVALID} authentication state
 	 *
-	 * @var Callback
+	 * @var object Callback
 	 */
 	var $loginFunction;
 
 	/**
 	 * Callback executed right after a user session is created ({@link AUTH_STATE_LOGIN})
 	 *
-	 * @var Callback
+	 * @var object Callback
 	 */
 	var $loginCallback;
 
 	/**
 	 * Callback executed right after an authentication attempt has failed
 	 *
-	 * @var Callback
+	 * @var object Callback
 	 */
 	var $errorCallback;
 
 	/**
 	 * Callback executed right after the user session is destroyed
 	 *
-	 * @var Callback
+	 * @var object Callback
 	 */
 	var $logoutCallback;
 
 	/**
 	 * Callback to handle user session expiration
 	 *
-	 * @var Callback
+	 * @var object Callback
 	 */
 	var $expiryCallback;
 
 	/**
 	 * Callback to handle user session idleness
 	 *
-	 * @var Callback
+	 * @var object Callback
 	 */
 	var $idlenessCallback;
 
 	/**
 	 * Callback to handle valid, non expired and non idled user sessions
 	 *
-	 * @var Callback
+	 * @var object Callback
 	 */
 	var $validSessionCallback;
 
@@ -207,7 +209,7 @@ class Auth extends PHP2Go
 	 * Internal reference to the object holding
 	 * logged user's data
 	 *
-	 * @var User
+	 * @var object User
 	 * @access private
 	 */
 	var $User = NULL;
@@ -233,7 +235,7 @@ class Auth extends PHP2Go
 	 *
 	 * @param string $sessionName Session name
 	 * @return Auth
-	 * @see Auth::getInstance
+	 * @see getInstance
 	 */
 	function Auth($sessionName=NULL) {
 		parent::PHP2Go();
@@ -627,7 +629,7 @@ class Auth extends PHP2Go
 	 * the session ID will be generated right after the new session is created
 	 *
 	 * @access protected
-	 * @uses Auth::authenticate
+	 * @uses authenticate
 	 */
 	function login() {
 		// executes the authentication method, implemented inside child classes

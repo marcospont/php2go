@@ -1,62 +1,133 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/base/AbstractNode.class.php,v 1.21 2006/06/15 00:30:49 mpont Exp $
-// $Date: 2006/06/15 00:30:49 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		AbstractNode
-// @desc		Classe que implementa métodos de construção e manipulação
-//				de nodos, criando, destruindo e gerenciando seus atributos
-//				e nodos filhos. Baseia-se nos métodos implementados pelo
-//				modelo DOM Level 2
-// @package		php2go.base
-// @extends		PHP2Go
-// @version		$Revision: 1.21 $
-// @author		Marcos Pont
-//!-----------------------------------------------------------------
+/**
+ * Abstract implementation of a node
+ * 
+ * The AbstractNode class contains methods to manipulate nodes: create,
+ * destroy, manage attributes and children. The implementation is highly
+ * based on the DOM Level 2
+ * 
+ * @package base
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class AbstractNode extends PHP2Go
 {
-	var $id;						// @var id string							ID único do nodo
-	var $name;						// @var name string							Nome do nodo, com semântica dependente da utilização nas classes extendidas
-	var $attrs;						// @var attrs array							Vetor de atributos do nodo
-	var $children;					// @var children array						Vetor de filhos do nodo
-	var $hashIndex;					// @var hashIndex array						Indexa os IDs de nodos para facilitar a busca
-	var $childrenCount = 0;			// @var childrenCount int					"0" Número de filhos do nodo
-	var $parentNode = NULL;			// @var parentNode AbstractNode object		"NULL" Nodo pai
-	var $firstChild = NULL;			// @var firstChild AbstractNode object		"NULL" Primeiro filho do nodo
-	var $lastChild = NULL;			// @var lastChild AbstractNode object		"NULL" Último filho do nodo
-	var $previousSibling = NULL;	// @var previousSibling AbstractNode object	"NULL" Nodo anterior na cadeia de nodos do mesmo nível
-	var $nextSibling = NULL;		// @var nextSibling AbstractNode object		"NULL" Próximo nodo na cadeia de nodos do mesmo nível
+	/**
+	 * Node ID
+	 * 
+	 * Defaults to the value returned by an unique ID generator.
+	 *
+	 * @var string
+	 */
+	var $id;
+	
+	/**
+	 * Node name
+	 *
+	 * @var string
+	 */
+	var $name;
+	
+	/**
+	 * Node attributes
+	 *
+	 * @var array
+	 */
+	var $attrs;
+	
+	/**
+	 * Node children
+	 *
+	 * @var array
+	 */
+	var $children;
+	
+	/**
+	 * Children count
+	 *
+	 * @var int
+	 */
+	var $childrenCount = 0;
+	
+	/**
+	 * Reference to the parent node
+	 *
+	 * @var object AbstractNode
+	 */
+	var $parentNode = NULL;
+	
+	/**
+	 * Reference to the node's first child
+	 *
+	 * @var object AbstractNode
+	 */
+	var $firstChild = NULL;
+	
+	/**
+	 * Reference to the node's last child
+	 *
+	 * @var object AbstractNode
+	 */
+	var $lastChild = NULL;
+	
+	/**
+	 * Reference to the node's previous sibling
+	 *
+	 * @var object AbstractNode
+	 */
+	var $previousSibling = NULL;
+	
+	/**
+	 * Reference to the node's next sibling
+	 *
+	 * @var object AbstractNode
+	 */
+	var $nextSibling = NULL;
+	
+	/**
+	 * Hash containing IDs of the child nodes
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $hashIndex;
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::AbstractNode
-	// @desc		Construtor do objeto AbstractNode
-	// @param		nodeName string		Nome para o nodo
-	// @param		nodeAttrs array		"array()" Atributos do nodo
-	// @param		nodeChildren array	"NULL" Vetor de filhos do nodo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 *
+	 * @param string $nodeName Node name
+	 * @param array $nodeAttrs Node attributes
+	 * @param array $nodeChildren Node children
+	 * @return AbstractNode
+	 */
 	function AbstractNode($nodeName, $nodeAttrs=array(), $nodeChildren=NULL) {
 		parent::PHP2Go();
 		$this->id = PHP2Go::generateUniqueId('Node');
@@ -72,75 +143,72 @@ class AbstractNode extends PHP2Go
 		$this->childrenCount = (is_array($nodeChildren) ? sizeof($nodeChildren) : 0);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::getId
-	// @desc		Busca o ID do nodo
-	// @return		string ID do nodo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the node ID
+	 *
+	 * @return string
+	 */
 	function getId() {
 		return $this->id;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::getName
-	// @desc		Busca o nome do nodo
-	// @return		string Nome do nodo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the node name
+	 *
+	 * @return string
+	 */
 	function getName() {
 		return $this->name;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::setName
-	// @desc		Atribui um novo valor ao nome do nodo atual
-	// @param		newName string	Nome nome para o nodo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the node name
+	 *
+	 * @param string $newName New node name
+	 */
 	function setName($newName) {
 		$this->name = $newName;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::hasAttributes
-	// @desc		Verifica se o nodo possui atributos
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the node has any attributes
+	 *
+	 * @return bool
+	 */
 	function hasAttributes() {
 		return (is_array($this->attrs) && !empty($this->attrs));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::hasAttribute
-	// @desc		Verifica se o nodo possui um determinado atributo
-	// @param		name string		Nome do atributo
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the node has a given attribute
+	 *
+	 * @param string $name Attribute name
+	 * @return bool
+	 */
 	function hasAttribute($name) {
 		return (is_array($this->attrs) && array_key_exists($name, $this->attrs));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getAttributes
-	// @desc		Retorna o vetor de atributos do nodo XML
-	// @return		array Vetor de atributos do nodo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all node attributes
+	 * 
+	 * The attribute set is returned by reference, so that changes are
+	 * automatically applied in the node object.
+	 *
+	 * @return array
+	 */
 	function &getAttributes() {
 		return $this->attrs;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getAttribute
-	// @desc		Busca o valor de um atributo do nodo XML
-	// @param		attribute string	Nome do atributo
-	// @return		string Valor do atributo ou FALSE se ele não existir
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a reference to a given node attribute
+	 * 
+	 * If the attribute doesn't exist, this method returns false.
+	 *
+	 * @param string $attribute Attribute name
+	 * @return mixed
+	 */
 	function &getAttribute($attribute) {
 		$false = FALSE;
 		if ($this->hasAttribute($attribute))
@@ -148,89 +216,82 @@ class AbstractNode extends PHP2Go
 		return $false;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::addAttributes
-	// @desc		Adiciona um conjunto de atributos ao nodo
-	// @param		attributes array	Vetor de atributos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add/replace a set of attributes in the node
+	 * 
+	 * The new set of attributes is merged with the current ones,
+	 * using {@link array_merge()}.
+	 *
+	 * @param array $attributes Attributes array
+	 */
 	function addAttributes($attributes) {
 		if (TypeUtils::isHashArray($attributes))
 			$this->attrs = array_merge($this->attrs, $attributes);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::setAttribute
-	// @desc		Configura o valor de um atributo do nodo
-	// @param		attribute string	Nome do atributo
-	// @param		value mixed			Valor para o atributo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Create or modify an attribute
+	 *
+	 * @param string $attribute Attribute name
+	 * @param mixed $value Attribute value
+	 */
 	function setAttribute($attribute, $value) {
 		$this->attrs[$attribute] = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::removeAttribute
-	// @desc		Remove um atributo do nodo
-	// @param		attribute string	Nome do atributo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Remove a given attribute
+	 *
+	 * @param string $attribute Attribute name
+	 */
 	function removeAttribute($attribute) {
 		unset($this->attrs[$attribute]);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getParentNode
-	// @desc		Retorna o nodo pai do nodo atual
-	// @return		AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get this node's parent node
+	 *
+	 * @return AbstractNode|NULL
+	 */
 	function &getParentNode() {
 		return $this->parentNode;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::setParentNode
-	// @desc		Define o nodo superior ao nodo atual
-	// @param		&Node AbstractNode object
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set this node's parent node
+	 *
+	 * @param AbstractNode $Node New parent node
+	 */
 	function setParentNode(&$Node) {
 		$this->parentNode =& $Node;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::hasChildren
-	// @desc		Verifica se o nodo XML possui filhos
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the node has any child nodes
+	 *
+	 * @return bool
+	 */
 	function hasChildren() {
 		return ($this->childrenCount > 0);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::getChildrenCount
-	// @desc 		Retorna o número de filhos do nodo XML
-	// @return		int Número de filhos do nodo
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get this node's children count
+	 *
+	 * @return int
+	 */
 	function getChildrenCount() {
 		return $this->childrenCount;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getChildNodes
-	// @desc		Retorna o vetor de filhos do nodo
-	// @note		Retorna um array vazio caso o nodo não possua nodos filhos
-	// @return		array
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all child nodes of this node
+	 * 
+	 * The array of child nodes is returned by reference.
+	 * If the are no child nodes, an empty array is returned.
+	 *
+	 * @return array
+	 */
 	function &getChildNodes() {
 		$result = array();
 		if ($this->childrenCount > 0)
@@ -238,12 +299,11 @@ class AbstractNode extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getFirstChild
-	// @desc		Busca o primeiro filho do nodo
-	// @return		AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get this node's first child
+	 *
+	 * @return AbstractNode|NULL
+	 */
 	function &getFirstChild() {
 		$result = NULL;
 		if ($this->childrenCount > 0)
@@ -251,12 +311,11 @@ class AbstractNode extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getLastChild
-	// @desc		Busca o útlimo filho do nodo
-	// @return		AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get this node's last child
+	 *
+	 * @return AbstractNode|NULL
+	 */
 	function &getLastChild() {
 		$result = NULL;
 		if ($this->childrenCount > 0)
@@ -264,33 +323,30 @@ class AbstractNode extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getPreviousSibling
-	// @desc		Retorna o nodo anterior na cadeia de nodos no mesmo nível
-	// @return		AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get this node's previous sibling
+	 *
+	 * @return AbstractNode|NULL
+	 */
 	function &getPreviousSibling() {
 		return $this->previousSibling;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getNextSibling
-	// @desc		Retorna o próximo nodo na cadeia de nodos no mesmo nível
-	// @return		AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get this node's next sibling
+	 *
+	 * @return AbstractNode|NULL
+	 */
 	function &getNextSibling() {
 		return $this->nextSibling;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&getChild
-	// @desc 		Retorna o filho de índice $index do nodo, se existir
-	// @param 		index int	Índice do nodo buscado
-	// @return	 	AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the child node whose index is $index
+	 *
+	 * @param int $index Child index
+	 * @return AbstractNode|NULL
+	 */
 	function &getChild($index) {
 		$result = FALSE;
 		if (isset($this->children[$index]))
@@ -298,13 +354,15 @@ class AbstractNode extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::getNodeIndex
-	// @desc		Procura por um determinado nodo nos filhos do nodo atual
-	// @param		node AbstractNode object	Nodo buscado
-	// @access		protected
-	// @return		int
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the index of a given node inside this node's children
+	 *
+	 * If the given node is not a child of this node, -1 is returned.
+	 * 
+	 * @param AbstractNode $Node Node to be used in the search
+	 * @access protected
+	 * @return int
+	 */
 	function getNodeIndex($Node) {
 		if ($this->childrenCount > 0) {
 			$result = array_search($Node->getId(), $this->hashIndex);
@@ -314,13 +372,12 @@ class AbstractNode extends PHP2Go
 		return -1;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&addChild
-	// @desc		Adiciona um filho ao nodo XML
-	// @param		childNode AbstractNode object	Objeto XmlNode a ser inserido
-	// @return		AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a new child node
+	 *
+	 * @param AbstractNode $childNode Child node
+	 * @return AbstractNode Node after being added in the tree
+	 */
 	function &addChild($childNode) {
 		$result = FALSE;
 		if (TypeUtils::isInstanceOf($childNode, 'AbstractNode')) {
@@ -349,14 +406,11 @@ class AbstractNode extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::addChildList
-	// @desc		Adiciona uma lista de filhos ao nodo XML
-	// @note		Este método recebe N parâmetros, que são interpretados
-	//				como N filhos a serem adicionados ao nodo atual
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a set of child nodes
+	 *
+	 * @param AbstractNode $Child,... Variable list of child nodes as arguments
+	 */
 	function addChildList() {
 		$args = func_get_args();
 		if (func_num_args() > 0) {
@@ -366,13 +420,15 @@ class AbstractNode extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::removeChild
-	// @desc		Remove um filho do nodo atual, através de seu índice
-	// @param		index int		Índice do nodo a ser removido
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Remove a child node given its index
+	 * 
+	 * Updates child nodes related with the removed node, by fixing
+	 * {@link previousSibling} and {@link nextSibling} references.
+	 *
+	 * @param int $index Node index
+	 * @return bool If the node was successfully removed
+	 */
 	function removeChild($index) {
 		if (array_key_exists($index, $this->children)) {
 			$OldChild =& $this->getChild($index);
@@ -404,13 +460,12 @@ class AbstractNode extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::cloneNode
-	// @desc		Retorna um clone do nodo
-	// @param		deep bool	"TRUE" Se igual a TRUE, retorna os filhos do nodo recursivamente. Do contrário, retorna apenas o nodo atual
-	// @return		AbstractNode object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Create a clone of the node
+	 *
+	 * @param bool $deep Recurse into child nodes
+	 * @return AbstractNode Node's clone
+	 */
 	function cloneNode($deep=TRUE) {
 		$Clone =& $this->createClone();
 		if ($deep) {
@@ -420,12 +475,14 @@ class AbstractNode extends PHP2Go
 		return $Clone;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractNode::&cloneNode
-	// @desc		Constrói um clone do objeto atual
-	// @access		public
-	// @return		AbstractNode object
-	//!-----------------------------------------------------------------
+	/**
+	 * Method used to create a clone of the node
+	 * 
+	 * This is used by {@link cloneNode} and is overriden
+	 * by child classes, like {@link XmlNode}.
+	 *
+	 * @return AbstractNode
+	 */
 	function &createClone() {
 		$Clone = new AbstractNode($this->name, $this->attrs, NULL);
 		return $Clone;

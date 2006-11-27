@@ -1,134 +1,143 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/base/Component.class.php,v 1.2 2006/11/19 18:41:50 mpont Exp $
-// $Date: 2006/11/19 18:41:50 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		Component
-// @desc		A classe Component é base para todos os elementos renderizáveis
-//				que podem ser incluídos em um documento HTML: templates, formulários
-//				(Form e classes filhas, campos e botões), relatórios (Report)
-//				e outros elementos gráficos, como menus (php2go.gui.Menu)
-// @package		php2go.base
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.2 $
-//!-----------------------------------------------------------------
+/**
+ * Basic renderizable component
+ * 
+ * The Component class is the base for all renderizable elements that can be
+ * included in an HTML document in PHP2Go: templates, forms (Form class and 
+ * its child classes, fields, buttons), reports (Report class) and other
+ * graphic elements, such as menus (php2go.gui package).
+ * 
+ * @package base
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ * @abstract 
+ */
 class Component extends PHP2Go
 {
-	var $attributes = array();	// @var attributes array	"array()" Atributos do componente
-	var $preRendered = FALSE;	// @var preRendered bool	"FALSE" Indica se a etapa de pré-renderização já foi executada
+	/**
+	 * Component attributes
+	 *
+	 * @var array
+	 */
+	var $attributes = array();
+	
+	/**
+	 * Indicates if the pre-render phase has
+	 * already been executed
+	 *
+	 * @var bool
+	 */
+	var $preRendered = FALSE;
 
-	//!-----------------------------------------------------------------
-	// @function	Component::Component
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 *
+	 * @return Component
+	 */
 	function Component() {
 		parent::PHP2Go();
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Component::__destruct
-	// @desc		Destrutor da classe
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 */
 	function __destruct() {
 		unset($this);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Component::getAttribute
-	// @desc		Busca o valor de um atributo do componente
-	// @param		name string		Nome do atributo
-	// @param		fallback mixed	"FALSE" Valor de retorno para atributos inexistentes
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the value of an attribute
+	 *
+	 * @param string $name Attribute name
+	 * @param mixed $fallback Value to be returned when attribute is not found
+	 * @return mixed
+	 */
 	function getAttribute($name, $fallback=FALSE) {
 		return (array_key_exists($name, $this->attributes) ? $this->attributes[$name] : $fallback);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Component::setAttribute
-	// @desc		Define o valor de um atributo
-	// @param		name string		Nome do atributo
-	// @param		value mixed		Valor do atributo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Create or modify an attribute
+	 *
+	 * @param string $name Attribute name
+	 * @param mixed $value Attribute value
+	 */
 	function setAttribute($name, $value) {
 		$this->attributes[$name] = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Component::onPreRender
-	// @desc		Etapa de pré-renderização. Deve ser implementada
-	//				pelas classes filhas, desde que a implementação
-	//				da classe superior também seja executada
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Pre-render the component
+	 * 
+	 * Must be overriden by child classes and explictly called
+	 * from inside the child implementations, so that the component
+	 * gets correctly flagged as pre-rendered.
+	 */
 	function onPreRender() {
 		$this->preRendered = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Component::getContent
-	// @desc		Retorna a saída gerada pelo componente
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the output produced by this component
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		ob_start();
 		$this->display();
 		return ob_get_clean();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Component::display
-	// @desc		Método abstrato de impressão da saída gerada pelo componente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract method that should print the component's output
+	 * 
+	 * @abstract
+	 */
 	function display() {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Component::__toString
-	// @desc		Retorna a saída do componente como forma de
-	//				representá-lo como uma string
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Build and return a string representation of the component
+	 * 
+	 * This is very useful inside the template engine, when components
+	 * are used as variables in the pattern {$var} and PHP version
+	 * is >= 5.0.0.
+	 *
+	 * @return string
+	 */
 	function __toString() {
 		ob_start();
 		$this->display();
 		return ob_get_clean();
 	}
 }
-
 ?>
