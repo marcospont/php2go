@@ -94,7 +94,7 @@ define('AUTH_STATE_VALID', 6);
  * $auth->init();
  * </code>
  *
- * @package php2go.auth
+ * @package auth
  * @uses HttpRequest
  * @uses SessionObject
  * @uses StringUtils

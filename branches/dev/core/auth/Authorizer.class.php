@@ -61,7 +61,7 @@ import('php2go.auth.User');
  * }
  * </code>
  *
- * @package php2go.auth
+ * @package auth
  * @uses User
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$

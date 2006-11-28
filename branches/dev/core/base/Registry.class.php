@@ -39,7 +39,7 @@
  * it is a simple wrapper to get/set variables and avoid using global variables
  * inside the application's code.
  *
- * @package php2go.base
+ * @package base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */

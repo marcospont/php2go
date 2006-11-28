@@ -102,7 +102,7 @@ define('BODY_END', 2);
  * $doc->display();
  * </code>
  *
- * @package php2go.base
+ * @package base
  * @uses Db
  * @uses DocumentElement
  * @uses HttpResponse

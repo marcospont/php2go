@@ -1,89 +1,197 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/cache/storage/AbstractCache.class.php,v 1.4 2006/10/26 04:42:39 mpont Exp $
-// $Date: 2006/10/26 04:42:39 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const CACHE_HIT "1"
-// Status que indica que a última operação get retornou os dados da cache com sucesso
+/**
+ * Last read operation was a hit
+ */
 define('CACHE_HIT', 1);
-// @const CACHE_STALE "2"
-// Status que indica que a última operação get detectou dados expirados em cache
+/**
+ * Last read operation was a hit, but cache object was stale (expired)
+ */
 define('CACHE_STALE', 2);
-// @const CACHE_MISS "3"
-// Status que indica que a última operação get não encontrou os dados em cache
+/**
+ * Last read operation was a miss (object not found)
+ */
 define('CACHE_MISS', 3);
-// @const CACHE_MEMORY_HIT "4"
-// Status que indica que a última operação get retornou os dados da cache em memória
+/**
+ * Last read operation was a hit, and data was found in temp memory
+ */
 define('CACHE_MEMORY_HIT', 4);
 
-//!-----------------------------------------------------------------
-// @class		AbstractCache
-// @desc		Implementação abstrata de um driver de armazenamento de cache.
-//				Os métodos de leitura, escrita e remoção devem ser implementados
-//				nas classes descendentes
-// @package		php2go.cache.storage
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.4 $
-//!-----------------------------------------------------------------
+/**
+ * Abstract implementation of a cache storage layer
+ * 
+ * The read, write and delete methods must be implemented by child classes.
+ * 
+ * @package cache
+ * @subpackage storage
+ * @author Marcos Pont
+ * @version $Revision$
+ * @static
+ */
 class AbstractCache extends PHP2Go
 {
-	var $lifeTime = CACHE_MANAGER_LIFETIME;		// @var lifeTime int			"CACHE_MANAGER_LIFETIME" Tempo de expiração dos dados em cache
-	var $lastValidTime;							// @var lastValidTime int		Timestamp máximo em que um dado em cache é válido
-	var $currentStatus = CACHE_MISS;			// @var currentStatus int		"CACHE_MISS" Último status de leitura
-	var $debug = FALSE;							// @var debug bool				"FALSE" Flag de debug
-	var $memoryCache = FALSE;					// @var memoryCache bool		"FALSE" Indica que a cache em memória está habilitada
-	var $memoryCacheChanged = FALSE;			// @var memoryCacheChanged bool	"FALSE" Se este flag for FALSE, o valor da cache secundária (memory cache) não será salvo em disco pois não mudou
-	var $memoryTable = array();					// @var memoryTable array		"array()" Espaço de armazenamento da cache em memória
-	var $memoryLimit = 100;						// @var memoryLimit int			"100" Limite da cache em memória
-	var $memoryCacheGroup;						// @var memoryCacheGroup string	Grupo da cache em memória
-	var $memoryFirstRead = TRUE;				// @var memoryFirstRead bool	"TRUE" Controle da primeira leitura da cache em memória
-	var $checksum = TRUE;						// @var checksum bool			"TRUE" Flag que habilita ou desabilita checksum ao ler/escrever dados em cache
-	var $checksumFunc = 'crc32';				// @var checksumFunc string		"crc32" Função de checksum
-	var $checksumLength = 32;					// @var checksumLength int		Tamanho da string de checksum
-	var $autoCleanFrequency = 0;				// @var autoCleanFrequency int	"0" Indica a cada quantas escritas os dados expirados devem ser removidos (0 - desabilitado)
-	var $writeCount = 0;						// @var writeCount int			"0" Controle de operações de escrita
+	/**
+	 * Lifetime in seconds for cache objects
+	 *
+	 * @var int
+	 */
+	var $lifeTime = CACHE_MANAGER_LIFETIME;
+	
+	/**
+	 * Maximum valid timestamp for cache objects
+	 *
+	 * @var int
+	 */
+	var $lastValidTime;
+	
+	/**
+	 * Result of the last read operation
+	 *
+	 * @var int
+	 */
+	var $currentStatus = CACHE_MISS;
+	
+	/**
+	 * Debug flag
+	 *
+	 * @var bool
+	 */
+	var $debug = FALSE;
+	
+	/**
+	 * Whether memory cache is enabled
+	 *
+	 * @var bool
+	 */
+	var $memoryCache = FALSE;
+	
+	/**
+	 * Memory cache storage area
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $memoryTable = array();
+	
+	/**
+	 * Memory cache size
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $memoryLimit = 100;
+	
+	/**
+	 * Group ID to be used to save and restore memory cache
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $memoryCacheGroup;
+	
+	/**
+	 * Flag indicating memory cache was already been loaded
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $memoryFirstRead = TRUE;
+	
+	/**
+	 * Flag indicating memory cache was already been changed
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $memoryCacheChanged = FALSE;
+	
+	/**
+	 * Whether to use checksum control when reading and writing cache objects
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $checksum = TRUE;
+	
+	/**
+	 * Checksum function
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $checksumFunc = 'crc32';
+	
+	/**
+	 * Checksum string length
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $checksumLength = 32;
+	
+	/**
+	 * Frequency in which expired cache objects are
+	 * automatically removed. When set to 0, this 
+	 * feature is disabled.
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $autoCleanFrequency = 0;
+	
+	/**
+	 * Registers the number of write operations
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $writeCount = 0;
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::AbstractCache
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 *
+	 * @return AbstractCache
+	 */
 	function AbstractCache() {
 		parent::PHP2Go();
 		if ($this->isA('AbstractCache', FALSE))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_ABSTRACT_CLASS', 'AbstractCache'), E_USER_ERROR, __FILE__, __LINE__);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::__destruct
-	// @desc		Destrutor da classe. Responsável por salvar o estado
-	//				da cache em memória utilizando os métodos do driver de
-	//				armazenamento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 * 
+	 * If memory cache is enabled, and has its contents changed,
+	 * the entries are saved in the storage layer so that they can
+	 * be used again by the next request.
+	 */
 	function __destruct() {
 		if ($this->memoryCache && $this->memoryCacheChanged && !empty($this->memoryTable)) {
 			$old = $this->debug;
@@ -95,24 +203,20 @@ class AbstractCache extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::initialize
-	// @desc		Inicializa o driver de armazenamento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Initializes the storage layer
+	 */
 	function initialize() {
 		$this->lastValidTime = (time() - $this->lifeTime);
 		PHP2Go::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::setLifeTime
-	// @desc		Configura o tempo de expiração
-	// @param		time int	Tempo de expiração, em segundos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the lifetime, in seconds, for cache objects
+	 *
+	 * @param int $time Lifetime
+	 * @return int Previous lifetime setting
+	 */
 	function setLifeTime($time) {
 		$oldLifeTime = $this->lifeTime;
 		$lifeTime = abs(intval($time));
@@ -126,13 +230,12 @@ class AbstractCache extends PHP2Go
 
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::setLastValidTime
-	// @desc		Configura o timestamp máximo de um dado em cache
-	// @param		time int	Unix timestamp
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set maximum timestamp for cache objects
+	 *
+	 * @param int $time UNIX timestamp
+	 * @return int Previous last valid timestamp
+	 */
 	function setLastValidTime($time) {
 		$oldValidTime = $this->lastValidTime;
 		$this->lifeTime = time() - $time;
@@ -140,26 +243,22 @@ class AbstractCache extends PHP2Go
 		return $oldValidTime;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::setDebug
-	// @desc		Habilita/desabilita o modo de debug
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable debug mode
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setDebug($setting=TRUE) {
 		$this->debug = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::setMemoryCache
-	// @desc		Define as configurações de cache em memória
-	// @param		enable bool		Habilitar/desabilitar
-	// @param		limit int		"100" Nmero máximo de entradas
-	// @param		group string	"NULL" Grupo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set memory cache settings
+	 *
+	 * @param bool $enable Enable/disable memory cache
+	 * @param int $limit Memory table size
+	 * @param string $group Memory cache group
+	 */
 	function setMemoryCache($enable, $limit=100, $group=NULL) {
 		$this->memoryCache = (bool)$enable;
 		if ($this->memoryCache) {
@@ -172,59 +271,55 @@ class AbstractCache extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::setReadChecksum
-	// @desc		Habilita/desabilita controle de checksum na leitura/escrita em cache
-	// @param		setting bool	Valor para o flag
-	// @param		func string		"NULL" Função de checksum
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable checksum control on read/write operations
+	 *
+	 * @param bool $setting Enable/disable
+	 * @param string $func Checksum function
+	 */
 	function setReadChecksum($setting, $func=NULL) {
 		$this->checksum = (bool)$setting;
 		if (!empty($func) && function_exists($func))
 			$this->checksumFunc = $func;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::setAutoClean
-	// @desc		Define a freqüência com que dados expirados em cache
-	//				devem ser automaticamente removidos (0 - desabilitado,
-	//				1 ou mais - número de operações de escrita)
-	// @param		frequency int	Freqüência
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable automatic removal of expired cache objects
+	 * 
+	 * The $frequency argument represents the number of write
+	 * operations to wait until then next automatic remove
+	 * operation is performed.
+	 *
+	 * @param int $frequency Auto clean frequency
+	 */
 	function setAutoClean($frequency) {
 		if ((int)$frequency > 0) {
 			$this->autoCleanFrequency = $frequency;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::load
-	// @desc		Pesquisa por um ID/grupo nos dados em cache
-	// @param		id string		ID
-	// @param		group string	"CACHE_MANAGER_GROUP" Grupo
-	// @param		force bool		"FALSE" Ignorar controle de expiração
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Load an object from the cache storage
+	 *
+	 * @param string $id Object ID
+	 * @param string $group Object group
+	 * @param bool $force Ignore expiration control
+	 * @return mixed Object data or FALSE when invalid or stale
+	 */
 	function load($id, $group=CACHE_MANAGER_GROUP, $force=FALSE) {
 		if ($this->memoryCache && $data = $this->_readMemory($id, $group))
 			return $data;
 		return $this->read($id, $group, $force);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::save
-	// @desc		Salva um objeto em cache
-	// @param		data mixed		Dado a ser salvo
-	// @param		id string		ID de cache
-	// @param		group string	"CACHE_MANAGER_GROUP" Grupo de cache
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Save an object in the cache storage
+	 *
+	 * @param mixed $data Object data
+	 * @param string $id Object ID
+	 * @param string $group Object group
+	 * @return bool
+	 */
 	function save($data, $id, $group=CACHE_MANAGER_GROUP) {
 		if ($this->autoCleanFrequency > 0) {
 			if ($this->autoCleanFrequency == $this->writeCount) {
@@ -237,64 +332,72 @@ class AbstractCache extends PHP2Go
 		return $this->write($data, $id, $group);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::read
-	// @desc		Método abstrato de leitura de dados em cache
-	// @param		id string		ID
-	// @param		group string	"CACHE_MANAGER_GROUP" Grupo
-	// @param		force bool		"FALSE" Ignorar controle de expiração
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract load method
+	 * 
+	 * Must be implemented in the child classes in order
+	 * to search for the object in the cache storage, verify
+	 * if the object is stale and complete, and return its
+	 * contents in case of success.
+	 *
+	 * @param string $id Object ID
+	 * @param string $group Object group
+	 * @param bool $force Ignore expiration control
+	 * @return mixed
+	 * @abstract 
+	 */
 	function read($id, $group=CACHE_MANAGER_GROUP, $force=FALSE) {
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::write
-	// @desc		Método abstrato de escrita de dados em cache
-	// @param		data mixed		Dados
-	// @param		id string		ID
-	// @param		group string	"CACHE_MANAGER_GROUP" Grupo
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract write method
+	 * 
+	 * Must be implemented in the child classes in order
+	 * to add or replace an object in the cache storage.
+	 *
+	 * @param mixed $data Object data
+	 * @param string $id Object ID
+	 * @param string $group Object group
+	 * @return bool
+	 * @abstract 
+	 */
 	function write($data, $id, $group=CACHE_MANAGER_GROUP) {
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::remove
-	// @desc		Método abstrato de remoção de um objeto da cache
-	// @param		id string		ID
-	// @param		group string	"CACHE_MANAGER_GROUP" Grupo
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract remove method
+	 * 
+	 * Must be implemented by the child classes.
+	 *
+	 * @param string $id Object ID
+	 * @param string $group Object group
+	 * @return bool
+	 */
 	function remove($id, $group=CACHE_MANAGER_GROUP) {
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::clear
-	// @desc		Método de limpeza de dados expirados
-	// @param		group string	"NULL" Grupo
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract clear method
+	 *
+	 * @param string $group Cache group
+	 * @return bool
+	 */
 	function clear($group=NULL) {
 		if ($this->memoryCache)
 			$this->memoryTable = array();
 		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::_getChecksum
-	// @desc		Calcula checksum para um determinado valor
-	// @param		data mixed	Valor
-	// @return		string Checksum
-	// @access		protected
-	//!-----------------------------------------------------------------
+	/**
+	 * Calculate the checksum of a given argument
+	 *
+	 * @param mixed $data Data
+	 * @return string Calculated checksum
+	 * @access private
+	 */
 	function _getChecksum($data) {
 		$func = $this->checksumFunc;
 		$len = $this->checksumLength;
@@ -310,14 +413,14 @@ class AbstractCache extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::_readMemory
-	// @desc		Busca por uma informação na cache em memória
-	// @param		id string		ID
-	// @param		group string	Grupo
-	// @access		protected
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Reads information from the memory table
+	 *
+	 * @param string $id Object ID
+	 * @param string $group Object group
+	 * @access private
+	 * @return mixed
+	 */
 	function _readMemory($id, $group) {
 		if ($this->memoryFirstRead) {
 			$old = $this->debug;
@@ -342,17 +445,14 @@ class AbstractCache extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::_writeMemory
-	// @desc		Adiciona um objeto na cache em memória
-	// @param		data mixed		Valor
-	// @param		id string		ID
-	// @param		group string	Grupo
-	// @note		Quando o tamanho máximo da cache em memória for alcançado,
-	//				a primeira entrada (na ordem de criação) será apagada
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes information in the memory table
+	 *
+	 * @param mixed $data Object data
+	 * @param string $id Object ID
+	 * @param string $group Object group
+	 * @access private
+	 */
 	function _writeMemory($data, $id, $group) {
 		$key = $group . '-' . $id;
 		$this->memoryTable[$key] = $data;
@@ -364,13 +464,12 @@ class AbstractCache extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractCache::_debug
-	// @desc		Exibe uma mensagem de debug
-	// @param		msg string	Mensagem
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Utility method to display debug messages
+	 *
+	 * @param string $msg Message
+	 * @access private
+	 */
 	function _debug($msg) {
 		if ($this->debug)
 			println("CACHE DEBUG (" . parent::getClassName() . ") --- {$msg}");

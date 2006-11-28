@@ -34,7 +34,7 @@
  * destroy, manage attributes and children. The implementation is highly
  * based on the DOM Level 2
  *
- * @package php2go.base
+ * @package base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */

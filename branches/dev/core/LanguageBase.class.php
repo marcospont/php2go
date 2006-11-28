@@ -27,51 +27,55 @@
  * @version $Id$
  */
 
-//!-----------------------------------------------------------------
-// @class		LanguageBase
-// @desc		A classe LanguageBase armazena as tabelas de linguagens
-//				utilizadas no framework e nos sistemas executados sobre ele
-// @author		Marcos Pont
-// @version		$Revision: 1.15 $
-// @note		A definição de linguagem da configuração do framework carrega
-//				para a classe o vetor de linguagem correspondente. Adicionalmente,
-//				o usuário pode adicionar suas próprias entradas de linguagem respeitando
-//				a mesma parametrização definida na configuração (config[LANGUAGE])
-// @note		Exemplo de uso:<br>
-//				<pre>
-//
-//				... no script de inicialização do sistema
-//
-//				$Lang =& LanguageBase::getInstance();
-//				$Lang->loadLanguageTableByValue(array('LANGUAGE_KEY'=>'value'), 'MY_DOMAIN');
-//
-//				... em um outro arquivo ou script pertencente ao sistema
-//
-//				$Lang =& LanguageBase::getInstance();
-//				$value = $Lang->getLanguageValue('MY_DOMAIN.LANGUAGE_KEY', $params);
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * Language table manager
+ * 
+ * When PHP2Go initializes, the default language table of the framework
+ * is loaded into the singleton of the LanguageBase class. That's the
+ * way the core classes retrieve internationalized messages.
+ * 
+ * By adding a LANGUAGE.MESSAGES_PATH in the global configuration settings,
+ * you're able to create your own language domains, which are also accessible
+ * from this class. The only difference is that when using custom domains, 
+ * the domain must be provided together with the name of the language entry.
+ * <code>
+ * $lang =& LanguageBase::getInstance();
+ * $lang->getLanguageValue('MY_DOMAIN:MY_KEY');
+ * $lang->getLanguageValue('MY_DOMAIN:PATH.TO.MY_KEY');
+ * </code>
+ * 
+ * @package php2go
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class LanguageBase
 {
-	var $languageBase;		// @var languageBase array	Armazena as tabelas de linguagem ativas
+	/**
+	 * Loaded language entries
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $languageBase;
 
-	//!-----------------------------------------------------------------
-	// @function	LanguageBase::LanguageBase
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 * 
+	 * Shouldn't be called directly. Always use {@link getInstance} to read,
+	 * add or modify language entries.
+	 *
+	 * @return LanguageBase
+	 */
 	function LanguageBase() {
 		$this->languageBase = array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LanguageBase::&getInstance
-	// @desc		Retorna uma instância única (singleton) da classe LanguageBase
-	// @access		public
-	// @return		LanguageBase object Instância da classe LanguageBase
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of the LanguageBase class
+	 *
+	 * @return LanguageBase
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
@@ -79,24 +83,19 @@ class LanguageBase
 		return $instance;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LanguageBase::clearLanguageBase
-	// @desc		Remove todas as entradas de linguagem carregadas
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Clear all loaded language entries
+	 */
 	function clearLanguageBase() {
 		$this->languageBase = array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LanguageBase::loadLanguageTableByValue
-	// @desc		Carrega entrada(s) de linguagem a partir de uma variável
-	// @access		public
-	// @param		languageTable array	Vetor de entradas de linguagem
-	// @param		domain string		Nome de domínio
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add/replace a set of language entries in a given language domain
+	 * 
+	 * @param array $languageTable Set of language entries
+	 * @param string $domain Domain
+	 */
 	function loadLanguageTableByValue($languageTable, $domain) {
 		$languageTable = (array)$languageTable;
 		if (isset($this->languageBase[$domain])) {
@@ -106,25 +105,31 @@ class LanguageBase
 			$this->languageBase[$domain] = $languageTable;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LanguageBase::loadLanguageTableByFile
-	// @desc		Carrega entradas de linguagem a partir de um arquivo
-	// @access		public
-	// @param		languageFile string	Caminho completo do arquivo de linguagem
-	// @param		domain string		Nome de domínio
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Loads language entries from a file
+	 * 
+	 * This method is called inside {@link Init} class to load 
+	 * internationalized messages used by the framework into the
+	 * 'PHP2GO' language domain.
+	 *
+	 * @param string $languageFile Language file
+	 * @param string $domain Domain that must receive the new entries
+	 */
 	function loadLanguageTableByFile($languageFile, $domain) {
 		$this->loadLanguageTableByValue(includeFile($languageFile, TRUE), $domain);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LanguageBase::getLanguageValue
-	// @desc		Busca uma determinada chave na tabela de linguagem
-	// @access		public
-	// @param		keyName string	Nome da chave
-	// @return		mixed Valor da chave ou FALSE se não encontrada
-	//!-----------------------------------------------------------------
+	/**
+	 * Resolve a given language entry
+	 * 
+	 * The $params attribute expects a single substitution
+	 * variable or an array of substitution variables. This variables
+	 * are used to replace printf placeholders inside the message.
+	 *
+	 * @param string $key Language entry key
+	 * @param mixed $params Substitution arguments
+	 * @return string|NULL Resolved message or NULL when not found
+	 */
 	function getLanguageValue($key, $params=NULL) {
 		$key = trim($key);
 		if (($pos = strpos($key, ':')) !== FALSE) {
@@ -133,10 +138,10 @@ class LanguageBase
 		} else {
 			$domain = 'PHP2GO';
 		}
-		// carrega a tabela de linguagem, se for um domínio de usuário ainda não carregado
+		// load the language domain if the domain wasn't already loaded
 		if ($domain != 'PHP2GO' && !isset($this->languageBase[$domain]))
 			$this->_loadLanguageDomain($domain);
-		// executa o método de busca da chave (permite múltiplas dimensões)
+		// search for the language key (accepts multidimensional search)
 		$value = (strpos($key, '.') !== FALSE ? findArrayPath(@$this->languageBase[$domain], $key) : @$this->languageBase[$domain][$key]);
 		if ($value) {
 			if ($params !== NULL)
@@ -147,13 +152,18 @@ class LanguageBase
 		return NULL;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LanguageBase::_loadLanguageDomain
-	// @desc		Carrega a tabela de linguagem para um domínio de mensagens
-	// @param		domain string	Nome do domínio
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Loads a given language domain
+	 * 
+	 * Based on the messages path (LANGUAGE.MESSAGES_PATH) and on the
+	 * active language code (LANGUAGE_CODE), determine the path of
+	 * the language domain file in the file system. Tries to read that
+	 * file, and load its contents into the language table in case of
+	 * success.
+	 *
+	 * @param string $domain Domain name
+	 * @access private
+	 */
 	function _loadLanguageDomain($domain) {
 		$Conf =& Conf::getInstance();
 		$code = $Conf->getConfig('LANGUAGE_CODE');

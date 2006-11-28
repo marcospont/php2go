@@ -43,7 +43,7 @@ define('AUTH_IMAP_PORT', 143);
  * To use AuthIMAP as the application authenticator, set
  * AUTH.AUTHENTICATOR_PATH = 'php2go.auth.AuthIMAP'.
  *
- * @package php2go.auth
+ * @package auth
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
