@@ -1,62 +1,84 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/LocaleNegotiator.class.php,v 1.2 2006/02/28 21:55:49 mpont Exp $
-// $Date: 2006/02/28 21:55:49 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		LocaleNegotiator
-// @desc		A classe LocaleNegotiator é responsável por buscar as linguagens
-//				e os charsets enviados nos pelo cliente nos cabeçalhos HTTP
-//				Accept-Language e Accept-Charset. No processo de inicialização do
-//				framework, em caso de auto detecção habilitada, esta classe compara
-//				as linguagens e charsets suportados com os disponibilizados para
-//				definir as configurações a serem utilizadas
-// @author		Marcos Pont
-// @version		$Revision: 1.2 $
-//!-----------------------------------------------------------------
+/**
+ * Negotiates locale and charset based on HTTP headers
+ * 
+ * This class parses the Accept-Language and Accept-Charset headers in order
+ * to determine what are the user settings and use it when auto detecting
+ * localization settings.
+ * 
+ * When PHP2Go loads, and LANGUAGE.AUTO_DETECT is set to true, or CHARSET is
+ * set to 'auto', this class is used to determine the new values for these
+ * settings, based on the client browser preferences.
+ *
+ * @package php2go
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class LocaleNegotiator
 {
-	var $languages;		// @var languages array		Conjunto de linguegens suportadas pelo cliente
-	var $charsets;		// @var charsets array		Conjunto de charsets suportados pelo cliente
+	/**
+	 * Set of supported languages
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $languages;
 	
-	//!-----------------------------------------------------------------
-	// @function	LocaleNegotiator::LocaleNegotiator
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Set of supported charsets
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $charsets;
+	
+	/**
+	 * Class constructor
+	 * 
+	 * Loads supported languages and charsets from the HTTP_ACCEPT_LANGUAGE
+	 * and HTTP_ACCEPT_CHARSET headers.
+	 *
+	 * @return LocaleNegotiator
+	 */
 	function LocaleNegotiator() {
 		$this->languages = $this->_parseHeader(@$_SERVER['HTTP_ACCEPT_LANGUAGE']);
 		$this->charsets = $this->_parseHeader(@$_SERVER['HTTP_ACCEPT_CHARSET']);		
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	LocaleNegotiator::&getInstance
-	// @desc		Retorna uma instância única da classe
-	// @return		LocaleNegotiator object
-	// @access		public	
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of the LocaleNegotiator class
+	 *
+	 * @return LocaleNegotiator
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
@@ -64,12 +86,14 @@ class LocaleNegotiator
 		return $instance;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	LocaleNegotiator::getSupportedLanguages
-	// @desc		Retorna o conjunto de linguagens suportadas pelo cliente
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Get supported language codes
+	 * 
+	 * Each item of the returned array contains a language code, 
+	 * along with the quality factor (if lower than 1.0).
+	 *
+	 * @return array
+	 */
 	function getSupportedLanguages() {
 		$tmp = array();
 		foreach ($this->languages as $k => $v)
@@ -77,12 +101,14 @@ class LocaleNegotiator
 		return $tmp;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	LocaleNegotiator::getSupportedCharsets
-	// @desc		Retorna o conjunto de charsets suportados pelo cliente
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Get supported charset encodings
+	 * 
+	 * Each item of the returned array contains a charset code,
+	 * along with the quality factor (if lower than 1.0).
+	 *
+	 * @return array
+	 */
 	function getSupportedCharsets() {
 		$tmp = array();
 		foreach ($this->charsets as $k => $v)
@@ -90,15 +116,20 @@ class LocaleNegotiator
 		return $tmp;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	LocaleNegotiator::negotiateLanguage
-	// @desc		Compara as linguagens disponíveis com as linguagens suportadas
-	//				para definir o valor a ser utilizado
-	// @param		available array		Linguagens disponíveis
-	// @param		default string		Linguagem padrão, se nenhuma das disponíveis for suportada
-	// @return		string Linguagem a ser utilizada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Negotiate the language code
+	 * 
+	 * This method expects a set of language codes supported
+	 * by the application and a default language code to be used
+	 * when negotiation fails.
+	 * 
+	 * The set of application language codes is compared with
+	 * the languages parsed from the request.
+	 *
+	 * @param array $available Language codes supported by the application
+	 * @param string $default Default language code
+	 * @return string Language code
+	 */
 	function negotiateLanguage($available, $default) {
 		$available = (array)$available;
 		foreach ($this->languages as $lang => $level) {
@@ -109,14 +140,16 @@ class LocaleNegotiator
 		return $default;		
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	LocaleNegotiator::negotiateCharset
-	// @desc		Compara os charsets disponíveis com os suportados para definir o valor a ser utilizado
-	// @param		available array		Charsets disponíveis
-	// @param		default string		Charset padrão, se nenhum dos disponíveis for suportado
-	// @return		string Charset a ser utilizada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Negotiate the charset encoding
+	 * 
+	 * Matches a set of charset codes supported by the application
+	 * against the ones parsed from the HTTP headers
+	 *
+	 * @param array $available Available charset codes
+	 * @param string $default Default charset code, to be used when negotiation fails
+	 * @return string Charset
+	 */
 	function negotiateCharset($available, $default) {
 		$available = (array)$available;
 		foreach ($this->charsets as $charset => $level) {
@@ -127,14 +160,12 @@ class LocaleNegotiator
 		return $default;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	LocaleNegotiator::_parseHeader
-	// @desc		Método utilitário para interpretar o valor dos headers
-	//				Accept-Language e Accept-Charset
-	// @access		private
-	// @param		str string	Valor do header
-	// @return		array Valores capturados
-	//!-----------------------------------------------------------------
+	/**
+	 * Internal method that parses Accept-* headers
+	 *
+	 * @param string $str Raw header
+	 * @return array Parsed header
+	 */
 	function _parseHeader($str) {
 		$result = array();
 		$str = (string)$str;
@@ -156,15 +187,14 @@ class LocaleNegotiator
 		return $result;
     }
     
-    //!-----------------------------------------------------------------
-    // @function	LanguageNegotiator::_compare
-    // @desc		Buscar um valor em um array, utilizando comparação
-    //				binary safe insensível ao caso
-    // @param		value string	Valor de pesquisa
-    // @param		array array		Array de valores com os quais o valor será comparado
-    // @return		mixed Valor encontrado ou FALSE se nenhuma comparação retornar sucesso
-    // @access		private
-    //!-----------------------------------------------------------------
+    /**
+     * Search for a value inside an array, using binary safe 
+     * and case insensitive comparison
+     *
+     * @param string $value Search value
+     * @param array $array Search base
+     * @return string|FALSE Array entry in case of success. FALSE in case of error
+     */
     function _compare($value, $array) {
     	$l = strlen($value);
     	foreach ($array as $comp) {

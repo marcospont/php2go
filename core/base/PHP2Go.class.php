@@ -48,7 +48,7 @@ $GLOBALS['PHP2Go_shutdown_funcs'] = array();
  *
  * The PHP2Go class is imported inside p2gConfig.php.
  *
- * @package php2go.base
+ * @package base
  * @uses Conf
  * @uses LanguageBase
  * @uses PHP2GoError

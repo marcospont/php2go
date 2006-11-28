@@ -51,8 +51,8 @@ class Conf
 	/**
 	 * Class constructor
 	 *
-	 * This constructor is called inside {@link getInstance} when
-	 * the singleton is created.
+	 * Shouldn't be called directly. Always use {@link getInstance}
+	 * when you need to read, add or modify configuration settings.
 	 *
 	 * @return Conf
 	 */
@@ -71,72 +71,13 @@ class Conf
 			$instance = new Conf;
 		return $instance;
 	}
-
-	/**
-	 * Load a new set of configuration entries from a given file
-	 *
-	 * This method is used by {@link Init} class to initialize global
-	 * configuration settings.
-	 *
-	 * @param string $configModule Configuration file path
-	 */
-	function loadConfig($configModule) {
-		$this->config = includeFile($configModule, TRUE);
-	}
-
-
-	/**
-	 * Create or replace a single configuration entry or a set of entries
-	 *
-	 * <code>
-	 * $Conf =& Conf::getInstance();
-	 * $Conf->setConfig('LOCALE', 'en-us');
-	 * $Conf->setConfig(array('KEY'=>'value', 'ANOTHER_KEY'=>'another_value'));
-	 * </code>
-	 *
-	 * @param string|array $configName Config key or a key=>value hashmap
-	 * @param mixed $configValue Value
-	 * @todo Allow setting array members by using a dot path
-	 */
-	function setConfig($configName, $configValue='') {
-		if (is_array($configName) && trim($configValue) == '') {
-			if (isset($this->config))
-				$this->config = array_merge($this->config, $configName);
-			else
-				$this->config = $configName;
-		} else {
-			$this->config[$configName] = $configValue;
-		}
-	}
-
-	/**
-	 * Get a configuration setting
-	 *
-	 * @param string $configName Config key
-	 * @param mixed $fallback Return value to be used when the key is not found
-	 * @return mixed Config key value or $fallback if the key doesn't exist
-	 * @static
-	 */
-	function getConfig($configName, $fallback=FALSE) {
-		return findArrayPath($this->config, $configName, '.', $fallback);
-	}
-
-	/**
-	 * Get all configuration settings
-	 *
-	 * @return array
-	 * @static
-	 */
-	function &getAll() {
-		return $this->config;
-	}
-
+	
 	/**
 	 * Get database connection settings for a given connetion ID
 	 *
-	 * If the ID is missing, the default ID will be the value of
-	 * the DATABASE.DEFAULT_CONNECTION setting or the key of the
-	 * first entry in the DATABASE.CONNECTIONS array.
+	 * If the $connectionId argument is missing, the method will
+	 * try to use the DATABASE.DEFAULT_CONNECTION setting or the
+	 * first key of the DATABASE.CONNECTIONS array.
 	 *
 	 * @param string $connectionId Connection ID
 	 * @return array|FALSE Connection properties or FALSE in case of error
@@ -187,6 +128,62 @@ class Conf
 			return $params;
 		PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_DATABASE_PARAMETERS', $connectionId), E_USER_ERROR, __FILE__, __LINE__);
 		return FALSE;
+	}	
+
+	/**
+	 * Load a new set of configuration entries from a given file
+	 *
+	 * This method is used by {@link Init} class to initialize global
+	 * configuration settings.
+	 *
+	 * @param string $configModule Configuration file path
+	 */
+	function loadConfig($configModule) {
+		$this->config = includeFile($configModule, TRUE);
+	}
+
+	/**
+	 * Create or replace a single configuration entry or a set of entries
+	 *
+	 * <code>
+	 * $Conf =& Conf::getInstance();
+	 * $Conf->setConfig('LOCALE', 'en-us');
+	 * $Conf->setConfig(array('KEY'=>'value', 'ANOTHER_KEY'=>'another_value'));
+	 * </code>
+	 *
+	 * @param string|array $configName Config key or a key=>value hashmap
+	 * @param mixed $configValue Value
+	 * @todo Allow setting array members by using a dot path
+	 */
+	function setConfig($configName, $configValue='') {
+		if (is_array($configName) && trim($configValue) == '') {
+			if (isset($this->config))
+				$this->config = array_merge($this->config, $configName);
+			else
+				$this->config = $configName;
+		} else {
+			$this->config[$configName] = $configValue;
+		}
+	}
+
+	/**
+	 * Get a configuration setting
+	 *
+	 * @param string $configName Config key
+	 * @param mixed $fallback Return value to be used when the key is not found
+	 * @return mixed Config key value or $fallback if the key doesn't exist
+	 */
+	function getConfig($configName, $fallback=FALSE) {
+		return findArrayPath($this->config, $configName, '.', $fallback);
+	}
+
+	/**
+	 * Get all configuration settings
+	 *
+	 * @return array
+	 */
+	function &getAll() {
+		return $this->config;
 	}
 }
 ?>

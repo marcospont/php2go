@@ -35,7 +35,7 @@
  * its child classes, fields, buttons), reports (Report class) and other
  * graphic elements, such as menus (php2go.gui package).
  *
- * @package php2go.base
+ * @package base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  * @abstract

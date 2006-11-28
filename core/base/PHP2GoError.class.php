@@ -49,7 +49,7 @@ if (!defined('E_STRICT'))
  * PHP2GoError class is used to create an error object, save
  * it in the error log file and raise it through {@link trigger_error()}.
  *
- * @package php2go.base
+ * @package base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
