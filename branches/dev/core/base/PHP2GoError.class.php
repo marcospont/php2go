@@ -39,17 +39,17 @@ if (!defined('E_STRICT'))
 
 /**
  * Base error class
- * 
+ *
  * This class is used by the framework as a wrapper to throw and log
- * application errors. 
- * 
- * During the initialization, PHP2Go defines the function 
+ * application errors.
+ *
+ * During the initialization, PHP2Go defines the function
  * {@link php2goErrorHandler()} as the error handler for
  * warnings, notices and user errors. Inside this function,
- * PHP2GoError class is used to create an error object, save 
+ * PHP2GoError class is used to create an error object, save
  * it in the error log file and raise it through {@link trigger_error()}.
- * 
- * @package base
+ *
+ * @package php2go.base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -61,28 +61,28 @@ class PHP2GoError extends PHP2Go
 	 * @var object
 	 */
 	var $object;
-	
+
 	/**
 	 * Error message
 	 *
 	 * @var string
 	 */
 	var $msg = '';
-	
+
 	/**
 	 * Extra/detailed error message
 	 *
 	 * @var string
 	 */
 	var $extra = '';
-	
+
 	/**
 	 * Error type
 	 *
 	 * @var int
 	 */
 	var $type = E_USER_ERROR;
-	
+
 	/**
 	 * String description of the error type, loaded
 	 * from the active language table
@@ -90,28 +90,28 @@ class PHP2GoError extends PHP2Go
 	 * @var string
 	 */
 	var $typeDesc;
-	
+
 	/**
 	 * Error file path
 	 *
 	 * @var string
 	 */
 	var $file;
-	
+
 	/**
 	 * Error line number
 	 *
 	 * @var int
 	 */
 	var $line;
-	
+
 	/**
 	 * Format for log entry dates
 	 *
 	 * @var string
 	 */
 	var $dateFormat = '%b %d %H:%M:%S';
-	
+
 	/**
 	 * Set of error messages that should be ignored
 	 *
@@ -159,20 +159,20 @@ class PHP2GoError extends PHP2Go
 	function setMessage($message, $extra='') {
 		$this->msg = $message;
 		if (!empty($extra))
-			$this->extra = $extra; 
+			$this->extra = $extra;
 	}
-	
+
 	/**
 	 * Set the error type
-	 * 
+	 *
 	 * @param int $type Error type
 	 */
 	function setType($type) {
 		$this->type = $type;
-		$errorTypes = PHP2Go::getLangVal('ERR_TYPES');				
+		$errorTypes = PHP2Go::getLangVal('ERR_TYPES');
 		$this->typeDesc = ($type == E_DATABASE_ERROR ? PHP2Go::getLangVal('ERR_DATABASE') : $errorTypes[$type]);
 	}
-	
+
 	/**
 	 * Set the path to the file where the error happened
 	 *
@@ -182,7 +182,7 @@ class PHP2GoError extends PHP2Go
 		if (trim($fileName) != '')
 			$this->file = $fileName;
 	}
-	
+
 	/**
 	 * Set the line number where the error happened
 	 *
@@ -222,7 +222,7 @@ class PHP2GoError extends PHP2Go
 	function showErrors() {
 		return (TypeUtils::isTrue(PHP2Go::getConfigVal('SHOW_ERRORS', FALSE)));
 	}
-	
+
 	/**
 	 * Check if debug trace should be displayed/logged along with
 	 * the error message
@@ -232,7 +232,7 @@ class PHP2GoError extends PHP2Go
 	function debugTrace() {
 		return (TypeUtils::isTrue(PHP2Go::getConfigVal('DEBUG_TRACE', FALSE)));
 	}
-	
+
 	/**
 	 * Check if a given error message should be ignored
 	 *
@@ -248,7 +248,7 @@ class PHP2GoError extends PHP2Go
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Check if a given error code is E_USER_* (user error codes)
 	 *
@@ -258,7 +258,7 @@ class PHP2GoError extends PHP2Go
 	function isUserError($errorCode) {
 		return ($errorCode == E_USER_ERROR || $errorCode == E_USER_WARNING || $errorCode == E_USER_NOTICE);
 	}
-	
+
 	/**
 	 * Raise the error, if capturing errors is enabled
 	 */
@@ -268,10 +268,10 @@ class PHP2GoError extends PHP2Go
 			trigger_error($this->msg, $this->type);
 		}
 	}
-	
+
 	/**
 	 * Log the error using the given $logFile
-	 * 
+	 *
 	 * The log file path can contain {@link strftime()} placeholders.
 	 *
 	 * @param string $logFile Log file path
@@ -294,7 +294,7 @@ class PHP2GoError extends PHP2Go
 	/**
 	 * Handle the error by logging and/or displaying according
 	 * with the global configuration settings
-	 * 
+	 *
 	 * This method is called inside {@link php2goErrorHandler()}
 	 * to handle manually thrown errors or normal warnings/notices
 	 * captured by the error handler.
@@ -316,11 +316,11 @@ class PHP2GoError extends PHP2Go
 			if ($this->showErrors())
 				$this->_displayError($errorData);
 			// log the error
-			$logFile = ($this->type == E_DATABASE_ERROR ? PHP2Go::getConfigVal('DB_ERROR_LOG_FILE', FALSE) : PHP2Go::getConfigVal('ERROR_LOG_FILE', FALSE));				
+			$logFile = ($this->type == E_DATABASE_ERROR ? PHP2Go::getConfigVal('DB_ERROR_LOG_FILE', FALSE) : PHP2Go::getConfigVal('ERROR_LOG_FILE', FALSE));
 			$this->_logError($errorData, strftime($logFile));
 			// abort the script for user errors or database errors
 			if ($this->type == E_USER_ERROR || $this->type == E_DATABASE_ERROR)
-				exit;			
+				exit;
 		}
 	}
 
@@ -353,11 +353,11 @@ class PHP2GoError extends PHP2Go
 			</table>
 		");
 	}
-	
+
 	/**
 	 * Build a log message from a given set of error properties
 	 * and save it in a given log file
-	 * 
+	 *
 	 * No action is performed if logging errors is disabled in
 	 * the global configuration settings.
 	 *
@@ -382,7 +382,7 @@ class PHP2GoError extends PHP2Go
 					$i++;
 				}
 			}
-			if (!empty($errData['REQUEST'])) {				
+			if (!empty($errData['REQUEST'])) {
 				foreach ($errData['REQUEST'] as $key=>$value) {
 					if (is_array($value))
 						$logString .= "\t{$key}=\"" . dumpArray($value) . "\"" . $nl;
@@ -394,9 +394,9 @@ class PHP2GoError extends PHP2Go
 				@error_log($logString, 3, $logFile);
 			else
 				@error_log($logString, 0);
-		}		
-	}	
-	
+		}
+	}
+
 	/**
 	 * Format the error message
 	 *
@@ -405,7 +405,7 @@ class PHP2GoError extends PHP2Go
 	 */
 	function _formatMessage() {
 		if (!isset($this->object))
-			return PHP2Go::getLangVal('ERR_SCRIPT_MESSAGE', $this->msg);		
+			return PHP2Go::getLangVal('ERR_SCRIPT_MESSAGE', $this->msg);
 		return PHP2Go::getLangVal('ERR_OBJ_MESSAGE', array($this->object, $this->msg));
 	}
 
@@ -416,7 +416,7 @@ class PHP2GoError extends PHP2Go
 	 * @return array Error stack trace
 	 * @access private
 	 */
-	function _getStackTrace() {		
+	function _getStackTrace() {
 		if ($this->debugTrace()) {
 			$trace = debug_backtrace();
 			$result = array();
@@ -462,7 +462,7 @@ class PHP2GoError extends PHP2Go
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Collect information about the request to save in the log
 	 * file along with the error data
@@ -486,7 +486,7 @@ class PHP2GoError extends PHP2Go
 							$info['PARAMS'][$key] = dumpArray($value);
 						else
 							$info['PARAMS'][$key] = $value;
-					}						
+					}
 				}
 			} elseif ($method == 'POST') {
 				$info['METHOD'] = 'POST';
@@ -523,6 +523,6 @@ class PHP2GoError extends PHP2Go
 			}
 		}
 		return $info;
-	}	
+	}
 }
 ?>

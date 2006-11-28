@@ -29,12 +29,12 @@
 
 /**
  * Abstract implementation of a node
- * 
+ *
  * The AbstractNode class contains methods to manipulate nodes: create,
  * destroy, manage attributes and children. The implementation is highly
  * based on the DOM Level 2
- * 
- * @package base
+ *
+ * @package php2go.base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -42,76 +42,76 @@ class AbstractNode extends PHP2Go
 {
 	/**
 	 * Node ID
-	 * 
+	 *
 	 * Defaults to the value returned by an unique ID generator.
 	 *
 	 * @var string
 	 */
 	var $id;
-	
+
 	/**
 	 * Node name
 	 *
 	 * @var string
 	 */
 	var $name;
-	
+
 	/**
 	 * Node attributes
 	 *
 	 * @var array
 	 */
 	var $attrs;
-	
+
 	/**
 	 * Node children
 	 *
 	 * @var array
 	 */
 	var $children;
-	
+
 	/**
 	 * Children count
 	 *
 	 * @var int
 	 */
 	var $childrenCount = 0;
-	
+
 	/**
 	 * Reference to the parent node
 	 *
 	 * @var object AbstractNode
 	 */
 	var $parentNode = NULL;
-	
+
 	/**
 	 * Reference to the node's first child
 	 *
 	 * @var object AbstractNode
 	 */
 	var $firstChild = NULL;
-	
+
 	/**
 	 * Reference to the node's last child
 	 *
 	 * @var object AbstractNode
 	 */
 	var $lastChild = NULL;
-	
+
 	/**
 	 * Reference to the node's previous sibling
 	 *
 	 * @var object AbstractNode
 	 */
 	var $previousSibling = NULL;
-	
+
 	/**
 	 * Reference to the node's next sibling
 	 *
 	 * @var object AbstractNode
 	 */
 	var $nextSibling = NULL;
-	
+
 	/**
 	 * Hash containing IDs of the child nodes
 	 *
@@ -191,7 +191,7 @@ class AbstractNode extends PHP2Go
 
 	/**
 	 * Get all node attributes
-	 * 
+	 *
 	 * The attribute set is returned by reference, so that changes are
 	 * automatically applied in the node object.
 	 *
@@ -203,7 +203,7 @@ class AbstractNode extends PHP2Go
 
 	/**
 	 * Get a reference to a given node attribute
-	 * 
+	 *
 	 * If the attribute doesn't exist, this method returns false.
 	 *
 	 * @param string $attribute Attribute name
@@ -218,7 +218,7 @@ class AbstractNode extends PHP2Go
 
 	/**
 	 * Add/replace a set of attributes in the node
-	 * 
+	 *
 	 * The new set of attributes is merged with the current ones,
 	 * using {@link array_merge()}.
 	 *
@@ -286,7 +286,7 @@ class AbstractNode extends PHP2Go
 
 	/**
 	 * Get all child nodes of this node
-	 * 
+	 *
 	 * The array of child nodes is returned by reference.
 	 * If the are no child nodes, an empty array is returned.
 	 *
@@ -358,7 +358,7 @@ class AbstractNode extends PHP2Go
 	 * Get the index of a given node inside this node's children
 	 *
 	 * If the given node is not a child of this node, -1 is returned.
-	 * 
+	 *
 	 * @param AbstractNode $Node Node to be used in the search
 	 * @access protected
 	 * @return int
@@ -422,7 +422,7 @@ class AbstractNode extends PHP2Go
 
 	/**
 	 * Remove a child node given its index
-	 * 
+	 *
 	 * Updates child nodes related with the removed node, by fixing
 	 * {@link previousSibling} and {@link nextSibling} references.
 	 *
@@ -477,7 +477,7 @@ class AbstractNode extends PHP2Go
 
 	/**
 	 * Method used to create a clone of the node
-	 * 
+	 *
 	 * This is used by {@link cloneNode} and is overriden
 	 * by child classes, like {@link XmlNode}.
 	 *
