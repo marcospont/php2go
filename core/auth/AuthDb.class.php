@@ -46,7 +46,7 @@ define('AUTH_DB_DEFAULT_TABLE', 'auth');
  * If AUTH.AUTHENTICATOR_PATH is missing in the global configuration, this will be used
  * as the default authenticator returned from calls to {@link Auth::getInstance()}.
  *
- * @package auth
+ * @package php2go.auth
  * @uses Db
  * @uses QueryBuilder
  * @uses StringUtils

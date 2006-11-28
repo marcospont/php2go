@@ -1,69 +1,97 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/ClassLoader.class.php,v 1.5 2006/10/26 04:24:59 mpont Exp $
-// $Date: 2006/10/26 04:24:59 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		ClassLoader
-// @desc		O PHP2Go utiliza um padrão de caminho para classes
-//				e arquivos utilizando o caractere "." como separador,
-//				seguindo o padrão adotado por outras linguagens e tecnologias.
-//				Esta classe é responsável por traduzir estes caminhos
-//				em caminhos reais para diretórios, arquivos ou classes,
-//				para que o PHP possa interpretá-los
-// @note		Em caso de sucesso, cada caminho separado por pontos é incluído
-//				em uma cache, para que os mesmos arquivos ou diretórios não
-//				sejam processados duas ou mais vezes
-// @note		Cada diretório processado é incluído no include_path do
-//				PHP, para melhorar a performance dos próximos acessos
-//				ao mesmo diretório
-// @note		No PHP4, arquivos e classes serão interpretados no
-//				momento da importação. No PHP5, arquivos serão interpretados
-//				no momento da importação e classes serão importadas sob
-//				demanda, através da função __autoload
-// @author		Marcos Pont
-// @version		$Revision: 1.5 $
-//!-----------------------------------------------------------------
+/**
+ * Loader for class and library files
+ *
+ * PHP2Go uses the "dot path" syntax to identify a class or library.
+ * The first element of the path must point to a include path key,
+ * (php2go, the framework default, or a user-defined include path
+ * key, defined in the configuration entry INCLUDE_PATH). The
+ * following path elements are traduced into a relative path in
+ * the file system.
+ *
+ * In the path 'php2go.base.Document':
+ * - php2go is the include path key (points to a folder in the file system)
+ * - base.Document is the relative path starting from the include path key root
+ * - when the file extension is missing, .class.php is used
+ * - the resolved path would be PHP2GO_ROOT . core/base/Document.class.php
+ *
+ * ClassLoader has the responsability of traducing paths in the "dot"
+ * pattern to real paths pointing to folders, classes, libraries
+ * or helper files.
+ *
+ * Each processed path is stored in an internal cache, so that it won't
+ * be processed twice.
+ *
+ * Under PHP4, files and classes are included in the exact moment they're requested.
+ * Under PHP5, files are included right away and classes are included on demand,
+ * through an __autoload interceptor.
+ *
+ * @package php2go
+ * @uses Conf
+ * @uses LanguageBase
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class ClassLoader
 {
-	var $importCache = array();			// @var importCache array		"array()" Cache de caminhos separados por pontos já processados anteriormente
-	var $importClassCache = array();	// @var importClassCache array	"array()" Cache de classes requisitadas em PHP5, para que a função __autoload conheça a extensão de arquivo correta a ser utilizada
+	/**
+	 * Holds dot paths already processed
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $importCache = array();
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::ClassLoader
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Holds class dot paths already processed
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $importClassCache = array();
+
+	/**
+	 * Class constructor
+	 *
+	 * @return ClassLoader
+	 */
 	function ClassLoader() {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::&getInstance
-	// @desc		Retorna o singleton da classe ClassLoader
-	// @return		ClassLoader object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of the ClassLoader class
+	 *
+	 * @return ClassLoader
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
@@ -71,25 +99,19 @@ class ClassLoader
 		return $instance;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::importPath
-	// @desc		Importa o(s) arquivo(s) correspondentes ao caminho fornecido
-	// @param		path string			Caminho para a(s) classe(s) ou arquivo(s)
-	// @param		extension string	"class.php" Extensão do arquivo
-	// @param		isClass bool		"TRUE" O caminho representa uma classe ou conjunto de classes
-	// @note		Traduz um caminho para uma classe, arquivo ou conjunto
-	//				de arquivos separado por pontos para um caminho no
-	//				sistema de arquivos, e registra este caminho no
-	//				include_path do PHP. Exemplo: "php2go.base.Document"
-	// @note		Para utilizar classes ou arquivos que não pertencem ao PHP2Go,
-	//				crie a chave "INCLUDE_PATH" no vetor de configurações $P2G_USER_CFG,
-	//				contendo um vetor associativo chave => caminho.<br><br>
-	//				Exemplo: para incluir "/www/project/classes/MyClass.class.php",
-	//				inclua "project => '/www/project/'" na chave "INCLUDE_PATH" e
-	//				execute import('project.classes.MyClass');
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Import the file(s) pointed by the given path
+	 *
+	 * Translates a dot path to a path in the file system pointing
+	 * to a single file or a set of files, when the wildcard * is
+	 * present.
+	 *
+	 * @param string $path Dot path
+	 * @param string $extension File(s) extension
+	 * @param bool $isClass Indicates that a class or classes are being imported
+	 * @return bool Operation result
+	 * @see import()
+	 */
 	function importPath($path, $extension='class.php', $isClass=TRUE) {
 		if (isset($this->importCache[$path]))
 			return TRUE;
@@ -108,24 +130,24 @@ class ClassLoader
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::loadFile
-	// @desc		Inclui um arquivo a partir de seu caminho ou nome
-	// @param		filePath string		Caminho do arquivo
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Include a file given its path in the file system
+	 *
+	 * @param string $filePath File path
+	 * @return bool Operation result
+	 */
 	function loadFile($filePath) {
 		return ($this->_isReadable($filePath) ? (include_once($filePath)) : FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::loadDirectory
-	// @desc		Inclui todo o conteúdo de um determinado diretório
-	// @param		directoryPath string	Caminho do diretório
-	// @access		protected
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Include all files inside a given directory
+	 *
+	 * Operation will stop when the first error is found.
+	 *
+	 * @param string $directoryPath Directory path
+	 * @return bool Operation result
+	 */
 	function loadDirectory($directoryPath) {
 		$Lang =& LanguageBase::getInstance();
 		$directoryPath = rtrim($directoryPath, "\\/");
@@ -144,17 +166,18 @@ class ClassLoader
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::_translateDotPath
-	// @desc		Traduz um caminho com pontos como separadores, a fim
-	//				de determinar o caminho real no sistema de arquivos
-	// @note		O primeiro elemento do caminho pode ser qualquer um
-	//				dos valores definidos na entrada de configuração
-	//				"INCLUDE_PATH"
-	// @param		dotPath string	Caminho separado por pontos
-	// @return		mixed Informações do caminho processadas
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Translate a dot path into a file system path
+	 *
+	 * Determines the real file system path of the file or files. The
+	 * first path element must match one of the defined include path
+	 * keys. The other elements are translated into a relative file
+	 * system path.
+	 *
+	 * @param string $dotPath Path
+	 * @return bool Operation result
+	 * @access private
+	 */
 	function _translateDotPath($dotPath) {
 		$matches = array();
 		if (preg_match("/^([^\.]+)\.(.*\.)?([^\.]+)/i", $dotPath, $matches)) {
@@ -184,14 +207,15 @@ class ClassLoader
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::_isReadable
-	// @desc		Verifica se um determinado arquivo pode ser lido,
-	//				utilizando o include_path como base de pesquisa
-	// @param		filePath string		Caminho do arquivo
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given file path is readable
+	 *
+	 * The method also tries to find the file using include_path.
+	 *
+	 * @param string $filePath File path
+	 * @access private
+	 * @return bool
+	 */
 	function _isReadable($filePath) {
 		$handle = @fopen($filePath, 'r', TRUE);
 		if (is_resource($handle)) {
@@ -201,13 +225,12 @@ class ClassLoader
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ClassLoader::_registerIncludePath
-	// @desc		Registra um diretório no include_path do PHP
-	// @param		includePath string	Diretório a ser incluído
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Register a new entry in PHP's include_path directive
+	 *
+	 * @param string $includePath New include path
+	 * @access private
+	 */
 	function _registerIncludePath($includePath) {
 		$ps = PATH_SEPARATOR;
 		$includePath = strtr($includePath, '\\', '/');

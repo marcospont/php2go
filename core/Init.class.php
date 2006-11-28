@@ -1,56 +1,80 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/Init.class.php,v 1.38 2006/11/25 12:12:17 mpont Exp $
-// $Date: 2006/11/25 12:12:17 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const PHP2GO_CONFIG_FILE_NAME	"userConfig.php"
-// Nome do arquivo padrão de configuração do framework
+/**
+ * Default configuration file name
+ */
 define('PHP2GO_CONFIG_FILE_NAME', 'userConfig.php');
-// @const PHP2GO_DEFAULT_LANGUAGE	"en-us"
-// Representa a linguagem padrão a ser utilizada quando não for definido um valor fixo nem habilitada auto detecção
+/**
+ * Default language code
+ */
 define('PHP2GO_DEFAULT_LANGUAGE', 'en-us');
-// @const PHP2GO_DEFAULT_CHARSET	"iso-8859-1"
-// Charset padrão a ser utilizado quando requisitado e não fornecido pelo usuário
+/**
+ * Default charset
+ */
 define('PHP2GO_DEFAULT_CHARSET', 'iso-8859-1');
 
-//!-----------------------------------------------------------------
-// @class		Init
-// @desc		A classe Init é instanciada dentro do arquivo de definições
-//				do framework, a fim de carregar o arquivo de configurações do
-//				usuário, o arquivo de entradas de linguagem e realizar validações
-//				no ambiente atual
-// @author		Marcos Pont
-// @version		$Revision: 1.38 $
-//!-----------------------------------------------------------------
+/**
+ * Initializes the framework
+ *
+ * This class is used inside the initialization script, and has the
+ * responsability of starting up all basic servies of the framework:
+ * configuration, internationalization and session.
+ *
+ * @package php2go
+ * @uses Conf
+ * @uses LanguageBase
+ * @uses LanguageNegotiator
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Init
 {
-	var $_Conf;			// @var _Conf Conf object					Contém as configurações do usuário para o framework
-	var $_Lang;			// @var _Lang LanguageBase object			Contém a tabela de linguagem utilizada no framework
-	var $_Negotiator;	// @var _Negotiator LocaleNegotiator object	Utilizada para detectar parâmetros de internacionalização a partir dos headers enviados pelo browser cliente
-	var $locale;		// @var locale string						Locale ativo
-	var $charset;		// @var charset string						Charset ativo
+	/**
+	 * Locale code
+	 *
+	 * @var string
+	 */
+	var $locale;
 
+	/**
+	 * Charset code
+	 *
+	 * @var string
+	 */
+	var $charset;
+
+	/**
+	 * Available set of locales
+	 *
+	 * @var array
+	 */
 	var $localeTable = array(
 		'pt-br' => array(array('pt_BR', 'portuguese', 'pt_BR.iso-8859-1', 'pt_BR.utf-8'), 'brazilian-portuguese', 'pt-br'),
 		'en-us' => array(array('en_US', 'en'), 'us-english', 'en'),
@@ -61,11 +85,35 @@ class Init
 		'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr')
 	);
 
-	//!-----------------------------------------------------------------
-	// @function	Init::Init
-	// @desc		Construtor da classe de inicialização do framework
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Reference to the singleton of the {@link Conf} class
+	 *
+	 * @var object Conf
+	 * @access private
+	 */
+	var $_Conf;
+
+	/**
+	 * Refernce to the singleton of the {@link LanguageBase} class
+	 *
+	 * @var object LanguageBase
+	 * @access private
+	 */
+	var $_Lang;
+
+	/**
+	 * Reference to the singleton of the {@link LocaleNegotiator} class
+	 *
+	 * @var object LocaleNegotiator
+	 * @access private
+	 */
+	var $_Negotiator;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return Init
+	 */
 	function Init() {
 		$this->_Conf =& Conf::getInstance();
 		$this->_Lang =& LanguageBase::getInstance();
@@ -78,13 +126,15 @@ class Init
 		$this->_checkDateFormat();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::&getInstance
-	// @desc		Retorna uma instância única (singleton) da classe Init
-	// @return		Init object
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of the class
+	 *
+	 * This method is called inside p2gConfig.php, and launches
+	 * the framework's initialization.
+	 *
+	 * @return Init
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
@@ -92,26 +142,27 @@ class Init
 		return $instance;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::setLocale
-	// @desc		Altera a tabela de linguagem em relação ao valor original da tabela de configuração
-	// @param		language string		Código da linguagem/idioma
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Change the active locale
+	 *
+	 * @param string $language Language code
+	 * @return bool
+	 */
 	function setLocale($language) {
 		return $this->_applyLocale($language);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::resetLocale
-	// @desc		Verifica se existe um código de linguagem definido pelo usuário
-	//				armazenado em um cookie ou na sessão. Se existir, remove as referências
-	//				existentes e reinicializa as tabelas de linguagem baseado na configuração
-	// @note		Este método pode ser útil para remover uma escolha de linguagem
-	//				feita pelo usuário quando ele encerra sua sessão
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Reset the language settings
+	 *
+	 * Check if there's a language code (choosen by the user) stored
+	 * in the cookies or in the session scope. If it exists, it is removed
+	 * and all language/locale configurations are reinitialized based on
+	 * the default language settings.
+	 *
+	 * This method could be useful to remove a language choice right
+	 * after the user logs off the application.
+	 */
 	function resetLocale() {
 		if (isset($_SESSION['PHP2GO_LANGUAGE']) || isset($_COOKIE['PHP2GO_LANGUAGE'])) {
 			unset($_SESSION['PHP2GO_LANGUAGE']);
@@ -121,42 +172,41 @@ class Init
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::_initConfig
-	// @desc		Este método inicializa o conjunto de configurações setadas
-	//				pelo usuário, criando uma instância da classe Conf
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Initialize the configuration settings
+	 *
+	 * @access private
+	 */
 	function _initConfig() {
-		// verifica se o vetor de configuração já foi definido pelo usuário
+		// check if there's an user-defined $P2G_USER_CFG array in the global scope
 		global $P2G_USER_CFG;
 		if (isset($P2G_USER_CFG) && is_array($P2G_USER_CFG)) {
 			$this->_Conf->setConfig($P2G_USER_CFG);
 			$P2G_USER_CFG = NULL;
 		}
-		// verifica se existe um arquivo de configuração na raiz do domínio
+		// check if there's a configuration file in the root of the application's domain
 		elseif (@file_exists($_SERVER['DOCUMENT_ROOT'] . '/userConfig.php')) {
 			$this->_Conf->loadConfig($_SERVER['DOCUMENT_ROOT'] . '/userConfig.php');
 		}
-		// inicializa a partir das configurações padrões do framework
+		// try to use the framework's default config file
 		elseif (@file_exists(PHP2GO_ROOT . 'userConfig.php')) {
 			$this->_Conf->loadConfig(PHP2GO_ROOT . 'userConfig.php');
 		}
 		else {
 			setupError('The default configuration file <b>userConfig.php</b> was not found at <b>' . PHP2GO_ROOT . '</b>');
-			return FALSE;
 		}
-		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::_initSession
-	// @desc		Inicializa a sessão de usuário, aplicando as configurações
-	//				de nome, tempo de expiração e caminho de serialização
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Initializes the session
+	 *
+	 * Configure all session properties based on the global settings: session
+	 * name, session lifetime, session save path, ... Start PHP session if
+	 * SESSION.AUTO_START is missing or set to true. Define a set of ini
+	 * entries for sessions.
+	 *
+	 * @access private
+	 */
 	function _initSession() {
 		// defaults
 		$defaults = array(
@@ -175,7 +225,7 @@ class Init
 				'SAVE_PATH' => $this->_Conf->getConfig('SESSION_PATH'),
 				'AUTO_START' => $this->_Conf->getConfig('SESSION_AUTO_START', TRUE),
 				'COOKIES_ONLY' => TRUE
-			);				
+			);
 		} else {
 			$conf = array_merge($defaults, $conf);
 		}
@@ -184,7 +234,7 @@ class Init
 			ini_set('session.name', $conf['NAME']);
 		ini_set('session.cache_limiter', 'must_revalidate');
 		ini_set('session.use_cookies', TRUE);
-		ini_set('session.cookie_lifetime', 0);		
+		ini_set('session.cookie_lifetime', 0);
 		// sessão previsamente inicializada
 		if (ini_get('session.auto_start') == TRUE) {
 			$_SESSION = array();
@@ -215,17 +265,19 @@ class Init
 			@session_start();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::_initLocale
-	// @desc		Inicializa as configurações de linguagem e localização a partir
-	//				das configurações definidas pelo usuário
-	// @note		Implementa alteração dinâmica da linguagem a partir de um parâmetro
-	//				da requisição e auto detecção a partir do cabeçalho Accept-Language
-	// @note		Consulte o arquivo INSTALL.txt que acompanha o framework para saber mais
-	//				sobre as possibilidades da entrada de configuração 'LANGUAGE'
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Initialize locale and language settings
+	 *
+	 * Steps of language code detection:
+	 * - use LANGUAGE.REQUEST_PARAM, if present and mapping to a supported language code
+	 * - use the previously selected language code stored in the cookies, if present and supported
+	 * - use the previously selected language stored in the session scope, if present and supported
+	 * - use auto detected language, if auto detection is enabled and detected language is supported
+	 * - use language code defined as default, if present in the config settings
+	 * - use framework's default language code (en-us)
+	 *
+	 * @access private
+	 */
 	function _initLocale() {
 		// linguagem
 		$conf = $this->_Conf->getConfig('LANGUAGE');
@@ -285,25 +337,23 @@ class Init
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::_checkPhpVersion
-	// @desc		Verifica a versão do PHP instalada no sistema operacional do servidor
-	// @note		A requisição mínima para utilização do PHP2Go é a versão 4.3.0
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the running PHP version satisfies the
+	 * minimum requirement of the framework
+	 *
+	 * @access private
+	 */
 	function _checkPhpVersion() {
 		if (!version_compare(PHP_VERSION, '4.3.0', '>=') == -1)
 			setupError($this->_Lang->getLanguageValue('ERR_OLD_PHP_VERSION', array(PHP_VERSION, '4.3.0')));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::_checkAbsoluteUri
-	// @desc		Verifica se a chave ABSOLUTE_URI do arquivo de configuração
-	//				foi definida e se a mesma possui um valor correto
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the ABSOLUTE_URI configuration setting
+	 * is present and represents a valid absolute or relative URL
+	 *
+	 * @access private
+	 */
 	function _checkAbsoluteUri() {
 		if (!$uri = $this->_Conf->getConfig('ABSOLUTE_URI')) {
 			setupError($this->_Lang->getLanguageValue('ERR_ABSOLUTE_URI_NOT_FOUND'));
@@ -324,12 +374,11 @@ class Init
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::_checkDateFormat
-	// @desc		Verifica o formato local de data definido no arquivo de configuração
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Validate LOCAL_DATE_FORMAT provided in the configuration settings
+	 *
+	 * @access private
+	 */
 	function _checkDateFormat() {
 		$dateFormat = $this->_Conf->getConfig('LOCAL_DATE_FORMAT');
 		if ($dateFormat) {
@@ -347,15 +396,13 @@ class Init
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Init::_applyLocale
-	// @desc		Aplica uma definição/alteração de linguagem nas tabelas
-	//				de configuração e linguagem
-	// @param		language string		Código da linguagem
-	// @param		userDefined bool	"FALSE" Definida pelo usuário?
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Apply a given language code
+	 *
+	 * @param string $language Language code
+	 * @param bool $userDefined Whether this is a user choice
+	 * @return bool
+	 */
 	function _applyLocale($language, $userDefined=FALSE) {
 		global $ADODB_LANG;
 		if (isset($this->localeTable[$language])) {

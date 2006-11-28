@@ -39,7 +39,7 @@ import('php2go.net.Pop3');
  * To use AuthPOP3 as the application authenticator, set
  * AUTH.AUTHENTICATOR_PATH = 'php2go.auth.AuthPOP3'.
  *
- * @package auth
+ * @package php2go.auth
  * @uses Pop3
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$

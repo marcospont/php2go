@@ -1,28 +1,31 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/LanguageBase.class.php,v 1.15 2006/10/26 04:30:43 mpont Exp $
-// $Date: 2006/10/26 04:30:43 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 //!-----------------------------------------------------------------
 // @class		LanguageBase
@@ -50,7 +53,7 @@
 //				</pre>
 //!-----------------------------------------------------------------
 class LanguageBase
-{	
+{
 	var $languageBase;		// @var languageBase array	Armazena as tabelas de linguagem ativas
 
 	//!-----------------------------------------------------------------
@@ -61,7 +64,7 @@ class LanguageBase
 	function LanguageBase() {
 		$this->languageBase = array();
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	LanguageBase::&getInstance
 	// @desc		Retorna uma instância única (singleton) da classe LanguageBase
@@ -75,7 +78,7 @@ class LanguageBase
 			$instance = new LanguageBase();
 		return $instance;
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	LanguageBase::clearLanguageBase
 	// @desc		Remove todas as entradas de linguagem carregadas
@@ -85,13 +88,13 @@ class LanguageBase
 	function clearLanguageBase() {
 		$this->languageBase = array();
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	LanguageBase::loadLanguageTableByValue
 	// @desc		Carrega entrada(s) de linguagem a partir de uma variável
 	// @access		public
 	// @param		languageTable array	Vetor de entradas de linguagem
-	// @param		domain string		Nome de domínio	
+	// @param		domain string		Nome de domínio
 	// @return		void
 	//!-----------------------------------------------------------------
 	function loadLanguageTableByValue($languageTable, $domain) {
@@ -102,7 +105,7 @@ class LanguageBase
 		} else
 			$this->languageBase[$domain] = $languageTable;
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	LanguageBase::loadLanguageTableByFile
 	// @desc		Carrega entradas de linguagem a partir de um arquivo
@@ -114,7 +117,7 @@ class LanguageBase
 	function loadLanguageTableByFile($languageFile, $domain) {
 		$this->loadLanguageTableByValue(includeFile($languageFile, TRUE), $domain);
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	LanguageBase::getLanguageValue
 	// @desc		Busca uma determinada chave na tabela de linguagem
@@ -123,7 +126,7 @@ class LanguageBase
 	// @return		mixed Valor da chave ou FALSE se não encontrada
 	//!-----------------------------------------------------------------
 	function getLanguageValue($key, $params=NULL) {
-		$key = trim($key);		
+		$key = trim($key);
 		if (($pos = strpos($key, ':')) !== FALSE) {
 			$domain = substr($key, 0, $pos);
 			$key = substr($key, $pos+1);
@@ -142,8 +145,8 @@ class LanguageBase
 				return $value;
 		}
 		return NULL;
-	}	
-	
+	}
+
 	//!-----------------------------------------------------------------
 	// @function	LanguageBase::_loadLanguageDomain
 	// @desc		Carrega a tabela de linguagem para um domínio de mensagens

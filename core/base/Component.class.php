@@ -29,16 +29,16 @@
 
 /**
  * Basic renderizable component
- * 
+ *
  * The Component class is the base for all renderizable elements that can be
- * included in an HTML document in PHP2Go: templates, forms (Form class and 
+ * included in an HTML document in PHP2Go: templates, forms (Form class and
  * its child classes, fields, buttons), reports (Report class) and other
  * graphic elements, such as menus (php2go.gui package).
- * 
- * @package base
+ *
+ * @package php2go.base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
- * @abstract 
+ * @abstract
  */
 class Component extends PHP2Go
 {
@@ -48,7 +48,7 @@ class Component extends PHP2Go
 	 * @var array
 	 */
 	var $attributes = array();
-	
+
 	/**
 	 * Indicates if the pre-render phase has
 	 * already been executed
@@ -97,7 +97,7 @@ class Component extends PHP2Go
 
 	/**
 	 * Pre-render the component
-	 * 
+	 *
 	 * Must be overriden by child classes and explictly called
 	 * from inside the child implementations, so that the component
 	 * gets correctly flagged as pre-rendered.
@@ -119,7 +119,7 @@ class Component extends PHP2Go
 
 	/**
 	 * Abstract method that should print the component's output
-	 * 
+	 *
 	 * @abstract
 	 */
 	function display() {
@@ -127,7 +127,7 @@ class Component extends PHP2Go
 
 	/**
 	 * Build and return a string representation of the component
-	 * 
+	 *
 	 * This is very useful inside the template engine, when components
 	 * are used as variables in the pattern {$var} and PHP version
 	 * is >= 5.0.0.

@@ -52,29 +52,29 @@ define('BODY_END', 2);
 
 /**
  * HTML documents builder
- * 
+ *
  * The Document class is the main gateway to produce HTML output in PHP2Go.
  * Based on a master layout template provided by the developer, this class
  * builds an HTML document, putting the layout contents inside a BODY tag.
- * 
+ *
  * Each variable declared in the layout template is considered a "document
  * element". A document element is a page slot whose contents should be defined
  * by the developer.
- * 
+ *
  * Normally, a page will contain a main element, which represents the main content
  * area. Other elements can be created to encapsulate and reuse interface elements
- * or areas that repeat over multiple pages, like a header, a navigation menu and 
+ * or areas that repeat over multiple pages, like a header, a navigation menu and
  * a footer.
- * 
+ *
  * Document class also controls items of the document head (external scripts, inline
  * scripts, alternate links, external CSS files, inline CSS code) and properties of
  * the document body (Javascript events, inline attributes, inline scripts).
- * 
+ *
  * The main member of the bundled Javascript framework (javascript/php2go.js) is
  * included by default in all pages built with this class. This gives you access
  * to a wide set of features, like DOM functions, event handling functions, logging
  * helper and much more.
- * 
+ *
  * <code>
  * /* my_templates/my_layout_template.tpl {@*}
  * <div style="width:800px">
@@ -101,8 +101,8 @@ define('BODY_END', 2);
  * /* build and display the final output {@*}
  * $doc->display();
  * </code>
- * 
- * @package base
+ *
+ * @package php2go.base
  * @uses Db
  * @uses DocumentElement
  * @uses HttpResponse
@@ -115,117 +115,117 @@ class Document extends PHP2Go
 {
 	/**
 	 * Document title
-	 * 
+	 *
 	 * Defaults to the configuration setting TITLE
 	 *
 	 * @var string
 	 */
 	var $docTitle;
-	
+
 	/**
 	 * Document charset
-	 * 
+	 *
 	 * Defaults to the configuration setting CHARSET
 	 *
 	 * @var string
 	 */
 	var $docCharset;
-	
+
 	/**
 	 * Document language code
-	 * 
+	 *
 	 * Defaults to the active language code.
 	 *
 	 * @var string
 	 */
 	var $docLanguage;
-	
+
 	/**
 	 * Set of "name" meta tags
 	 *
 	 * @var array
 	 */
 	var $metaTagsName = array();
-	
+
 	/**
 	 * Set of "http-equiv" meta tags
 	 *
 	 * @var array
 	 */
 	var $metaTagsHttp = array();
-	
+
 	/**
 	 * Set of external script files
 	 *
 	 * @var array
 	 */
 	var $scriptFiles = array();
-	
+
 	/**
 	 * Set of inline scripts
 	 *
 	 * @var array
 	 */
 	var $scriptExtCode = array();
-	
+
 	/**
 	 * Sequence of script actions to perform when document loads
 	 *
 	 * @var array
 	 */
 	var $onLoadCode = array();
-	
+
 	/**
 	 * Set of stylesheet files
 	 *
 	 * @var array
 	 */
 	var $styles = array();
-	
+
 	/**
 	 * Set of imported stylesheet files
-	 * 
+	 *
 	 * This property is populated by {@link importStyle}.
 	 *
 	 * @var array
 	 */
 	var $importedStyles = array();
-	
+
 	/**
 	 * Set of inline style definitions
 	 *
 	 * @var string
 	 */
 	var $styleExtCode = '';
-	
+
 	/**
 	 * Set of alternate links for this document
 	 *
 	 * @var array
 	 */
 	var $alternateLinks = array();
-	
+
 	/**
 	 * Extra HTML content to be included inside the head tag
 	 *
 	 * @var string
 	 */
 	var $extraHeaderCode = '';
-	
+
 	/**
 	 * Set of script event handlers for document's body
 	 *
 	 * @var array
 	 */
 	var $bodyEvents = array();
-	
+
 	/**
 	 * Set of attributes for document's body
 	 *
 	 * @var array
 	 */
 	var $bodyCfg = array();
-	
+
 	/**
 	 * Extra HTML content that must be rendered in the top or in
 	 * the bottom of the HTML document
@@ -233,35 +233,35 @@ class Document extends PHP2Go
 	 * @var array
 	 */
 	var $extraBodyContent = array();
-	
+
 	/**
 	 * Whether to allow crawlers and robots
 	 *
 	 * @var bool
 	 */
 	var $allowRobots = TRUE;
-	
+
 	/**
 	 * Whether to enable browser cache
 	 *
 	 * @var bool
 	 */
 	var $makeCache = FALSE;
-	
+
 	/**
 	 * Whether to enable gzip compression for this page
 	 *
 	 * @var bool
 	 */
 	var $makeCompression = FALSE;
-	
+
 	/**
 	 * Compression level
 	 *
 	 * @var int
 	 */
 	var $compressionLevel;
-	
+
 	/**
 	 * Set of document elements detected in the layout template
 	 *
@@ -275,7 +275,7 @@ class Document extends PHP2Go
 	 * @var object Template
 	 */
 	var $Template;
-	
+
 	/**
 	 * Used to measure time spent to create and display the HTML document
 	 *
@@ -283,10 +283,10 @@ class Document extends PHP2Go
 	 * @access private
 	 */
 	var $TimeCounter;
-	
+
 	/**
 	 * Class constructor
-	 * 
+	 *
 	 * Initializes the layout template using the provided $docLayout. The
 	 * array of $docIncludes could contain a set of include files for the
 	 * layout template.
@@ -342,7 +342,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Set the document's title based on a given SQL query
-	 * 
+	 *
 	 * The first cell of the first row of the SQL results
 	 * will be used as the document's title.
 	 *
@@ -375,8 +375,8 @@ class Document extends PHP2Go
 
 	/**
 	 * Append some value in the document's title based on an SQL query
-	 * 
-	 * The first cell of the first row of the SQL results will be 
+	 *
+	 * The first cell of the first row of the SQL results will be
 	 * appended in the document's title.
 	 *
 	 * @param string $sql SQL query
@@ -420,9 +420,9 @@ class Document extends PHP2Go
 
 	/**
 	 * Enable or disable browser cache for this document
-	 * 
+	 *
 	 * Browser cache is not enabled by the default inside the class. Although,
-	 * it could be useful for pages that need more performance and thus need 
+	 * it could be useful for pages that need more performance and thus need
 	 * to rely on caching tecniques.
 	 *
 	 * @param bool $flag Enable/disable
@@ -433,7 +433,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Enable/disable gzip compression for this document
-	 * 
+	 *
 	 * GZIP compression isn't enabled by default. However, this is one of
 	 * the good practices when dealing with pages that produce large HTML
 	 * payloads.
@@ -450,7 +450,7 @@ class Document extends PHP2Go
 	/**
 	 * Set the form (or form+field) that should receive focus
 	 * right after the document is loaded
-	 * 
+	 *
 	 * If $formField is missing, the first available field of
 	 * $formName will get the focus.
 	 *
@@ -483,9 +483,9 @@ class Document extends PHP2Go
 
 	/**
 	 * Adds a block of script code in the document
-	 * 
+	 *
 	 * The $position argument determines if the script will be added
-	 * in the end of the document's head ({@link SCRIPT_START}) or in 
+	 * in the end of the document's head ({@link SCRIPT_START}) or in
 	 * the end of the document's body ({@link SCRIPT_END}).
 	 *
 	 * @param string $scriptCode Block of script code
@@ -500,7 +500,7 @@ class Document extends PHP2Go
 	}
 
 	/**
-	 * Register a script instruction that must be 
+	 * Register a script instruction that must be
 	 * executed when document is loaded
 	 *
 	 * @param string $instruction Script instruction
@@ -528,7 +528,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Import a stylesheet file onto the document
-	 * 
+	 *
 	 * In contrast with {@link addStyle}, which builds a link element, this method
 	 * builds a style element containing an @import(styleUrl) statement.
 	 *
@@ -556,7 +556,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Add an alternate link in the document
-	 * 
+	 *
 	 * This method can be used to build references to feeds:
 	 * <code>
 	 * $doc->addAlternateLink('application/rss+xml', 'feeds/latest.xml', 'RSS Feed');
@@ -573,7 +573,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Define the shortcut icon of this document
-	 * 
+	 *
 	 * The shortcut icon is used by browsers in the main address bar
 	 * and in the bookmark sections
 	 *
@@ -632,7 +632,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Add a script event handler in the document
-	 * 
+	 *
 	 * <code>
 	 * $doc->attachBodyEvent('onLoad', "alert('this will execute first!');");
 	 * $doc->attachBodyEvent('onLoad', "alert('and then, this!');");
@@ -663,7 +663,7 @@ class Document extends PHP2Go
 	/**
 	 * Create a {@link DocumentElement} given its name, the path
 	 * of the template source and the source type
-	 * 
+	 *
 	 * <code>
 	 * $doc = new Document('layout.tpl');
 	 * /* bind "header" slot with an external template file {@*}
@@ -695,7 +695,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Set the contents of a given document element
-	 * 
+	 *
 	 * When assigning objects to document elements under PHP4, always
 	 * use {@link assignByRef} instead of {@link assign}.
 	 *
@@ -709,7 +709,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Set the contents of a given document element by reference
-	 * 
+	 *
 	 * This method is specially suited to assign renderizable
 	 * components to document elements. By using this approach,
 	 * significant performance improvements could be achieved.
@@ -787,7 +787,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Initialize some properties of the document
-	 * 
+	 *
 	 * @access private
 	 */
 	function _initialize() {
@@ -839,7 +839,7 @@ class Document extends PHP2Go
 
 	/**
 	 * Prints the document head: meta tags, scripts, stylesheets, links
-	 * 
+	 *
 	 * @access private
 	 */
 	function _printDocumentHeader() {
@@ -889,7 +889,7 @@ class Document extends PHP2Go
 	/**
 	 * Prints the document body: body tag with properties and event
 	 * handlers, layout template, inline scripts and extra HTML code
-	 * 
+	 *
 	 * @access private
 	 */
 	function _printDocumentBody() {
@@ -924,7 +924,7 @@ class Document extends PHP2Go
 	 * - For template elements, call {@link Template::parse()} if not called yet
 	 * - For component elements, call {@link Component::onPreRender()} if not called yet
 	 * - Assign object elements by ref and scalar elements by value
-	 * 
+	 *
 	 * @access private
 	 */
 	function _buildBodyContent() {

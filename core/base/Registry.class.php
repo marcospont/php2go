@@ -29,17 +29,17 @@
 
 /**
  * Implementation of a registry of variables
- * 
+ *
  * This is an utility class that exposes a simple API to handle variables
  * stored in a registry. This registry is initialized with the contents
  * of the superglobal $GLOBALS array.
- * 
+ *
  * The scope of the variables handled by this class is the executing script.
  * This means that Registry is not a persistent storage layer for variables:
  * it is a simple wrapper to get/set variables and avoid using global variables
  * inside the application's code.
- * 
- * @package base
+ *
+ * @package php2go.base
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -54,7 +54,7 @@ class Registry extends PHP2Go
 
 	/**
 	 * Class constructor
-	 * 
+	 *
 	 * It's not recommended to call this constructor directly. It is used
 	 * by {@link Registry::getInstance()} to create the singleton of the class.
 	 *
@@ -67,7 +67,7 @@ class Registry extends PHP2Go
 
 	/**
 	 * Get the singleton of the Registry class
-	 * 
+	 *
 	 * @return Registry
 	 * @static
 	 */
@@ -80,7 +80,7 @@ class Registry extends PHP2Go
 
 	/**
 	 * Read an entry from the registry
-	 * 
+	 *
 	 * <code>
 	 * $value = Registry::get('variable');
 	 * if ($value) {
@@ -103,7 +103,7 @@ class Registry extends PHP2Go
 
 	/**
 	 * Add/modify an entry in the registry
-	 * 
+	 *
 	 * <code>
 	 * Registry::set(Registry::get('variable')+1);
 	 * Registry::set('my_var', $myValue);

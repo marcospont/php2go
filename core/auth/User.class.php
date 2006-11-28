@@ -58,7 +58,7 @@ import('php2go.session.SessionObject');
  * $user->setPropertyValue('last_seen_uri', HttpRequest::uri());
  * </code>
  *
- * @package auth
+ * @package php2go.auth
  * @uses System
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
