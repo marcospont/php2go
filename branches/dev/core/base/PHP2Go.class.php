@@ -362,7 +362,7 @@ class PHP2Go
 	/**
 	 * Register an object destructor
 	 *
-	 * @param object $object Object
+	 * @param object &$object Object
 	 * @param string $methodName Destructor method name
 	 * @static
 	 */

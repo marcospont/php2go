@@ -75,15 +75,7 @@ class Init
 	 *
 	 * @var array
 	 */
-	var $localeTable = array(
-		'pt-br' => array(array('pt_BR', 'portuguese', 'pt_BR.iso-8859-1', 'pt_BR.utf-8'), 'brazilian-portuguese', 'pt-br'),
-		'en-us' => array(array('en_US', 'en'), 'us-english', 'en'),
-		'es' => array(array('es_ES', 'es'), 'spanish', 'es'),
-		'cs' => array(array('cs_CZ', 'cz'), 'czech', 'cz'),
-		'it' => array(array('it_IT', 'it'), 'italian', 'it'),
-		'de-de' => array(array('de_DE', 'de', 'ge'), 'de-german', 'de'),
-		'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr')
-	);
+	var $localeTable = array();
 
 	/**
 	 * Reference to the singleton of the {@link Conf} class
@@ -115,6 +107,15 @@ class Init
 	 * @return Init
 	 */
 	function Init() {
+		$this->localeTable = array(
+			'pt-br' => array(array('pt_BR', 'portuguese', 'pt_BR.iso-8859-1', 'pt_BR.utf-8'), 'brazilian-portuguese', 'pt-br'),
+			'en-us' => array(array('en_US', 'en'), 'us-english', 'en'),
+			'es' => array(array('es_ES', 'es'), 'spanish', 'es'),
+			'cs' => array(array('cs_CZ', 'cz'), 'czech', 'cz'),
+			'it' => array(array('it_IT', 'it'), 'italian', 'it'),
+			'de-de' => array(array('de_DE', 'de', 'ge'), 'de-german', 'de'),
+			'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr')
+		);
 		$this->_Conf =& Conf::getInstance();
 		$this->_Lang =& LanguageBase::getInstance();
 		$this->_Negotiator =& LocaleNegotiator::getInstance();
@@ -269,12 +270,12 @@ class Init
 	 * Initialize locale and language settings
 	 *
 	 * Steps of language code detection:
-	 * - use LANGUAGE.REQUEST_PARAM, if present and mapping to a supported language code
-	 * - use the previously selected language code stored in the cookies, if present and supported
-	 * - use the previously selected language stored in the session scope, if present and supported
-	 * - use auto detected language, if auto detection is enabled and detected language is supported
-	 * - use language code defined as default, if present in the config settings
-	 * - use framework's default language code (en-us)
+	 * # use LANGUAGE.REQUEST_PARAM, if present and mapping to a supported language code
+	 * # use the previously selected language code stored in the cookies, if present and supported
+	 * # use the previously selected language stored in the session scope, if present and supported
+	 * # use auto detected language, if auto detection is enabled and detected language is supported
+	 * # use language code defined as default, if present in the config settings
+	 * # use framework's default language code (en-us)
 	 *
 	 * @access private
 	 */

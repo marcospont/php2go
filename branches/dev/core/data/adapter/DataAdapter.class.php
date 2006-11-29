@@ -1,56 +1,112 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/data/adapter/DataAdapter.class.php,v 1.6 2006/10/26 04:42:49 mpont Exp $
-// $Date: 2006/10/26 04:42:49 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		DataAdapter
-// @desc		A classe DataAdapter é a base para os adaptadores de dados utilizados
-//				na classe DataSet e suas classes extendidas. Em suas classes filhas são
-//				implementadas as funcionalidades de navegação sobre um conjunto de 
-//				dados proveniente das diversas fontes: resultados de uma consulta a 
-//				banco dados, um arquivo CSV, um arquivo XML ou um array
-// @package		php2go.data.adapter
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.6 $
-//!-----------------------------------------------------------------
+/**
+ * Abstract data adapter
+ * 
+ * This class is the base for all data adapters used by {@link DataSet}
+ * and its child classes. All load, fetch and navigation operations
+ * are implemented in the adapter classes.
+ * 
+ * @package data
+ * @subpackage adapter
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ * @abstract
+ */
 class DataAdapter extends PHP2Go
 {
-	var $fieldCount = 0;		// @var fieldCount int			"0" Número de campos do conjunto de resultados
-	var $fieldNames = array();	// @var fieldNames array		"array()" Vetor contendo os nomes dos campos do conjunto de dados
-	var $params = array();		// @var params array			"array()" Vetor de parâmetros específicos do provider
-	var $recordCount = 0;		// @var recordCount int			"0" Número de linhas do resultado
-	var $totalRecordCount = 0;	// @var totalRecordCount int	"0" Utilizado para armazenar o tamanho total do conjunto de dados
+	/**
+	 * Field count
+	 *
+	 * @var int
+	 */
+	var $fieldCount = 0;
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::DataAdapter
-	// @desc		Construtor da classe. Deve ser executado somente pelas
-	//				classes filhas
-	// @access		public
-	// @param		params array	"array()" Vetor de parâmetros de inicialização	
-	//!-----------------------------------------------------------------
+	/**
+	 * Field names of the data set
+	 *
+	 * @var array
+	 */
+	var $fieldNames = array();
+	
+	/**
+	 * Used to fetch records
+	 *
+	 * @var array
+	 */
+	var $fields = array();
+	
+	/**
+	 * Current cursor position
+	 *
+	 * @var int
+	 */
+	var $absolutePosition = 0;
+	
+	/**
+	 * Indicates end of data set was reached
+	 *
+	 * @var bool
+	 */
+	var $eof = TRUE;
+	
+	/**
+	 * Number of records in the data set
+	 *
+	 * @var int
+	 */
+	var $recordCount = 0;
+	
+	/**
+	 * Total number of records, when subsets are used
+	 *
+	 * @var int
+	 */
+	var $totalRecordCount = 0;
+	
+	/**
+	 * Adapter parameters
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $params = array();
+	
+	/**
+	 * Class constructor
+	 * 
+	 * Must be explictly called by child adapters
+	 *
+	 * @param array $params Configuration arguments
+	 * @return DataAdapter
+	 */
 	function DataAdapter($params=array()) {
 		parent::PHP2Go();
 		if ($this->isA('DataAdapter', FALSE))
@@ -58,12 +114,11 @@ class DataAdapter extends PHP2Go
 		$this->params = TypeUtils::toArray($params);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::getType
-	// @desc		Retorna o tipo do adaptador
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get adapter type
+	 *
+	 * @return string
+	 */
 	function getType() {
 		$className = parent::getClassName();
 		switch (strtolower($className)) {
@@ -80,79 +135,162 @@ class DataAdapter extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::getParameter
-	// @desc		Busca o valor de um parâmetro do adapter
-	// @param		param string	Nome do parâmetro
-	// @return		mixed Valor do parâmetro
-	// @access		public		
-	//!-----------------------------------------------------------------
+	/**
+	 * Get an adapter parameter
+	 *
+	 * @param string $param Parameter name
+	 * @return mixed
+	 */
 	function getParameter($param) {
 		return (isset($this->params[$param]) ? $this->params[$param] : NULL);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::setParameter
-	// @desc		Define o valor de um parâmetro específico do provider
-	// @param		param string	Nome do parâmetro
-	// @param		value mixed		Valor para o parâmetro
-	// @access		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set an adapter parameter
+	 *
+	 * @param string $param Name
+	 * @param mixed $value Value
+	 */
 	function setParameter($param, $value) {
 		$this->params[$param] = $value;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::getFieldCount
-	// @desc		Retorna o número de colunas/campos do conjunto de dados
-	// @access		public
-	// @return		int Número de campos	
-	//!-----------------------------------------------------------------
+	/**#@+
+	 * Must be implemented by child adapters
+     * 
+     * @abstract
+     */
+	function load($index) {
+	}
+	function loadSubSet($offset, $size) {		
+	}
+	/**#@-*/
+	
+	/**
+	 * Get number of fields/columns of the data set
+	 *
+	 * @return int
+	 */
 	function getFieldCount() {
 		return $this->fieldCount;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::getFieldNames
-	// @desc		Retorna o vetor contendo os nomes dos campos/colunas do DataSet
-	// @access		public
-	// @return		array Vetor contendo os nomes dos campos
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the names of the fields/columns of the data set
+	 *
+	 * @return array
+	 */
 	function getFieldNames() {
 		return $this->fieldNames;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::getRecordCount
-	// @desc		Retorna o número total de registros no conjunto de dados atual
-	// @access		public
-	// @return		int Número de registros	
-	// @note		Quando o provedor de dados estiver sendo utilizado para
-	//				construção de dados paginados, este método retorna apenas
-	//				o total de registros da página
-	// @see			PagedDataSet::getTotalRecordCount
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a field given its name
+	 *
+	 * @param string $fieldId Field name
+	 * @return mixed
+	 */
+	function getField($fieldId) {
+		return (array_key_exists($fieldId, $this->fields) ? $this->fields[$fieldId] : NULL);
+	}
+	
+	/**
+	 * Get current cursor position
+	 *
+	 * @return int
+	 */
+	function getAbsolutePosition() {
+		return $this->absolutePosition;
+	}
+	
+	/**
+	 * Get number of records in the data set
+	 *
+	 * @return int
+	 */
 	function getRecordCount() {
 		return $this->recordCount;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::moveFirst
-	// @desc		Move o ponteiro para o primeiro registro do conjunto de dados
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------		
+	/**
+	 * Return current record
+	 *
+	 * @return array
+	 */
+	function current() {
+		return $this->fields;
+	}
+	
+	/**
+	 * Check if the end of the data set was reached
+	 *
+	 * @return array
+	 */
+	function eof() {
+		return $this->eof;
+	}	
+
+	/**
+	 * Fetches the record pointed by current cursor position,
+	 * and increments cursor position
+	 *
+	 * @return mixed
+	 */
+	function fetch() {
+		if (!$this->eof) {
+			$dataArray = $this->fields;
+			$this->moveNext();
+			return $dataArray;
+		}
+		return FALSE;
+	}
+	
+	/**
+	 * Fetches the record pointed by internal cursor into a
+	 * given variable, and increments cursor position
+	 *
+	 * @param mixed &$dataArray Variable to copy record data
+	 * @return bool
+	 */
+	function fetchInto(&$dataArray) {
+		if (!$this->eof) {
+			$dataArray = $this->fields;
+			$this->moveNext();
+			return TRUE;
+		}
+		return FALSE;
+	}	
+	
+	/**#@+
+	 * Must be implemented by child adapters
+     * 
+     * @abstract
+     */
+	function move($index) {
+		return FALSE;
+	}
+	function movePrevious() {
+		return FALSE;
+	}
+	function moveNext() {
+		return FALSE;
+	}
+	/**#@-*/
+	
+	/**
+	 * Move internal pointer to the first record
+	 *
+	 * @return bool
+	 */
 	function moveFirst() {
 		return ($this->getAbsolutePosition() == 0 ? TRUE : $this->move(0));
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	DataAdapter::moveFirst
-	// @desc		Move o ponteiro para o último registro do conjunto de dados
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Move internal pointer to the last record
+	 *
+	 * @return bool
+	 */
 	function moveLast() {
 		return $this->move($this->getRecordCount() - 1);
 	}	

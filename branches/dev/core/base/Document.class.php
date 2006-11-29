@@ -721,7 +721,7 @@ class Document extends PHP2Go
 	 * </code>
 	 *
 	 * @param string $elementName Element name
-	 * @param Component $ContentObj Component to fill the slot
+	 * @param Component &$ContentObj Component to fill the slot
 	 * @see assign
 	 */
 	function assignByRef($elementName, &$ContentObj) {
@@ -921,9 +921,9 @@ class Document extends PHP2Go
 	/**
 	 * Process all document elements before rendering the page body
 	 *
-	 * - For template elements, call {@link Template::parse()} if not called yet
-	 * - For component elements, call {@link Component::onPreRender()} if not called yet
-	 * - Assign object elements by ref and scalar elements by value
+	 * # For template elements, call {@link Template::parse()} if not called yet
+	 * # For component elements, call {@link Component::onPreRender()} if not called yet
+	 * # Assign object elements by ref and scalar elements by value
 	 *
 	 * @access private
 	 */

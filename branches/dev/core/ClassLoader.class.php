@@ -38,10 +38,10 @@
  * the file system.
  *
  * In the path 'php2go.base.Document':
- * - php2go is the include path key (points to a folder in the file system)
- * - base.Document is the relative path starting from the include path key root
- * - when the file extension is missing, .class.php is used
- * - the resolved path would be PHP2GO_ROOT . core/base/Document.class.php
+ * # php2go is the include path key (internally points to PHP2GO_ROOT . "core/")
+ * # base.Document is the relative path starting from the include path key root
+ * # when the file extension is missing, .class.php is used
+ * # the resolved path would be PHP2GO_ROOT . "core/base/Document.class.php"
  *
  * ClassLoader has the responsability of traducing paths in the "dot"
  * pattern to real paths pointing to folders, classes, libraries

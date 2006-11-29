@@ -1,55 +1,78 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/data/DataSet.class.php,v 1.13 2006/10/26 04:39:09 mpont Exp $
-// $Date: 2006/10/26 04:39:09 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		DataSet
-// @desc		A classe DataSet é uma interface para a construção de conjuntos
-//				de dados através dos quais é possível navegar utilizando um ponteiro,
-//				permitindo a criação de iterações sobre estes dados.<br>
-//				Para tal, existe um conjunto de <b>adaptadores de dados</b> capazes
-//				de montar e manipular um DataSet partindo de diversas fontes: banco de dados,
-//				arquivo CSV, arquivo XML ou arrays.
-// @package		php2go.data
-// @extends		Component
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.13 $
-//!-----------------------------------------------------------------
+/**
+ * Base wrapper for data sets
+ * 
+ * The DataSet class exposes an interface to load, navigate, inspect and
+ * read data sets. Different types of information can be processed through
+ * a set of <b>data adapters</b>.
+ * 
+ * The existent adapters are: 
+ * # <b>db</b> (records loaded from the database)
+ * # <b>xml</b> (records loaded from a XML file respecting a special structure) 
+ * # <b>csv</b> (records from a CSV file)
+ * # <b>array</b> (data loaded from a PHP array)
+ * 
+ * @package data
+ * @uses TypeUtils
+ * @author Marcos Pont
+ * @version $Revision$
+ */
 class DataSet extends Component
 {
-	var $adapter = NULL;	// @var adapter mixed			"NULL" Objeto que representa o adaptador de dados da classe
-	var $adapterType;		// @var adapterType string		Tipo do adaptador de dados (db, csv, xml, array)
+	/**
+	 * Data adapter
+	 *
+	 * @var object DataAdapter
+	 * @access protected
+	 */
+	var $adapter = NULL;
+	
+	/**
+	 * Adapter type
+	 *
+	 * @var string
+	 * @access protected
+	 */
+	var $adapterType;
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::DataSet
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		type string		Tipo de adaptador (db, csv, xml, array)
-	// @param		params array	"array()" Parâmetros de inicialização do adaptador
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 * 
+	 * Shouldn't be called directly. Prefer calling the static
+	 * methods {@link factory} and {@link getInstance}.
+	 *
+	 * @param string $type Adapter type (db, csv, xml or array)
+	 * @param array $params Adapter parameters
+	 * @return DataSet
+	 */
 	function DataSet($type, $params=array()) {
 		parent::Component();
 		$type = ucfirst(strtolower($type));
@@ -62,22 +85,24 @@ class DataSet extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::&factory
-	// @desc		Método factory: pode ser utilizado para construir
-	//				diferentes tipos de dataset a partir dos parâmetros
-	//				$type (tipo de adaptador) e $params (argumentos para
-	//				criação do dataset)
-	// @param		type string		Tipo de adaptador (db, csv, xml, array)
-	// @param		params array	"array()" Parâmetros de inicialização do adaptador
-	// @note		Parâmetros do tipo "db": debug (bool), connectionId (string)<br>
-	//				Parâmetros do tipo "xml": nenhum<br>
-	//				Parâmetros do tipo "csv": nenhum<br>
-	//				Parâmetros do tipo "array": nenhum
-	// @return		DataSet object
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Creates a new dataset of type $type, using a 
+	 * given set of configuration $params
+	 * 
+	 * The argument $type is mandatory and must be one of
+	 * the supported adapter types: db, xml, csv or array.
+	 * 
+	 * The set of parameters accepted by data adapters are:
+	 * # db : debug (bool), connectionId (string), optimizeCount (bool)
+	 * # xml : none
+	 * # csv : none
+	 * # array : none
+	 *
+	 * @param string $type Adapter type
+	 * @param array $params Adapter parameters
+	 * @return DataSet
+	 * @static
+	 */
 	function &factory($type, $params=array()) {
 		$type = strtolower($type);
 		$params = (array)$params;
@@ -85,19 +110,23 @@ class DataSet extends Component
 		return $instance;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::&getInstance
-	// @desc		Retorna uma instância única de um determinado tipo de DataSet
-	// @param		type string		Tipo de adaptador (db, csv, xml, array)
-	// @param		params array	"array()" Parâmetros de inicialização do adaptador
-	// @note		Parâmetros do tipo "db": debug (bool), connectionId (string)<br>
-	//				Parâmetros do tipo "xml": nenhum<br>
-	//				Parâmetros do tipo "csv": nenhum<br>
-	//				Parâmetros do tipo "array": nenhum
-	// @return		DataSet object
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of a given dataset type
+	 * 
+	 * The argument $type is mandatory and must be one of
+	 * the supported adapter types: db, xml, csv or array.
+	 *
+	 * The set of parameters accepted by data adapters are:
+	 * # db : debug (bool), connectionId (string), optimizeCount (bool)
+	 * # xml : none
+	 * # csv : none
+	 * # array : none
+	 *
+	 * @param string $type Adapter type
+	 * @param array $params Adapter parameters
+	 * @return DataSet
+	 * @static
+	 */
 	function &getInstance($type, $params=array()) {
 		static $instances;
 		if (!isset($instances))
@@ -110,215 +139,260 @@ class DataSet extends Component
 		return $instances[$hash];
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::load
-	// @desc		Este método recebe uma quantidade variável de parâmetros
-	//				dependendo do adaptador de dados utilizado. A partir dos parâmetros
-	//				recebidos, o método load() interno ao adaptador é executado
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Loads information onto the data adapter
+	 * 
+	 * Receives a variable number of arguments, depending on
+	 * the active data adapter. Internally calls load() method
+	 * of the data adapter.
+	 * 
+	 * Below, some examples using different data adapters:
+	 * <code>
+	 * /* db adapter {@*}
+	 * $dataset->load("select * from my_table where status = ?", array($status));
+	 * /* xml adapter {@*}
+	 * $dataset->load("my_data.xml", DS_XML_CDATA);
+	 * /* csv adapter {@*}
+	 * $dataset->load("my_data.csv");
+	 * /* array adapter {@*}
+	 * $dataset->load($myArray);
+	 * </code>
+	 * 
+	 * @see DataSetArray::load()
+	 * @see DataSetCsv::load()
+	 * @see DataSetDb::load()
+	 * @see  DataSetXml::load()
+	 */
 	function load() {
 		$args = func_get_args();
 		@call_user_func_array(array(&$this->adapter, 'load'), $args);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::loadSubSet
-	// @desc		Este método recebe uma quantidade variável de parâmetros
-	//				dependendo do adaptador de dados utilizado. A partir dos parâmetros
-	//				fornecidos, o método loadSubSet() interno ao adaptador é executado
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Loads a subset of a data source onto the data adapter
+	 *
+	 * From the third parameter to the last, this method receives
+	 * a variable number of arguments, depending on the active
+	 * data adapter. Internally calls loadSubSet() method
+	 * of the data adapter.
+	 * 
+	 * @param int $offset Starting offset (zero-based)
+	 * @param int $size Subset size
+	 * @see DataSetArray::loadSubSet()
+	 * @see DataSetCsv::loadSubSet()
+	 * @see DataSetDb::loadSubSet()
+	 * @see  DataSetXml::loadSubSet()
+	 */
 	function loadSubSet() {
 		$args = func_get_args();
 		@call_user_func_array(array(&$this->adapter, 'loadSubSet'), $args);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::getFieldCount
-	// @desc		Busca o número de colunas/campos do DataSet criado
-	// @return		int Número de campos
-	// @see			DataSet::getRecordCount
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getFieldCount() {
+	/**
+	 * Get the field count of the data set
+	 *
+	 * @uses DataAdapter::getFieldCount()
+	 * @return int
+	 */
+	function getFieldCount() {		
 		return $this->adapter->getFieldCount();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::getFieldNames
-	// @desc		Monta um vetor contendo os nomes dos campos do DataSet
-	// @return		array Vetor de campos do conjunto de dados
-	// @see			DataSet::getFieldNames
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the field names of the data set
+	 *
+	 * @uses DataAdapter::getFieldNames()
+	 * @return array
+	 */
 	function getFieldNames() {
 		return $this->adapter->getFieldNames();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::getFieldName
-	// @desc		Busca o nome de um determinado campo do conjunto de dados,
-	//				a partir de seu índice
-	// @param		i int	Índice do campo
-	// @return		string Nome do campo buscado
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the name of the field indexed by $i
+	 *
+	 * @uses DataAdapter::getFieldNames()
+	 * @param int $i Field index
+	 * @return string
+	 */
 	function getFieldName($i) {
 		$fieldNames = $this->adapter->getFieldNames();
 		return (isset($fieldNames[$i]) ? $fieldNames[$i] : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::getField
-	// @desc		Busca o valor de um campo na posição atual do cursor
-	//				através de seu índice ou de seu nome
-	// @param		fieldId mixed	Índice ou nome do campo buscado
-	// @return		mixed	Valor do campo no registro atual
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the value of a field
+	 *
+	 * @uses DataAdapter::getField()
+	 * @param string $fieldId Field name
+	 * @return mixed
+	 */
 	function getField($fieldId) {
 		return $this->adapter->getField($fieldId);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::getRecordCount
-	// @desc		Retorna o número de registros do DataSet
-	// @access		public
-	// @return		int Número de registros
-	// @see			DataSet::getFieldCount
-	//!-----------------------------------------------------------------
-	function getRecordCount() {
-		return $this->adapter->getRecordCount();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DataSet::getAbsolutePosition
-	// @desc		Retorna a posição atual do cursor
-	// @return		int Posição atual do cursor
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get current cursor position
+	 *
+	 * @uses DataAdapter::getAbsolutePosition()
+	 * @return int
+	 */
 	function getAbsolutePosition() {
 		return $this->adapter->getAbsolutePosition();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::current
-	// @desc		Busca o registro apontado pela posição atual do cursor
-	// @return		array Vetor contendo dados do registro atual
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the number of records in the data set
+	 *
+	 * @uses DataAdapter::getRecordCount()
+	 * @return int
+	 */
+	function getRecordCount() {
+		return $this->adapter->getRecordCount();
+	}
+
+	/**
+	 * Get current record
+	 * 
+	 * Retrieve the contents of the record pointed by
+	 * the current cursor position.
+	 * <code>
+	 * $ds =& DataSet::factory('db');
+	 * $ds->load('select * from my_table');
+	 * while (!$ds->eof()) {
+	 *   $current = $ds->current();
+	 *   $ds->moveNext();
+	 * }
+	 * </code>
+	 *
+	 * @uses DataAdapter::current()
+	 * @return array
+	 */
 	function current() {
 		return $this->adapter->current();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::fetch
-	// @desc		Retorna um vetor contendo a linha atual, ou FALSE se
-	//				o final do DataSet for atingido
-	// @return		mixed Vetor contendo o registro atual ou FALSE
-	// @see			DataSet::fetchInto
-	// @access		public
-	//!-----------------------------------------------------------------
-	function fetch() {
-		return $this->adapter->fetch();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DataSet::fetchInto
-	// @desc		Armazena o conteúdo do registro atual no vetor passado
-	//				através do parâmetro $dataArray. Retorna FALSE se o final
-	//				do conjunto de resultados foi atingido
-	// @param		&dataArray array	Vetor para armazenamento do registro
-	// @see			DataSet::fetch
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function fetchInto(&$dataArray) {
-		return $this->adapter->fetchInto($dataArray);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DataSet::eof
-	// @desc		Verifica se o final do conjunto de resultados foi atingido
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if end of data set was reached
+	 * 
+	 * Don't forget to manually advance the cursor
+	 * position when using eof() inside a while loop.
+	 * 
+	 * <code>
+	 * $ds =& DataSet::factory('db');
+	 * $ds->load('select * from my_table');
+	 * while (!$ds->eof()) {
+	 *   $row = $ds->current();
+	 *   /* don't forget this :) {@*}
+	 *   $ds->moveNext();
+	 * }
+	 * </code>
+	 *
+	 * @uses DataAdapter::eof()
+	 * @return bool
+	 */
 	function eof() {
 		return $this->adapter->eof();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::move
-	// @desc		Move o ponteiro para um determinado número de registro
-	// @param		recordNumber int	Número do registro
-	// @access		public
-	// @return		bool
-	// @see			DataSet::movePrevious
-	// @see			DataSet::moveNext
-	// @see			DataSet::moveFirst
-	// @see			DataSet::moveLast
-	//!-----------------------------------------------------------------
-	function move($recordNumber) {
-		return $this->adapter->move($recordNumber);
+	/**
+	 * Fetches the record pointed by the active cursor position
+	 * 
+	 * When using fetch(), it's not necessary to increment the
+	 * cursor position by calling {@link moveNext}.
+	 * <code>
+	 * $ds->load($data);
+	 * while ($row = $ds->fetch()) {
+	 *   /* there's no need to call moveNext() here {@*}
+	 * }
+	 * </code>
+	 * 
+	 * IMPORTANT: fetch returns the current record and moves to
+	 * the next, if existent. So calls to {@link current} and
+	 * {@link getField} won't operate on previously returned
+	 * record.
+	 *
+	 * @uses DataAdapter::fetch()
+	 * @return array|FALSE Returns FALSE when end of data set is reached
+	 * @see fetchInto
+	 */
+	function fetch() {
+		return $this->adapter->fetch();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::moveNext
-	// @desc		Move o ponteiro para o próximo registro
-	// @access		public
-	// @return		bool
-	// @note		Retorna FALSE se o final do DataSet foi atingido
-	// @see			DataSet::move
-	// @see			DataSet::movePrevious
-	// @see			DataSet::moveFirst
-	// @see			DataSet::moveLast
-	//!-----------------------------------------------------------------
-	function moveNext() {
-		return $this->adapter->moveNext();
+	/**
+	 * Fetches the current record into $dataArray variable
+	 * 
+	 * When using fetchInto, $dataArray is taken by reference and
+	 * the cursor position is automatically incremented.
+	 * <code>
+	 * $ds->load($data);
+	 * while ($ds->fetchInto($row)) {
+	 *   /* there's no need to call moveNext() here {@*}
+	 * }
+	 * </code>
+	 *
+	 * IMPORTANT: fetchInto returns the current record and moves to
+	 * the next, if existent. So calls to {@link current} and
+	 * {@link getField} won't operate on previously returned
+	 * record.
+	 *
+	 * @uses DataAdapter::fetchInto()
+	 * @param array $dataArray Variable to copy record data
+	 * @return bool Returns FALSE when end of data set is reached
+	 * @see fetch
+	 */
+	function fetchInto(&$dataArray) {
+		return $this->adapter->fetchInto($dataArray);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::movePrevious
-	// @desc		Move o ponteiro para o registro anterior
-	// @access		public
-	// @return		bool
-	// @note		Retorna FALSE se o início do DataSet foi alcançado
-	// @see			DataSet::move
-	// @see			DataSet::moveNext
-	// @see			DataSet::moveFirst
-	// @see			DataSet::moveLast
-	//!-----------------------------------------------------------------
+	/**
+	 * Move internal pointer to a given position
+	 *
+	 * @uses DataAdapter::move()
+	 * @param int $index Record index
+	 * @return bool
+	 */
+	function move($index) {
+		return $this->adapter->move($index);
+	}
+
+	/**
+	 * Move internal pointer to the previous position
+	 *
+	 * @uses DataAdapter::movePrevious()
+	 * @return bool
+	 */
 	function movePrevious() {
 		return $this->adapter->movePrevious();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::moveFirst
-	// @desc		Move o ponteiro para o primeiro registro
-	// @access		public
-	// @return		bool
-	// @see			DataSet::move
-	// @see			DataSet::moveNext
-	// @see			DataSet::movePrevious
-	// @see			DataSet::moveLast
-	//!-----------------------------------------------------------------
+	/**
+	 * Move internal pointer to the next position
+	 *
+	 * @uses DataAdapter::moveNext()
+	 * @return bool
+	 */
+	function moveNext() {
+		return $this->adapter->moveNext();
+	}
+
+	/**
+	 * Move internal pointer to the first record
+	 *
+	 * @uses DataAdapter::moveFirst()
+	 * @return bool
+	 */
 	function moveFirst() {
 		return $this->adapter->moveFirst();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSet::moveLast
-	// @desc		Move o ponteiro para o último registro
-	// @access		public
-	// @return		bool
-	// @see			DataSet::move
-	// @see			DataSet::moveNext
-	// @see			DataSet::movePrevious
-	// @see			DataSet::moveFirst
-	//!-----------------------------------------------------------------
+	/**
+	 * Move internal pointer to the last record
+	 *
+	 * @uses DataAdapter::moveLast()
+	 * @return bool
+	 */
 	function moveLast() {
 		return $this->adapter->moveLast();
 	}
