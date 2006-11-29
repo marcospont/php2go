@@ -575,14 +575,13 @@ class Auth extends PHP2Go
 	 * This method detects and updates the {@link $authState}. According
 	 * to the calculated state, it will create, modify or destroy the user
 	 * session and execute the proper callback:
-	 * - if the user session is invalid, tries to fetch the login credentials from the request
-	 * - if the credentials are present, query the authenticator. If the user is valid, create
+	 * # if the user session is invalid, tries to fetch the login credentials from the request
+	 * # if the credentials are present, query the authenticator. If the user is valid, create
 	 *   the user session and execute the login callback. Otherwise, execute the authentication
 	 *   failure callback
-	 * - if the credentials are not present, execute the invalid session callback
-	 * - if the session is valid and expired, destroy it and execute the expiry callback
-	 * - if the session is valid and idled, destroy it and execute the idleness callback
-	 * - otherwise, execute the valid session callback
+	 * # if the session is valid and expired, destroy it and execute the expiry callback
+	 * # if the session is valid and idled, destroy it and execute the idleness callback
+	 * # otherwise, execute the valid session callback
 	 */
 	function init() {
 		if (!$this->initialized) {

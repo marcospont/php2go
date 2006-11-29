@@ -1,30 +1,32 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/data/Report.class.php,v 1.75 2006/11/19 18:31:30 mpont Exp $
-// $Date: 2006/11/19 18:31:30 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.data.PagedDataSet');
 import('php2go.data.ReportSimpleSearch');
 import('php2go.db.QueryBuilder');
@@ -34,105 +36,421 @@ import('php2go.text.StringUtils');
 import('php2go.xml.XmlDocument');
 import('php2go.util.Callback');
 import('php2go.util.Statement');
-//------------------------------------------------------------------
 
-// @const REPORT_DEFAULT_VISIBLE_PAGES "10"
-// Define o número padrão de links para outras páginas visíveis
+/**
+ * Default number of visible page links
+ * when using REPORT_PAGING_DEFAULT paging style
+ */
 define('REPORT_DEFAULT_VISIBLE_PAGES', 10);
-// @const REPORT_DEFAULT_PAGE_BREAK "20"
-// Número de linhas padrão por página em modo de impressão
+/**
+ * Default lines per page, to be used on print page breaks
+ */
 define('REPORT_DEFAULT_PAGE_BREAK', 20);
-// @const REPORT_COLUMN_SIZES_CUSTOM "1"
-// Células cuja largura deve ser definida pelo programador
+/**
+ * Column sizes defined by the developer
+ */
 define('REPORT_COLUMN_SIZES_CUSTOM', 1);
-// @const REPORT_COLUMN_SIZES_FIXED "2"
-// Células são geradas com o mesmo tamanho
+/**
+ * Fixed and equal sizes for all columns
+ */
 define('REPORT_COLUMN_SIZES_FIXED', 2);
-// @const REPORT_COLUMN_SIZES_FREE "3"
-// Células são geradas sem atributo de tamanho - a largura é definida pelo browser
+/**
+ * Don't use width attribute on columns. Size will be defined by the browser rendering engine
+ */
 define('REPORT_COLUMN_SIZES_FREE', 3);
-// @const REPORT_PAGING_DEFAULT "1"
-// Sistema de paginação padrão, com links para N próximas páginas, primeira e última
+/**
+ * Default paging style: displays N links to another pages and links to another sets of pages
+ */
 define('REPORT_PAGING_DEFAULT', 1);
-// @const REPORT_PREVNEXT "2"
-// Sistema de paginação com apenas dois links, para a página anterior e a próxima
+/**
+ * Displays links or buttons pointing to previous and next pages
+ */
 define('REPORT_PREVNEXT', 2);
-// @const REPORT_FIRSTPREVNEXTLAST "3"
-// Sistema de paginação com links para a primeira, anterior, próxima e última páginas
+/**
+ * Displays links or buttons pointing to first, previous, next and last pages
+ */
 define('REPORT_FIRSTPREVNEXTLAST', 3);
 
-//!-----------------------------------------------------------------
-// @class		Report
-// @desc 		A classe Report constrói relatórios a partir de consultas
-// 				SQL, permitindo a exibição por colunas ou por células, o
-// 				agrupamento do relatório por uma ou mais colunas, paginação
-// 				automática, filtros simples ou compostos e ordenação on-the-fly
-// @package		php2go.data
-// @extends 	PagedDataSet
-// @uses		Db
-// @uses		HtmlUtils
-// @uses		HttpRequest
-// @uses		QueryBuilder
-// @uses		ReportSimpleSearch
-// @uses		Statement
-// @uses		StringUtils
-// @uses		Template
-// @uses		XmlDocument
-// @author 		Marcos Pont
-// @version		$Revision: 1.75 $
-// @note		Confira exemplo de uso em examples/report.example.php
-// @note		Se estiver utilizando PHP5, não esqueça de incluir a declaração XML na primeira linha do arquivo de especificação
-//!-----------------------------------------------------------------
+/**
+ * Build and display paged data sets loaded from a database
+ * 
+ * Based on a XML specification, which contains data source
+ * information and configuration settings, and a template file 
+ * that determines user interface, the Report class builds
+ * fully featured data sets split into pages.
+ * 
+ * It offers lots of features, like automatic generation of 
+ * pagination links, simple search tool with highlight support,
+ * multiple page layouts, ordering, single level grouping and 
+ * much more.
+ * 
+ * Basic example of a XML file:
+ * <code>
+ * <?xml version="1.0" encoding="iso-8859-1"?>
+ * <report title="My Report">
+ *   <layout grid="T" sortable="T">
+ *     <pagination style="REPORT_PAGING_PREVNEXT">
+ *       <param name="useButtons" value="T"/>
+ *     </pagination>
+ *     <style altstyle="odd,even"/>
+ *     <columns>
+ *       <column name="name" alias="Name"/>
+ *       <column name="address" alias="Address"/>
+ *       <column name="category" alias="Category" help="Client category"/>
+ *     </columns>
+ *   </layout>
+ *   <datasource>
+ *     <fields>name, address, category</fields>
+ *     <tables>client</tables>
+ *     <clause/>
+ *     <groupby/>
+ *     <orderby/>
+ *   </datasource>
+ * </report>
+ * </code>
+ * 
+ * Basic example of a template file:
+ * <code>
+ * <table align='center' width='700'>
+ *   <tr>
+ *     <td align='center' colspan='2'>{$title}</td>
+ *   </tr>
+ *   <tr>
+ *     <td align='left'>{$rows_per_page}</td>
+ *     <td align='right'>{$page_links}</td>
+ *   </tr>
+ * </table>
+ * <table align='center' width='700'>
+ *   <!-- START BLOCK : loop_line -->
+ *   <tr>
+ *     <!-- START BLOCK : loop_header_cell -->
+ *     <th width='{$col_width}'>{$col_help}{$col_name}{$col_order}</th>
+ *     <!-- END BLOCK : loop_header_cell -->
+ *     <!-- START BLOCK : loop_cell -->
+ *     <td width='{$col_width}' class='{$alt_style}'>{$col_data}</td>
+ *     <!-- END BLOCK : loop_cell -->
+ *   </tr>
+ *   <!-- END BLOCK : loop_line -->
+ * </table>
+ * <table align='center' width='700'>
+ *   <tr>
+ *     <td align='left'>{$this_page}</td>
+ *     <td align='right'>{$row_interval}</td>
+ *   </tr>
+ * </table>
+ * </code>
+ * 
+ * @package data
+ * @uses Db
+ * @uses HtmlUtils
+ * @uses HttpRequest
+ * @uses QueryBuilder
+ * @uses ReportSimpleSearch
+ * @uses Statement
+ * @uses Template
+ * @uses XmlDocument
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision
+ */
 class Report extends PagedDataSet
 {
-	var $id;						// @var id string					ID do relatório, utilizando para identifica-lo em páginas que utilizam mais de uma instância
-	var $title;						// @var title string				Título do relatório
-	var $debug = FALSE;				// @var debug bool					"FALSE" Habilita ou desabilita debug na execução da consulta do relatório
-	var $baseUri;					// @var baseUri string				URI base para os links montados pela classe
-	var $rootAttrs = array();		// @var rootAttrs array				"array()" Vetor de atributos da raiz do XML do relatório
-	var $hasHeader = FALSE;			// @var hasHeader bool				"FALSE" Indica que o relatório é montado em colunas com os cabeçalhos na primeira linha
-	var $numCols = 1;				// @var numCols int					"1" Número de registros por linha (quando hasHeader = FALSE), modelo de relatório em "células"
-	var $isSortable = TRUE;			// @var isSortable bool				"TRUE" Se verdadeiro, habilita a geração de links nos cabeçalhos das colunas para reordenação do relatório
-	var $isPrintable = FALSE;		// @var isPrintable bool			"FALSE" Indica se o relatório está sendo gerado para impressão
-	var $pageBreak;					// @var pageBreak int				Quebra de página (para a versão de impressão)
-	var $extraVars;					// @var extraVars string			Parâmetros extra que devem ser enviados junto com requisições de paginação e reordenamento
-	var $emptyBlock;				// @var emptyBlock string			Permite a definição de um bloco alternativo a ser criado para relatórios por célula quando o número de células não completa a linha
-	var $handlers = array();		// @var handlers array				"array()" Conjunto de handlers (pageStart, pageEnd, line)
-	var $pagination = array();		// @var pagination array			"array()" Vetor contendo configurações de paginação
-	var $jsListeners = array();		// @var jsListeners array			"array()" Conjunto de tratadores Javascript (onChangePage, onSort, onSearch)
-	var $style = array();			// @var style array					"array()" Vetor que armazena as configurações de estilo do relatório (título, links, formulário de busca, hints de ajuda)
-	var $icons = array(); 			// @var icons array					"array()" Vetor de ícones da classe (orderasc = ordenação ascendente, orderdesc = ordenação descendente)
-	var $variables = array();		// @var variables array				"array()" Definições de variáveis: valor, valor default e ordem de pesquisa
-	var $columns = array();			// @var columns array				"array()" Armazena configurações das colunas do relatório (alias, tamanho, alinhamento, texto de ajuda)
-	var $hidden = array();			// @var hidden array				"array()" Vetor de colunas a serem escondidas na exibição do relatório
-	var $unsortable = array();		// @var unsortable array			"array()" Conjunto de colunas para as quais não deve ser habilitada ordenação a partir dos cabeçalhos
-	var $colSizes;					// @var colSizes array				Vetor que permite definir tamanhos customizados para as colunas (hasHeader = TRUE)
-	var $colSizesMode;				// @var colSizesMode int			Modo utilizado para definir os tamanhos das colunas
-	var $group;						// @var group array					Vetor de colunas pelas quais os dados devem ser agrupados
-	var $groupDisplay = array();	// @var groupDisplay array			"array()" Vetor de colunas a serem exibidas a cada novo agrupamento
-	var $emptyTemplate;				// @var emptyTemplate array			Armazena o arquivo e as variáveis de substituição do template customizado para tratamento de relatório vazio
-	var $searchTemplate;			// @var searchTemplate array		Armazena o arquivo e as variáveis de substituição do template do formulário de filtros de pesquisa
-	var $Template = NULL;			// @var Template Template object	Template para geração do conteúdo do relatório
-	var $_Document = NULL;			// @var _Document Document object	Documento onde o relatório será inserido
-	var $_SimpleSearch = NULL;		// @var _SimpleSearch ReportSimpleSearch object		Controla o formulário de busca/filtro
-	var $_loaded = FALSE;			// @var _loaded bool				"FALSE" Indica se o relatório já foi construído com o método build
-	var $_dataSource = array();		// @var _dataSource array			"array()" Dados da consulta SQL, extraídos do arquivo XML
-	var $_sqlCode = '';				// @var _sqlCode string				"" Código SQL final do relatório
-	var $_bindVars = array();		// @var _bindVars array				"array()" Variáveis de amarração da consulta SQL
-	var $_currentGroup;				// @var _currentGroup mixed			Armazena o agrupamento ativo
-	var $_order;					// @var _order string				Coluna atual da ordenação customizada pelo usuário
-	var $_orderType;				// @var _orderType string			Tipo atual da ordenação customizada pelo usuário
+	/**
+	 * Report id
+	 *
+	 * @var string
+	 */
+	var $id;
+	
+	/**
+	 * Report title
+	 *
+	 * @var string
+	 */
+	var $title;
+	
+	/**
+	 * Debug flag
+	 *
+	 * @var bool
+	 */
+	var $debug = FALSE;
+	
+	/**
+	 * Base URI for all links (paging, sorting, ...)
+	 * 
+	 * Defaults to $_SERVER['PHP_SELF'].
+	 *
+	 * @var string
+	 */
+	var $baseUri;
+	
+	/**
+	 * Attributes of the XML root
+	 *
+	 * @var array
+	 */
+	var $rootAttrs = array();
+	
+	/**
+	 * Whether grid mode is enabled
+	 *
+	 * @var bool
+	 */
+	var $hasHeader = FALSE;
+	
+	/**
+	 * Number of records per row (when grid mode is disabled)
+	 *
+	 * @var int
+	 */
+	var $numCols = 1;
+	
+	/**
+	 * Indicates sorting is enabled
+	 *
+	 * @var bool
+	 */
+	var $isSortable = TRUE;
+	
+	/**
+	 * Enable/disable print mode
+	 *
+	 * @var bool
+	 */
+	var $isPrintable = FALSE;
+	
+	/**
+	 * Rows per page (when building print page breaks)
+	 *
+	 * @var int
+	 */
+	var $pageBreak;
+	
+	/**
+	 * Extra URL variables that must be included in all report links (paging, sorting, filtering, ...)
+	 * 
+	 * @var string
+	 */
+	var $extraVars;
+	
+	/**
+	 * Template block used to generate cells
+	 * to fill incomplete lines (when grid mode
+	 * is disabled)
+	 *
+	 * @var string
+	 */
+	var $emptyBlock;
+	
+	/**
+	 * Set of icons used by the class
+	 *
+	 * @var array
+	 */
+	var $icons = array();
+	
+	/**
+	 * Report handlers (pageStart, pageEnd, line, column)
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $handlers = array();
+	
+	/**
+	 * Holds pagination settings
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $pagination = array();
+	
+	/**
+	 * Holds JS event listeners (onChangePage, onSort, onSearch)
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $jsListeners = array();
+	
+	/**
+	 * Style settings
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $style = array();
+	
+	/**
+	 * Substitution variables for the XML file
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $variables = array();
+	
+	/**
+	 * Column settings
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $columns = array();
+	
+	/**
+	 * Column names that must be hidden
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $hidden = array();
+	
+	/**
+	 * Column names that can't be used to sort the report
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $unsortable = array();
+	
+	/**
+	 * Custom column sizes
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $colSizes;
+	
+	/**
+	 * Column sizes mode
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $colSizesMode;
+	
+	/**
+	 * Column name(s) to be used to group report data
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $group;
+	
+	/**
+	 * Column name(s) that must be displayed to identify a group of data
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $groupDisplay = array();
+	
+	/**
+	 * Empty template settings
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $emptyTemplate;
+	
+	/**
+	 * Simple search template settings
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $searchTemplate;
+	
+	/**
+	 * Template instance used to build and display the report
+	 *
+	 * @var object Template
+	 */
+	var $Template = NULL;
+	
+	/**
+	 * Reference to the Document where the report is inserted
+	 *
+	 * @var object Document
+	 * @access private
+	 */
+	var $_Document = NULL;
+	
+	/**
+	 * Simple search tool based on filters defined in the XML file
+	 *
+	 * @var object ReportSimpleSearch
+	 * @access private
+	 */
+	var $_SimpleSearch = NULL;
+	
+	/**
+	 * Indicates report data was already been loaded
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $_loaded = FALSE;
+	
+	/**
+	 * Data source settings (connection ID, SQL query)
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $_dataSource = array();
+	
+	/**
+	 * SQL code used to build the internal data set
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $_sqlCode = '';
+	
+	/**
+	 * Bind vars to be used in the SQL query or procedure call
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $_bindVars = array();
+	
+	/**
+	 * Used to control data grouping
+	 *
+	 * @var mixed
+	 * @access private
+	 */
+	var $_currentGroup;
+	
+	/**
+	 * Current sort column
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $_order;
+	
+	/**
+	 * Current sort type
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $_orderType;
 
-	//!-----------------------------------------------------------------
-	// @function	Report::Report
-	// @desc		Construtor da classe de relatórios do PHP2Go. Cria uma
-	// 				conexão com o banco e realiza as configurações iniciais
-	// @param		xmlFile string				Arquivo XML com as definições de geração do relatório
-	// @param		templateFile string			Arquivo template da interface do relatório
-	// @param		&Document Document object	Objeto Document onde o relatório será inserido
-	// @param		tplIncludes array			"array()" Vetor de valores para blocos de inclusão no template
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 * 
+	 * Parses the XML specification and initializes the internal template.
+	 *
+	 * @param string $xmlFile Path to the XML file
+	 * @param string $templateFile Path to the template file
+	 * @param Document $Document Document where the report will be inserted
+	 * @param array $tplIncludes Include blocks for the template
+	 * @return Report
+	 */
 	function Report($xmlFile, $templateFile, &$Document, $tplIncludes=array()) {
 		parent::PagedDataSet('db');
 		if (!TypeUtils::isInstanceOf($Document, 'Document'))
@@ -176,147 +494,123 @@ class Report extends PagedDataSet
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::__destruct
-	// @desc		Destrutor do objeto Report
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 */
 	function __destruct() {
 		unset($this);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::getSql
-	// @desc		Retorna o código final da consulta SQL ou do statement
-	//				utilizado para gerar o relatório
-	// @return		string Código SQL do relatório
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get SQL code or procedure call used to build the internal data set
+	 *
+	 * @return string
+	 */
 	function getSql() {
 		return $this->_sqlCode;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::getFirstPageUrl
-	// @desc		Retorna a URL que aponta para a primeira página do relatório
-	// @return		string	URL apontando para a primeira página
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an URL pointing to the first report page
+	 * 
+	 * Returns FALSE if we're at the first page.
+	 *
+	 * @return string|FALSE
+	 */
 	function getFirstPageUrl() {
 		return $this->_generatePageLink(1);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::getLastPageUrl
-	// @desc		Retorna a URL que aponta para a última página do relatório
-	// @return		string	URL apontando para a última página
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an URL pointing to the last report page
+	 * 
+	 * Returns FALSE if we're at the last page.
+	 *
+	 * @return string|FALSE
+	 */
 	function getLastPageUrl() {
 		return $this->_generatePageLink(parent::getPageCount());
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::getPreviousPageUrl
-	// @desc		Retorna a URL que aponta para a página anterior do relatório,
-	//				ou FALSE se a página atual é a primeira
-	// @note		Para que este método possa ser utilizado, deve ser executado
-	//				após a chamada do método Report::build()
-	// @return		mixed	URL da página anterior ou FALSE
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an URL pointing to the previous report page
+	 * 
+	 * Returns FALSE if we're at the first page.
+	 *
+	 * @return string|FALSE
+	 */
 	function getPreviousPageUrl() {
 		if ($previousPage = parent::getPreviousPage())
 			return $this->_generatePageLink($previousPage);
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::getNextPageUrl
-	// @desc		Retorna a URL que aponta para a próxima página do relatório,
-	//				ou FALSE se a página atual é a última
-	// @note		Para que este método possa ser utilizado, deve ser executado
-	//				após a chamada do método Report::build()
-	// @return		mixed	URL da próxima página ou FALSE
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an URL pointing to the next report page
+	 * 
+	 * Returns FALSE if we're at the last page.
+	 *
+	 * @return string|FALSE
+	 */
 	function getNextPageUrl() {
 		if ($nextPage = parent::getNextPage())
 			return $this->_generatePageLink($nextPage);
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::setTitle
-	// @desc 		Configura o título do relatório
-	// @param 		title string	Título para o relatório
-	// @param 		docTitle bool	"FALSE" Concatenar este título ao documento
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set report title
+	 *
+	 * @param string $title New title
+	 * @param bool $docTitle Whether report title must be appended in the {@link _Document}
+	 */
 	function setTitle($title, $docTitle=FALSE) {
 		$this->title = $title;
 		if (!!$docTitle)
 			$this->_Document->appendTitle($this->title, TRUE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::setBaseUri
-	// @desc		Define o endereço base para montagem de links
-	// @param		uri string		URI base
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set base URI for all links built by the class
+	 *
+	 * @param string $uri Base URI
+	 */
 	function setBaseUri($uri) {
 		$this->baseUri = $uri;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	Report::useHeader
-	// @desc 		Configura o relatório para exibir 1 registro apenas por
-	// 				linha, criando no topo da página cabeçalhos para todas
-	// 				as colunas
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable grid mode
+	 */
 	function useHeader() {
 		$this->hasHeader = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	Report::setColumns
-	// @desc 		Informa quantos registros por linha o relatório deve exibir
-	// @param 		numCols int		Número de registros por linha
-	// @see 		Report::useHeader
-	// @note 		Esta função só terá efeito sobre o relatório se o uso
-	// 				de cabeçalhos não estiver ativo
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Define how much records must be displayed per line
+	 * 
+	 * This method only take effect when grid mode is disabled.
+	 *
+	 * @param int $numCols Records per line
+	 * @see hasHeader
+	 * @see useHeader
+	 */
 	function setColumns($numCols) {
 		$this->numCols = max(intval($numCols), 1);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::disableOrderByLinks
-	// @desc		Desabilita a funcionalidade de ordenação de colunas a partir dos cabeçalhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Disable sorting links on grid header
+	 */
 	function disableOrderByLinks() {
 		$this->isSortable = FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::isPrintable
-	// @desc		Indica que o relatório está sendo gerado para impressão. Desta forma, é
-	//				necessário informar o valor de quebra de página. A paginação e a ordenação
-	//				dinâmica serão desabilitadas
-	// @param		pageBreak int	Quebra de página
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable print mode for this report
+	 *
+	 * @param int $pageBreak Lines per page (to generate CSS based page breaks)
+	 */
 	function isPrintable($pageBreak) {
 		@set_time_limit(0);
 		$this->isPrintable = TRUE;
@@ -325,14 +619,22 @@ class Report extends PagedDataSet
 		$this->_SimpleSearch->clear();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	Report::setExtraVars
-	// @desc 		Concatena o texto indicado pelo parâmetro $extraVars a todos os links
-	//				para outras páginas, submissão de busca e reordenação dos dados
-	// @param 		extraVars string		Texto em formato 'urlencode'
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the piece of query string that should be included in
+	 * all links built by the class (paging, sorting, filtering, ...)
+	 * 
+	 * <code>
+	 * $report = new Report('report.xml', 'report.tpl', $doc);
+	 * $report->setExtraVars('some_param=some_value');
+	 * </code>
+	 * 
+	 * You can get the same effect by calling:
+	 * <code>
+	 * $report->setBaseUri(HttpRequest::basePath() . '?some_param=some_value');
+	 * </code>
+	 *
+	 * @param string $extraVars Extra URL arguments
+	 */
 	function setExtraVars($extraVars) {
 		if (ereg("[^=]+=[^=]+", $extraVars)) {
 			$this->extraVars = ltrim($extraVars);
@@ -342,41 +644,63 @@ class Report extends PagedDataSet
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::setEmptyBlock
-	// @desc		Permite definir um bloco a ser utilizado em relatórios do tipo
-	//				CELL (N células por linha com M placeholders em cada célula) para
-	//				o caso da última linha de dados tiver de ser completada com células
-	//				em branco ou com um código diferente do bloco loop_cell
-	// @param		blockName string	Nome do bloco
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the template block to be used to generate empty
+	 * cells for an incomplete line
+	 * 
+	 * When grid mode is disabled, sometimes the total number
+	 * of records is not divisible by the number of records per
+	 * line. Thus, one or more cell blocks of the incomplete line
+	 * won't contain any data. Use this method to give this cell 
+	 * blocks a better appearance.
+	 * 
+	 * <code>
+	 * /* inside your template file {@*}
+	 * <!-- START BLOCK : loop_cell -->
+	 * <td><table width="100%">
+	 *   <tr>
+	 *     <td>
+	 *       {$name_alias}: {$name}<br/>
+	 *       {$address_alias}: {$address}
+	 *     </td>
+	 *   </tr>
+	 * </tr></table></td>
+	 * <!-- END BLOCK : loop_cell -->
+	 * <!-- START BLOCK : empty_cell -->
+	 * <td>&nbsp;</td>
+	 * <!-- END BLOCK : empty_cell -->
+	 * 
+	 * /* inside your PHP file {@*}
+	 * $report->setEmptyBlock('empty_cell');
+	 * </code>
+	 *
+	 * @param string $blockName Template block name
+	 */
 	function setEmptyBlock($blockName) {
 		$this->emptyBlock = $blockName;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	Report::setVisiblePages
-	// @desc 		Configura o número máximo de páginas visíveis na tela
-	// @param 		pages int		Número de páginas visíveis na tela
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the number of visible page links when
+	 * using {@link REPORT_PAGING_DEFAULT} as paging style
+	 *
+	 * @param int $pages Number of page links
+	 */
 	function setVisiblePages($pages) {
 		$this->pagination['visiblePages'] = max(intval($pages), 1);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Report::setPagingStyle
-	// @desc		Define o estilo dos links de paginação que serão gerados
-	//				para o relatório. Os tipos estão definidos em constantes
-	//				da própria classe
-	// @param		style int			Estilo de links de paginação
-	// @param		params array		"NULL" Parâmetros para montagem da paginação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set paging style and paging parameters
+	 * 
+	 * Paging parameters (not applicable when style == {@link REPORT_PAGING_DEFAULT}:
+	 * # useButtons : use buttons instead of normal anchor tags
+	 * # useSymbols : use symbols (<<, <, >, >>) instead of internationalized messages
+	 * # hideInvalid : hide invalid navigation actions
+	 *
+	 * @param int $style Paging style: {@link REPORT_PAGING_DEFAULT}, {@link REPORT_PAGING_FIRSTPREVNEXTLAST} or {@link REPORT_PAGING_PREVNEXT}
+	 * @param array $params Set of paging parameters
+	 */
 	function setPagingStyle($style, $params = NULL) {
 		$this->pagination['style'][0] = intval($style);
 		if (is_array($params)) {
@@ -392,17 +716,15 @@ class Report extends PagedDataSet
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	Report::setStyleMapping
-	// @desc 		Configura os estilos CSS do relatório
-	// @param 		link string			"" Estilo CSS para os links e outros textos
-	// @param 		filter string		"" Estilo CSS para os campos do formulário de busca
-	// @param 		button string		"" Estilo CSS para os botões do formulário de busca
-	// @param 		title string		"" Estilo CSS para o título do relatório
-	// @param		header string		"" Estilo CSS para os cabeçalhos do relatório, se habilitados
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set CSS classes to be used on the report
+	 *
+	 * @param string $link CSS class for links
+	 * @param string $filter CSS class for simple search fields
+	 * @param string $button CSS class for paging and simple search buttons
+	 * @param string $title CSS class for report title
+	 * @param string $header CSS class for headers, when grid mode is enabled
+	 */
 	function setStyleMapping($link='', $filter='', $button='', $title='', $header='') {
 		if (trim($header) == '')
 			$header = $link;
@@ -415,15 +737,20 @@ class Report extends PagedDataSet
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	Report::setAlternateStyle
-	// @desc 		Configura estilos CSS para serem alternados nas linhas do relatório
-	// @note 		A função recebe N parâmetros de entrada, que serão os
-	// 				estilos exibidos alternadamente no relatório. A variável
-	// 				{alt_style} deve ser declarada no bloco 'loop_cell'
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set alternating class names for table rows
+	 * 
+	 * This feature is enabled when {$alt_style} variable is declared
+	 * inside the "loop_cell" template block
+	 * <code>
+	 * <!-- START BLOCK : loop_cell -->
+	 * <td class="{$alt_style}">{$col_data}</td>
+	 * <!-- END BLOCK : loop_cell -->
+	 * </code>
+	 *
+	 * Accepts a variable number of CSS classes. These classes will alternate
+	 * when report rows are displayed.
+	 */
 	function setAlternateStyle() {
 		if (func_num_args() < 2)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_REPORT_MIN_ALT_STYLE'), E_USER_ERROR, __FILE__, __LINE__);

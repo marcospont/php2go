@@ -260,7 +260,7 @@ class AbstractNode extends PHP2Go
 	/**
 	 * Set this node's parent node
 	 *
-	 * @param AbstractNode $Node New parent node
+	 * @param AbstractNode &$Node New parent node
 	 */
 	function setParentNode(&$Node) {
 		$this->parentNode =& $Node;
