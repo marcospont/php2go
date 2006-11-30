@@ -42,16 +42,16 @@ define('DS_XML_ATTR', 2);
 
 /**
  * XML data adapter
- * 
+ *
  * Implementation of a data adapter that is able to read records
  * from a XML file, if this file respects a special structure,
  * and navigate through them.
- * 
+ *
  * DataSetXml can parse 2 types of XML structures: in the first,
  * fields are nodes inside the row node, and field value is the
- * text child node; in the second, fields are attributes of the 
+ * text child node; in the second, fields are attributes of the
  * row node. See examples of both types below:
- * 
+ *
  * CDATA based ({@link DS_XML_CDATA}):
  * <code>
  * <dataset>
@@ -61,7 +61,7 @@ define('DS_XML_ATTR', 2);
  *   </row>
  * </dataset>
  * </code>
- * 
+ *
  * Attribute based ({@link DS_XML_ATTR}):
  * <code>
  * <dataset>
@@ -69,7 +69,7 @@ define('DS_XML_ATTR', 2);
  *   <row field="value2" another_field="value2"/>
  * </dataset>
  * </code>
- * 
+ *
  * @package data
  * @subpackage adapter
  * @uses AbstractList
@@ -78,7 +78,7 @@ define('DS_XML_ATTR', 2);
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
-class DataSetXml extends DataAdapter 
+class DataSetXml extends DataAdapter
 {
 	/**
 	 * Iterator used to nagivate through the records
@@ -87,7 +87,7 @@ class DataSetXml extends DataAdapter
 	 * @access private
 	 */
 	var $Iterator;
-	
+
 	/**
 	 * Attributes of the root node of the XML tree
 	 *
@@ -95,7 +95,7 @@ class DataSetXml extends DataAdapter
 	 * @access private
 	 */
 	var $rootAttrs;
-	
+
 	/**
 	 * Struct type ({@link DS_XML_CDATA} or {@link DS_XML_ATTR})
 	 *
@@ -103,7 +103,7 @@ class DataSetXml extends DataAdapter
 	 * @access private
 	 */
 	var $structType;
-	
+
 	/**
 	 * Class constructor
 	 *
@@ -113,7 +113,7 @@ class DataSetXml extends DataAdapter
 	function DataSetXml($params=array()) {
 		parent::DataAdapter($params);
 	}
-	
+
 	/**
 	 * Loads a XML file
 	 *
@@ -121,15 +121,15 @@ class DataSetXml extends DataAdapter
 	 * @param int $structType Structure type ({@link DS_XML_CDATA} or {@link DS_XML_ATTR})
 	 * @return bool
 	 */
-	function load($fileName, $structType=DS_XML_CDATA) {		
+	function load($fileName, $structType=DS_XML_CDATA) {
 		$this->structType = $structType;
 		$XmlDocument = new XmlDocument();
 		$XmlDocument->parseXml($fileName);
 		$RootNode =& $XmlDocument->getRoot();
 		$this->rootAttrs = $RootNode->getAttributes();
-		if ($RootNode->hasChildren()) {			
+		if ($RootNode->hasChildren()) {
 			$DataList = new AbstractList($RootNode->getChildNodes());
-			$this->Iterator =& $DataList->iterator();			
+			$this->Iterator =& $DataList->iterator();
 			$this->absolutePosition = 0;
 			$this->recordCount = $RootNode->getChildrenCount();
 			$this->fields = $this->_buildRecord($this->Iterator->next());
@@ -140,7 +140,7 @@ class DataSetXml extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Loads a subset of a XML file
 	 *
@@ -154,8 +154,8 @@ class DataSetXml extends DataAdapter
 		$this->structType = $structType;
 		$XmlDocument = new XmlDocument();
 		$XmlDocument->parseXml($fileName);
-		$RootNode =& $XmlDocument->getRoot();		
-		$subSet = array_slice($RootNode->getChildNodes(), $offset, $size);		
+		$RootNode =& $XmlDocument->getRoot();
+		$subSet = array_slice($RootNode->getChildNodes(), $offset, $size);
 		if ($RootNode->hasChildren() && sizeof($subSet) > 0) {
 			$DataList = new AbstractList($subSet);
 			$this->Iterator =& $DataList->iterator();
@@ -170,7 +170,7 @@ class DataSetXml extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Get attributes of the XML root
 	 *
@@ -179,7 +179,7 @@ class DataSetXml extends DataAdapter
 	function getRootAttributes() {
 		return (isset($this->rootAttrs) ? $this->rootAttrs : NULL);
 	}
-	
+
 	/**
 	 * Move cursor to a given position
 	 *
@@ -188,22 +188,22 @@ class DataSetXml extends DataAdapter
 	 */
 	function move($index) {
 		if (is_object($this->Iterator) && TypeUtils::isInteger($index)) {
-			if ($this->Iterator->moveToIndex($index)) {				
+			if ($this->Iterator->moveToIndex($index)) {
 				$this->absolutePosition = $this->Iterator->getCurrentIndex();
-				$this->fields = $this->_buildRecord($this->Iterator->next());				
+				$this->fields = $this->_buildRecord($this->Iterator->next());
 				$this->eof = FALSE;
 				return TRUE;
 			}
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Move to the next record, if existent
 	 *
 	 * @return bool
 	 */
-	function moveNext() {		
+	function moveNext() {
 		if (is_object($this->Iterator) && $this->Iterator->hasNext()) {
 			$this->fields = $this->_buildRecord($this->Iterator->next());
 			$this->absolutePosition = $this->Iterator->getCurrentIndex();
@@ -212,7 +212,7 @@ class DataSetXml extends DataAdapter
 		$this->eof = TRUE;
 		return FALSE;
 	}
-	
+
 	/**
 	 * Move to the previous record, if existent
 	 *
@@ -228,7 +228,14 @@ class DataSetXml extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
+	/**
+	 * Free internal {@link Iterator}
+	 */
+	function close() {
+		unset($this->Iterator);
+	}
+
 	/**
 	 * Parse fields from a xml node
 	 *
@@ -249,6 +256,6 @@ class DataSetXml extends DataAdapter
 				}
 				return $result;
 		}
-	}	
+	}
 }
 ?>

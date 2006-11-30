@@ -29,11 +29,11 @@
 
 /**
  * Abstract data adapter
- * 
+ *
  * This class is the base for all data adapters used by {@link DataSet}
  * and its child classes. All load, fetch and navigation operations
  * are implemented in the adapter classes.
- * 
+ *
  * @package data
  * @subpackage adapter
  * @author Marcos Pont <mpont@users.sourceforge.net>
@@ -48,49 +48,49 @@ class DataAdapter extends PHP2Go
 	 * @var int
 	 */
 	var $fieldCount = 0;
-	
+
 	/**
 	 * Field names of the data set
 	 *
 	 * @var array
 	 */
 	var $fieldNames = array();
-	
+
 	/**
 	 * Used to fetch records
 	 *
 	 * @var array
 	 */
 	var $fields = array();
-	
+
 	/**
 	 * Current cursor position
 	 *
 	 * @var int
 	 */
 	var $absolutePosition = 0;
-	
+
 	/**
 	 * Indicates end of data set was reached
 	 *
 	 * @var bool
 	 */
 	var $eof = TRUE;
-	
+
 	/**
 	 * Number of records in the data set
 	 *
 	 * @var int
 	 */
 	var $recordCount = 0;
-	
+
 	/**
 	 * Total number of records, when subsets are used
 	 *
 	 * @var int
 	 */
 	var $totalRecordCount = 0;
-	
+
 	/**
 	 * Adapter parameters
 	 *
@@ -98,10 +98,10 @@ class DataAdapter extends PHP2Go
 	 * @access private
 	 */
 	var $params = array();
-	
+
 	/**
 	 * Class constructor
-	 * 
+	 *
 	 * Must be explictly called by child adapters
 	 *
 	 * @param array $params Configuration arguments
@@ -113,7 +113,7 @@ class DataAdapter extends PHP2Go
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_ABSTRACT_CLASS', 'DataAdapter'), E_USER_ERROR, __FILE__, __LINE__);
 		$this->params = TypeUtils::toArray($params);
 	}
-	
+
 	/**
 	 * Get adapter type
 	 *
@@ -134,7 +134,7 @@ class DataAdapter extends PHP2Go
 				return NULL;
 		}
 	}
-	
+
 	/**
 	 * Get an adapter parameter
 	 *
@@ -144,7 +144,7 @@ class DataAdapter extends PHP2Go
 	function getParameter($param) {
 		return (isset($this->params[$param]) ? $this->params[$param] : NULL);
 	}
-	
+
 	/**
 	 * Set an adapter parameter
 	 *
@@ -154,18 +154,18 @@ class DataAdapter extends PHP2Go
 	function setParameter($param, $value) {
 		$this->params[$param] = $value;
 	}
-	
+
 	/**#@+
 	 * Must be implemented by child adapters
-     * 
+     *
      * @abstract
      */
 	function load($index) {
 	}
-	function loadSubSet($offset, $size) {		
+	function loadSubSet($offset, $size) {
 	}
 	/**#@-*/
-	
+
 	/**
 	 * Get number of fields/columns of the data set
 	 *
@@ -174,7 +174,7 @@ class DataAdapter extends PHP2Go
 	function getFieldCount() {
 		return $this->fieldCount;
 	}
-	
+
 	/**
 	 * Get the names of the fields/columns of the data set
 	 *
@@ -183,7 +183,7 @@ class DataAdapter extends PHP2Go
 	function getFieldNames() {
 		return $this->fieldNames;
 	}
-	
+
 	/**
 	 * Get a field given its name
 	 *
@@ -193,7 +193,7 @@ class DataAdapter extends PHP2Go
 	function getField($fieldId) {
 		return (array_key_exists($fieldId, $this->fields) ? $this->fields[$fieldId] : NULL);
 	}
-	
+
 	/**
 	 * Get current cursor position
 	 *
@@ -202,7 +202,7 @@ class DataAdapter extends PHP2Go
 	function getAbsolutePosition() {
 		return $this->absolutePosition;
 	}
-	
+
 	/**
 	 * Get number of records in the data set
 	 *
@@ -211,7 +211,7 @@ class DataAdapter extends PHP2Go
 	function getRecordCount() {
 		return $this->recordCount;
 	}
-	
+
 	/**
 	 * Return current record
 	 *
@@ -220,7 +220,7 @@ class DataAdapter extends PHP2Go
 	function current() {
 		return $this->fields;
 	}
-	
+
 	/**
 	 * Check if the end of the data set was reached
 	 *
@@ -228,7 +228,7 @@ class DataAdapter extends PHP2Go
 	 */
 	function eof() {
 		return $this->eof;
-	}	
+	}
 
 	/**
 	 * Fetches the record pointed by current cursor position,
@@ -244,7 +244,7 @@ class DataAdapter extends PHP2Go
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Fetches the record pointed by internal cursor into a
 	 * given variable, and increments cursor position
@@ -259,11 +259,11 @@ class DataAdapter extends PHP2Go
 			return TRUE;
 		}
 		return FALSE;
-	}	
-	
+	}
+
 	/**#@+
 	 * Must be implemented by child adapters
-     * 
+     *
      * @abstract
      */
 	function move($index) {
@@ -276,7 +276,7 @@ class DataAdapter extends PHP2Go
 		return FALSE;
 	}
 	/**#@-*/
-	
+
 	/**
 	 * Move internal pointer to the first record
 	 *
@@ -285,7 +285,7 @@ class DataAdapter extends PHP2Go
 	function moveFirst() {
 		return ($this->getAbsolutePosition() == 0 ? TRUE : $this->move(0));
 	}
-	
+
 	/**
 	 * Move internal pointer to the last record
 	 *
@@ -293,6 +293,14 @@ class DataAdapter extends PHP2Go
 	 */
 	function moveLast() {
 		return $this->move($this->getRecordCount() - 1);
-	}	
+	}
+
+	/**
+	 * Must be implemented by child adapters
+	 *
+	 * @abstract
+	 */
+	function close() {
+	}
 }
 ?>

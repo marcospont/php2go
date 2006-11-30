@@ -32,15 +32,15 @@ import('php2go.util.AbstractList');
 
 /**
  * Array data adapter
- * 
+ *
  * Implementation of a data adapter that is able to read and navigate
  * through a PHP array.
- * 
+ *
  * The arrays provided to load methods must be indexed numerically,
  * and each member of the first dimension (another array, an object or
  * a scalar variable) will be a record in the data set.
- * 
- * The example below demonstrates how to use this class 
+ *
+ * The example below demonstrates how to use this class
  * to handle arrays of objects:
  * <code>
  * class person {
@@ -60,7 +60,7 @@ import('php2go.util.AbstractList');
  * $ds->moveNext();
  * print $ds->getField('lastName'); /* prints 'Smith' {@*}
  * </code>
- * 
+ *
  * @package data
  * @subpackage adapter
  * @uses AbstractList
@@ -78,7 +78,7 @@ class DataSetArray extends DataAdapter
 	 * @access private
 	 */
 	var $Iterator;
-	
+
 	/**
 	 * Holds the record type (array, object, string, int, float, ...)
 	 *
@@ -86,7 +86,7 @@ class DataSetArray extends DataAdapter
 	 * @access private
 	 */
 	var $recordType;
-	
+
 	/**
 	 * Class constructor
 	 *
@@ -96,7 +96,7 @@ class DataSetArray extends DataAdapter
 	function DataSetArray($params=array()) {
 		parent::DataAdapter($params);
 	}
-	
+
 	/**
 	 * Loads an array
 	 *
@@ -118,7 +118,7 @@ class DataSetArray extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Loads a subset of an array
 	 *
@@ -137,7 +137,7 @@ class DataSetArray extends DataAdapter
 				if (sizeof($subSet) > 0) {
 					$this->absolutePosition = 0;
 					$this->recordCount = sizeof($subSet);
-					$this->totalRecordCount = sizeof($content);					
+					$this->totalRecordCount = sizeof($content);
 					$DataList = new AbstractList($subSet);
 					$this->Iterator =& $DataList->iterator();
 					$this->fields = $this->Iterator->next();
@@ -150,8 +150,8 @@ class DataSetArray extends DataAdapter
 			return TRUE;
 		}
 		return FALSE;
-	}	
-	
+	}
+
 	/**
 	 * Overrides parent class implementation in order to correctly
 	 * fetch field values when records are objects
@@ -169,7 +169,7 @@ class DataSetArray extends DataAdapter
 				return NULL;
 		}
 	}
-	
+
 	/**
 	 * Move to a given position in the data set
 	 *
@@ -187,7 +187,7 @@ class DataSetArray extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Move to the next record, if existent
 	 *
@@ -202,7 +202,7 @@ class DataSetArray extends DataAdapter
 		$this->eof = TRUE;
 		return FALSE;
 	}
-	
+
 	/**
 	 * Move to the previous record, if existent
 	 *
@@ -218,16 +218,23 @@ class DataSetArray extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
+	/**
+	 * Free internal {@link Iterator}
+	 */
+	function close() {
+		unset($this->Iterator);
+	}
+
 	/**
 	 * Define fields, field names and field count, depending
 	 * on the native type of a record
-	 * 
+	 *
 	 * This method is called inside {@link load} and
-	 * {@link loadSubSet}, and determines the value of 
-	 * {@link recordType}, {@link fieldNames} and 
+	 * {@link loadSubSet}, and determines the value of
+	 * {@link recordType}, {@link fieldNames} and
 	 * {@link fieldCount}.
-	 * 
+	 *
 	 * @access private
 	 */
 	function _setFieldProperties() {

@@ -31,14 +31,14 @@ import('php2go.data.adapter.DataAdapter');
 
 /**
  * DB data adapter
- * 
+ *
  * Implementation of a data adapter that is able to read and navigate
  * through a set of records returned by a database query or cursor.
- * 
+ *
  * The $stmt argument passed to {@link load()} and {@link loadSubSet()}
  * methods can be either an SQL string or an array returned by
  * {@link Db::prepare()}. Below you can see some use cases:
- * 
+ *
  * <code>
  * /* simple navigation example using {@link fetch()} {@*}
  * $ds =& DataSet::factory('db');
@@ -46,7 +46,7 @@ import('php2go.data.adapter.DataAdapter');
  * while ($row = $ds->fetch()) {
  *   print $ds->getField('name');
  * }
- * 
+ *
  * /* using {@link eof()} and {@link moveNext()} and a different connection ID {@*}
  * $ds =& DataSet::factory('db', array('connectionId'=>'CONN_ID'));
  * $ds->load("select * from table");
@@ -84,11 +84,11 @@ class DataSetDb extends DataAdapter
 
 	/**
 	 * Loads data using an SQL query, prepared statement or stored procedure
-	 * 
+	 *
 	 * Examples:
 	 * <code>
 	 * $ds->load("select * from users where status = ?", array($status));
-	 * $ds->load("package.proc_name(:STATUS, :CURSOR)", array('STATUS'=>$status), TRUE, 'CURSOR'); 
+	 * $ds->load("package.proc_name(:STATUS, :CURSOR)", array('STATUS'=>$status), TRUE, 'CURSOR');
 	 * $ds->load("proc_get_users(?)", array($status), TRUE);
 	 * </code>
 	 *
@@ -123,14 +123,14 @@ class DataSetDb extends DataAdapter
 	}
 
 	/**
-	 * Loads a subset of data from an SQL query, prepared 
+	 * Loads a subset of data from an SQL query, prepared
 	 * statement or procedure call
-	 * 
+	 *
 	 * When $stmt is a procedure call, it <b>must</b> accept 3 mandatory arguments:
 	 * # record count (to be used by the procedure to return the total record count, ignoring offset and size)
 	 * # offset (starting offset of the requested subset)
 	 * # size (subset size)
-	 * 
+	 *
 	 * Examples:
 	 * <code>
 	 * $ds->loadSubSet(0, 30, "select * from table where active = ?", array($active));
@@ -193,7 +193,7 @@ class DataSetDb extends DataAdapter
 	/**
 	 * Overrides parent implementation to call fetchInto
 	 * method of the internal {@link RecordSet}
-	 * 
+	 *
 	 * @param array $dataArray Variable to copy record data
 	 * @return bool
 	 */
@@ -233,6 +233,14 @@ class DataSetDb extends DataAdapter
 	 */
 	function movePrevious() {
 		return ($this->absolutePosition > 1 && is_object($this->RecordSet) ? $this->RecordSet->move($this->absolutePosition-1) : FALSE);
+	}
+
+	/**
+	 * Closes internal {@link RecordSet}
+	 */
+	function close() {
+		$this->RecordSet->close();
+		unset($this->RecordSet);
 	}
 
 	/**

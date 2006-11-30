@@ -32,11 +32,11 @@ import('php2go.util.AbstractList');
 
 /**
  * CSV data adapter
- * 
+ *
  * Implementation of a data adapter that is able to read and navigate
  * through a CSV (comma-separated values) file.
- * 
- * When loaded, the first line of the CSV file defines the field names 
+ *
+ * When loaded, the first line of the CSV file defines the field names
  * of the data set, even if the file doesn't contain a header line.
  *
  * @package data
@@ -47,7 +47,7 @@ import('php2go.util.AbstractList');
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
-class DataSetCsv extends DataAdapter 
+class DataSetCsv extends DataAdapter
 {
 	/**
 	 * Iterator used to navigate through the records
@@ -56,7 +56,7 @@ class DataSetCsv extends DataAdapter
 	 * @access private
 	 */
 	var $Iterator;
-	
+
 	/**
 	 * Class constructor
 	 *
@@ -66,10 +66,10 @@ class DataSetCsv extends DataAdapter
 	function DataSetCsv($params=array()) {
 		parent::DataAdapter($params);
 	}
-	
+
 	/**
 	 * Loads a CSV file
-	 * 
+	 *
 	 * The file must be built so that the first line
 	 * contain the field names, and the set of records
 	 * start in the second line.
@@ -95,7 +95,7 @@ class DataSetCsv extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Loads a subset of a CSV file
 	 *
@@ -116,17 +116,17 @@ class DataSetCsv extends DataAdapter
 			$subSet = array_slice($content, $offset, $size);
 			if (sizeof($subSet) > 0) {
 				$DataList = new AbstractList($subSet);
-				$this->Iterator =& $DataList->iterator();				
+				$this->Iterator =& $DataList->iterator();
 				$this->recordCount = sizeof($subSet);
-				$this->totalRecordCount = sizeof($content);				
+				$this->totalRecordCount = sizeof($content);
 				$this->fields = $this->_buildRecord($this->Iterator->next());
 				$this->eof = FALSE;
 				return TRUE;
 			}
 		}
 		return FALSE;
-	}	
-	
+	}
+
 	/**
 	 * Move to a given position in the data set
 	 *
@@ -144,7 +144,7 @@ class DataSetCsv extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
 	/**
 	 * Move to the next record, if existent
 	 *
@@ -159,7 +159,7 @@ class DataSetCsv extends DataAdapter
 		$this->eof = TRUE;
 		return FALSE;
 	}
-	
+
 	/**
 	 * Move to the previous record, if existent
 	 *
@@ -175,14 +175,21 @@ class DataSetCsv extends DataAdapter
 		}
 		return FALSE;
 	}
-	
+
+	/**
+	 * Free internal {@link Iterator}
+	 */
+	function close() {
+		unset($this->Iterator);
+	}
+
 	/**
 	 * Parse fields from a raw CSV line
 	 *
 	 * @param string $fileLine Line from the CSV file
 	 * @return array Parsed fields
 	 * @access private
-	 */	
+	 */
 	function _buildRecord($fileLine) {
 		// remove string delimiter
 		$preparedLineData = ereg_replace("\"|'", "", $fileLine);
