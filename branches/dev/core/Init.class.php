@@ -257,10 +257,10 @@ class Init
 		// configurações de garbage collection
 		ini_set('session.gc_probability', 1);
 		if (is_int($conf['LIFETIME']))
-			ini_set('session.gc_maxlifetime', $lifetime);
+			ini_set('session.gc_maxlifetime', $conf['LIFETIME']);
 		// save path
 		if (!empty($conf['SAVE_PATH']) && is_dir($conf['SAVE_PATH']))
-			session_save_path($path);
+			session_save_path($conf['SAVE_PATH']);
 		// auto start
 		if ($conf['AUTO_START'] !== FALSE)
 			@session_start();
