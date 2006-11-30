@@ -29,17 +29,17 @@
 
 /**
  * Base wrapper for data sets
- * 
+ *
  * The DataSet class exposes an interface to load, navigate, inspect and
  * read data sets. Different types of information can be processed through
  * a set of <b>data adapters</b>.
- * 
- * The existent adapters are: 
+ *
+ * The existent adapters are:
  * # <b>db</b> (records loaded from the database)
- * # <b>xml</b> (records loaded from a XML file respecting a special structure) 
+ * # <b>xml</b> (records loaded from a XML file respecting a special structure)
  * # <b>csv</b> (records from a CSV file)
  * # <b>array</b> (data loaded from a PHP array)
- * 
+ *
  * @package data
  * @uses TypeUtils
  * @author Marcos Pont
@@ -54,7 +54,7 @@ class DataSet extends Component
 	 * @access protected
 	 */
 	var $adapter = NULL;
-	
+
 	/**
 	 * Adapter type
 	 *
@@ -65,7 +65,7 @@ class DataSet extends Component
 
 	/**
 	 * Class constructor
-	 * 
+	 *
 	 * Shouldn't be called directly. Prefer calling the static
 	 * methods {@link factory} and {@link getInstance}.
 	 *
@@ -80,18 +80,19 @@ class DataSet extends Component
 		if (!empty($type) && import("php2go.data.adapter.{$adapterClass}")) {
 			$this->adapter = new $adapterClass($params);
 			$this->adapterType = $type;
+			parent::registerDestructor($this, '__destruct');
 		} else {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_DATASET_INVALID_TYPE', $type), E_USER_ERROR, __FILE__, __LINE__);
 		}
 	}
 
 	/**
-	 * Creates a new dataset of type $type, using a 
+	 * Creates a new dataset of type $type, using a
 	 * given set of configuration $params
-	 * 
+	 *
 	 * The argument $type is mandatory and must be one of
 	 * the supported adapter types: db, xml, csv or array.
-	 * 
+	 *
 	 * The set of parameters accepted by data adapters are:
 	 * # db : debug (bool), connectionId (string), optimizeCount (bool)
 	 * # xml : none
@@ -112,7 +113,7 @@ class DataSet extends Component
 
 	/**
 	 * Get the singleton of a given dataset type
-	 * 
+	 *
 	 * The argument $type is mandatory and must be one of
 	 * the supported adapter types: db, xml, csv or array.
 	 *
@@ -140,12 +141,19 @@ class DataSet extends Component
 	}
 
 	/**
+	 * Destructor method
+	 */
+	function __destruct() {
+		$this->close();
+	}
+
+	/**
 	 * Loads information onto the data adapter
-	 * 
+	 *
 	 * Receives a variable number of arguments, depending on
 	 * the active data adapter. Internally calls load() method
 	 * of the data adapter.
-	 * 
+	 *
 	 * Below, some examples using different data adapters:
 	 * <code>
 	 * /* db adapter {@*}
@@ -157,7 +165,7 @@ class DataSet extends Component
 	 * /* array adapter {@*}
 	 * $dataset->load($myArray);
 	 * </code>
-	 * 
+	 *
 	 * @see DataSetArray::load()
 	 * @see DataSetCsv::load()
 	 * @see DataSetDb::load()
@@ -175,7 +183,7 @@ class DataSet extends Component
 	 * a variable number of arguments, depending on the active
 	 * data adapter. Internally calls loadSubSet() method
 	 * of the data adapter.
-	 * 
+	 *
 	 * @param int $offset Starting offset (zero-based)
 	 * @param int $size Subset size
 	 * @see DataSetArray::loadSubSet()
@@ -194,7 +202,7 @@ class DataSet extends Component
 	 * @uses DataAdapter::getFieldCount()
 	 * @return int
 	 */
-	function getFieldCount() {		
+	function getFieldCount() {
 		return $this->adapter->getFieldCount();
 	}
 
@@ -253,7 +261,7 @@ class DataSet extends Component
 
 	/**
 	 * Get current record
-	 * 
+	 *
 	 * Retrieve the contents of the record pointed by
 	 * the current cursor position.
 	 * <code>
@@ -274,10 +282,10 @@ class DataSet extends Component
 
 	/**
 	 * Check if end of data set was reached
-	 * 
+	 *
 	 * Don't forget to manually advance the cursor
 	 * position when using eof() inside a while loop.
-	 * 
+	 *
 	 * <code>
 	 * $ds =& DataSet::factory('db');
 	 * $ds->load('select * from my_table');
@@ -297,7 +305,7 @@ class DataSet extends Component
 
 	/**
 	 * Fetches the record pointed by the active cursor position
-	 * 
+	 *
 	 * When using fetch(), it's not necessary to increment the
 	 * cursor position by calling {@link moveNext}.
 	 * <code>
@@ -306,7 +314,7 @@ class DataSet extends Component
 	 *   /* there's no need to call moveNext() here {@*}
 	 * }
 	 * </code>
-	 * 
+	 *
 	 * IMPORTANT: fetch returns the current record and moves to
 	 * the next, if existent. So calls to {@link current} and
 	 * {@link getField} won't operate on previously returned
@@ -322,7 +330,7 @@ class DataSet extends Component
 
 	/**
 	 * Fetches the current record into $dataArray variable
-	 * 
+	 *
 	 * When using fetchInto, $dataArray is taken by reference and
 	 * the cursor position is automatically incremented.
 	 * <code>
@@ -395,6 +403,13 @@ class DataSet extends Component
 	 */
 	function moveLast() {
 		return $this->adapter->moveLast();
+	}
+
+	/**
+	 * Closes the data set
+	 */
+	function close() {
+		$this->adapter->close();
 	}
 }
 ?>
