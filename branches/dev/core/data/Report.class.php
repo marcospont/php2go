@@ -491,13 +491,13 @@ class Report extends PagedDataSet
 		if ($globalConf)
 			$this->_loadGlobalSettings($globalConf);
 		$this->_processXml($xmlFile);
-		parent::registerDestructor($this, '__destruct');
 	}
 
 	/**
 	 * Class destructor
 	 */
 	function __destruct() {
+		parent::__destruct();
 		unset($this);
 	}
 
@@ -1679,8 +1679,8 @@ class Report extends PagedDataSet
 					$this->Template->assign('col_name', (!empty($this->style['header']) ? "<span class='{$this->style['header']}'>{$colAlias}</span>" : $colAlias));
 				} else {
 					$orderTypeIcon = (
-						$this->orderType == 'a' ? $this->icons['orderasc'] : (
-							$this->orderType == 'd' ? $this->icons['orderdesc'] : $this->icons['orderasc']
+						$this->_orderType == 'a' ? $this->icons['orderasc'] : (
+							$this->_orderType == 'd' ? $this->icons['orderdesc'] : $this->icons['orderasc']
 						)
 					);
 					$onSort = @$this->jsListeners['onSort'];
