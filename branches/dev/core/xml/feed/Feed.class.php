@@ -39,8 +39,8 @@ define('FEED_ATOM', 'ATOM');
 // @class		Feed
 // @desc		Esta classe funciona como base para um feed (conjunto de informações),
 //				constituído por um canal (FeedChannel) e um ou mais itens (FeedItem).
-//				Além disso, uma instância da classe Feed possui um código de tipo 
-//				(FEED_RSS ou FEED_ATOM), a propriedade etag (hash do feed) e a data 
+//				Além disso, uma instância da classe Feed possui um código de tipo
+//				(FEED_RSS ou FEED_ATOM), a propriedade etag (hash do feed) e a data
 //				da última modificação das informações
 // @package		php2go.xml.feed
 // @extends		FeedNode
@@ -63,8 +63,8 @@ class Feed extends FeedNode
 	// @desc		Construtor da classe
 	// @param		type int		Tipo do feed
 	// @param		version string	"NULL" Versão
-	// @access		public	
-	//!-----------------------------------------------------------------	
+	// @access		public
+	//!-----------------------------------------------------------------
 	function Feed($type, $version=NULL) {
 		parent::FeedNode();
 		switch (strtoupper($type)) {
@@ -89,57 +89,57 @@ class Feed extends FeedNode
 				$this->version = '2.0';
 				$this->contentType = 'application/rss+xml';
 				break;
-		}		
+		}
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::isATOM
 	// @desc		Verifica se o feed é do tipo ATOM
 	// @access		public
 	// @return		bool
-	//!-----------------------------------------------------------------	
+	//!-----------------------------------------------------------------
 	function isATOM() {
 		return ($this->type == FEED_ATOM);
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::isRSS
 	// @desc		Verifica se o feed é do tipo RSS
 	// @access		public
 	// @return		bool
-	//!-----------------------------------------------------------------	
+	//!-----------------------------------------------------------------
 	function isRSS() {
 		return ($this->type == FEED_RSS);
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::getLastModified
 	// @desc		Busca a data da última atualização do feed
 	// @param		fmt string	"r" Formato de apresentação da data/hora
 	// @return		string Data formatada
 	// @note		Se a data armazenada não for do tipo unix timestamp, o formato desejado não será aplicado
-	// @access		public	
+	// @access		public
 	//!-----------------------------------------------------------------
 	function getLastModified($fmt='r') {
 		return (TypeUtils::isInteger($this->lastModified) ? date($fmt, $this->lastModified) : $this->lastModified);
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::&getChannel
 	// @desc		Busca o canal associado a este feed
 	// @return		FeedChannel object
-	// @access		public	
+	// @access		public
 	//!-----------------------------------------------------------------
 	function &getChannel() {
 		return $this->Channel;
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::getChannelElementNames
 	// @desc		Retorna o conjunto de propriedades válidas para o canal,
 	//				de acordo com o tipo e versão do feed
 	// @return		array Vetor de propriedades
-	// @access		public	
+	// @access		public
 	//!-----------------------------------------------------------------
 	function getChannelElementNames() {
 		if ($this->isRSS()) {
@@ -155,8 +155,8 @@ class Feed extends FeedNode
 				case '0.93' :
 				case '0.94' :
 					return array(
-						'title', 'description', 'link', 'category', 'image', 'textinput', 
-						'cloud', 'language', 'copyright', 'docs', 'lastBuildDate', 
+						'title', 'description', 'link', 'category', 'image', 'textinput',
+						'cloud', 'language', 'copyright', 'docs', 'lastBuildDate',
 						'managingEditor', 'pubDate', 'rating', 'skipDays', 'skipHours'
 					);
 				// RSS 1.0
@@ -169,11 +169,11 @@ class Feed extends FeedNode
 				// RSS 2.0
 				default :
 					return array(
-						'title', 'description', 'link', 'category', 'image', 'textinput', 
-						'cloud', 'language', 'copyright', 'docs', 'lastBuildDate', 
-						'managingEditor', 'webMaster', 'pubDate', 'rating', 'skipDays', 
+						'title', 'description', 'link', 'category', 'image', 'textinput',
+						'cloud', 'language', 'copyright', 'docs', 'lastBuildDate',
+						'managingEditor', 'webMaster', 'pubDate', 'rating', 'skipDays',
 						'skipHours', 'generator', 'ttl'
-					);				
+					);
 			}
 		} else {
 			// ATOM 0.x
@@ -183,13 +183,13 @@ class Feed extends FeedNode
 			);
 		}
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::getItemElementNames
 	// @desc		Retorna o conjunto de propriedades válidas para um item do canal,
 	//				de acordo com o tipo e versão do feed
 	// @return		array Vetor de propriedades válidas para um item
-	// @access		public	
+	// @access		public
 	//!-----------------------------------------------------------------
 	function getItemElementNames() {
 		if ($this->isRSS()) {
@@ -208,7 +208,7 @@ class Feed extends FeedNode
 				case '1.0' :
 					return array(
 						'title', 'description', 'link', 'dc:date', 'dc:creator', 'dc:source', 'dc:format'
-					);				
+					);
 				// RSS 0.92, 0.93 e 0.94
 				case '0.92' :
 				case '0.93' :
@@ -216,72 +216,72 @@ class Feed extends FeedNode
 					return array(
 						'title', 'description', 'link', 'category', 'enclosure', 'source'
 					);
-				// RSS 2.0 
+				// RSS 2.0
 				default :
 					return array(
 						'title', 'description', 'link', 'guid', 'author', 'pubDate', 'category', 'enclosure', 'source', 'comments'
-					);					
+					);
 			}
 		} else {
 			// ATOM 0.x
 			return array(
-				'title', 'link', 'author', 'contributor', 'id', 'created', 
+				'title', 'link', 'author', 'contributor', 'id', 'created',
 				'issued', 'published', 'modified', 'updated', 'content', 'summary'
 			);
 		}
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::setETag
 	// @desc		Define o hash (ETag) do feed
 	// @param		hash string	Valor do hash
-	// @access		public	
+	// @access		public
 	// @return		void
 	//!-----------------------------------------------------------------
 	function setETag($hash) {
 		$this->etag = $hash;
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::setLastModified
 	// @desc		Seta o timestamp da última modificação do feed
 	// @param		lastModified int	Timestamp
-	// @access		public	
+	// @access		public
 	// @return		void
 	//!-----------------------------------------------------------------
 	function setLastModified($lastModified) {
 		$this->lastModified = parent::parseDate($lastModified);
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::setSyndicationURL
 	// @desc		Define a URL de origem do feed
 	// @param		url string		URL de origem
-	// @access		public	
+	// @access		public
 	// @return		void
 	//!-----------------------------------------------------------------
 	function setSyndicationURL($url) {
 		$this->syndicationURL = $url;
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::setChannel
 	// @desc		Define o canal associado ao feed
 	// @param		Channel FeedChannel object
-	// @access		public	
+	// @access		public
 	// @return		void
 	//!-----------------------------------------------------------------
 	function setChannel($Channel) {
 		if (TypeUtils::isInstanceOf($Channel, 'FeedChannel'))
 			$this->Channel = $Channel;
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::renderRootProperties
 	// @desc		Monta uma estrutura com nome e atributos do nodo raiz
 	//				da árvore XML do feed para fins de renderização
 	// @return		array Vetor contendo nome e atributos do nodo raiz
-	// @access		public	
+	// @access		public
 	//!-----------------------------------------------------------------
 	function renderRootProperties() {
 		if ($this->isRSS()) {
@@ -306,14 +306,14 @@ class Feed extends FeedNode
 			);
 		}
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::renderChannelElements
-	// @desc		Este método monta um vetor com os nomes e valores das 
+	// @desc		Este método monta um vetor com os nomes e valores das
 	//				propriedades formatados para fins de geração do arquivo
 	//				XML do feed (renderização)
-	// @return		array Vetor de propriedades com valores formatados para exibição	
-	// @access		public	
+	// @return		array Vetor de propriedades com valores formatados para exibição
+	// @access		public
 	//!-----------------------------------------------------------------
 	function renderChannelElements() {
 		if (TypeUtils::isInstanceOf($this->Channel, 'FeedChannel')) {
@@ -326,12 +326,12 @@ class Feed extends FeedNode
 					continue;
 				// elementos de data/timestamp
 				if (in_array($element, array('lastBuildDate', 'pubDate', 'modified', 'updated'))) {
-					$result[$element] = htmlspecialchars(parent::buildDate($value, $this->type, $this->version));
+					$result[$element] = parent::buildDate($value, $this->type, $this->version);
 				}
 				// elementos onde os atributos são atributos de nodo, e não nodos filhos
 				elseif ($element == 'cloud' || ($element == 'link' && $this->isATOM())) {
 					$result[$element] = array('_attrs' => $this->_formatElementValue($value));
-				} 
+				}
 				// outros elementos
 				else {
 					$result[$element] = $this->_formatElementValue($value);
@@ -340,7 +340,7 @@ class Feed extends FeedNode
 			// atributos e elementos especiais
 			if ($this->isRSS() && $this->version == '1.0') {
 				$result['_attrs'] = array('rdf:about' => htmlspecialchars($this->syndicationURL));
-				$result['dc:date'] = htmlspecialchars(Date::formatTime(time(), DATE_FORMAT_ISO8601));
+				$result['dc:date'] = Date::formatTime(time(), DATE_FORMAT_ISO8601);
 				if (isset($result['image']) && isset($result['image']['link']))
 					$result['image']['_attrs'] = array('rdf:about' => htmlspecialchars($result['image']['link']));
 				$items = array();
@@ -351,19 +351,19 @@ class Feed extends FeedNode
 						'rdf:li' => $items
 					)
 				);
-			}			
+			}
 			return $result;
 		}
 		return array();
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::renderItems
 	// @desc		Este método monta um vetor com todos os itens do canal,
-	//				com suas propriedades e elementos formatados para fins de 
+	//				com suas propriedades e elementos formatados para fins de
 	//				geração do arquivo XML do feed (renderização)
 	// @return		array Vetor com os dados dos itens do canal formatados
-	// @access		public	
+	// @access		public
 	//!-----------------------------------------------------------------
 	function renderItems() {
 		if (TypeUtils::isInstanceOf($this->Channel, 'FeedChannel')) {
@@ -372,7 +372,7 @@ class Feed extends FeedNode
 			$items = $this->Channel->getChildren();
 			foreach ($items as $item) {
 				$itemData = array();
-				reset($itemElements);				
+				reset($itemElements);
 				foreach ($itemElements as $element) {
 					// busca o valor da propriedade
 					$value = $item->getElement($element);
@@ -380,8 +380,8 @@ class Feed extends FeedNode
 						continue;
 					// elementos de data/timestamp
 					if (in_array($element, array('pubDate', 'created', 'issued', 'published', 'modified', 'updated'))) {
-						$itemData[$element] = htmlspecialchars(parent::buildDate($value, $this->type, $this->version));
-					} 
+						$itemData[$element] = parent::buildDate($value, $this->type, $this->version);
+					}
 					// enclosure: elemento com atributos e sem nodos filhos
 					elseif ($element == 'enclosure') {
 						$itemData[$element] = array('_attrs' => $this->_formatElementValue($value));
@@ -398,29 +398,29 @@ class Feed extends FeedNode
 										$value[$key] = array('_attrs' => array('href' => htmlspecialchars($link)));
 								}
 								$itemData[$element] = $value;
-							} 
+							}
 							// link único com atributos
 							else {
 								$value = $this->_formatElementValue($value);
 								$itemData[$element] = array('_attrs' => $value);
 							}
-						} 
+						}
 						// link simples formato string: converter em elemento com atributo href
 						else {
 							$value = array('href' => htmlspecialchars($value));
 							$itemData[$element] = array('_attrs' => $value);
-						}						
-					} 
+						}
+					}
 					// outros elementos
 					else {
-						$itemData[$element] = $this->_formatElementValue($value);
+						$itemData[$element] = $value;
 					}
 				}
 				// atributos e elementos especiais
 				if ($this->isRSS() && $this->version == '1.0')
 					$itemData['_attrs'] = array('rdf:about' => htmlspecialchars($item->getElement('link', '')));
 				if ($this->isRSS() && !in_array($this->version, array('0.9', '0.91')))
-					$itemData['source'] = array('_attrs' => array('url' => htmlspecialchars($this->syndicationURL)), '_cdata' => htmlspecialchars($this->Channel->getElement('title', '')));
+					$itemData['source'] = array('_attrs' => array('url' => htmlspecialchars($this->syndicationURL)), '_cdata' => $this->Channel->getElement('title', ''));
 				if ($this->isRSS() && $this->version == '2.0') {
 					if (isset($itemData['guid']))
 						$itemData['guid'] = array('_attrs' => array('isPermaLink' => 'true'), '_cdata' => $itemData['guid']);
@@ -434,15 +434,15 @@ class Feed extends FeedNode
 		}
 		return array();
 	}
-	
+
 	//!-----------------------------------------------------------------
 	// @function	Feed::_formatElementValue
 	// @desc		Formata o valor de um elemento, sendo ele simples, composto,
 	//				múltiplo ou composto e múltiplo
 	// @param		value mixed		Valor do elemento
-	// @return		mixed Valor(es) do elemento formatados para inclusão no 
+	// @return		mixed Valor(es) do elemento formatados para inclusão no
 	//				arquivo XML (usando a função htmlspecialchars)
-	// @access		private	
+	// @access		private
 	//!-----------------------------------------------------------------
 	function _formatElementValue($value) {
 		// elementos compostos ou múltiplos (ex: image, textinput, author, contributor)
@@ -459,7 +459,7 @@ class Feed extends FeedNode
 		} else {
 			$value = htmlspecialchars($value);
 		}
-		return $value;	
+		return $value;
 	}
 }
 ?>
