@@ -35,14 +35,15 @@ import('php2go.file.DirectoryEntry');
  *
  * This class is able to read the contents of folders in the file system.
  * It can handle multiple folders at the same time.
- * 
+ *
  * @package file
+ * @uses FileSystem
  * @uses Number
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
-class DirectoryManager extends FileSystem
+class DirectoryManager extends PHP2Go
 {
 	/**
 	 * Current opened directory handle
@@ -51,21 +52,21 @@ class DirectoryManager extends FileSystem
 	 * @access private
 	 */
 	var $currentHandle = NULL;
-	
+
 	/**
 	 * Current opened path
 	 *
 	 * @var string
 	 */
 	var $currentPath;
-	
+
 	/**
 	 * Attributes of current opened directory
 	 *
 	 * @var array
 	 */
 	var $currentAttrs;
-	
+
 	/**
 	 * Whether to throw errors when directories can't be opened
 	 *
@@ -79,13 +80,13 @@ class DirectoryManager extends FileSystem
 	 * @return DirectoryManager
 	 */
 	function DirectoryManager() {
-		parent::FileSystem();
+		parent::PHP2Go();
 		parent::registerDestructor($this, '__destruct');
 	}
 
 	/**
 	 * Class destructor
-	 * 
+	 *
 	 * Closes all opened directory handles.
 	 */
 	function __destruct() {
@@ -113,7 +114,7 @@ class DirectoryManager extends FileSystem
 
 	/**
 	 * Get current opened directory handle
-	 * 
+	 *
 	 * Returns FALSE if there's not a valid opened handle.
 	 *
 	 * @return resource|bool
@@ -125,7 +126,7 @@ class DirectoryManager extends FileSystem
 	/**
 	 * Create a {@link DirectoryManager} instance pointing to
 	 * the parent directory of the opened directory
-	 * 
+	 *
 	 * @return DirectoryManager
 	 */
 	function &getParentDirectory() {
@@ -142,21 +143,25 @@ class DirectoryManager extends FileSystem
 	/**
 	 * Get current opened directory's parent path
 	 *
+	 * @uses FileSystem::getStandardPath()
 	 * @return string
 	 */
 	function getParentPath() {
-		$fullPath = StringUtils::left($this->currentAttrs['path'], -1);
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle) || TypeUtils::isFalse(strpos($fullPath, '/'))) {
-			return '';
-		} else {
-			return dirname($fullPath) . '/';
+		if (is_resource($this->currentHandle)) {
+			$fullPath = substr($this->currentAttrs['path'], 0, -1);
+			$parentPath = FileSystem::getStandardPath(dirname($fullPath));
+			if (substr($parentPath, -1) != '/')
+				$parentPath .= '/';
+			return $parentPath;
 		}
+		return '';
 	}
 
 	/**
 	 * Opens a directory
 	 *
 	 * @param string $directoryPath Directory path
+	 * @uses FileSystem::getFileAttributes()
 	 * @return bool
 	 */
 	function open($directoryPath) {
@@ -169,20 +174,19 @@ class DirectoryManager extends FileSystem
 		// fix directory path
 		$directoryPath = $attrs['path'];
 		// check if the directory is already opened
-		$handles = &$this->getHandles();
-		if (!isset($handles[$directoryPath]) || !TypeUtils::isResource($handles[$directoryPath])) {
-			$handles[$directoryPath] = @opendir($directoryPath);
-			if (TypeUtils::isFalse($handles[$directoryPath])) {
+		$handles =& $this->getHandles();
+		if (!isset($handles[$directoryPath]) || !is_resource($handles[$directoryPath])) {
+			$handle = @opendir($directoryPath);
+			if ($handle === FALSE) {
 				if ($this->throwErrors)
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_OPEN_DIR', $directoryPath), E_USER_ERROR, __FILE__, __LINE__);
 				return FALSE;
 			}
+			$handles[$directoryPath] =& $handle;
 		}
-		if ($attrs) {
-			$this->currentHandle = &$handles[$directoryPath];
-			$this->currentPath = $directoryPath;
-			$this->currentAttrs =& $attrs;
-		}
+		$this->currentHandle =& $handles[$directoryPath];
+		$this->currentPath = $directoryPath;
+		$this->currentAttrs =& $attrs;
 		return TRUE;
 	}
 
@@ -192,33 +196,33 @@ class DirectoryManager extends FileSystem
 	 * @return bool
 	 */
 	function isOpen() {
-		return (isset($this->currentHandle) && !TypeUtils::isResource($this->currentHandle));
+		return (is_resource($this->currentHandle));
 	}
 
 	/**
 	 * Alternate between 2 opened directories
-	 * 
-	 * The $directoryPath argument must be the 
+	 *
+	 * The $directoryPath argument must be the
 	 * same path used to open the directory.
 	 *
 	 * @param string $directoryPath Directory path
+	 * @uses FileSystem::getFileAttributes()
 	 * @return bool
 	 */
 	function changeDirectory($directoryPath) {
 		$handles =& $this->getHandles();
-		if (!isset($handles[$directoryPath]) || !TypeUtils::isResource($handles[$directoryPath])) {
-			return FALSE;
-		} else {
+		if (is_resource($handles[$directoryPath])) {
 			$this->currentHandle =& $handles[$directoryPath];
 			$this->currentPath = $directoryPath;
 			$this->currentAttrs = FileSystem::getFileAttributes($directoryPath);
 			return TRUE;
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Read the next entry from the opened directory
-	 * 
+	 *
 	 * Example:
 	 * <code>
 	 * $dir = new DirectoryManager();
@@ -229,21 +233,17 @@ class DirectoryManager extends FileSystem
 	 * }
 	 * $dir->close();
 	 * </code>
-	 * 
+	 *
 	 * Returns FALSE after the last entry was read.
 	 *
 	 * @param string $includeRegExp Include regular expression
 	 * @return DirectoryEntry|bool
 	 */
 	function read($includeRegExp='') {
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
-			if (!$entry = @readdir($this->currentHandle)) {
-				return FALSE;
-			} else {
+		if (is_resource($this->currentHandle)) {
+			if ($entry = @readdir($this->currentHandle)) {
 				// ignore "." and ".." entries
-				if (ereg("^\.{1,2}", $entry)) {
+				if (preg_match("/^\.{1,2}/", $entry)) {
 					return $this->read($includeRegExp);
 				} elseif (!empty($includeRegExp)) {
 					if (preg_match('/' . $includeRegExp . '/', $entry))
@@ -255,12 +255,13 @@ class DirectoryManager extends FileSystem
 				}
 			}
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Get a list of all regular files included in the
 	 * current opened directory
-	 * 
+	 *
 	 * Returns FALSE when there's no opened directory.
 	 *
 	 * @uses DirectoryManager::_readSimple()
@@ -269,10 +270,8 @@ class DirectoryManager extends FileSystem
 	 * @return array|bool
 	 */
 	function getFileNames($includeRegExp='', $sort=TRUE) {
-		$files = array();
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentHandle)) {
+			$files = array();
 			$this->rewind();
 			while ($entry = $this->_readSimple($includeRegExp)) {
 				if (@is_file($this->currentPath . $entry))
@@ -282,12 +281,13 @@ class DirectoryManager extends FileSystem
 				sort($files, SORT_STRING);
 			return $files;
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Get an array of {@link DirectoryEntry} instances, containing
 	 * all regular files included in the current opened directory
-	 * 
+	 *
 	 * Returns FALSE when there's no opened directory.
 	 *
 	 * @param string $includeRegExp Include regular expression
@@ -295,10 +295,8 @@ class DirectoryManager extends FileSystem
 	 * @return array
 	 */
 	function getFiles($includeRegExp='', $sort=TRUE) {
-		$files = array();
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentHandle)) {
+			$files = array();
 			$this->rewind();
 			while ($entry = $this->read($includeRegExp)) {
 				if ($entry->isFile())
@@ -308,21 +306,20 @@ class DirectoryManager extends FileSystem
 				usort($files, array($this, '_sortDirectoryEntries'));
 			return $files;
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Get an array of {@link DirectoryEntry} instances, containing
 	 * all directories included in the current opened directory
-	 * 
+	 *
 	 * Returns FALSE if there's no opened directory.
 	 *
 	 * @return array
 	 */
 	function getDirectories() {
-		$directories = array();
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentHandle)) {
+			$directories = array();
 			$this->rewind();
 			while ($entry = $this->read()) {
 				if ($entry->isDirectory()) {
@@ -332,6 +329,7 @@ class DirectoryManager extends FileSystem
 			sort($directories);
 			return $directories;
 		}
+		return FALSE;
 	}
 
 	/**
@@ -351,7 +349,7 @@ class DirectoryManager extends FileSystem
 	/**
 	 * Builds a tree of files and subdirectories using the
 	 * current opened directory as root node
-	 * 
+	 *
 	 * Returns a {@link DirectoryEntry} instance, containing all
 	 * files and subdirectories as <b>child nodes</b>.
 	 *
@@ -360,7 +358,7 @@ class DirectoryManager extends FileSystem
 	 */
 	function &getContentTree() {
 		$result = NULL;
-		if (isset($this->currentHandle) && TypeUtils::isResource($this->currentHandle)) {
+		if (is_resource($this->currentHandle)) {
 			$result = new DirectoryEntry($this->getParentPath(), $this->currentAttrs['lastDir']);
 			$this->rewind();
 			$this->_getChildren($result);
@@ -374,11 +372,7 @@ class DirectoryManager extends FileSystem
 	 * @return bool
 	 */
 	function rewind() {
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
-			return @rewinddir($this->currentHandle);
-		}
+		return @rewinddir($this->currentHandle);
 	}
 
 	/**
@@ -387,9 +381,7 @@ class DirectoryManager extends FileSystem
 	 * @return bool
 	 */
 	function close() {
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentHandle)) {
 			// remove from the internal set of handles
 			$handles = &$this->getHandles();
 			unset($handles[$this->currentPath]);
@@ -400,6 +392,7 @@ class DirectoryManager extends FileSystem
 			unset($this->currentAttrs);
 			return @closedir($handle);
 		}
+		return FALSE;
 	}
 
 	/**
@@ -407,15 +400,12 @@ class DirectoryManager extends FileSystem
 	 * and directory names only
 	 *
 	 * @param string $includeRegExp Include regular expression
+	 * @access private
 	 * @return array
 	 */
 	function _readSimple($includeRegExp='') {
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
-			if (!$entry = @readdir($this->currentHandle)) {
-				return FALSE;
-			} else {
+		if (is_resource($this->currentHandle)) {
+			if ($entry = @readdir($this->currentHandle)) {
 				// ignore "." and ".." entries
 				if (ereg("^\.{1,2}", $entry)) {
 					return $this->_readSimple($includeRegExp);
@@ -429,6 +419,7 @@ class DirectoryManager extends FileSystem
 				}
 			}
 		}
+		return FALSE;
 	}
 
 	/**
@@ -440,7 +431,7 @@ class DirectoryManager extends FileSystem
 	function _getChildren(&$node) {
 		$oldPath = $node->getFullName();
 		while ($entry = $this->read()) {
-			$child = &$node->addChild($entry);
+			$child =& $node->addChild($entry);
 			if ($child->isDirectory()) {
 				$this->open($child->getFullName());
 				$this->_getChildren($child);
@@ -459,9 +450,7 @@ class DirectoryManager extends FileSystem
 	 */
 	function _getTotalSize($deep=FALSE) {
 		$size = 0;
-		if (!isset($this->currentHandle) || !TypeUtils::isResource($this->currentHandle)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentHandle)) {
 			$this->rewind();
 			$oldPath = $this->currentPath;
 			while ($entry = $this->read()) {
@@ -479,17 +468,17 @@ class DirectoryManager extends FileSystem
 
 	/**
 	 * Used to sort directory entries
-	 * 
+	 *
 	 * @param DirectoryEntry $a First entry
 	 * @param DirectoryEntry $b Second entry
+	 * @access private
 	 * @return int
 	 */
 	function _sortDirectoryEntries($a, $b) {
 		$an = $a->getName();
 		$bn = $b->getName();
-	 	if ($an == $bn) {
+	 	if ($an == $bn)
 			return 0;
-		}
 		return ($an < $bn) ? -1 : 1;
 	}
 }

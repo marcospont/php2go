@@ -65,10 +65,11 @@ define('FILE_MANAGER_DEFAULT_BLOCK', 512);
  * delete, change mode, change owner, get/set attributes.
  *
  * @package file
+ * @uses FileSystem
  * @author Marcos Pont
  * @version $Revision$
  */
-class FileManager extends FileSystem
+class FileManager extends PHP2Go
 {
 	/**
 	 * Attributes of the current opened file
@@ -113,7 +114,7 @@ class FileManager extends FileSystem
 	 * @return FileManager
 	 */
 	function FileManager() {
-		parent::FileSystem();
+		parent::PHP2Go();
 		parent::registerDestructor($this, '__destruct');
 	}
 
@@ -183,24 +184,25 @@ class FileManager extends FileSystem
 	 * $fm->open('servers.txt', FILE_MANAGER_WRITE, LOCK_EX);
 	 * </code>
 	 *
+	 * @uses FileSystem::getFileAttributes()
 	 * @param string $filePath File path
 	 * @param string $mode Open mode
-	 * @param int $lockFile Lock type
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return bool
 	 */
-	function open($filePath, $mode = FILE_MANAGER_READ_BINARY, $lockFile = FALSE) {
+	function open($filePath, $mode=FILE_MANAGER_READ_BINARY, $lockType=FALSE) {
 		$attrs = FileSystem::getFileAttributes($filePath);
 		$dirAttrs = FileSystem::getFileAttributes(dirname($filePath));
-		$pointers = &$this->getPointers();
+		$pointers =& $this->getPointers();
 		if (!isset($pointers[$filePath][$mode]) || !is_resource($pointers[$filePath][$mode])) {
 			// validate read mode
-			if ($this->_isRead($mode) && !preg_match('/^(http|https|ftp|php):\/\//i', $filePath) && !$attrs) {
+			if (preg_match('/^rb?$/', $mode) && !preg_match('/^(http|https|ftp|php):\/\//i', $filePath) && !$attrs) {
 				if ($this->throwErrors)
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
 				return FALSE;
 			}
 			// validate write/append mode
-			if ($this->_isWrite($mode) || $this->_isAppend($mode)) {
+			if (preg_match('/^(w|a)b?$/', $mode)) {
 				if (!FileSystem::exists($filePath)) {
 					if (!$dirAttrs['isWriteable']) {
 						if ($this->throwErrors)
@@ -223,13 +225,13 @@ class FileManager extends FileSystem
 				return FALSE;
 			}
 		}
-  		if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-   			$this->lock($pointers[$filePath][$mode], $lockFile);
+  		if ($lockType == LOCK_SH || $lockType == LOCK_EX) {
+   			$this->lock($pointers[$filePath][$mode], $lockType);
 		}
-  		$this->currentFile = &$pointers[$filePath][$mode];
+  		$this->currentFile =& $pointers[$filePath][$mode];
   		$this->currentPath = $filePath;
 		$this->currentMode = $mode;
-  		$this->currentAttrs = &$attrs;
+  		$this->currentAttrs =& $attrs;
   		return TRUE;
 	}
 
@@ -241,10 +243,11 @@ class FileManager extends FileSystem
 	 *
 	 * @param string $filePath File path
 	 * @param string $mode Mode used to open the file
+	 * @uses FileSystem::getFileAttributes()
 	 * @return bool
 	 */
 	function changeFile($filePath, $mode) {
-		$pointers = &$this->getPointers();
+		$pointers =& $this->getPointers();
 		if (!isset($pointers[$filePath][$mode]) || !is_resource($pointers[$filePath][$mode])) {
 			return FALSE;
 		} else {
@@ -282,10 +285,9 @@ class FileManager extends FileSystem
 	 * @return mixed Attribute value
 	 */
 	function getAttribute($attributeName) {
-		if (!isset($this->currentFile) || !is_resource($this->currentFile))
-			return FALSE;
-		else
-			return isset($this->currentAttrs[$attributeName]) ? $this->currentAttrs[$attributeName] : FALSE;
+		if (is_resource($this->currentFile))
+			return (array_key_exists($attributeName, $this->currentAttrs) ? $this->currentAttrs[$attributeName] : FALSE);
+		return FALSE;
 	}
 
 	/**
@@ -296,10 +298,9 @@ class FileManager extends FileSystem
 	 * @return array|bool
 	 */
 	function getAttributes() {
-		if (!isset($this->currentFile) || !is_resource($this->currentFile))
-			return FALSE;
-		else
+		if (is_resource($this->currentFile))
 			return $this->currentAttrs;
+		return FALSE;
 	}
 
 	/**
@@ -309,29 +310,28 @@ class FileManager extends FileSystem
 	 * Returns FALSE when end of file is reached.
 	 *
 	 * @param int $size Block size
-	 * @param bool $lockFile Whether to lock the file in shared mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return string|bool
 	 */
-	function read($size=FILE_MANAGER_DEFAULT_BLOCK, $lockFile=FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	function read($size=FILE_MANAGER_DEFAULT_BLOCK, $lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX) {
+				$this->lock($fp, $lockType);
 			}
-			return feof($fp) ? FALSE : fread($fp, max(intval($size), 1));
+			return (feof($fp) ? FALSE : fread($fp, max(intval($size), 1)));
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Reads a char from the opened file
 	 *
-	 * @param bool $lockFile Whether to lock the file in shared mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return string|bool
 	 */
-	function readChar($lockFile = FALSE) {
-		return $this->read(1, $lockFile);
+	function readChar($lockType=FALSE) {
+		return $this->read(1, $lockType);
 	}
 
 	/**
@@ -340,38 +340,29 @@ class FileManager extends FileSystem
 	 * Read bytes from the file until a line break is found
 	 * or until end of file is reached.
 	 *
-	 * @param bool $lockFile Whether to lock the file in shared mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return string|bool
 	 */
-	function readLine($lockFile = FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	function readLine($lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}
-			return feof($fp) ? FALSE : fgets($fp);
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX)
+				$this->lock($fp, $lockType);
+			return (feof($fp) ? FALSE : fgets($fp));
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Read all contents of the current file
 	 *
-	 * @param string $lockFile Whether to lock the file in shared mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return string|bool
 	 */
-	function readFile($lockFile = FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
-			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}
-			$attrs = FileSystem::getFileAttributes($this->currentPath);
-			return $this->read($attrs['size'], $lockFile);
-		}
+	function readFile($lockType=FALSE) {
+		if (is_resource($this->currentFile))
+			return $this->read($this->currentAttrs['size'], $lockType);
+		return FALSE;
 	}
 
 	/**
@@ -381,13 +372,11 @@ class FileManager extends FileSystem
 	 * @return array|bool
 	 */
 	function readArray($filePath) {
-		if (!FileSystem::exists($filePath)) {
-			if ($this->throwErrors)
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
-			return FALSE;
-		} else {
+		if (file_exists($filePath))
 			return file($filePath);
-		}
+		if ($this->throwErrors)
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
+		return FALSE;
 	}
 
 	/**
@@ -395,30 +384,32 @@ class FileManager extends FileSystem
 	 *
 	 * @param string $string Input string
 	 * @param int $size Total bytes to write
-	 * @param bool $lockFile Whether to lock the file in exclusive mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return bool
 	 */
-	function write($string, $size = 0, $lockFile = FALSE) {
-		if (!is_scalar($string) || !is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	function write($string, $size=0, $lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
+			$string = (string)$string;
 			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX)
+				$this->lock($fp, $lockType);
 			return (@fwrite($fp, $string, max($size, strlen($string))));
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Write a char in the current file
 	 *
 	 * @param string $char Char to write
-	 * @param bool $lockFile Whether to lock the file in exclusive mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return bool
 	 */
-	function writeChar($char, $lockFile = FALSE) {
-		return $this->write($char, 1, $lockFile);
+	function writeChar($char, $lockType=FALSE) {
+		$char = (string)$char;
+		if (strlen($char) > 0)
+			return $this->write($char[0], 1, $lockType);
+		return FALSE;
 	}
 
 	/**
@@ -426,12 +417,13 @@ class FileManager extends FileSystem
 	 *
 	 * @param string $string Input string
 	 * @param string $endLine Line end delimiter
-	 * @param bool $lockFile Whether to lock the file in exclusive mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return bool
 	 */
-	function writeLine($string, $endLine = "\n", $lockFile = FALSE) {
+	function writeLine($string, $endLine="\n", $lockType=FALSE) {
+		$string = (string)$string;
 		$string .= $endLine;
-		return $this->write($string, strlen($string), $lockFile);
+		return $this->write($string, strlen($string), $lockType);
 	}
 
 	/**
@@ -466,12 +458,11 @@ class FileManager extends FileSystem
 	 * @return bool
 	 */
 	function rewind() {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
 			return @rewind($fp);
 		}
+		return FALSE;
 	}
 
 	/**
@@ -481,33 +472,30 @@ class FileManager extends FileSystem
 	 * @return bool
 	 */
 	function seek($offset) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
 			$result = @fseek($fp, $offset);
-			return ($result === 0) ? TRUE : FALSE;
+			return ($result === 0 ? TRUE : FALSE);
 		}
+		return FALSE;
 	}
 
 	/**
 	 * Truncate the current file to a given size
 	 *
 	 * @param int $size New size
-	 * @param bool $lockFile Whether to lock the file in exclusive mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 * @return bool
 	 */
-	function truncate($size, $lockFile = FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	function truncate($size, $lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
 			$truncSize = abs(intval($size));
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX)
+				$this->lock($fp, $lockType);
 			return @ftruncate($fp, $truncSize);
 		}
+		return FALSE;
 	}
 
 	/**
@@ -517,10 +505,9 @@ class FileManager extends FileSystem
 	 * @return bool
 	 */
 	function changeMode($newMode) {
-		if (!isset($this->currentPath))
-			return FALSE;
-		else
+		if (isset($this->currentPath))
 			return chmod($this->currentPath, $newMode);
+		return FALSE;
 	}
 
 	/**
@@ -528,6 +515,7 @@ class FileManager extends FileSystem
 	 *
 	 * If $time is missing, current UNIX timestamp will be used.
 	 *
+	 * @uses FileSystem::touch()
 	 * @param int $time New modified time
 	 */
 	function touch($time=NULL) {
@@ -541,11 +529,11 @@ class FileManager extends FileSystem
 	 * Lock a given file
 	 *
 	 * @param resource &$filePointer File handle
-	 * @param int $lockFile Lock type
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
 	 */
-	function lock(&$filePointer, $lockFile) {
+	function lock(&$filePointer, $lockType) {
 		$locks = FileManager::getLocks();
-		if (@flock($filePointer, $lockFile))
+		if (@flock($filePointer, $lockType))
 			$locks[] =& $filePointer;
 	}
 
@@ -576,10 +564,10 @@ class FileManager extends FileSystem
 		if (!is_resource($this->currentFile)) {
 			return FALSE;
 		} else {
-			// remove do vetor de pointers
+			// remove from internal set of handles
 			$pointers =& $this->getPointers();
 			unset($pointers[$this->currentPath][$this->currentMode]);
-			// reseta o valor das propriedades do objeto
+			// reset class properties
 			$fp = $this->currentFile;
 			unset($this->currentFile);
 			unset($this->currentPath);
@@ -603,39 +591,6 @@ class FileManager extends FileSystem
 			}
 		}
 		$pointers = array();
-	}
-
-	/**
-	 * Check if $mode is a read mode
-	 *
-	 * @param string $mode Input mode
-	 * @access private
-	 * @return bool
-	 */
-	function _isRead($mode) {
-		return (ereg(FILE_MANAGER_READ."b?\+?", $mode));
-	}
-
-	/**
-	 * Check if $mode is a write mode
-	 *
-	 * @param string $mode Input mode
-	 * @access private
-	 * @return bool
-	 */
-	function _isWrite($mode) {
-		return (ereg(FILE_MANAGER_WRITE."b?\+?", $mode));
-	}
-
-	/**
-	 * Check if $mode is an append mode
-	 *
-	 * @param string $mode Input mode
-	 * @access private
-	 * @return bool
-	 */
-	function _isAppend($mode) {
-		return (ereg(FILE_MANAGER_APPEND."b?\+?", $mode));
 	}
 }
 ?>
