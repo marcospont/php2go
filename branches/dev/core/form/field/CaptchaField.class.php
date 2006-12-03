@@ -1,71 +1,99 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/CaptchaField.class.php,v 1.9 2006/10/26 04:55:12 mpont Exp $
-// $Date: 2006/10/26 04:55:12 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//-----------------------------------------
 import('php2go.form.field.FormField');
 import('php2go.graph.CaptchaImage');
-//-----------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		CaptchaField
-// @desc		Constrói uma imagem de segurança (CAPTCHA) e um input
-//				do tipo TEXT onde o usuário deve informar a palavra idêntica
-//				à que aparece na imagem gerada
-// @package		php2go.form.field
-// @extends		FormField
-// @uses		CaptchaImage
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.9 $
-//!-----------------------------------------------------------------
+/**
+ * Text field with CAPTCHA security image
+ *
+ * Displays a text input and a CAPTCHA security image. The
+ * word inside the image must be entered in the text input so
+ * that the field can be validated.
+ *
+ * @package form
+ * @subpackage field
+ * @uses CaptchaImage
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class CaptchaField extends FormField
 {
-	var $Captcha = NULL;	// @var Captcha CaptchaImage object		"NULL" Configura e gera a imagem captcha
-	var $imagePath;			// @var imagetPath string				Caminho onde a imagem deve ser salva
-	var $imageType;			// @var imageType int					Tipo da imagem a ser gerada
-	var $readOnly = NULL;	// @var readOnly bool					"NULL" Indica se o o componente é somente leitura
+	/**
+	 * Used to generate and display the CAPTCHA image
+	 *
+	 * @var object CaptchaImage
+	 * @access private
+	 */
+	var $Captcha = NULL;
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::CaptchaField
-	// @desc		Construtor da classe
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @access		public
-	//!-----------------------------------------------------------------
-	function CaptchaField(&$Form) {
-		parent::FormField($Form);
+	/**
+	 * Image save path
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $imagePath;
+
+	/**
+	 * Image type
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $imageType;
+
+	/**
+	 * Whether the component is read-only
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $readOnly = NULL;
+
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return CaptchaField
+	 */
+	function CaptchaField(&$Form, $child=FALSE) {
+		parent::FormField($Form, $child);
 		$this->htmlType = 'TEXT';
 		$this->searchable = FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::display
-	// @desc		Gera o código HTML do campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && parent::onPreRender());
 		print sprintf("%s&nbsp;&nbsp;<input type=\"text\" id=\"%s\" name=\"%s\" value=\"\" maxlength=\"%s\" size=\"%s\" title=\"%s\" autocomplete=\"OFF\"%s%s%s%s%s%s>",
@@ -75,37 +103,31 @@ class CaptchaField extends FormField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::setSize
-	// @desc		Altera ou define o tamanho do campo texto onde o texto da imagem deve ser reproduzido
-	// @param		size int		Tamanho para o campo de texto
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the size of the text input
+	 *
+	 * @param int $size Text input size
+	 */
 	function setSize($size) {
 		if (TypeUtils::isInteger($size))
 			$this->attributes['SIZE'] = $size;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::setLength
-	// @desc		Define número máximo de caracteres do campo
-	// @param		length int		Define o tamanho da string captcha
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set maxlength of the text input
+	 *
+	 * @param int $length Text input maxlength
+	 */
 	function setLength($length) {
 		if (TypeUtils::isInteger($length))
 			$this->attributes['LENGTH'] = $length;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::setReadonly
-	// @desc		Permite habilitar ou desabilitar o atributo de somente leitura do campo texto
-	// @param		setting bool	"TRUE" Valor para o atributo, TRUE torna o campo texto somente leitura
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable read-only mode for this component
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setReadonly($setting=TRUE) {
 		if (TypeUtils::isTrue($setting)) {
 			$this->attributes['READONLY'] = " readonly";
@@ -116,13 +138,12 @@ class CaptchaField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::isValid
-	// @desc		Sobrecarrega o método isValid da classe FormField para executar
-	//				a validação do valor informado contra o conteúdo da mensagem captcha
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Validates the component
+	 *
+	 * @uses CaptchaImage::verify()
+	 * @return bool
+	 */
 	function isValid() {
 		$result = parent::isValid();
 		$verify = $this->Captcha->verify($this->value);
@@ -132,67 +153,61 @@ class CaptchaField extends FormField
 		return TypeUtils::toBoolean($result);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::onLoadNode
-	// @desc		Processa atributos e nodos filhos provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		// inicializa a imagem captcha
+		// initialize the CAPTCHA image
 		$this->Captcha = new CaptchaImage($this->id . '_captcha');
-		// tamanho do campo
+		// input size and maxlength
 		if (isset($attrs['SIZE']))
 			$this->setSize($attrs['SIZE']);
 		elseif (isset($attrs['LENGTH']))
 			$this->setSize($attrs['LENGTH']);
 		else
 			$this->setSize($this->Captcha->textLength);
-		// tamanho da string captcha
+		// CAPTCHA string length
 		if ($attrs['LENGTH']) {
 			$this->setLength($attrs['LENGTH']);
 			$this->Captcha->setTextLength($attrs['LENGTH']);
 		} else {
 			$this->setLength($this->attributes['SIZE']);
 		}
-		// somente leitura
+		// read-only
 		$readOnly = (resolveBooleanChoice(@$attrs['READONLY']) || $this->_Form->readonly);
 		if ($readOnly)
 			$this->setReadonly();
-		// dimensões da imagem
+		// image dimensions
 		if ($attrs['WIDTH'])
 			$this->Captcha->setWidth($attrs['WIDTH']);
 		if ($attrs['HEIGHT'])
 			$this->Captcha->setHeight($attrs['HEIGHT']);
-		// nível de ruído
+		// noise level
 		if ($attrs['NOISELEVEL'])
 			$this->Captcha->setNoiseLevel($attrs['NOISELEVEL']);
-		// propriedades da fonte do texto
+		// font properties
 		if ($attrs['FONTSIZE'])
 			$this->Captcha->setFontSize($attrs['FONTSIZE']);
 		if ($attrs['FONTSHADOW'])
 			$this->Captcha->setFontShadow($attrs['FONTSHADOW']);
 		if ($attrs['FONTANGLE'])
 			$this->Captcha->setFontAngle($attrs['FONTANGLE']);
-		// caminho onde a imagem deve ser salva
+		// image save path
 		if ($attrs['IMAGEPATH'])
 			$this->imagePath = $attrs['IMAGEPATH'];
-		// tipo de imagem
+		// image type
 		$type = @constant(@$attrs['IMAGETYPE']);
 		if (!TypeUtils::isNull($type, TRUE))
 			$this->imageType = $type;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CaptchaField::onPreRender
-	// @desc		Revalida o estado de somente-leitura do campo baseado
-	//				no valor da propriedade readonly no formulário
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		// revalida a propriedade "readonly"
