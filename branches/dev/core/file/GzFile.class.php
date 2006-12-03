@@ -1,83 +1,120 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/file/GzFile.class.php,v 1.13 2006/03/15 04:43:23 mpont Exp $
-// $Date: 2006/03/15 04:43:23 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.file.FileCompress');
-import('php2go.net.HttpResponse');
 import('php2go.text.StringUtils');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class 		GzFile
-// @desc 		Permite a compactação de arquivos utilizando o formato GZIP (GNU Zip)
-// @package		php2go.file
-// @extends 	FileCompress
-// @uses 		FileManager
-// @uses		HttpResponse
-// @uses		StringUtils
-// @author 		Marcos Pont
-// @version		$Revision: 1.13 $
-//!-----------------------------------------------------------------
+/**
+ * Reads and write GZIP files
+ *
+ * The class is able to create and extract GZIP files
+ * using functions of the <b>zlib</b> extension.
+ *
+ * @package file
+ * @uses FileManager
+ * @uses HttpResponse
+ * @uses StringUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class GzFile extends FileCompress
 {
-	var $gzData;	// @var gzData string	Dados do arquivo .gz
-	var $level = 9;	// @var level int		Nivel de compressão a ser utilizado
+	/**
+	 * GZIP stream
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $gzData;
 
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::GzFile
-	// @desc 		Executa o construtor da classe superior (FileCompress)
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Compression level
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $level = 9;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return GzFile
+	 */
 	function GzFile() {
 		parent::FileCompress();
 		$this->gzData = "";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::setCompressionLevel
-	// @desc 		Configura o nível do algoritmo de compactação
-	// @access 		public
-	// @param 		level int			Nível de comptactação
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set compression level
+	 *
+	 * @param int $level Compression level
+	 */
 	function setCompressionLevel($level) {
 		$this->level = $level <= 9 ? max(1, (int)$level): 9;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::addData
-	// @desc 		Adiciona dados binários de um arquivo ao .gz
-	// @access 		public
-	// @param 		data string		Dados de um arquivo
-	// @param 		fileName string   "NULL" Nome do arquivo
-	// @param 		fileAttrs array	"array()" Atributos do arquivo
-	// @return		void
-	// @note 		Conjunto de atributos: time e comment
-	//!-----------------------------------------------------------------
-	function addData($data, $fileName = NULL, $fileAttrs = array()) {
+	/**
+	 * Adds a file in the GZIP stream
+	 *
+	 * @param string $fileName File path
+	 * @param string $comment File comment
+	 * @return bool
+	 */
+	function addFile($fileName, $comment=NULL) {
+		$Mgr =& FileCompress::getFileManager();
+		if (!$Mgr->open($fileName, FILE_MANAGER_READ_BINARY)) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		} else {
+			$fileName = (StringUtils::match($fileName, '/') ? substr($fileName, strrpos($fileName, '/') + 1) : $fileName);
+			$attrs['time'] = $Mgr->getAttribute('mTime');
+			if (!is_null($comment))
+				$attrs['comment'] = $comment;
+			$this->addData($Mgr->readFile(), $fileName, $attrs);
+			$Mgr->close();
+			return TRUE;
+		}
+	}
+
+	/**
+	 * Adds data in the GZIP stream
+	 *
+	 * Attributes:
+	 * # time : last modified time
+	 * # comment : file comment
+	 *
+	 * @param string $data Data
+	 * @param string $fileName File name
+	 * @param array $fileAttrs File attributes
+	 */
+	function addData($data, $fileName=NULL, $fileAttrs=array()) {
 		$fileFlags = bindec('000' . (isset($fileAttrs['comment']) ? '1' : '0') . ($fileName != NULL ? '1' : '0') . '000');
 		$this->gzData = $this->_buildFileHeader($fileFlags, $fileAttrs['time']);
 		if ($fileName != NULL)
@@ -88,37 +125,22 @@ class GzFile extends FileCompress
 		$this->gzData .= pack("VV", crc32($data), strlen($data));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::addFile
-	// @desc 		Adiciona um arquivo ao .gz
-	// @access 		public
-	// @param 		fileName string	Nome do arquivo
-	// @param		comment string	"NULL" Comentário para o arquivo
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function addFile($fileName, $comment = NULL) {
-		$Mgr =& FileCompress::getFileManager();
-		if (!$Mgr->open($fileName, FILE_MANAGER_READ_BINARY)) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
-			return FALSE;
-		} else {
-			$fileName = (StringUtils::match($fileName, '/') ? substr($fileName, strrpos($fileName, '/') + 1) : $fileName);
-			$attrs['time'] = $Mgr->getAttribute('mTime');
-			if (!TypeUtils::isNull($comment))
-				$attrs['comment'] = $comment;
-			$this->addData($Mgr->readFile(), $fileName, $attrs);
-			$Mgr->close();
-			return TRUE;
-		}
+	/**
+	 * Get the GZIP stream
+	 *
+	 * @return string
+	 */
+	function getData() {
+		return $this->gzData;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::extractData
-	// @desc 		Extrai o conteúdo do arquivo compactado
-	// @access 		public
-	// @param 		data string		Conteúdo do arquivo .gz
-	// @return 		array Vetor contendo os dados do arquivo ou false em caso de erros
-	//!-----------------------------------------------------------------
+	/**
+	 * Extract GZIP data
+	 *
+	 * @param string $data GZIP data
+	 * @access protected
+	 * @return array Extracted file information
+	 */
 	function extractData($data) {
 		$header = unpack("H2a/H2b/Cflags", StringUtils::left($data, 3));
 		$descriptor = unpack("Vcrc/Vsize", StringUtils::right($data, 8));
@@ -153,43 +175,18 @@ class GzFile extends FileCompress
 		return $file;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::getData
-	// @desc 		Retorna o conteúdo do arquivo .gz construído
-	// @access 		public
-	// @return 		string Conteúdo do arquivo GZIP
-	//!-----------------------------------------------------------------
-	function getData() {
-		return $this->gzData;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::downloadFile
-	// @desc 		Imprime os headers de formato de arquivo para permitir
-	// 				o download do arquivo .gz montado
-	// @access 		public
-	// @param 		fileName string	Nome do arquivo a ser enviado ao usuário
-	// @return		void
-	//!-----------------------------------------------------------------
-	function downloadFile($fileName) {
-		if (!HttpResponse::headersSent()) {
-			HttpResponse::download($fileName, strlen($this->getData()));
-			print $this->getData();
-		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function 	GzFile::_buildFileHeader
-	// @desc 		Constrói o cabeçalho de um arquivo no formato GZIP
-	// @access 		private
-	// @param 		flags int			Flags de formatação do arquivo
-	// @param 		mtime int			"0" Timestamp de modificação do arquivo
-	// @return		string Cabeçalho do arquivo GZIP em formato binário
-	//!-----------------------------------------------------------------
+	/**
+	 * Build the GZIP header
+	 *
+	 * @param int $flags File flags
+	 * @param int $mtime File timestamp
+	 * @access private
+	 * @return string
+	 */
 	function _buildFileHeader($flags, $mtime = 0) {
 		if (!$mtime) $mtime = time();
-		// Formato do cabeçalho de arquivo :
-		// POS    TAM       DESC
+		// Header format:
+		// POS    SIZE      DESC
 		// 0      2         Magic header
 		// 2      1         Compression Method
 		// 3      1         File flags
