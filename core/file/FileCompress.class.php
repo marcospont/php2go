@@ -29,17 +29,19 @@
 
 import('php2go.file.FileManager');
 import('php2go.file.DirectoryManager');
+import('php2go.net.HttpResponse');
 
 /**
- * Base class to handle with archiving and compressing files
+ * Base class to handle with archives and file compression
  *
- * This class is the base of classes the archive or compress
- * files. It contains all common operations shared by the
- * child classes.
+ * This class is the base of classes that read/write archives
+ * and compressed files. It contains all common operations
+ * shared by child classes.
  *
  * @package file
  * @uses FileManager
  * @uses DirectoryManager
+ * @uses HttpResponse
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
@@ -264,6 +266,17 @@ class FileCompress extends PHP2Go
 	}
 
 	/**
+	 * Must be implemented in the child classes
+	 *
+	 * @param string $data Data
+	 * @param string $fileName File name
+	 * @param array $attrs File attributes
+	 * @abstract
+	 */
+	function addData($data, $fileName, $attrs) {
+	}
+
+	/**
 	 * Opens and extracts a file
 	 *
 	 * Returns an array of extract files or FALSE in case of error.
@@ -334,6 +347,10 @@ class FileCompress extends PHP2Go
 	 * Save files extracted from an archive
 	 *
 	 * Inexistent directories will be automatically created.
+	 * <code>
+	 * $zip =& FileCompress::getInstance('zip');
+	 * $zip->saveExtractedFiles($zip->extractFile('test.zip'), 0777, 'tmp/');
+	 * </code>
 	 *
 	 * @param array $files List of files
 	 * @param int $createMode Create mode
@@ -398,6 +415,19 @@ class FileCompress extends PHP2Go
 		chdir($cwd);
 		return $fileSet;
 	}
+
+	/**
+	 * Download the generated archive
+	 *
+	 * @param string $fileName File name
+	 */
+	function downloadFile($fileName) {
+		if (!headers_sent()) {
+			HttpResponse::download($fileName, strlen($this->getData()));
+			print $this->getData();
+		}
+	}
+
 
 	/**
 	 * Print debug information
