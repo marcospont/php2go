@@ -1,71 +1,79 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/AutoCompleteField.class.php,v 1.6 2006/11/19 18:28:30 mpont Exp $
-// $Date: 2006/11/19 18:28:30 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.db.QueryBuilder');
 import('php2go.form.field.EditableField');
 import('php2go.util.json.JSONEncoder');
-//------------------------------------------------------------------
 
-// @const AUTOCOMPLETE_NORMAL "normal"
-// Style key for normal option rows
-define('AUTOCOMPLETE_NORMAL', 'normal');
-// @const AUTOCOMPLETE_SELECTED "selected"
-// Style key for selected option rows
-define('AUTOCOMPLETE_SELECTED', 'selected');
-// @const AUTOCOMPLETE_HOVER "hover"
-// Style key for option rows when hovered
-define('AUTOCOMPLETE_HOVER', 'hover');
-
-//!-----------------------------------------------------------------
-// @class		AutoCompleteField
-// @desc		Implementação de um campo texto onde o conteúdo fornecido
-//				pelo usuário é utilizado para realizar uma pesquisa
-//				e fornecer opções no estilo "auto-completar"
-// @package		php2go.form.field
-// @extends		EditableField
-// @uses		Db
-// @uses		HttpRequest
-// @uses		JSONEncoder
-// @author		Marcos Pont
-// @version		$Revision: 1.6 $
-//!-----------------------------------------------------------------
+/**
+ * Text field with autocomplete support
+ *
+ * Autocomplete searches are performed as the chars are entered
+ * in the text field. Autocomplete choices can be filtered from a
+ * local JS array or through an AJAX call.
+ *
+ * @package form
+ * @subpackage field
+ * @uses Db
+ * @uses HttpRequest
+ * @uses JSONEncoder
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class AutoCompleteField extends EditableField
 {
-	var $options = array();		// @var options array		"array()" Opções de configuração do componente JS utilizado
-	var $choices = array();		// @var choices array		"array()" Conjunto de opções
-	var $dataSource = array();	// @var dataSource array	"array()" Datasource do componente
+	/**
+	 * Configuration options
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $options = array();
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::AutoCompleteField
-	// @desc		Construtor da classe
-	// @param		&Form Form object		Formulário onde o campo será inserido
-	// @param		child bool				"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Autocomplete choices
+	 *
+	 * Holds choices declared explictly in the XML specification.
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $choices = array();
+	var $dataSource = array();
+
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return AutoCompleteField
+	 */
 	function AutoCompleteField(&$Form, $child=FALSE) {
 		parent::EditableField($Form, $child);
 		$this->htmlType = 'TEXT';
@@ -73,20 +81,17 @@ class AutoCompleteField extends EditableField
 			'maxChoices' => 10,
 			'separator' => ',',
 			'style' => array(
-				AUTOCOMPLETE_NORMAL => 'autoCompleteNormal',
-				AUTOCOMPLETE_SELECTED => 'autoCompleteSelected',
-				AUTOCOMPLETE_HOVER => 'autoCompleteHover'
+				'normal' => 'autoCompleteNormal',
+				'selected' => 'autoCompleteSelected',
+				'hover' => 'autoCompleteHover'
 			),
 			'url' => HttpRequest::uri(FALSE)
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::display
-	// @desc		Monta o código HTML do componente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		if ($this->options['ajax'] && !$this->options['throbber']) {
 			$throbber = sprintf("\n<span id=\"%s_throbber\" style=\"display:none\"><img src=\"%sindicator.gif\" border=\"0\" align=\"top\" alt=\"\"></span>", $this->id, PHP2GO_ICON_PATH);
@@ -118,18 +123,17 @@ class AutoCompleteField extends EditableField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setSource
-	// @desc		Define a fonte das opções de pesquisa
-	// @note		<b>LOCAL</b> utiliza opções locais (Javascript) definidas
-	//				estaticamente (nodos CHOICE) ou dinamicamente (DATASOURCE).
-	//				<b>AJAX</b> significa busca através de requisições AJAX, utilizando
-	//				o DATASOURCE definido na especificação XML
-	// @param		src string		LOCAL ou AJAX
-	// @param		option array	"array()" Opções de configuração
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the source of the autocomplete choices
+	 *
+	 * # LOCAL: all autocomplete choices are serialized in a JS array. They
+	 *   can be declare either through choice nodes or a datasource
+	 * # AJAX: choices are loaded on demand, through AJAX calls, and using
+	 *   the datasource declared in the XML specification
+	 *
+	 * @param string $src Source
+	 * @param array $options Configuration options
+	 */
 	function setSource($src, $options=array()) {
 		if ($src == 'LOCAL') {
 			$this->options['ajax'] = FALSE;
@@ -144,161 +148,141 @@ class AutoCompleteField extends EditableField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setDelay
-	// @desc		Define o delay de execução da pesquisa
-	// @note		Se o intervalo entre a digitação de 2 caracteres no
-	//				campo de pesquisa for superior ao delay, o filtro
-	//				será aplicado (local ou remotamente)
-	// @param		delay float	Delay de pesquisa
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the search delay
+	 *
+	 * If the interval between 2 typed keys exceeds the delay, the
+	 * autocomplete search will be performed (locally or remotely).
+	 *
+	 * @param float $delay Delay
+	 */
 	function setDelay($delay) {
 		$delay = (float)$delay;
 		if ($delay > 0)
 		$this->options['delay'] = $delay;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setMultiple
-	// @desc		Define se o campo permite múltiplas escolhas
-	// @param		setting bool		Múltiplo (TRUE) ou simples (FALSE)
-	// @param		separator string	Separador (múltipla escolha)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable disable multiple selection
+	 *
+	 * @param bool $setting Enable/disable
+	 * @param string $separator Separator for multiple values
+	 */
 	function setMultiple($setting, $separator) {
 		$this->options['incremental'] = (bool)$setting;
 		if ($this->options['incremental'] && $separator)
 			$this->options['separator'] = $separator;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setHeight
-	// @desc		Define a altura do container que exibe as opções de escolha
-	// @note		Se este atributo for omitido, a altura necessária para
-	//				comportar as opções exibidas será utilizada
-	// @param		height int	Altura para o container
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Set the height of the container used to display search results
+	 *
+	 * @param int $height Height
+	 */
 	function setHeight($height) {
 		$height = intval($height);
 		if ($height)
 			$this->options['height'] = $height;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setMaxChoices
-	// @desc		Define o máximo de opções a ser exibido
-	// @param		max int	Máximo de opções
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set maximum choices that can be returned
+	 *
+	 * @param int $max Max choices
+	 */
 	function setMaxChoices($max) {
 		$max = intval($max);
 		if ($max > 0)
 			$this->options['maxChoices'] = $max;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setMinChars
-	// @desc		Define o tamanho mínimo em caracteres para que a
-	//				pesquisa seja executada
-	// @param		min int	Mínimo de caracteres
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set miminum chars that must be typed until a search is performed
+	 *
+	 * @param int $min Min chars
+	 */
 	function setMinChars($min) {
 		$min = intval($min);
 		if ($min > 0)
 			$this->options['minChars'] = $min;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setIgnoreCase
-	// @desc		Habilita/desabilita pesquisa insensível ao caso
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable case insensitivity in the autocomplete search
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setIgnoreCase($setting) {
 		$this->options['ignoreCase'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setFullSearch
-	// @desc		Habilita/desabilita pesquisa em toda a string (contendo)
-	//				e não só no início (iniciando com)
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable full search
+	 *
+	 * By default, the class searches only in the beginning of the
+	 * choices. By enabling full search, the search engine will
+	 * match the search term in any part of the choices.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setFullSearch($setting) {
 		$this->options['fullSearch'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setAutoSelect
-	// @desc		Habilita o recurso de auto-selecionar quando a
-	//				pesquisa retornar apenas uma opção
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable auto-select when the search returns only one choice
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setAutoSelect($setting) {
 		$this->options['autoSelect'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setChoiceValueNode
-	// @desc		Define o nodo que determina o valor a ser utilizado
-	//				quando as escolhas possuem conteúdo HTML.
-	// @note		Se as escolhas utilizam o padrão HTML &lt;div&gt;choice value&lt;/div&gt;
-	//				&lt;div&gt;auxiliar text&lt;/div&gt;, o valor do atributo seria "div",
-	//				o que faz com que o componente busque a primeira ocorrência deste tipo
-	//				de nodo para determinar o valor a ser copiado para o campo texto
-	// @param		node string Tipo de nodo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the node that contains the choice value, when
+	 * choices contain HTML code
+	 *
+	 *
+	 * If your choices are returned in the following format:
+	 * <code>
+	 * <li><div>John Smith</div><div>john.smith@company.org</div></li>
+	 * </code>
+	 * The value we want to catch is in the first div node. So, the
+	 * choice value node would be "div".
+	 *
+	 * @param string $node Node name
+	 */
 	function setChoiceValueNode($node) {
 		if (!empty($node))
 			$this->options['choiceValueNode'] = trim($node);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::setItemStyle
-	// @desc		Define estilo CSS para os resultados de pesquisa
-	// @param		style string	Estilo CSS
-	// @param		type int		Nome da propriedade de estilo (normal, hover, selected)
-	// @note		As constantes da classe contêm os valores possíveis para o parâmetro $type
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set a CSS property of the autocomplete choices
+	 *
+	 * @param string $style CSS class
+	 * @param string $type CSS property: normal, selected or hover
+	 */
 	function setItemStyle($style, $type) {
 		if (!empty($style))
 			$this->options['style'][$type] = $style;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
-		// quando escolha múltipla estiver habilitada, máscaras não são suportadas
+		// when multiple choice is enabled, masks aren't supported
 		$multiple = resolveBooleanChoice(@$attrs['MULTIPLE']);
 		if ($multiple)
 			unset($attrs['MASK']);
 		parent::onLoadNode($attrs, $children);
-		// datasource (utilizado para escolhas locais dinâmicas ou via ajax)
+		// datasource
 		$this->dataSource = parent::parseDataSource($children['DATASOURCE']);
-		// fonte da busca
+		// search source
 		$source = TypeUtils::ifNull(@$attrs['SOURCE'], 'LOCAL');
 		if ($source == 'AJAX') {
 			$opts = array();
@@ -320,40 +304,40 @@ class AutoCompleteField extends EditableField
 		// delay
 		if (isset($attrs['DELAY']))
 			$this->setDelay($attrs['DELAY']);
-		// escolha múltipla
+		// multiple choices
 		$this->setMultiple($multiple, @$attrs['SEPARATOR']);
-		// altura do container
+		// container height
 		$this->setHeight(@$attrs['HEIGHT']);
-		// máximo de opções de escolha
+		// max choices
 		$this->setMaxChoices(@$attrs['MAXCHOICES']);
-		// tamanho mínimo de token
+		// minimum chars for a search token
 		$this->setMinChars(@$attrs['MINCHARS']);
-		// busca case-insensitive ou não
+		// ignore case when searching
 		if ($attrs['IGNORECASE'])
 			$this->setIgnoreCase(resolveBooleanChoice($attrs['IGNORECASE']));
 		// full search
 		$this->setFullSearch(resolveBooleanChoice(@$attrs['FULLSEARCH']));
-		// auto selecionar quando 1 resultado só for retornado
+		// auto-select when only 1 result is returned
 		$this->setAutoSelect(resolveBooleanChoice(@$attrs['AUTOSELECT']));
 		// nodo de seleção de valor (quando as escolhas possuem conteúdo HTML)
 		$this->setChoiceValueNode(@$attrs['CHOICEVALUENODE']);
-		// estilos
-		$this->setItemStyle(@$attrs['NORMALSTYLE'], AUTOCOMPLETE_NORMAL);
-		$this->setItemStyle(@$attrs['SELECTEDSTYLE'], AUTOCOMPLETE_SELECTED);
-		$this->setItemStyle(@$attrs['HOVERSTYLE'], AUTOCOMPLETE_HOVER);
+		// CSS styles
+		$this->setItemStyle(@$attrs['NORMALSTYLE'], 'normal');
+		$this->setItemStyle(@$attrs['SELECTEDSTYLE'], 'selected');
+		$this->setItemStyle(@$attrs['HOVERSTYLE'], 'hover');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::onDataBind
-	// @desc		Executa as configurações do componente que dependem
-	//				de valores dinâmicos. É também utilizado para executar
-	//				a pesquisa quando o componente estiver utilizando AJAX
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * This method is also used to respond to autocomplete
+	 * queries via AJAX.
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
-		// variáveis do datasource e montagem das opções usando datasource
+		// variables inside datasource, choices loaded from datasource
 		if (!empty($this->dataSource)) {
 			foreach ((array)$this->dataSource as $name => $value) {
 				if (preg_match("/~[^~]+~/", $value))
@@ -362,7 +346,7 @@ class AutoCompleteField extends EditableField
 			if (!$this->_Form->isPosted())
 				$this->_getChoices();
 		}
-		// busca das opções por ajax
+		// search and print choices, responding to an AJAX request
 		$headers = HttpRequest::getHeaders();
 		if (@$headers['X-Requested-With'] == 'XMLHttpRequest') {
 			$token = HttpRequest::post($this->name);
@@ -371,7 +355,7 @@ class AutoCompleteField extends EditableField
 				exit;
 			}
 		}
-		// processamento do valor, quando incremental=true
+		// handle multiple choices
 		if ($this->options['incremental']) {
 			$this->searchDefaults['OPERATOR'] = 'IN';
 			if ($this->_Form->isPosted()) {
@@ -392,25 +376,20 @@ class AutoCompleteField extends EditableField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::onPreRender
-	// @desc		Executa tarefas de pré-renderização do componente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/autocompletefield.js');
 		$this->_Form->Document->addStyle(PHP2GO_CSS_PATH . 'autocompletefield.css');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::_getChoices
-	// @desc		Busca as consultas a partir da consulta SQL armazenada
-	//				no datasource do componente
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Build the list of choices using the component's datasource
+	 *
+	 * @access private
+	 */
 	function _getChoices() {
 		if (empty($this->choices)) {
 			$Db =& Db::getInstance($this->dataSource['CONNECTION']);
@@ -442,14 +421,14 @@ class AutoCompleteField extends EditableField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AutoCompleteField::_printChoices
-	// @desc		Executa a pesquisa e retorna seus resultados em HTML
-	// @note		Utilizado quando o componente funcionar em modo AJAX
-	// @param		token string Token de pesquisa
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Respond to an AJAX search call
+	 *
+	 * Execute the search query and return the results in HTML (li nodes).
+	 *
+	 * @param string $token Search token
+	 * @access private
+	 */
 	function _printChoices($token) {
 		$ign = HttpRequest::post('ignorecase');
 		$full = HttpRequest::post('fullsearch');
