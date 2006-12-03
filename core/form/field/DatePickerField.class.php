@@ -1,58 +1,66 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/DatePickerField.class.php,v 1.4 2006/10/26 04:55:13 mpont Exp $
-// $Date: 2006/10/26 04:55:13 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.datetime.Date');
 import('php2go.form.field.FormField');
 import('php2go.util.json.JSONEncoder');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		DatePickerField
-// @desc		Tipo especial de controle de formulário que implementa
-//				uma seleção simples ou múltipla de datas a partir de
-//				um calendário (biblioteca JSCalendar)
-// @package		php2go.form.field
-// @uses		Date
-// @uses		JSONEncoder
-// @extends		FormField
-// @author		Marcos Pont
-// @version		$Revision: 1.4 $
-//!-----------------------------------------------------------------
+/**
+ * Date selection tool
+ *
+ * Implements a date selection tool based on the bundled library
+ * JSCalendar. Accepts single or multiple selection.
+ *
+ * @package form
+ * @subpackage field
+ * @uses Date
+ * @uses JSONEncoder
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class DatePickerField extends FormField
 {
-	var $options = array();		// @var options array	"array()" Conjunto de opções para o calendário
+	/**
+	 * Configuration options
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $options = array();
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::DatePickerField
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @param		child bool			"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return DatePickerField
+	 */
 	function DatePickerField(&$Form, $child=FALSE) {
 		parent::FormField($Form, $child);
 		$this->searchDefaults['DATATYPE'] = 'DATE';
@@ -70,12 +78,9 @@ class DatePickerField extends FormField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::display
-	// @desc		Gera o código HTML contendo o calendário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		print sprintf(
@@ -87,38 +92,34 @@ class DatePickerField extends FormField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::setMultiple
-	// @desc		Define o tipo de escolha de data (simples ou múltipla)
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable multiple selection
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setMultiple($setting) {
 		$this->attributes['MULTIPLE'] = (bool)$setting;
 		$this->searchDefaults['OPERATOR'] = ($this->attributes['MULTIPLE'] ? 'IN' : 'EQ');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::setDateStatusFunc
-	// @desc		Define a função JS que deverá tratar o status de cada
-	//				uma das datas do calendário, habilitando-as ou desabilitando-as
-	// @param		funcName string	Nome da função
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set a Javascript function to define enable state
+	 * for each calendar date
+	 *
+	 * @param string $funcName Function name
+	 */
 	function setDateStatusFunc($funcName) {
 		if ($funcName)
 			$this->options['statusFunc'] = $funcName;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::setShowTime
-	// @desc		Habilita ou desabilita a seleção de hora juntamente com a data
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable time selection
+	 *
+	 * Defaults to FALSE.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setShowTime($setting) {
 		$setting = (bool)$setting;
 		$dateType = PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
@@ -133,95 +134,84 @@ class DatePickerField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::setFirstWeekDay
-	// @desc		Define qual será o primeiro dia da semana no calendário
-	// @note		O padrão desta configuração é 0 (Domingo). 0 significa
-	//				domingo e 6 significa Sábado
-	// @param		day int	Primeiro dia da semana no calendário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set first day of the week
+	 *
+	 * Defaults to 0 (Sunday).
+	 *
+	 * @param int $day Day number (0-sunday, 1-monday, ...)
+	 */
 	function setFirstWeekDay($day) {
 		$day = intval($day);
 		if ($day >= 0 && $day <= 6)
 			$this->options['firstDay'] = $day;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::setShowOthers
-	// @desc		Habilita ou desabilita a exibição de dias pertencentes
-	//				a outros meses no calendário
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable display of days from other months
+	 *
+	 * Defaults to FALSE.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setShowOthers($setting) {
 		$this->options['showOthers'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::setShowWeekNumbers
-	// @desc		Habilita ou desabilita a exibição dos números das
-	//				semanas do ano no calendário
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable display of week numbers
+	 *
+	 * Defaults to FALSE.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setShowWeekNumbers($setting) {
 		$this->options['weekNumbers'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::setYearRange
-	// @desc		Define o intervalo de anos aceito pelo calendário
-	// @param		start int Ano inicial
-	// @param		end int Ano final
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set calendar year range
+	 *
+	 * @param int $start Minimum year
+	 * @param int $end Maximum year
+	 */
 	function setYearRange($start, $end) {
 		if ($start && $end)
 			$this->options['range'] = array($start, $end);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		// seleção múltipla
+		// multiple selection
 		$this->setMultiple(resolveBooleanChoice(@$attrs['MULTIPLE']));
-		// função JS que define o status das datas
+		// date status function
 		$this->setDateStatusFunc(@$attrs['DATESTATUSFUNC']);
-		// hora
+		// time selection
 		$this->setShowTime(resolveBooleanChoice(@$attrs['TIME']));
-		// primeiro dia da semana
+		// first week day
 		$this->setFirstWeekDay(@$attrs['FIRSTWEEKDAY']);
-		// dias de outros meses
+		// show days from other months and years
 		$this->setShowOthers(resolveBooleanChoice(@$attrs['SHOWOTHERS']));
-		// números das semanas do ano
+		// show week numbers
 		$this->setShowWeekNumbers(resolveBooleanChoice(@$attrs['SHOWWEEKNUMBERS']));
-		// intervalo de anos
+		// year range
 		$matches = array();
 		$range = @$attrs['YEARRANGE'];
 		if ($range && preg_match('/^([0-9]{4})\s*,\s*([0-9]{4})$/', $range, $matches))
 			$this->setYearRange($matches[1], $matches[2]);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::onDataBind
-	// @desc		Sobrecarrega o método onDataBind da classe FormField para interpretar
-	//				expressões de data e para converter seleções de datas em formato de array
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
 		$regs = array();
@@ -233,12 +223,9 @@ class DatePickerField extends FormField
 			parent::setSubmittedValue(!empty($this->value) ? explode($this->options['dateSep'], $this->value) : array());
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DatePickerField::onPreRender
-	// @desc		Prepara as opções de configuração do JS Calendar
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		$this->_Form->Document->importStyle(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar-system.css");

@@ -1,80 +1,95 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/EditSearchField.class.php,v 1.18 2006/10/26 04:55:13 mpont Exp $
-// $Date: 2006/10/26 04:55:13 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.DbField');
 import('php2go.form.field.LookupField');
+import('php2go.template.Template');
 import('php2go.util.service.ServiceJSRS');
-//------------------------------------------------------------------
 
-// @const EDITSEARCH_DEFAULT_SIZE "10"
-// Tamanho padrão do campo que contém o termo de pesquisa
+/**
+ * Default size of the search text input
+ */
 define('EDITSEARCH_DEFAULT_SIZE', 10);
-// @const EDITSEARCH_DEFAULT_LOOKUP_WIDTH "250"
-// Largura padrão em pixels para a lista de resultados
+/**
+ * Default width of the select input used to show search results
+ */
 define('EDITSEARCH_DEFAULT_LOOKUP_WIDTH', 250);
 
-//!-----------------------------------------------------------------
-// @class		EditSearchField
-// @desc		A classe EditSearchField implementa um pequeno e eficiente componente
-//				de pesquisa, baseado em um conjunto de filtros e um campo de digitação
-//				do termo de pesquisa. Partindo de uma consulta SQL base, o componente
-//				inclui a cláusula definida para o filtro escolhido, e popula um campo
-//				SELECT com os resultados da pesquisa. A requisição da pesquisa é
-//				realizada utilizando JSRS
-// @package		php2go.form.field
-// @extends		DbField
-// @author		Marcos Pont
-// @version		$Revision: 1.18 $
-//!-----------------------------------------------------------------
+/**
+ * JSRS based search tool based on a set of filters, a search input and a select input
+ *
+ * Based on a set of filters defined in the XML specification, this class builds
+ * a search tool that uses a JSRS request to get results from a data source and
+ * populate a select input ({@link LookupField} child component).
+ *
+ * @package form
+ * @subpackage field
+ * @uses LookupField
+ * @uses ServiceJSRS
+ * @uses Template
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class EditSearchField extends DbField
 {
-	var $filters = array();		// @var filters array					"array()" Conjunto de filtros
-	var $_LookupField;			// @var _LookupField LookupField object	Objeto LookupField usado para exibir os resultados da pesquisa
+	/**
+	 * Data filters
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $filters = array();
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::EditSearchField
-	// @desc		Construtor da classe
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @access		public
-	//!-----------------------------------------------------------------
-	function EditSearchField(&$Form) {
-		parent::DbField($Form, FALSE);
+	/**
+	 * LookupField component used to display search results
+	 *
+	 * @var object LookupField
+	 */
+	var $_LookupField;
+
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return EditSearchField
+	 */
+	function EditSearchField(&$Form, $child=FALSE) {
+		parent::DbField($Form, $child);
 		$this->composite = TRUE;
 		$this->searchDefaults['OPERATOR'] = 'EQ';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::display
-	// @desc		Gera o código HTML do componente, composto pelas
-	//				opções e termo de pesquisa, e o campo de exibição
-	//				dos resultados
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		$Tpl = new Template(PHP2GO_TEMPLATE_PATH . 'editsearchfield.tpl');
@@ -116,45 +131,43 @@ class EditSearchField extends DbField
 		$Tpl->display();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::getValue
-	// @desc		O valor do componente mapeia diretamente para o valor
-	//				do campo LOOKUPFIELD associado
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * The value of an EditSearchField component maps directly
+	 * to the value of the internal {@link LookupField} child component
+	 *
+	 * @uses LookupField::getValue()
+	 * @return mixed
+	 */
 	function getValue() {
 		return $this->_LookupField->getValue();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::getDisplayValue
-	// @desc		Retorna a representação textual do valor do componente
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * The human-readable value of an EditSearchField component
+	 * is produced by the internal {@link LookupField} child component
+	 *
+	 * @uses LookupField::getDisplayValue()
+	 * @return string
+	 */
 	function getDisplayValue() {
 		return $this->_LookupField->getDisplayValue();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::getFocusId
-	// @desc		Retorna o ID da lista de campos de pesquisa, que
-	//				deverá receber foco quando o label do campo for clicado
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the search input as the control to be activated
+	 * when the component receives focus
+	 *
+	 * @return string
+	 */
 	function getFocusId() {
 		return "{$this->id}_filters";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::&getLookupField
-	// @desc		Retorna o objecto LookupField que representa a lista de de resultados da pesquisa
-	// @note		Retorna NULL se o objeto não foi definido
-	// @return		LookupField object	Campo LookupField associado à este campo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the internal LookupField
+	 *
+	 * @return LookupField
+	 */
 	function &getLookupField() {
 		$result = NULL;
 		if (TypeUtils::isInstanceOf($this->_LookupField, 'LookupField'))
@@ -162,51 +175,43 @@ class EditSearchField extends DbField
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setSize
-	// @desc		Altera ou define o tamanho do campo
-	// @param		size int	Tamanho para o campo de pesquisa
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set search input size
+	 *
+	 * @param int $size Search input size
+	 */
 	function setSize($size) {
 		if (TypeUtils::isInteger($size))
 			$this->attributes['SIZE'] = $size;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setLength
-	// @desc		Define número máximo de caracteres do campo
-	// @param		length int	Máximo de caracteres para o campo de pesquisa
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set search input maxlength
+	 *
+	 * @param int $length Maxlength
+	 */
 	function setLength($length) {
 		if (TypeUtils::isInteger($length))
 			$this->attributes['LENGTH'] = $length;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setUrl
-	// @desc		Define a URL para onde a busca deve ser enviada
-	// @note		Normalmente, a URL de pesquisa é a mesma do formulário. Porém,
-	//				em alguns casos, pode ser necessária a utilização de um endereço diferente
-	// @param		url string	URL de pesquisa
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set search URL
+	 *
+	 * Defaults to $_SERVER['REQUEST_URI'].
+	 *
+	 * @param string $url Search URL
+	 */
 	function setUrl($url) {
 		if (!empty($url))
 			$this->attributes['URL'] = $this->_Form->evaluateStatement($url);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setAutoComplete
-	// @desc		Define valor para o recurso autocompletar no campo
-	// @param		setting mixed	Valor para o atributo AUTOCOMPLETE
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable the autocomplete feature of the browser on the search input
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setAutoComplete($setting) {
 		if (TypeUtils::isTrue($setting))
 			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"ON\"";
@@ -216,38 +221,33 @@ class EditSearchField extends DbField
 			$this->attributes['AUTOCOMPLETE'] = "";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setAutoTrim
-	// @desc		Habilita ou desabilita a remoção automática dos caracteres
-	//				brancos no início e no fim do termo de pesquisa no momento
-	//				da submissão
-	// @param		setting bool	"TRUE" Valor para o atributo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable removal of trailing whitespaces from the search input upon search
+	 *
+	 * Defaults to FALSE.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setAutoTrim($setting=TRUE) {
 		$this->attributes['AUTOTRIM'] = TypeUtils::toBoolean($setting);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setAutoDispatch
-	// @desc		Habilita ou desabilita a execução automática da pesquisa
-	//				desde que os filtros estejam preenchidos e sejam válidos
-	// @param		setting bool	"TRUE" Valor para o atributo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable search auto dispatch if filter and search term inputs are filled
+	 *
+	 * Defaults to FALSE.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setAutoDispatch($setting=TRUE) {
 		$this->attributes['AUTODISPATCH'] = TypeUtils::toBoolean($setting);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setButtonValue
-	// @desc		Define o valor do botão de pesquisa usado no componente
-	// @param		value string	Valor para o botão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set search button value
+	 *
+	 * @param string $value Button value
+	 */
 	function setButtonValue($value) {
 		if ($value)
 			$this->attributes['BTNVALUE'] = resolveI18nEntry($value);
@@ -255,13 +255,11 @@ class EditSearchField extends DbField
 			$this->attributes['BTNVALUE'] = PHP2Go::getLangVal('DEFAULT_BTN_VALUE');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setButtonImage
-	// @desc		Define uma imagem a ser utilizada no botão de pesquisa
-	// @param		img string	Caminho da imagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set search button image
+	 *
+	 * @param string $img Button image
+	 */
 	function setButtonImage($img) {
 		if ($img)
 			$this->attributes['BTNIMG'] = trim($img);
@@ -269,32 +267,32 @@ class EditSearchField extends DbField
 			$this->attributes['BTNIMG'] = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::setDebug
-	// @desc		Habilita ou desabilita debug no mecanismo de pesquisa JSRS
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable debug mode
+	 *
+	 * When debug is enabled, the hidden iframe used to
+	 * perform JSRS requests becomes visible (top of the screen
+	 * on IE, bottom of the screen on Firefox and Opera).
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setDebug($setting) {
 		$this->attributes['DEBUG'] = TypeUtils::toBoolean($setting);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @uses ServiceJSRS::registerHandler()
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
 		if (!empty($this->dataSource) &&  isset($children['DATAFILTER']) && isset($children['LOOKUPFIELD']) &&
 			TypeUtils::isInstanceOf($children['LOOKUPFIELD'], 'XmlNode')
 		) {
-			// armazenamento dos filtros
+			// data filters
 			$filters = TypeUtils::toArray($children['DATAFILTER']);
 			foreach ($filters as $filterNode) {
 				$id = $filterNode->getAttribute('ID');
@@ -311,23 +309,23 @@ class EditSearchField extends DbField
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EDITSEARCH_DUPLICATED_DATAFILTER', $id), E_USER_ERROR, __FILE__, __LINE__);
 				$this->filters[$id] = array($label, $expression, $mask);
 			}
-			// inicializa o handler JSRS
+			// initialize JSRS handler
 			$Service =& ServiceJSRS::getInstance();
 			$Service->registerHandler(array($this, 'performSearch'), strtolower($this->id) . 'PerformSearch');
 			$this->_Form->postbackFields[] = $this->id;
-			// tamanho do campo de pesquisa
+			// search input size
 			if (isset($attrs['SIZE']))
 				$this->setSize($attrs['SIZE']);
 			elseif (isset($attrs['LENGTH']))
 				$this->setSize($attrs['LENGTH']);
 			else
 				$this->setSize(EDITSEARCH_DEFAULT_SIZE);
-			// número máximo de caracteres do termo de pesquisa
+			// search input maxlength
 			if ($attrs['LENGTH'])
 				$this->setLength($attrs['LENGTH']);
 			else
 				$this->setLength($this->attributes['SIZE']);
-			// url de pesquisa
+			// search URL
 			$this->setUrl(@$attrs['URL']);
 			// autocomplete
 			$this->setAutoComplete(resolveBooleanChoice(@$attrs['AUTOCOMPLETE']));
@@ -335,12 +333,12 @@ class EditSearchField extends DbField
 			$this->setAutoTrim(resolveBooleanChoice(@$attrs['AUTOTRIM']));
 			// autodispatch
 			$this->setAutoDispatch(resolveBooleanChoice(@$attrs['AUTODISPATCH']));
-			// valor e imagem do botão
+			// button value and image
 			$this->setButtonValue(@$attrs['BTNVALUE']);
 			$this->setButtonImage(@$attrs['BTNIMG']);
-			// debug da requisição JSRS
+			// JSRS debug
 			$this->setDebug(resolveBooleanChoice(@$attrs['DEBUG']));
-			// cria o campo lookupfield
+			// child LookupField
 			$lookupAttrs =& $children['LOOKUPFIELD']->getAttributes();
 			if (!isset($lookupAttrs['WIDTH']))
 				$lookupAttrs['WIDTH'] = EDITSEARCH_DEFAULT_LOOKUP_WIDTH;
@@ -352,20 +350,14 @@ class EditSearchField extends DbField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::onDataBind
-	// @desc		Se o formulário foi submetido, o valor do campo é
-	//				copiado do valor determinado para o LOOKUPFIELD.
-	//				Adicionalmente, os valores selecionados para filtro e
-	//				termo de busca são lidos do request para que o dataset
-	//				dos resultados possa ser reconstruído
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
 		if ($this->_Form->isPosted) {
-			//$this->_LookupField->onDataBind();
 			$lastFilter = HttpRequest::getVar($this->id . '_lastfilter', $this->_Form->formMethod);
 			$lastSearch = HttpRequest::getVar($this->id . '_lastsearch', $this->_Form->formMethod);
 			if ($lastFilter !== NULL && $lastSearch !== NULL) {
@@ -380,13 +372,9 @@ class EditSearchField extends DbField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::onPreRender
-	// @desc		Executa as configurações necessárias antes da construção
-	//				do código HTML final do componente
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/editsearchfield.js');
@@ -396,29 +384,29 @@ class EditSearchField extends DbField
 		$this->_LookupField->onPreRender();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSearchField::performSearch
-	// @desc		Método responsável por executar a pesquisa, utilizando
-	//				o tipo de filtro e o termo de pesquisa escolhidos no
-	//				formulário. O retorno produzido é uma string contendo
-	//				separadores padrão para linhas "|" e colunas "~"
-	// @param		identifier string	Identificador do campo
-	// @param		filter int			ID do Filtro
-	// @param		term mixed			Termo de pesquisa
-	// @return		string Resultados
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Responds to the JSRS search request
+	 *
+	 * Receive filter name and search term, and use them
+	 * to filter the component's data source, returning
+	 * the search results in a string based on separators
+	 * for lines and columns.
+	 *
+	 * @param string $filter Filter name
+	 * @param string $term Search term
+	 * @return string
+	 */
 	function performSearch($filter, $term) {
 		if (isset($this->filters[$filter])) {
-			// constrói a nova cláusula
+			// builds the condition clause
 			$clause = sprintf($this->filters[$filter][1], $term);
 			if (empty($this->dataSource['CLAUSE']))
 				$this->dataSource['CLAUSE'] = $clause;
 			else
 				$this->dataSource['CLAUSE'] = "({$this->dataSource['CLAUSE']}) AND {$clause}";
-			// executa a consulta
+			// execute the query
 			@parent::processDbQuery(ADODB_FETCH_NUM, ServiceJSRS::debugEnabled());
-			// monta a string de resultados
+			// build the results string
 			if ($this->_Rs->RecordCount() > 0) {
 				$lines = array();
 				while (!$this->_Rs->EOF) {

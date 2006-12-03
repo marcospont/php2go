@@ -1,77 +1,107 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/EditSelectionField.class.php,v 1.30 2006/10/26 04:55:13 mpont Exp $
-// $Date: 2006/10/26 04:55:13 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.EditField');
 import('php2go.form.field.LookupField');
 import('php2go.template.Template');
 import('php2go.util.HtmlUtils');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		EditSelectionField
-// @desc		Esta classe monta uma estrutura de campos contendo um EDITFIELD para digitação
-//				de valores que são inseridos sem repetição em um LOOKUPFIELD. Este último pode
-//				ser definido com ou sem DATASOURCE. São definidos, também, dois campos escondidos
-//				(INSFIELD e REMFIELD), que armazenam os valores inseridos e removidos
-// @package		php2go.form.field
-// @uses		EditField
-// @uses		HtmlUtils
-// @uses		LookupField
-// @uses		Template
-// @extends		FormField
-// @author		Marcos Pont
-// @version		$Revision: 1.30 $
-//!-----------------------------------------------------------------
+/**
+ * Value selection tool based on a text input, a set of buttons and a select input
+ *
+ * New values entered in the text input are added to the select input through an
+ * "add" button. Existent select options can be removed using the "remove" and
+ * "remove all" buttons. The select input can also load previously saved values,
+ * using a data source.
+ *
+ * @package form
+ * @subpackage field
+ * @uses EditField
+ * @uses HtmlUtils
+ * @uses LookupField
+ * @uses Template
+ * @uses TypeUtils
+ * @author Marcos Pont
+ * @version $Revision$
+ */
 class EditSelectionField extends FormField
 {
-	var $buttonImages = array();	// @var buttonImages array				"array()" Vetor armazenando as imagens para os botões de ação
-	var $listSeparator = '#';		// @var listSeparator string			"#" Caractere usado para separar os valores nos campos escondidos (adicionados/removidos)
-	var $_EditField;				// @var _EditField EditField object		Objeto EditField que cria e monta o código do campo de edição
-	var $_LookupField;				// @var _LookupField LookupField object	Objeto LookupField que cria e monta o código do campo que armazena os valores inseridos
+	/**
+	 * Images for the action buttons
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $buttonImages = array();
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::EditSelectionField
-	// @desc		Construtor da classe
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @access		public
-	//!-----------------------------------------------------------------
-	function EditSelectionField(&$Form) {
-		parent::FormField($Form);
+	/**
+	 * Separator used in hidden control fields
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $listSeparator = '#';
+
+	/**
+	 * EditField component used to add values
+	 *
+	 * @var object EditField
+	 * @access private
+	 */
+	var $_EditField;
+
+	/**
+	 * LookupField component used to present saved values
+	 * and to add values entered in the text input
+	 *
+	 * @var object LookupField
+	 * @access private
+	 */
+	var $_LookupField;
+
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return EditSelectionField
+	 */
+	function EditSelectionField(&$Form, $child=FALSE) {
+		parent::FormField($Form, $child);
 		$this->composite = TRUE;
 		$this->searchable = FALSE;
 		$this->customEvents = array('onAdd', 'onRemove');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::display
-	// @desc		Gera o código HTML do componente
-	// @access		public
-	// @return		void	
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		$Tpl = new Template(PHP2GO_TEMPLATE_PATH . 'editselectionfield.tpl');
@@ -96,24 +126,21 @@ class EditSelectionField extends FormField
 		$Tpl->display();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::getFocusId
-	// @desc		Retornao ID do campo de inserção de valores, que
-	//				deverá receber foco quando o label do campo for clicado
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the text input as the control the should be
+	 * activated when the component receives focus
+	 *
+	 * @return string
+	 */
 	function getFocusId() {
 		return $this->_EditField->getId();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::&getEditField
-	// @desc		Busca o objeto EditField que representa a caixa de edição
-	// @return		EditField object	Caixa de edição
-	// @note		Retorna NULL se o objeto ainda não foi definido
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the internal EditField
+	 *
+	 * @return EditField
+	 */
 	function &getEditField() {
 		$result = NULL;
 		if (TypeUtils::isInstanceOf($this->_EditField, 'EditField'))
@@ -121,14 +148,11 @@ class EditSelectionField extends FormField
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::&getLookupField
-	// @desc		Retorna o objecto LookupField que representa a lista de
-	//				itens inseridos na estrutura do campo
-	// @return		LookupField object	Lista de itens inseridos
-	// @note		Retorna NULL se o objeto não foi definido
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the internal LookupField
+	 *
+	 * @return LookupField
+	 */
 	function &getLookupField() {
 		$result = NULL;
 		if (TypeUtils::isInstanceOf($this->_LookupField, 'LookupField'))
@@ -136,13 +160,11 @@ class EditSelectionField extends FormField
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::setInsertedValuesFieldName
-	// @desc		Define o nome do campo escondido que irá armazenar os valores inseridos na caixa de seleção
-	// @param		insField string		Nome para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the name of the hidden field that will hold added values
+	 *
+	 * @param string $insField Field name
+	 */
 	function setInsertedValuesFieldName($insField) {
 		if (trim($insField) != '' && $insField != $this->_EditField->name && $insField != $this->_LookupField->name)
 			$this->attributes['INSFIELD'] = $insField;
@@ -151,13 +173,11 @@ class EditSelectionField extends FormField
 		$this->_Form->verifyFieldName($this->_Form->formName, $this->attributes['INSFIELD']);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::setRemovedValuesFieldName
-	// @desc		Define o nome do campo escondido que irá armazenar os valores removidos da caixa de seleção
-	// @param		remField string		Nome para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the name of the hidden field that will hold removed values
+	 *
+	 * @param string $insField Field name
+	 */
 	function setRemovedValuesFieldName($remField) {
 		if (trim($remField) != '' && $remField != $this->_EditField->name && $remField != $this->_LookupField->name)
 			$this->attributes['REMFIELD'] = $remField;
@@ -166,15 +186,11 @@ class EditSelectionField extends FormField
 		$this->_Form->verifyFieldName($this->_Form->formName, $this->attributes['REMFIELD']);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::setTableWidth
-	// @desc		Os campos do tipo EditSelection são gerados em um template
-	//				pré-definido no framework. Este método permite customizar
-	//				o tamanho da tabela principal deste template
-	// @param		tableWidth string	Tamanho para a tabela, a ser utilizado no atributo WIDTH da tabela
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set component's table width in pixels
+	 *
+	 * @param int $tableWidth Table width
+	 */
 	function setTableWidth($tableWidth) {
 		if ($tableWidth)
 			$this->attributes['TABLEWIDTH'] = " width='" . $tableWidth . "'";
@@ -182,67 +198,60 @@ class EditSelectionField extends FormField
 			$this->attributes['TABLEWIDTH'] = "";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::setButtonImages
-	// @desc		Define imagens para os botões de ação
-	// @param		add string		Imagem para o botão "adicionar"
-	// @param		rem string		Imagem para o botão "remover"
-	// @param		remAll string	Imagem para o botão "remover todos"
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set images for the action buttons
+	 *
+	 * @param string $add "Add" button image
+	 * @param string $rem "Remove" button image
+	 * @param string $remAll "Remove all" button image
+	 */
 	function setButtonImages($add, $rem, $remAll) {
 		(trim($add) != '') && ($this->buttonImages['ADD'] = $add);
 		(trim($rem) != '') && ($this->buttonImages['REM'] = $rem);
 		(trim($remAll) != '') && ($this->buttonImages['REMALL'] = $remAll);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		// verifica se a estrutura de nodos filhos está correta
+		// check if children structure is valid
 		if (isset($children['EDITFIELD']) && isset($children['LOOKUPFIELD']) &&
 			TypeUtils::isInstanceOf($children['EDITFIELD'], 'XmlNode') &&
 			TypeUtils::isInstanceOf($children['LOOKUPFIELD'], 'XmlNode')) {
-			// instancia os campos filhos
+			// create EditField and LookupField child components
 			$this->_EditField = new EditField($this->_Form, TRUE);
 			$this->_EditField->onLoadNode($children['EDITFIELD']->getAttributes(), $children['EDITFIELD']->getChildrenTagsArray());
 			$this->_LookupField = new LookupField($this->_Form, TRUE);
 			$this->_LookupField->onLoadNode($children['LOOKUPFIELD']->getAttributes(), $children['LOOKUPFIELD']->getChildrenTagsArray());
-			// copia o atributo disabled para os filhos
+			// disabled attribute is propagated to the children
 			$this->_EditField->attributes['DISABLED'] = $this->attributes['DISABLED'];
 			$this->_LookupField->attributes['DISABLED'] = $this->attributes['DISABLED'];
-			// campo para valores inseridos
+			// hidden field for added values
 			$this->setInsertedValuesFieldName(@$attrs['INSFIELD']);
-			// campo para valores removidos
+			// hidden field for removed values
 			$this->setRemovedValuesFieldName(@$attrs['REMFIELD']);
-			// largura da tabela
+			// table width
 			$this->setTableWidth(@$attrs['TABLEWIDTH']);
-			// imagens dos botões
+			// button images
 			$this->setButtonImages(@$attrs['ADDIMG'], @$attrs['REMIMG'], @$attrs['REMALLIMG']);
 		} else {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_EDITSELECTION_CHILDREN', $this->name), E_USER_ERROR, __FILE__, __LINE__);
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::onDataBind
-	// @desc		Transforma o valor submetido em um array contendo
-	//				valores inseridos e valores removidos
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
-		// registra valores submetidos
 		if ($this->_Form->isPosted()) {
 			$inserted = HttpRequest::getVar($this->attributes['INSFIELD'], $this->_Form->formMethod);
 			$removed = HttpRequest::getVar($this->attributes['REMFIELD'], $this->_Form->formMethod);
@@ -253,14 +262,9 @@ class EditSelectionField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditSelectionField::onPreRender
-	// @desc		Configura os botões de ação e algumas propriedades dos
-	//				campos de valor e seleção que possuem restrições em seus
-	//				valores quando usadas dentro desta classe
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/editselectionfield.js');
@@ -301,12 +305,12 @@ class EditSelectionField extends FormField
 					$this->attributes['DISABLED'], $actHash[$i][3]
 				);
 		}
-		// configurações da caixa de texto
+		// EditField settings
 		$this->_EditField->setRequired(FALSE);
 		if ($this->accessKey)
 			$this->_EditField->setAccessKey($this->accessKey);
 		$this->_EditField->onPreRender();
-		// configurações da lista de itens selecionados
+		// LookupField settings
 		if (trim($this->_LookupField->getAttribute('FIRST')) == "")
 			$this->_LookupField->setFirstOption(PHP2Go::getLangVal('LOOKUP_SELECTION_DEFAULT_SELFIRST'));
 		$this->_LookupField->disableFirstOption(FALSE);

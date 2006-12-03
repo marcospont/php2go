@@ -1,53 +1,51 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/DbCheckGroup.class.php,v 1.9 2006/11/02 19:21:34 mpont Exp $
-// $Date: 2006/11/02 19:21:34 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.DbGroupField');
-import('php2go.template.Template');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		DbCheckGroup
-// @desc		Classe que constrói um grupo de campos do tipo RADIO BUTTON,
-//				carregando os elementos do grupo a partir de uma consulta ao
-//				banco de dados
-// @package		php2go.form.field
-// @extends		DbGroupField
-// @author		Marcos Pont
-// @version		$Revision: 1.9 $
-//!-----------------------------------------------------------------
+/**
+ * Builds a group of checkbox inputs loaded from a datasource
+ *
+ * @package form
+ * @subpackage field
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class DbCheckGroup extends DbGroupField
 {
-	//!-----------------------------------------------------------------
-	// @function	DbCheckGroup::DbCheckGroup
-	// @desc		Construtor da classe, inicializa os atributos básicos do campo
-	// @param		&Form Form object		Formulário no qual o campo é inserido
-	// @param		child bool				"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return DbCheckGroup
+	 */
 	function DbCheckGroup(&$Form, $child=FALSE) {
 		parent::DbField($Form, $child);
 		$this->htmlType = 'CHECKBOX';
@@ -55,15 +53,12 @@ class DbCheckGroup extends DbGroupField
 		$this->attributes['MULTIPLE'] = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DbCheckGroup::renderGroup
-	// @desc		Implementa o método renderGroup da classe pai, onde
-	//				os dados dos elementos do grupo (botões RADIO) são
-	//				armazenados em um array para serem utilizados na
-	//				renderização
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the HTML code of the checkbox inputs
+	 *
+	 * @access protected
+	 * @return array
+	 */
 	function renderGroup() {
 		$group = array();
 		$groupName = (substr($this->name, -2) != '[]' ? $this->name . '[]' : $this->name);
@@ -121,39 +116,33 @@ class DbCheckGroup extends DbGroupField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DbCheckGroup::setShortcuts
-	// @desc		Habilita/desabilita shortcuts (Todos/Nenhum/Inverter)
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable shortcuts
+	 *
+	 * Shortcuts are links rendered above the checkbox inputs used
+	 * to check all inputs, uncheck all inputs and invert selection
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setShortcuts($setting) {
 		$this->attributes['SHORTCUTS'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DbCheckGroup::onLoadNode
-	// @desc		Processa atributos e nodos filhos da especificação XML do campo
-	// @param		attrs array		Atributos
-	// @param		children array	Nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
 		// shortcuts
 		$this->setShortcuts(resolveBooleanChoice(@$attrs['SHORTCUTS']));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DbCheckGroup::onPreRender
-	// @desc		Insere o sufixo "[]" na propriedade validationName,
-	//				que indica como o campo deve ser referenciado pela
-	//				API de validação client-side
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		if (substr($this->validationName, -2) != '[]')
 			$this->validationName .= '[]';
