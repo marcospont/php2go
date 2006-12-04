@@ -112,7 +112,7 @@ class FileField extends FormField
 	}
 
 	/**
-	 * Set callback function that must be used to save the uploaded file
+	 * Set a callback function that must be used to save the uploaded file
 	 *
 	 * @param string $function Function name, class/method or object/method
 	 */

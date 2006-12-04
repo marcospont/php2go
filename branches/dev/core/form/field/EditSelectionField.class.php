@@ -40,6 +40,9 @@ import('php2go.util.HtmlUtils');
  * "remove all" buttons. The select input can also load previously saved values,
  * using a data source.
  *
+ * Added values and removed values are stored in 2 hidden fields. These fields are
+ * also used to defined the submitted value of this component.
+ *
  * @package form
  * @subpackage field
  * @uses EditField
@@ -128,7 +131,7 @@ class EditSelectionField extends FormField
 
 	/**
 	 * Define the text input as the control the should be
-	 * activated when the component receives focus
+	 * activated when the component's label is clicked
 	 *
 	 * @return string
 	 */
@@ -176,7 +179,7 @@ class EditSelectionField extends FormField
 	/**
 	 * Set the name of the hidden field that will hold removed values
 	 *
-	 * @param string $insField Field name
+	 * @param string $remField Field name
 	 */
 	function setRemovedValuesFieldName($remField) {
 		if (trim($remField) != '' && $remField != $this->_EditField->name && $remField != $this->_LookupField->name)

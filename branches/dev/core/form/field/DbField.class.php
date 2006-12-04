@@ -31,7 +31,7 @@ import('php2go.db.QueryBuilder');
 import('php2go.form.field.FormField');
 
 /**
- * Base class for form components based on a datasource
+ * Base class for form components based on a data source
  *
  * @package form
  * @subpackage field
@@ -118,6 +118,7 @@ class DbField extends FormField
 	/**
 	 * Processes attributes and child nodes loaded from the XML specification
 	 *
+	 * @uses FormField::parseDataSource()
 	 * @param array $attrs Node attributes
 	 * @param array $children Node children
 	 */

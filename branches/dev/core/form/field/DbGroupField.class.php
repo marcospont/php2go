@@ -90,7 +90,7 @@ class DbGroupField extends DbField
 
 	/**
 	 * Define the ID of the first group member as the
-	 * target when the component receives focus
+	 * target when the component's label is clicked
 	 *
 	 * @return string
 	 */
