@@ -1,85 +1,210 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/FormField.class.php,v 1.63 2006/11/02 19:14:40 mpont Exp $
-// $Date: 2006/11/02 19:14:40 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.datetime.Date');
-import('php2go.net.HttpRequest');
-import('php2go.text.StringUtils');
 import('php2go.util.HtmlUtils');
-import('php2go.util.Statement');
-import('php2go.validation.Validator');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		FormField
-// @desc		Classe abstrata que atua como base para a construção
-//				de campos de formulário a partir dos atributos definidos
-//				na especificação XML
-// @package		php2go.form.field
-// @extends		Component
-// @uses		Form
-// @uses		FormEventListener
-// @uses		FormRule
-// @uses		HtmlUtils
-// @uses		HttpRequest
-// @uses		Statement
-// @author		Marcos Pont
-// @version		$Revision: 1.63 $
-//!-----------------------------------------------------------------
+/**
+ * Base class for all form components
+ *
+ * @package form
+ * @subpackage field
+ * @uses Date
+ * @uses HttpRequest
+ * @uses HtmlUtils
+ * @uses Validator
+ * @abstract
+ */
 class FormField extends Component
 {
-	var $id;							// @var id string				ID do campo
-	var $name;							// @var name string				Nome do campo
-	var $validationName;				// @var validationName string	Nome a ser utilizado em validações Javascript
-	var $label;							// @var label string			Rótulo do campo
-	var $accessKey;						// @var accessKey string		Tecla de atalho do campo
-	var $value = '';					// @var value mixed				"" Valor do campo
-	var $fieldTag;						// @var fieldTag string			Nome da tag no arquivo XML
-	var $htmlType;						// @var htmlType string			Tipo da tag INPUT construída
-	var $rules = array();				// @var rules array				"array()" Regras de igualdade, desigualdade e obrigatoriedade condicional para o campo
-	var $listeners = array();			// @var listeners array			"array()" Conjunto de tratadores de eventos associados a este campo
-	var $customEvents = array();		// @var customEvents array		"array()" Conjunto de eventos customizados (fora do DOM) tratados por este campo de formulário
-	var $customListeners = array();		// @var customListeners array	"array()" Conjunto de tratadores de eventos custom (fora do DOM) associados a este campo
-	var $search = array();				// @var search array			"array()" Configurações customizadas de pesquisa para este campo
-	var $searchDefaults = array();		// @var searchDefaults array	"array()" Configurações padrão de pesquisa para este campo
-	var $required = FALSE;				// @var required bool			"FALSE" Indica se o campo é obrigatório ou não
-	var $disabled = NULL;				// @var disabled bool			"NULL" Indica se o campo está desabilitado
-	var $child = FALSE;					// @var child bool				"FALSE" Indica que o campo é um membro de um campo composto (DataGrid, RangeField, ...)
-	var $composite = FALSE;				// @var composite bool			"FALSE" Indica que é um campo composto
-	var $searchable = TRUE;				// @var searchable bool			"TRUE" Se esta propriedade for FALSE, indica que o campo não é válido para um formulário de pesquisa
-	var $dataBind = FALSE;				// @var dataBind bool			"FALSE" Indica se o método onDataBind já foi executado (definição de valor, resolução de expressões e variáveis)
-	var $_Form = NULL;					// @var _Form Form object		Objeto Form no qual o campo será incluído
+	/**
+	 * Field ID
+	 *
+	 * @var string
+	 */
+	var $id;
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::FormField
-	// @desc		Construtor da classe, inicializa os atributos básicos do campo
-	// @param		&Form Form object		Formulário onde o campo será inserido
-	// @param		child bool				"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Field name
+	 *
+	 * @var string
+	 */
+	var $name;
+
+	/**
+	 * Name used to identify the form component
+	 * when configuring client validation
+	 *
+	 * @var string
+	 */
+	var $validationName;
+
+	/**
+	 * Field label
+	 *
+	 * @var string
+	 */
+	var $label;
+
+	/**
+	 * Field access key
+	 *
+	 * @var string
+	 */
+	var $accessKey;
+
+	/**
+	 * Field value
+	 *
+	 * @var mixed
+	 */
+	var $value = '';
+
+	/**
+	 * Tag name in the XML specification
+	 *
+	 * @var string
+	 */
+	var $fieldTag;
+
+	/**
+	 * HTML input type
+	 *
+	 * @var string
+	 */
+	var $htmlType;
+
+	/**
+	 * Whether the field is required
+	 *
+	 * @var bool
+	 */
+	var $required = FALSE;
+
+	/**
+	 * Whether the field is disabled
+	 *
+	 * @var bool
+	 */
+	var $disabled = NULL;
+
+	/**
+	 * Whether the component is child of another component
+	 *
+	 * @var bool
+	 */
+	var $child = FALSE;
+
+	/**
+	 * Indicates a composite form component
+	 *
+	 * @var bool
+	 */
+	var $composite = FALSE;
+
+	/**
+	 * Indicates if this component can be used on search forms
+	 *
+	 * @var bool
+	 */
+	var $searchable = TRUE;
+
+	/**
+	 * Field rules
+	 *
+	 * @var array
+	 * @access protected
+	 */
+	var $rules = array();
+
+	/**
+	 * Field JS listeners
+	 *
+	 * @var array
+	 * @access protected
+	 */
+	var $listeners = array();
+
+	/**
+	 * Custom events handled by the component
+	 *
+	 * @var array
+	 * @access protected
+	 */
+	var $customEvents = array();
+
+	/**
+	 * Custom event listeners
+	 *
+	 * @var array
+	 * @access protected
+	 */
+	var $customListeners = array();
+
+	/**
+	 * Custom search settings
+	 *
+	 * @var array
+	 * @access protected
+	 */
+	var $search = array();
+
+	/**
+	 * Default search settings
+	 *
+	 * @var array
+	 * @access protected
+	 */
+	var $searchDefaults = array();
+
+	/**
+	 * Indicates the data bind phase was already executed
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $dataBind = FALSE;
+
+	/**
+	 * Reference to the parent form
+	 *
+	 * @var object Form
+	 */
+	var $_Form = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return FormField
+	 */
 	function FormField(&$Form, $child=FALSE) {
 		parent::Component();
 		if ($this->isA('FormField', FALSE))
@@ -96,43 +221,38 @@ class FormField extends Component
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::__destruct
-	// @desc		Destrutor do objeto
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function __destruct() {
-		unset($this);
+	/**
+	 * Must be implemented by child classes
+	 *
+	 * @abstract
+	 */
+	function display() {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getId
-	// @desc		Retorna o ID do campo
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get component's ID
+	 *
+	 * @return string
+	 */
 	function getId() {
 		return $this->id;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getFocusId
-	// @desc		Retorna o ID do elemento com o qual o LABEL
-	//				do campo deve ser associado
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the ID of the control that should be activated
+	 * when the component's label is clicked
+	 *
+	 * @return string
+	 */
 	function getFocusId() {
 		return $this->id;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setId
-	// @desc		Define o ID do campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the component's ID
+	 *
+	 * @param string $id New ID
+	 */
 	function setId($id) {
 		if (!empty($id))
 			$this->id = $id;
@@ -140,23 +260,20 @@ class FormField extends Component
 			$this->id = PHP2Go::generateUniqueId(parent::getClassName());
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getName
-	// @desc		Busca o nome do campo
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the component's name
+	 *
+	 * @return string
+	 */
 	function getName() {
 		return $this->name;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setName
-	// @desc		Altera ou define o nome do campo
-	// @param		newName string	Novo nome para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the component's name
+	 *
+	 * @param string $newName New name
+	 */
 	function setName($newName) {
 		$oldName = $this->name;
 		if ($newName != '')
@@ -172,26 +289,23 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getLabel
-	// @desc		Busca o rótulo do campo
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get component's label
+	 *
+	 * @return string
+	 */
 	function getLabel() {
 		return $this->label;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getLabelCode
-	// @desc		Método responsável pela construção do código HTML
-	//				do rótulo do campo, incluindo indicativo de obrigatoriedade
-	// @param		reqFlag bool	Exibir ou não indicativo de obrigatoriedade
-	// @param		reqColor string	Cor do indicativo
-	// @param		reqText string	Texto do indicativo
-	// @return		string Código da tag LABEL - rótulo do campo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Build and return the HTML code of the component's label
+	 *
+	 * @param bool $reqFlag Whether the required field mark should be displayed
+	 * @param string $reqColor Color of the required field mark
+	 * @param string $reqText Contents of the required field mark
+	 * @return string
+	 */
 	function getLabelCode($reqFlag, $reqColor, $reqText) {
 		$UserAgent =& UserAgent::getInstance();
 		$label = $this->label;
@@ -217,51 +331,45 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setLabel
-	// @desc		Altera ou define o rótulo do campo
-	// @param		label string		Novo rótulo para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set component's label
+	 *
+	 * @param string $label New label
+	 */
 	function setLabel($label) {
-		if (!StringUtils::isEmpty($label))
+		$label = trim(strval($label));
+		if (strlen($label) > 0)
 			$this->label = resolveI18nEntry($label);
 		else
 			$this->label = $this->name;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getValue
-	// @desc		Busca o valor atribuído ao campo
-	// @return		mixed Valor do campo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get component's value
+	 *
+	 * @return mixed
+	 */
 	function getValue() {
 		return $this->value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getDisplayValue
-	// @desc		Monta uma representação compreensível do valor do campo
-	// @note		Este método é utilizado na montagem de uma descrição
-	//				"human readable" das cláusulas de busca construídas
-	//				pela classe php2go.form.SearchForm
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a human-readable representation of the component's value
+	 *
+	 * @return string
+	 */
 	function getDisplayValue() {
 		return $this->value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getSearchData
-	// @desc		Retorna o conjunto de informações específicas de busca
-	//				para este campo: o valor submetido e os parâmetros de configuração
-	//				(operador, tipo de dado, alias)
-	// @return		array Dados de busca deste campo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get component's search data
+	 *
+	 * This method is used by {@link SearchForm} class to retrieve
+	 * search information about a form field.
+	 *
+	 * @return array
+	 */
 	function getSearchData() {
 		$search = array_merge($this->searchDefaults, $this->search);
 		if ($this->_Form->isPosted()) {
@@ -275,25 +383,23 @@ class FormField extends Component
 		return $search;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setValue
-	// @desc		Altera ou define valor para o campo
-	// @param		value mixed		Valor para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the component's value
+	 *
+	 * @param mixed $value New value
+	 */
 	function setValue($value) {
 		if (!$this->dataBind)
 			$this->onDataBind();
 		$this->value = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setSubmittedValue
-	// @desc		Adiciona um valor no conjunto de valores submetidos do formulário
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Register the component's value in the set of form submitted values
+	 *
+	 * @param string $value Submitted value
+	 * @access protected
+	 */
 	function setSubmittedValue($value=NULL) {
 		$sv =& $this->_Form->submittedValues;
 		$value = TypeUtils::ifNull($value, $this->getValue());
@@ -306,44 +412,39 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getFieldTag
-	// @desc		Retorna o nome da tag do campo no arquivo XML
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the element name used to declare this
+	 * component in the XML specification
+	 *
+	 * @return string
+	 */
 	function getFieldTag() {
 		return $this->fieldTag;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::&getOwnerForm
-	// @desc		Retorna o formulário no qual o campo está inserido
-	// @return		Form object
-	// @access		public
-	//!-----------------------------------------------------------------
-	function &getOwnerForm() {
-		return $this->_Form;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormField::getHtmlType
-	// @desc		Retorna o tipo de INPUT ou elemento HTML que este campo representa
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the component's HTML input type
+	 *
+	 * @return string
+	 */
 	function getHtmlType() {
 		return $this->htmlType;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::getHelpCode
-	// @desc		Método responsável pela construção do código HTML de apresentação
-	//				do texto de ajuda atrelado ao campo, proveniente do atributo HELP
-	//				da especificação XML
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the component's parent form
+	 *
+	 * @return Form
+	 */
+	function &getOwnerForm() {
+		return $this->_Form;
+	}
+
+	/**
+	 * Builds and returns the HTML code of the component's help tooltip
+	 *
+	 * @return string
+	 */
 	function getHelpCode() {
 		if ($this->attributes['HELP'] != '') {
 			if ($this->_Form->helpOptions['mode'] == FORM_HELP_INLINE) {
@@ -360,13 +461,11 @@ class FormField extends Component
 		return '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setHelp
-	// @desc		Atribui um texto de ajuda ao campo
-	// @param		help string		Texto de ajuda para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set component's help message
+	 *
+	 * @param string $help Help message
+	 */
 	function setHelp($help) {
 		$help = trim($help);
 		if ($help != '')
@@ -375,36 +474,29 @@ class FormField extends Component
 			$this->attributes['HELP'] = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::isRequired
-	// @desc		Consulta se o campo é ou não obrigatório
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the component is required
+	 *
+	 * @return bool
+	 */
 	function isRequired() {
 		return $this->required;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setRequired
-	// @desc		Altera a obrigatoriedade do campo
-	// @param		setting bool		"TRUE" Valor para a obrigatoriedade
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Change de obligatoriness state of the component
+	 *
+	 * @param bool $setting Set this to TRUE to flag the field as required
+	 */
 	function setRequired($setting=TRUE) {
 		$this->required = (bool)$setting;
-		if ($this->required && !$this->_Form->hasRequired)
-			$this->_Form->hasRequired = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setDisabled
-	// @desc		Altera o valor do atributo que desabilita o campo
-	// @param		setting bool	"TRUE" Indica desabilitação ou habilitação do campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable the component
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setDisabled($setting=TRUE) {
 		if ($setting) {
 			$this->attributes['DISABLED'] = " disabled";
@@ -415,16 +507,17 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setStyle
-	// @desc		Define o estilo CSS do campo
-	// @param		style string	Estilo CSS para o campo (classe CSS)
-	// @note		Este método permite customizar o estilo de um determinado
-	//				campo em relação à configuração global definida para todo
-	//				o formulário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set component's CSS class
+	 *
+	 * To define a single CSS class for all fields in
+	 * a form, use {@link Form::setInputStyle()} or declare
+	 * it in the XML file (//form/style[@input]). To define
+	 * a global CSS configuration for all forms, use the
+	 * FORMS entry of the global configuration settings.
+	 *
+	 * @param string $style CSS class
+	 */
 	function setStyle($style) {
 		$style = trim($style);
 		if ($style == 'empty')
@@ -435,13 +528,11 @@ class FormField extends Component
 			$this->attributes['STYLE'] = $this->_Form->getInputStyle();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setAccessKey
-	// @desc		Define a tecla de atalho do campo
-	// @param		accessKey string	Tecla de atalho
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set component's access key
+	 *
+	 * @param string $accessKey Access key
+	 */
 	function setAccessKey($accessKey) {
 		if (trim($accessKey) != '') {
 			$this->attributes['ACCESSKEY'] = " accesskey=\"$accessKey\"";
@@ -452,13 +543,11 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::setTabIndex
-	// @desc		Define o índice de tab order do campo
-	// @param		tabIndex int		Índice para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set component's tab index
+	 *
+	 * @param int $tabIndex Tab index
+	 */
 	function setTabIndex($tabIndex) {
 		if (TypeUtils::isInteger($tabIndex))
 			$this->attributes['TABINDEX'] = " tabindex=\"$tabIndex\"";
@@ -466,38 +555,37 @@ class FormField extends Component
 			$this->attributes['TABINDEX'] = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::addEventListener
-	// @desc		Adiciona um novo tratador de eventos no campo
-	// @param		Listener FormEventListener object	Tratador de evento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new event listener
+	 *
+	 * @param FormEventListener $Listener New listener
+	 */
 	function addEventListener($Listener) {
 		$Listener->setOwner($this);
 		if ($Listener->isValid())
 			$this->listeners[] =& $Listener;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::addRule
-	// @desc		Adiciona uma regra de validação para o campo
-	// @param		Rule FormRule object	Regra de validação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new validation rule
+	 *
+	 * @param FormRule $Rule New rule
+	 */
 	function addRule($Rule) {
 		$Rule->setOwnerField($this);
 		if ($Rule->isValid())
 			$this->rules[] =& $Rule;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::isValid
-	// @desc		Aplica as validações de obrigatoriedade e de regras no campo
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Validates the component's value
+	 *
+	 * Check if the component's value is valid by executing
+	 * and collecting the results of all registered validators.
+	 *
+	 * @uses Validator::validateField()
+	 * @return bool
+	 */
 	function isValid() {
 		if (!$this->dataBind)
 			$this->onDataBind();
@@ -518,60 +606,57 @@ class FormField extends Component
 		return TypeUtils::toBoolean($result);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		$isDataBind = $this->_Form->isA('FormDataBind');
 		// id
 		$this->setId(TypeUtils::ifNull(@$attrs['ID'], @$attrs['NAME']));
-		// nome
+		// name
 		$this->setName(@$attrs['NAME']);
-		// rótulo
+		// label
 		$this->setLabel(@$attrs['LABEL']);
-		// armazena atributos VALUE e DEFAULT para processamento posterior
+		// store VALUE and DEFAULT attributes for further processing
 		if (isset($attrs['VALUE']))
 			$this->attributes['VALUE'] = ($attrs['VALUE'] == 'empty' ? '' : $attrs['VALUE']);
 		if (isset($attrs['DEFAULT']))
 			$this->attributes['DEFAULT'] = ($attrs['DEFAULT'] == 'empty' ? '' : $attrs['DEFAULT']);
-		// texto de ajuda
+		// help message
 		$this->setHelp(@$attrs['HELP']);
-		// classe CSS
+		// CSS class
 		$this->setStyle(@$attrs['STYLE']);
 		// access key
 		$this->setAccessKey(@$attrs['ACCESSKEY']);
 		// tab index
 		$this->setTabIndex(@$attrs['TABINDEX']);
-		// status
+		// disabled
 		$disabled = (resolveBooleanChoice(@$attrs['DISABLED']) || $isDataBind || $this->_Form->readonly);
 		if ($disabled)
 			$this->setDisabled();
-		// obrigatoriedade
+		// required
 		$this->setRequired(resolveBooleanChoice(@$attrs['REQUIRED']));
-		// tratadores de eventos
+		// event listeners
 		if (isset($children['LISTENER'])) {
 			$listeners = TypeUtils::toArray($children['LISTENER']);
 			foreach ($listeners as $listenerNode)
 				$this->addEventListener(FormEventListener::fromNode($listenerNode));
 		}
-		// regras de validação
+		// validation rules
 		if (isset($children['RULE']) && !$this->composite) {
 			$rules = TypeUtils::toArray($children['RULE']);
 			foreach ($rules as $ruleNode)
 				$this->addRule(FormRule::fromNode($ruleNode));
 		}
-		// configurações de busca, utilizadas pela classe php2go.form.SearchForm
+		// search settings
 		if (!$this->child && isset($children['SEARCH'])) {
 			$this->search = TypeUtils::toArray(@$children['SEARCH']->getAttributes());
 			$this->search['IGNORE'] = resolveBooleanChoice(@$this->search['IGNORE']);
 		}
-		// atributos de data bind
+		// data bind attributes
 		if ($isDataBind && !$this->composite) {
 			$this->attributes['DATASRC'] = " datasrc=\"#{$this->_Form->csvDbName}\"";
 			$this->attributes['DATAFLD'] = " datafld=\"{$this->name}\"";
@@ -581,23 +666,25 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::onDataBind
-	// @desc		Este método é responsável por executar configurações no campo posteriores
-	//				à interpretação da especificação XML
-	// @note		Dentro deste método, é executada a rotina de definição do valor do campo,
-	//				a partir da requisição, do escopo global ou dos atributos VALUE e DEFAULT
-	// @note		No método onDataBind também são resolvidas expressões e variáveis dentro
-	//				das propriedades do campo (atributos, datasource, regras de validação)
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * This method defines the component's value, through the following steps:
+	 * # check if the form was posted
+	 * # if the form is posted, tries to load the value from the request
+	 * # if the value is not found, try to use VALUE and DEFAULT attributes of the XML specification
+	 * # if the form is not posted, tries to use the VALUE attribute
+	 * # if the field hasn't a VALUE attribute, try to load the value from the request
+	 * # finally, tries to define the component's value from its DEFAULT attribute
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		$this->dataBind = TRUE;
 		if (!$this->composite || $this->isA('RangeField') || $this->isA('DataGrid')) {
 			$magicq = (System::getIni('magic_quotes_gpc') == 1);
 			if ($this->_Form->isPosted()) {
-				// 1) valor submetido
+				// 1) submitted value
 				$submittedValue = HttpRequest::getVar(preg_replace("/\[\]$/", '', $this->name), $this->_Form->formMethod);
 				if ($submittedValue !== NULL) {
 					if (!is_array($submittedValue) && $magicq)
@@ -605,19 +692,19 @@ class FormField extends Component
 					$this->setValue($submittedValue);
 					$this->setSubmittedValue();
 				}
-				// 2) valor submetido == NULL significa valor F para checkboxes
+				// 2) submitted value === NULL means "F" on checkbox inputs
 				elseif ($this->isA('CheckField')) {
 					$this->setValue('F');
 					$this->setSubmittedValue();
 				}
-				// 3) atributo VALUE - valor estático
+				// 3) VALUE attribute
 				elseif (isset($this->attributes['VALUE'])) {
 					if (preg_match("/~[^~]+~/", $this->attributes['VALUE']))
 						$this->setValue($this->_Form->evaluateStatement($this->attributes['VALUE']));
 					else
 						$this->setValue($this->attributes['VALUE']);
 				}
-				// 4) atributo DEFAULT
+				// 4) DEFAULT attribute
 				elseif (isset($this->attributes['DEFAULT'])) {
 					if (preg_match("/~[^~]+~/", $this->attributes['DEFAULT']))
 						$this->setValue($this->_Form->evaluateStatement($this->attributes['DEFAULT']));
@@ -625,21 +712,21 @@ class FormField extends Component
 						$this->setValue($this->attributes['DEFAULT']);
 				}
 			} else {
-				// 1) atributo VALUE - valor estático
+				// 1) VALUE attribute
 				if (isset($this->attributes['VALUE'])) {
 					if (preg_match("/~[^~]+~/", $this->attributes['VALUE']))
 						$this->setValue($this->_Form->evaluateStatement($this->attributes['VALUE']));
 					else
 						$this->setValue($this->attributes['VALUE']);
 				} else {
-					// 2) valor da requisição
+					// 2) read from the request
 					$requestValue = HttpRequest::getVar(preg_replace("/\[\]$/", '', $this->name), 'all', 'ROSGPCE');
 					if ($requestValue !== NULL) {
 						if (!is_array($requestValue) && $magicq)
 							$requestValue = stripslashes($requestValue);
 						$this->setValue($requestValue);
 					}
-					// 3) atributo DEFAULT
+					// 3) DEFAULT attribute
 					elseif (isset($this->attributes['DEFAULT'])) {
 						if (preg_match("/~[^~]+~/", $this->attributes['DEFAULT']))
 							$this->setValue($this->_Form->evaluateStatement($this->attributes['DEFAULT']));
@@ -657,50 +744,39 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::onPreRender
-	// @desc		Constrói e adiciona no formulário o código JavaScript de
-	//				controle de obrigratoriedade e o código gerado pelas regras
-	//				de validação associadas ao campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		if (!$this->dataBind)
 			$this->onDataBind();
-		// revalida a propriedade "disabled"
 		if ($this->disabled === NULL) {
 			if ($this->_Form->readonly)
 				$this->setDisabled();
 			else
 				$this->setDisabled(FALSE);
 		}
-		// um campo desabilitado não pode ser obrigatório
 		if ($this->disabled)
 			$this->setRequired(FALSE);
-		// adiciona script para controle de obrigatoriedade
-		// os componentes RangeField e DataGrid controlam obrigatoriedade individualmente por campo
+		// add required validation script
 		if ($this->required && !$this->isA('RangeField') && !$this->isA('DataGrid'))
 			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', RequiredValidator);\n", $this->_Form->formName, $this->validationName);
-		// constrói e adiciona o código das regras
+		// build and register valiadation rules script code
 		if (!empty($this->rules)) {
 			foreach ($this->rules as $Rule)
 				$this->_Form->validatorCode .= $Rule->getScriptCode();
 		}
-		// executa a função de construção do atributo SCRIPT (tratadores de eventos)
+		// render event listeners
 		if (@$this->attributes['SCRIPT'] === NULL)
 			$this->renderListeners();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::renderListeners
-	// @desc		Define o valor do atributo SCRIPT a partir dos tratadores
-	//				de eventos definidos para o campo, bem como o código dos
-	//				tratadores de eventos 'custom'
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Renders all event listeners configured for this component
+	 *
+	 * @access protected
+	 */
 	function renderListeners() {
 		$events = array();
 		$custom = array();
@@ -725,15 +801,16 @@ class FormField extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormField::parseDataSource
-	// @desc		Extrai as informações necessárias de um nodo DATASOURCE,
-	//				utilizado para indicar fontes de dados utilizadas em
-	//				campos de formulário
-	// @param		&DataSource XmlNode object	Nodo DATASOURCE
-	// @access		protected
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Extract information from a DATASOURCE node
+	 *
+	 * A data source is used by components that rely on an
+	 * external data source to load data sets
+	 *
+	 * @param XmlNode &$DataSource DATASOURCE node
+	 * @return array Data source settings
+	 * @access protected
+	 */
 	function parseDataSource(&$DataSource) {
 		$result = array();
 		if (TypeUtils::isInstanceOf($DataSource, 'XmlNode')) {

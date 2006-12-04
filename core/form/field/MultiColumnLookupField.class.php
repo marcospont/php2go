@@ -1,84 +1,82 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/MultiColumnLookupField.class.php,v 1.4 2006/10/26 04:55:14 mpont Exp $
-// $Date: 2006/10/26 04:55:14 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.DbField');
-//------------------------------------------------------------------
 
-// @const MCLOOKUP_NORMAL "normal"
-// Style key for normal option rows
-define('MCLOOKUP_NORMAL', 'normal');
-// @const MCLOOKUP_SELECTED "selected"
-// Style key for selected option rows
-define('MCLOOKUP_SELECTED', 'selected');
-// @const MCLOOKUP_HOVER "hover"
-// Style key for option rows when hovered
-define('MCLOOKUP_HOVER', 'hover');
-
-//!-----------------------------------------------------------------
-// @class		MultiColumnLookupField
-// @desc
-// @package		php2go.form.field
-// @extends		DbField
-// @uses		Template
-// @author		Marcos Pont
-// @version		$Revision: 1.4 $
-//!-----------------------------------------------------------------
+/**
+ * Multi column select input
+ *
+ * The MultiColumnLookupField is a value selection tool that mimics
+ * the behaviour of a regular select input, but displays its options
+ * in a table with multiple columns. Options can be loaded from an
+ * external data source.
+ *
+ * @package form
+ * @subpackage field
+ * @uses Template
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class MultiColumnLookupField extends DbField
 {
-	var $optionCount = 0;		// @var optionCount integer		Total de opções do campo
+	/**
+	 * Option count
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $optionCount = 0;
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::MultiColumnLookupField
-	// @desc		Construtor da classe
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @param		child bool			"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return MultiColumnLookupField
+	 */
 	function MultiColumnLookupField(&$Form, $child=FALSE) {
 		parent::DbField($Form, $child);
 		$this->htmlType = 'SELECT';
 		$this->searchDefaults['OPERATOR'] = 'EQ';
 		$this->attributes['ROWSTYLE'] = array(
-			MCLOOKUP_NORMAL => 'mclookupNormal',
-			MCLOOKUP_SELECTED => 'mclookupSelected',
-			MCLOOKUP_HOVER => 'mclookupHover'
+			'normal' => 'mclookupNormal',
+			'selected' => 'mclookupSelected',
+			'hover' => 'mclookupHover'
 		);
 		$this->attributes['TABLESTYLE'] = 'mcLookupTable';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::display
-	// @desc		Gera o código HTML do componente
-	// @access		public
-	// @return		void	
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
-		// processamento do template
 		$attrs = $this->attributes;
 		if (!$attrs['TABLEHEIGHT'])
 			$attrs['TABLEHEIGHT'] = 'null';
@@ -101,13 +99,12 @@ class MultiColumnLookupField extends DbField
 		$Tpl->display();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::getDisplayValue
-	// @desc		Monta uma representação compreensível
-	//				do valor do campo
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Traverses the options in order to build a human-readable
+	 * represention of the component's value
+	 *
+	 * @return string
+	 */
 	function getDisplayValue() {
 		$display = NULL;
 		if (isset($this->value)) {
@@ -122,37 +119,22 @@ class MultiColumnLookupField extends DbField
 		return $display;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::getOptionCount
-	// @desc		Retorna o total de opções do campo, baseado no total
-	//				de registros retornados da consulta realizada
-	// @return		int Total de opções disponíveis
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getOptionCount() {
-		return $this->optionCount;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::setHeaders
-	// @desc		Define os nomes dos cabeçalhos para as colunas
-	//				da tabela de opções gerada
-	// @param		headers string Nomes para os cabeçalhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the table headers
+	 *
+	 * @param string $headers Comma-separated headers
+	 */
 	function setHeaders($headers) {
 		if (!empty($headers))
 			$this->attributes['HEADERS'] = explode(',', trim(resolveI18nEntry($headers)));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::setWidth
-	// @desc		Define a largura da lista de opções, em pixels
-	// @param		width int	Largura para o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the width of the text field used to
+	 * display the current selected value
+	 *
+	 * @param int $width Width, in pixels
+	 */
 	function setWidth($width) {
 		if (TypeUtils::isInteger($width))
 			$this->attributes['WIDTH'] = " style=\"width:{$width}px\"";
@@ -160,101 +142,93 @@ class MultiColumnLookupField extends DbField
 			$this->attributes['WIDTH'] = "";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::setTableHeight
-	// @desc		Permite definir a altura, em pixels, da tabela de opções
-	// @param		height int	Altura da tabela em pixels
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setTableHeight($height) {
-		$height = intval($height);
-		if ($height > 0)
-			$this->attributes['TABLEHEIGHT'] = $height;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::setTableWidth
-	// @desc		Permite definir a largura, em pixels, da tabela de opções
-	// @param		width int	Largura da tabela em pixels
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set options table width
+	 *
+	 * @param int $width Width, in pixels
+	 */
 	function setTableWidth($width) {
 		$width = intval($width);
 		if ($width > 0)
 			$this->attributes['TABLEWIDTH'] = $width;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::setTableStyle
-	// @desc		Define o estilo (nome de classe CSS) para a tabela de opções
-	// @param		style string	Nome do estilo (classe)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set options table height
+	 *
+	 * @param int $height Height, in pixels
+	 */
+	function setTableHeight($height) {
+		$height = intval($height);
+		if ($height > 0)
+			$this->attributes['TABLEHEIGHT'] = $height;
+	}
+
+	/**
+	 * Set a CSS class to the options table
+	 *
+	 * @param string $style CSS class name
+	 */
 	function setTableStyle($style) {
 		if (!empty($style))
 			$this->attributes['TABLESTYLE'] = $style;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::setRowStyle
-	// @desc		Associa um nome de classe CSS a um determinado estilo
-	//				de linha na tabela de opções
-	// @param		style string	Nome do estilo
-	// @param		type string		Tipo da linha (vide constantes da classe)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set a CSS property of the table rows
+	 *
+	 * @param string $style CSS class name
+	 * @param string $type Property name: normal, selected or hover
+	 */
 	function setRowStyle($style, $type) {
 		if (!empty($style))
 			$this->attributes['ROWSTYLE'][$type] = $style;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get option count
+	 *
+	 * @return int
+	 */
+	function getOptionCount() {
+		return $this->optionCount;
+	}
+
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
 		// headers
 		$this->setHeaders(@$attrs['HEADERS']);
-		// altura e largura do componente da tabela
+		// text input width
 		$this->setWidth(@$attrs['WIDTH']);
+		// table dimensions
 		$this->setTableHeight(@$attrs['TABLEHEIGHT']);
 		$this->setTableWidth(@$attrs['TABLEWIDTH']);
-		// estilos
+		// style settings
 		$this->setTableStyle(@$attrs['TABLESTYLE']);
-		$this->setRowStyle(@$attrs['NORMALROWSTYLE'], MCLOOKUP_NORMAL);
-		$this->setRowStyle(@$attrs['SELECTEDROWSTYLE'], MCLOOKUP_NORMAL);
-		$this->setRowStyle(@$attrs['HOVERROWSTYLE'], MCLOOKUP_NORMAL);
+		$this->setRowStyle(@$attrs['NORMALROWSTYLE'], 'normal');
+		$this->setRowStyle(@$attrs['SELECTEDROWSTYLE'], 'selected');
+		$this->setRowStyle(@$attrs['HOVERROWSTYLE'], 'hover');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::onDataBind
-	// @desc		Executa a consulta ao banco para montar o
-	//				conjunto de opções para a lista de seleção
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
 		parent::processDbQuery(ADODB_FETCH_NUM);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MultiColumnLookupField::onPreRender
-	// @desc		Adiciona no documento HTML o arquivo CSS e a biblioteca
-	//				JS necessários para o funcionamento do componente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/multicolumnlookupfield.js');

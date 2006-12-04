@@ -139,7 +139,7 @@ class CaptchaField extends FormField
 	}
 
 	/**
-	 * Validates the component
+	 * Validates the submitted captcha string
 	 *
 	 * @uses CaptchaImage::verify()
 	 * @return bool

@@ -30,7 +30,9 @@
 import('php2go.form.field.DbGroupField');
 
 /**
- * Builds a group of radio buttons loaded from a data source
+ * Builds a group of radio buttons
+ *
+ * The group options are loaded from a data source.
  *
  * @package form
  * @subpackage field

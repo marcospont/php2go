@@ -1,60 +1,75 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/GroupField.class.php,v 1.27 2006/11/02 19:21:46 mpont Exp $
-// $Date: 2006/11/02 19:21:46 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.FormField');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		GroupField
-// @desc		A classe GroupField serve de base para a construção
-//				de um grupo de campos RADIO ou um grupo de campos
-//				CHECKBOX com opções estáticas (definidas via XML)
-// @package		php2go.form.field
-// @extends		FormField
-// @uses		Template
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.27 $
-//!-----------------------------------------------------------------
+/**
+ * Builds groups of checkboxes or radio buttons with options declared in the XML file
+ *
+ * @package form
+ * @subpackage field
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class GroupField extends FormField
 {
-	var $optionCount = 0;				// @var optionCount int			"0" Total de opções do grupo
-	var $optionAttributes = array();	// @var optionAttributes array	"array()" Vetor de atributos das opções
-	var $optionListeners = array();		// @var optionListeners array	"array()" Vetor de tratadores de evento por opção do grupo
-	var $templateFile;					// @var templateFile string		Nome do arquivo template para renderização do grupo
+	/**
+	 * Option count
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $optionCount = 0;
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::display
-	// @desc		Monta o código HTML do grupo de campos
-	// @note		Os dados dos elementos do grupo são definidos nas
-	//				classes filhas pelo método renderGroup()
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Group options (members and their attributes)
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $optionAttributes = array();
+
+	/**
+	 * Group event listeners
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $optionListeners = array();
+
+	/**
+	 * Builds the component's HTML code
+	 *
+	 * @see CheckGroup::renderGroup()
+	 * @see RadioField::renderGroup()
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		$group = $this->renderGroup();
@@ -78,40 +93,32 @@ class GroupField extends FormField
 		print $group['append'];
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::renderGroup
-	// @desc		O método renderGroup deve ser implementado nas classes
-	//				filhas retornando um array com os dados dos elementos do
-	//				grupo. Cada item do array deve conter as chaves "input"
-	//				(código do elemento do grupo), "name" e "caption"
-	// @note		O atributo "alt" é opcional e pode ser incluído na
-	//				especificação de cada item do grupo
-	// @access		public
-	// @return		array
-	// @abstract
-	//!-----------------------------------------------------------------
+	/**
+	 * Must be implemented by child classes
+	 *
+	 * @return array
+	 * @abstract
+	 */
 	function renderGroup() {
 		return array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::getFocusId
-	// @desc		Retorna o ID do primeiro elemento do grupo, que
-	//				deverá receber foco quando o label do campo for clicado
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the first group member as the control that should be
+	 * activated when the component's label is clicked
+	 *
+	 * @return string
+	 */
 	function getFocusId() {
 		return "{$this->id}_0";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::getDisplayValue
-	// @desc		Monta uma representação compreensível
-	//				do valor do campo
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Traverse group members in order to build a human-readable
+	 * representation of the component's value
+	 *
+	 * @return string
+	 */
 	function getDisplayValue() {
 		$display = NULL;
 		$value = $this->value;
@@ -127,38 +134,35 @@ class GroupField extends FormField
 		return (is_array($display) ? '(' . implode(', ', $display) . ')' : $display);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::getOptions
-	// @desc		Retorna o vetor de opções inseridas no grupo
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Get group options
+	 *
+	 * @return array
+	 */
 	function getOptions() {
 		return $this->optionAttributes;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::getOptionCount
-	// @desc		Busca o número de opções inseridas
-	// @return		int	Número de itens
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get option count
+	 *
+	 * @return int
+	 */
 	function getOptionCount() {
 		return $this->optionCount;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::addOption
-	// @desc		Adiciona uma nova opção ao conjunto de OPTIONS do grupo
-	// @param		value mixed			Valor para a opção
-	// @param		caption string		Caption da opção
-	// @param		alt string			"" Texto alternativo
-	// @param		disabled bool		"FALSE" Indica se a opção deve estar desabilitado
-	// @param		accessKey string	"NULL" Tecla de atalho
-	// @param		index int			"NULL" Índice onde a opção deve ser inserida
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new option in the group
+	 *
+	 * @param string $value Option value
+	 * @param string $caption Option caption
+	 * @param string $alt Option alt text
+	 * @param bool $disabled Whether the option should be disabled
+	 * @param string $accessKey Option access key
+	 * @param int $index Index where the option should be inserted
+	 * @return bool
+	 */
 	function addOption($value, $caption, $alt='', $disabled=FALSE, $accessKey=NULL, $index=NULL) {
 		if ($index <= $this->optionCount && $index >= 0) {
 			$newOption = array();
@@ -166,7 +170,7 @@ class GroupField extends FormField
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_OPTION_VALUE', array($index, $this->name)), E_USER_ERROR, __FILE__, __LINE__);
 				return FALSE;
 			}
-			// atributos da nova opção
+			// attributes of the new option
 			$newOption['VALUE'] = $value;
 			$newOption['CAPTION'] = (empty($caption) ? $newOption['VALUE'] : $caption);
 			$newOption['ALT'] = $alt;
@@ -175,11 +179,11 @@ class GroupField extends FormField
 				$newOption['DISABLED'] = " disabled";
 			else
 				$newOption['DISABLED'] = (isset($this->attributes['DISABLED']) ? $this->attributes['DISABLED'] : '');
-			// inserção na última posição
+			// insert at last position
 			if (!TypeUtils::isInteger($index) || $index == $this->optionCount) {
 				$this->optionAttributes[$this->optionCount] = $newOption;
 				$this->optionListeners[$this->optionCount] = array();
-			// inserção em uma determinada posição
+			// insert at a given position
 			} else {
 				for ($i=$this->optionCount; $i>$index; $i--) {
 					$this->optionAttributes[$i] = $this->optionAttributes[$i-1];
@@ -194,18 +198,17 @@ class GroupField extends FormField
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::removeOption
-	// @desc		Remove uma opção do grupo a partir de seu índice
-	// @param		index int	Índice a ser removido
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Remove a given option from the group
+	 *
+	 * @param int $index Option index
+	 * @return bool
+	 */
 	function removeOption($index) {
-		// índice inválido
+		// invalid index
 		if ($this->optionCount == 1 || !TypeUtils::isInteger($index) || $index < 0 || $index >= $this->optionCount)
 			return FALSE;
-		// move as outras opções
+		// reallocate other options
 		for ($i=$index; $i<($this->optionCount-1); $i++) {
 			$this->optionAttributes[$i] = $this->optionAttributes[$i+1];
 			$this->optionListeners[$i] = $this->optionListeners[$i+1];
@@ -216,26 +219,20 @@ class GroupField extends FormField
 		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::setCols
-	// @desc		Seta o número de colunas da tabela que contém os campos,
-	//				definindo assim quantos elementos devem ser exibidos por linha
-	// @param		cols int	Número de colunas ou campos por linha
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the number of inputs per line
+	 *
+	 * @param int $cols Inputs per line
+	 */
 	function setCols($cols) {
 		$this->attributes['COLS'] = max(1, $cols);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::setTableWidth
-	// @desc		Seta o tamanho (valor para o atributo WIDTH) da
-	//				tabela construída para o grupo de campos
-	// @param		tableWidth mixed	Tamanho da tabela
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set component's table width in pixels
+	 *
+	 * @param int $tableWidth Width in pixels
+	 */
 	function setTableWidth($tableWidth) {
 		if ($tableWidth)
 			$this->attributes['TABLEWIDTH'] = " width=\"{$tableWidth}\"";
@@ -243,21 +240,19 @@ class GroupField extends FormField
 			$this->attributes['TABLEWIDTH'] = "";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::setDisabled
-	// @desc		Modifica o estado de uma das opções do
-	//				grupo de campos (habilitado, desabilitado)
-	// @param		setting bool	"TRUE" Estado a ser aplicado à opção
-	// @param		index int		"NULL" Índice a ser alterado
-	// @access		public
-	// @return		TRUE
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable a given group option or all options
+	 *
+	 * @param bool $setting Enable/disable
+	 * @param int $index Option index
+	 * @return bool
+	 */
 	function setDisabled($setting=TRUE, $index=NULL) {
 		if ($index === NULL) {
 			parent::setDisabled($setting);
 			return TRUE;
 		} else {
-			// índice inválido
+			// invalid index
 			if (!TypeUtils::isInteger($index) || $index < 0 || $index >= $this->optionCount)
 				return FALSE;
 			$this->optionAttributes[$index]['DISABLED'] = ($setting ? ' disabled' : '');
@@ -265,17 +260,15 @@ class GroupField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::addEventListener
-	// @desc		Sobrescreve a implementação do método na classe FormField
-	//				para adicionar a possibilidade de inclusão de listeners individuais
-	//				por opção do grupo (um elemento radio, ou um elemento checkbox)
-	// @param		Listener FormEventListener object	Tratador de eventos
-	// @param		index int	"NULL" Índice do elemento do grupo ao qual o tratador deve ser associado
-	// @access		public
-	// @return		void
-	// @note		Se o parâmetro $index for omitido, o listener será incluído para todas as opções de grupo
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new event listener
+	 *
+	 * When $index is missing, the listener is bound
+	 * with all group options.
+	 *
+	 * @param FormEventListener $Listener Event listener
+	 * @param int $index Associate the listener with a given option only
+	 */
 	function addEventListener($Listener, $index=NULL) {
 		if ($index === NULL) {
 			parent::addEventListener($Listener);
@@ -286,27 +279,24 @@ class GroupField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		// número de colunas
+		// inputs per line
 		$this->setCols(@$attrs['COLS']);
-		// largura da tabela
+		// table width
 		$this->setTableWidth(@$attrs['TABLEWIDTH']);
-		// opções
+		// options
 		if (isset($children['OPTION'])) {
 			$options = TypeUtils::toArray($children['OPTION']);
 			for ($i=0,$s=sizeof($options); $i<$s; $i++) {
 				$this->addOption($options[$i]->getAttribute('VALUE'), $options[$i]->getAttribute('CAPTION'), $options[$i]->getAttribute('ALT'), ($options[$i]->getAttribute('DISABLED') == 'T'), $options[$i]->getAttribute('ACCESSKEY'));
-				// listeners individuais de cada opção
+				// individual listeners per option
 				$optChildren = $options[$i]->getChildrenTagsArray();
 				if (isset($optChildren['LISTENER'])) {
 					$listener = TypeUtils::toArray($optChildren['LISTENER']);
@@ -319,31 +309,24 @@ class GroupField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::onPreRender
-	// @desc		Executa tarefas de pré-renderização do componente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
-		// revalida a propriedade readonly do formulário
 		if ($this->_Form->readonly) {
 			for ($i=0; $i<$this->optionCount; $i++)
 				$this->optionAttributes[$i]['DISABLED'] = " disabled";
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	GroupField::renderListeners
-	// @desc		A classe GroupField sobrescreve a implementação do método renderListeners
-	//				para que os listeners gerais para todas as opções e os listeners individuais por
-	//				opção possam ser agrupados na montagem da definição dos eventos das opções do campo
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Override parent class implementation to render global listeners
+	 * (associated with all group options) and individual listeners
+	 *
+	 * @access protected
+	 */
 	function renderListeners() {
-		// processa os listeners para cada opção do grupo
 		for ($i=0, $s=$this->optionCount; $i<$s; $i++) {
 			$script = '';
 			$optionEvents = array();
@@ -353,7 +336,7 @@ class GroupField extends FormField
 					$optionEvents[$eventName] = array();
 				$optionEvents[$eventName][] = $globalListener->getScriptCode($i);
 			}
-			// listeners individuais
+			// individual listeners
 			reset($this->optionListeners[$i]);
 			foreach ($this->optionListeners[$i] as $optionListener) {
 				$eventName = $optionListener->eventName;

@@ -126,10 +126,10 @@ class AutoCompleteField extends EditableField
 	/**
 	 * Set the source of the autocomplete choices
 	 *
-	 * # LOCAL: all autocomplete choices are serialized in a JS array. They
-	 *   can be declare either through choice nodes or a datasource
-	 * # AJAX: choices are loaded on demand, through AJAX calls, and using
-	 *   the datasource declared in the XML specification
+	 * # LOCAL: all choices are serialized in a JS array. They
+	 *   can be declared through choice nodes or a datasource
+	 * # AJAX: choices are loaded on demand, through AJAX calls,
+	 *   and using the datasource declared in the XML specification
 	 *
 	 * @param string $src Source
 	 * @param array $options Configuration options
@@ -163,7 +163,7 @@ class AutoCompleteField extends EditableField
 	}
 
 	/**
-	 * Enable disable multiple selection
+	 * Enable/disable multiple selection
 	 *
 	 * @param bool $setting Enable/disable
 	 * @param string $separator Separator for multiple values
@@ -247,6 +247,7 @@ class AutoCompleteField extends EditableField
 	 * <code>
 	 * <li><div>John Smith</div><div>john.smith@company.org</div></li>
 	 * </code>
+	 *
 	 * The value we want to catch is in the first div node. So, the
 	 * choice value node would be "div".
 	 *
@@ -271,6 +272,7 @@ class AutoCompleteField extends EditableField
 	/**
 	 * Processes attributes and child nodes loaded from the XML specification
 	 *
+	 * @uses FormField::parseDataSource()
 	 * @param array $attrs Node attributes
 	 * @param array $children Node children
 	 */

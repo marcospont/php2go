@@ -30,7 +30,9 @@
 import('php2go.form.field.DbGroupField');
 
 /**
- * Builds a group of checkbox inputs loaded from a datasource
+ * Builds a group of checkbox inputs
+ *
+ * The options are loaded from a datasource.
  *
  * @package form
  * @subpackage field

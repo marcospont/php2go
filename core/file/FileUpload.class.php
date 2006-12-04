@@ -186,9 +186,9 @@ class FileUpload extends PHP2Go
 	 *   $name = trim(strtolower($name));
 	 *   $name = preg_replace('/\s+/', '_', $name);
 	 *   $name = date('dmY') . '_' . $name;
-	 *   if (@move_uploaded_file($handler['tmp_name'], $handler['save_path'] . $name)) {
+	 *   if (move_uploaded_file($handler['tmp_name'], $handler['save_path'] . $name)) {
 	 *     $handler['save_name'] = $name;
-	 *     @chmod($handler['save_path'] . $handler['save_name'], $handler['save_mode']);
+	 *     chmod($handler['save_path'] . $handler['save_name'], $handler['save_mode']);
 	 *   } else {
 	 *     $handler['error'] = "It wasn't possible to move the uploaded file {$handler['save_name']}";
 	 *   }

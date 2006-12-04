@@ -38,10 +38,6 @@ define('EDITABLE_FIELD_DEFAULT_SIZE', 10);
 /**
  * Base class for editable form components
  *
- * EditableField is an abstract class that contains methods and
- * attributes shared by {@link EditField}, {@link MemoField} and
- * {@link PasswdField}.
- *
  * @package form
  * @subpackage field
  * @uses StringUtils

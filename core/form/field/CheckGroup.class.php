@@ -32,7 +32,7 @@ import('php2go.form.field.GroupField');
 /**
  * Builds a group of checkbox inputs
  *
- * Group members are defined statically inside the XML
+ * Group options are defined statically inside the XML
  * specification through option nodes.
  *
  * @package form
@@ -54,7 +54,6 @@ class CheckGroup extends GroupField
 		parent::FormField($Form, $child);
 		$this->htmlType = 'CHECKBOX';
 		$this->searchDefaults['OPERATOR'] = 'IN';
-		$this->templateFile = PHP2GO_TEMPLATE_PATH . 'checkgroup.tpl';
 		$this->attributes['MULTIPLE'] = TRUE;
 	}
 
