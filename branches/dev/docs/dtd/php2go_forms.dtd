@@ -11,7 +11,7 @@
 <!ENTITY % weekdays "( 0 | 1 | 2 | 3 | 4 | 5 | 6 )">
 <!ENTITY % align "( LEFT | CENTER | RIGHT )">
 <!ENTITY % mask "( DIGIT | INTEGER | FLOAT | CURRENCY | CPFCNPJ | DATE | TIME | URL | EMAIL | WORD | ZIP )">
-<!ENTITY % type.method "( GET | POST )">
+<!ENTITY % method "( GET | POST )">
 <!ENTITY % type.btn "( SUBMIT | RESET | BUTTON | CLEAR | BACK )">
 <!ENTITY % type.list "( JS | JSRS | AJAX )">
 <!ENTITY % type.rul "( REGEX | EQ | NEQ | GT | LT | GOET | LOET | REQIF | REQIFEQ | REQIFNEQ | REQIFGT | REQIFLT | REQIFGOET | REQIFLOET )">
@@ -96,7 +96,7 @@
 <!ENTITY % rul.list.srch.dso "datasource?, ( listener* | rule* | search? )">
 <!ELEMENT form ( style? | errors? | section+ | variable* )>
 <!ATTLIST form
-	method %type.method; #IMPLIED
+	method %method; #IMPLIED
 	action %text; #IMPLIED
 	target %identifier; #IMPLIED
 	backurl %text; #IMPLIED
@@ -111,11 +111,11 @@
 	fieldset %text; #IMPLIED
 	sectiontitle %text; #IMPLIED
 	width %number; #IMPLIED
-	align %type.align; #IMPLIED
+	align %align; #IMPLIED
 	tablepadding %number; #IMPLIED
 	tablespacing %number; #IMPLIED
 	labelwidth %number; #IMPLIED
-	labelalign %type.align; #IMPLIED
+	labelalign %align; #IMPLIED
 >
 <!ELEMENT errors EMPTY>
 <!ATTLIST errors
@@ -386,6 +386,7 @@
 	%regattrs;
 	%htmlattrs;
 	type %type.btn; #REQUIRED
+	value %text; #IMPLIED
 	alt %text; #IMPLIED
 	disabled %boolean; "F"
 	img %text; #IMPLIED
