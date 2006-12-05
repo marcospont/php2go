@@ -907,7 +907,7 @@ class Document extends PHP2Go
 		// scripts located in the end of the document's body
 		if (isset($this->scriptExtCode[SCRIPT_END])) {
 			foreach($this->scriptExtCode[SCRIPT_END] as $language => $scripts) {
-				if (substr($str, -1) != "\n")
+				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
 				print sprintf("\n<script language=\"%s\" type=\"text/%s\">\n<!--\n%s//-->\n</script>", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
