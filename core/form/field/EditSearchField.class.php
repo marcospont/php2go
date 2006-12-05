@@ -204,7 +204,7 @@ class EditSearchField extends DbField
 	 */
 	function setUrl($url) {
 		if (!empty($url))
-			$this->attributes['URL'] = $this->_Form->evaluateStatement($url);
+			$this->attributes['URL'] = $this->_Form->resolveVariables($url);
 	}
 
 	/**

@@ -242,7 +242,7 @@ class FileField extends FormField
 	function onDataBind() {
 		parent::onDataBind();
 		if (preg_match("/~[^~]+~/", $this->attributes['SAVENAME']))
-			$this->attributes['SAVENAME'] = $this->_Form->evaluateStatement($this->attributes['SAVENAME']);
+			$this->attributes['SAVENAME'] = $this->_Form->resolveVariables($this->attributes['SAVENAME']);
 	}
 }
 ?>
