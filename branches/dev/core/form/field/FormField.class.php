@@ -658,7 +658,7 @@ class FormField extends Component
 		}
 		// data bind attributes
 		if ($isDataBind && !$this->composite) {
-			$this->attributes['DATASRC'] = " datasrc=\"#{$this->_Form->csvDbName}\"";
+			$this->attributes['DATASRC'] = " datasrc=\"#" . $this->_Form->getDbName() . "\"";
 			$this->attributes['DATAFLD'] = " datafld=\"{$this->name}\"";
 		} else {
 			$this->attributes['DATASRC'] = '';
@@ -700,14 +700,14 @@ class FormField extends Component
 				// 3) VALUE attribute
 				elseif (isset($this->attributes['VALUE'])) {
 					if (preg_match("/~[^~]+~/", $this->attributes['VALUE']))
-						$this->setValue($this->_Form->evaluateStatement($this->attributes['VALUE']));
+						$this->setValue($this->_Form->resolveVariables($this->attributes['VALUE']));
 					else
 						$this->setValue($this->attributes['VALUE']);
 				}
 				// 4) DEFAULT attribute
 				elseif (isset($this->attributes['DEFAULT'])) {
 					if (preg_match("/~[^~]+~/", $this->attributes['DEFAULT']))
-						$this->setValue($this->_Form->evaluateStatement($this->attributes['DEFAULT']));
+						$this->setValue($this->_Form->resolveVariables($this->attributes['DEFAULT']));
 					else
 						$this->setValue($this->attributes['DEFAULT']);
 				}
@@ -715,7 +715,7 @@ class FormField extends Component
 				// 1) VALUE attribute
 				if (isset($this->attributes['VALUE'])) {
 					if (preg_match("/~[^~]+~/", $this->attributes['VALUE']))
-						$this->setValue($this->_Form->evaluateStatement($this->attributes['VALUE']));
+						$this->setValue($this->_Form->resolveVariables($this->attributes['VALUE']));
 					else
 						$this->setValue($this->attributes['VALUE']);
 				} else {
@@ -729,7 +729,7 @@ class FormField extends Component
 					// 3) DEFAULT attribute
 					elseif (isset($this->attributes['DEFAULT'])) {
 						if (preg_match("/~[^~]+~/", $this->attributes['DEFAULT']))
-							$this->setValue($this->_Form->evaluateStatement($this->attributes['DEFAULT']));
+							$this->setValue($this->_Form->resolveVariables($this->attributes['DEFAULT']));
 						else
 							$this->setValue($this->attributes['DEFAULT']);
 					}

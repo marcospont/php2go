@@ -343,7 +343,7 @@ class AutoCompleteField extends EditableField
 		if (!empty($this->dataSource)) {
 			foreach ((array)$this->dataSource as $name => $value) {
 				if (preg_match("/~[^~]+~/", $value))
-					$this->dataSource[$name] = $this->_Form->evaluateStatement($value);
+					$this->dataSource[$name] = $this->_Form->resolveVariables($value);
 			}
 			if (!$this->_Form->isPosted())
 				$this->_getChoices();
