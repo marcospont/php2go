@@ -205,7 +205,7 @@ class Form extends Component
 	 * If required marks should be displayed
 	 *
 	 * @var bool
-	 *
+	 */
 	var $requiredMark = TRUE;
 
 	/**
@@ -328,7 +328,7 @@ class Form extends Component
 	/**
 	 * Class constructor
 	 *
-	 * @param string $xmlFile XML specification of the form elements
+	 * @param string $xmlFile Form XML specification
 	 * @param string $formName Form name
 	 * @param Document &$Document Document instance in which the form will be inserted
 	 * @return Form
@@ -380,6 +380,55 @@ class Form extends Component
 			}
 		}
 		parent::registerDestructor($this, '__destruct');
+	}
+
+	/**
+	 * Set the form method
+	 *
+	 * @param string $method GET or POST
+	 */
+	function setFormMethod($method) {
+		$method = trim($method);
+		if (in_array(strtoupper($method), array('GET','POST')))
+			$this->formMethod = $method;
+		else
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_FORM_METHOD', array($method, $this->formName)), E_USER_ERROR, __FILE__, __LINE__);
+	}
+
+	/**
+	 * Set the form action
+	 *
+	 * @param string $action Action URI
+	 */
+	function setFormAction($action) {
+		$this->formAction = $action;
+	}
+
+	/**
+	 * Form action's target
+	 *
+	 * @param string $target Action target
+	 */
+	function setFormActionTarget($target) {
+		$this->actionTarget = $target;
+	}
+
+	/**
+	 * Get the form signature
+	 *
+	 * @return string
+	 */
+	function getSignature() {
+		return md5($this->formName);
+	}
+
+	/**
+	 * Set the target URL for BACK buttons
+	 *
+	 * @param string $backUrl Back URL
+	 */
+	function setBackUrl($backUrl) {
+		$this->backUrl = $backUrl;
 	}
 
 	/**
@@ -510,6 +559,91 @@ class Form extends Component
 	}
 
 	/**
+	 * Enable read-only mode on this form
+	 */
+	function isReadonly() {
+    	$this->readonly = TRUE;
+	}
+
+	/**
+	 * Create/replace a variable
+	 *
+	 * Variables are declared inside some special nodes and attributes of
+	 * the XML specification. They can be resolved from the global scope
+	 * (request, session, cookies, registry) or can be set manually through
+	 * this method.
+	 *
+	 * @param string $name Name
+	 * @param mixed $value Value
+	 */
+	function setVariable($name, $value) {
+		if (isset($this->variables[$name]))
+			$this->variables[$name]['value'] = $value;
+		else
+			$this->variables[$name] = array(
+				'value' => $value
+			);
+	}
+
+	/**
+	 * Evaluates variables declared inside some special XML elements and attributes
+	 *
+	 * Tries to resolve variable values from the global scope and from the
+	 * set of manually defined variables.
+	 *
+	 * @uses Statement
+	 * @param string $source Text node or attribute value
+	 * @return string Value after variables resolution
+	 */
+	function resolveVariables($source) {
+		static $Stmt;
+		if (!isset($Stmt)) {
+			$Stmt = new Statement();
+			$Stmt->setVariablePattern('~', '~');
+			$Stmt->setShowUnassigned();
+		}
+		$Stmt->setStatement($source);
+		if (!$Stmt->isEmpty()) {
+			foreach ($Stmt->variables as $name => $variable) {
+				if (isset($this->variables[$name])) {
+					if (isset($this->variables[$name]['value'])) {
+						$Stmt->bindByName($name, $this->variables[$name]['value'], FALSE);
+					} elseif (!$Stmt->bindFromRequest($name, FALSE, @$this->variables[$name]['search'])) {
+						if (isset($this->variables[$name]['default'])) {
+							$Stmt->bindByName($name, $this->variables[$name]['default'], FALSE);
+						}
+					}
+				} else {
+					$Stmt->bindFromRequest($name, FALSE);
+				}
+			}
+		}
+		return $Stmt->getResult();
+	}
+
+	/**
+	 * Get all field names
+	 *
+	 * @return array
+	 */
+	function getFieldNames() {
+		if (!$this->formConstruct)
+			$this->processXml();
+		return array_keys($this->fields);
+	}
+
+	/**
+	 * Get all form fields
+	 *
+	 * @return array
+	 */
+	function &getFields() {
+		if (!$this->formConstruct)
+			$this->processXml();
+		return $this->fields;
+	}
+
+	/**
 	 * Get a field by name or path in the XML tree
 	 *
 	 * Example:
@@ -556,28 +690,6 @@ class Form extends Component
 				$result =& $this->fields[$fieldPath];
 		}
 		return $result;
-	}
-
-	/**
-	 * Get all form fields
-	 *
-	 * @return array
-	 */
-	function &getFields() {
-		if (!$this->formConstruct)
-			$this->processXml();
-		return $this->fields;
-	}
-
-	/**
-	 * Get all field names
-	 *
-	 * @return array
-	 */
-	function getFieldNames() {
-		if (!$this->formConstruct)
-			$this->processXml();
-		return array_keys($this->fields);
 	}
 
 	/**
@@ -635,75 +747,6 @@ class Form extends Component
 	}
 
 	/**
-	 * Get the form signature
-	 *
-	 * @return string
-	 */
-	function getSignature() {
-		return md5($this->formName);
-	}
-
-	/**
-	 * Set the form method
-	 *
-	 * @param string $method GET or POST
-	 */
-	function setFormMethod($method) {
-		$method = trim($method);
-		if (in_array(strtoupper($method), array('GET','POST')))
-			$this->formMethod = $method;
-		else
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_FORM_METHOD', array($method, $this->formName)), E_USER_ERROR, __FILE__, __LINE__);
-	}
-
-	/**
-	 * Set the form action
-	 *
-	 * @param string $action Action URI
-	 */
-	function setFormAction($action) {
-		$this->formAction = $action;
-	}
-
-	/**
-	 * Form action's target
-	 *
-	 * @param string $target Action target
-	 */
-	function setFormActionTarget($target) {
-		$this->actionTarget = $target;
-	}
-
-	/**
-	 * Set the target URL for BACK buttons
-	 *
-	 * @param string $backUrl Back URL
-	 */
-	function setBackUrl($backUrl) {
-		$this->backUrl = $backUrl;
-	}
-
-	/**
-	 * Create/replace a variable
-	 *
-	 * Variables are declared inside some special nodes and attributes of
-	 * the XML specification. They can be resolved from the global scope
-	 * (request, session, cookies, registry) or can be set manually through
-	 * this method.
-	 *
-	 * @param string $name Name
-	 * @param mixed $value Value
-	 */
-	function setVariable($name, $value) {
-		if (isset($this->variables[$name]))
-			$this->variables[$name]['value'] = $value;
-		else
-			$this->variables[$name] = array(
-				'value' => $value
-			);
-	}
-
-	/**
 	 * Check if the form is posted
 	 *
 	 * @return bool
@@ -711,8 +754,8 @@ class Form extends Component
 	function isPosted() {
 		if (!isset($this->isPosted)) {
 			if (HttpRequest::method() == $this->formMethod) {
-				$signature = HttpRequest::getVar(FORM_SIGNATURE);
-				if (!TypeUtils::isNull($signature) && $signature == $this->getSignature())
+				$signature = HttpRequest::getVar(FORM_SIGNATURE, strtolower($this->formMethod));
+				if ($signature !== NULL && $signature == $this->getSignature())
 					$this->isPosted = TRUE;
 				else
 					$this->isPosted = FALSE;
@@ -752,13 +795,6 @@ class Form extends Component
 	}
 
 	/**
-	 * Enable read-only mode on this form
-	 */
-	function isReadonly() {
-    	$this->readonly = TRUE;
-	}
-
-	/**
 	 * Prepares the form to be rendered
 	 */
 	function onPreRender() {
@@ -766,56 +802,30 @@ class Form extends Component
 			parent::onPreRender();
 			if (!$this->formConstruct)
 				$this->processXml();
-			$this->backUrl = $this->evaluateStatement($this->backUrl);
-			$this->formAction = $this->evaluateStatement($this->formAction);
+			$this->backUrl = $this->resolveVariables($this->backUrl);
+			$this->formAction = $this->resolveVariables($this->formAction);
 			$this->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form.js');
 		}
 	}
 
-	/**
-	 * Evaluates variables declared inside some special XML elements and attributes
-	 *
-	 * Tries to resolve variable values from the global scope and from the
-	 * set of manually defined variables.
-	 *
-	 * @param string $source Text node or attribute value
-	 * @return string Value after variables resolution
-	 */
-	function evaluateStatement($source) {
-		static $Stmt;
-		if (!isset($Stmt)) {
-			$Stmt = new Statement();
-			$Stmt->setVariablePattern('~', '~');
-			$Stmt->setShowUnassigned();
-		}
-		$Stmt->setStatement($source);
-		if (!$Stmt->isEmpty()) {
-			foreach ($Stmt->variables as $name => $variable) {
-				if (isset($this->variables[$name])) {
-					if (isset($this->variables[$name]['value'])) {
-						$Stmt->bindByName($name, $this->variables[$name]['value'], FALSE);
-					} elseif (!$Stmt->bindFromRequest($name, FALSE, @$this->variables[$name]['search'])) {
-						if (isset($this->variables[$name]['default'])) {
-							$Stmt->bindByName($name, $this->variables[$name]['default'], FALSE);
-						}
-					}
-				} else {
-					$Stmt->bindFromRequest($name, FALSE);
-				}
-			}
-		}
-		return $Stmt->getResult();
+	/**#@+
+	 * Must be implemented by child classes
+     *
+     * @abstract
+     */
+	function getContent() {
 	}
+	function display() {
+	}
+	/**#@-*/
 
-	//!-----------------------------------------------------------------
-	// @function	Form::verifySectionId
-	// @desc		Verifica a declaração duplicada de um ID de seção no formulário
-	// @param		formName string		Nome do formulário
-	// @param		sectionId string	ID de uma seção
-	// @access		public
-	// @return		void
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Protect against duplicated section IDs in the same form
+	 *
+	 * @param string $formName Form name
+	 * @param string $sectionId Section ID
+	 * @static
+	 */
 	function verifySectionId($formName, $sectionId) {
 		static $sections;
 		if (!isset($sections) || !isset($sections[$formName])) {
@@ -829,15 +839,13 @@ class Form extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::verifyFieldName
-	// @desc		Verifica a declaração duplicada de um nome de campo no formulário
-	// @param		formName string	Nome do formulário
-	// @param		fieldName string	Nome do campo a ser verificado
-	// @access		public
-	// @return		void
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Protect against duplicated field names in the same form
+	 *
+	 * @param string $formName Form name
+	 * @param string $fieldName Field name
+	 * @static
+	 */
 	function verifyFieldName($formName, $fieldName) {
 		static $fields;
 		if (!isset($fields) || !isset($fields[$formName])) {
@@ -851,15 +859,13 @@ class Form extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::verifyButtonName
-	// @desc		Verifica a declaração duplicada de um nome de botão no formulário
-	// @param		formName string	Nome do formulário
-	// @param		btnName string	Nome do botão a ser verificado
-	// @access		public
-	// @return		void
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Protect against duplicated button names in the same form
+	 *
+	 * @param string $formName Form name
+	 * @param string $btnName Button name
+	 * @static
+	 */
 	function verifyButtonName($formName, $btnName) {
 		static $buttons;
 		if (!isset($buttons) || !isset($buttons[$formName])) {
@@ -873,19 +879,16 @@ class Form extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::buildScriptCode
-	// @desc		Constrói a função de validação da submissão do
-	//				formulário a partir validações necessárias aos
-	//				campos requeridos e campos com checagem de máscara
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Renders the form validation script block
+	 *
+	 * @access protected
+	 */
 	function buildScriptCode() {
 		if (!empty($this->validatorCode) || !empty($this->beforeValidateCode) || array_key_exists('VALIDATEFUNC', (array)$this->rootAttrs)) {
 			$instance = $this->formName . '_validator';
 			$script = "\t{$instance} = new FormValidator('{$this->formName}');\n";
-			// opções do sumário de erros
+			// error summary settings
 			$summaryOptions = sprintf("%s, %s, %s, \"%s\"",
 				$this->clientErrorOptions['mode'],
 				(isset($this->clientErrorOptions['placeholder']) ? "\$('{$this->clientErrorOptions['placeholder']}')" : 'null'),
@@ -893,16 +896,16 @@ class Form extends Component
 				(isset($this->errorStyle['header_text']) ? $this->errorStyle['header_text'] : PHP2Go::getLangVal('ERR_FORM_ERRORS_SUMMARY'))
 			);
 			$script .= "\t{$instance}.setSummaryOptions({$summaryOptions});\n";
-			// definição dos validadores
+			// validators
 			if (!empty($this->validatorCode))
 				$script .= $this->validatorCode;
-			// funções de transformação
+			// transformation functions
 			if (!empty($this->beforeValidateCode)) {
 				$script .= "\t{$instance}.onBeforeValidate = function(validator, frm) {\n";
 				$script .= $this->beforeValidateCode;
 				$script .= "\t};\n";
 			}
-			// função auxiliar de validação
+			// auxiliary validation function
 			if (array_key_exists('VALIDATEFUNC', (array)$this->rootAttrs)) {
 				$matches = array();
 				$validateFunc = trim($this->rootAttrs['VALIDATEFUNC']);
@@ -919,14 +922,11 @@ class Form extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::processXml
-	// @desc		Inicia o processamento da árvore XML a partir de
-	//				sua raiz, processando seções de formulário e seus
-	//				botões
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Collect sections, fields and buttons from the parsed XML tree
+	 *
+	 * @access protected
+	 */
 	function processXml() {
 		$this->formConstruct = TRUE;
 		$xmlRoot =& $this->XmlDocument->getRoot();
@@ -956,7 +956,7 @@ class Form extends Component
 				}
 			}
 		}
-		// processamento de campos postback
+		// process postback fields
 		if (!empty($this->postbackFields)) {
 			foreach ($this->postbackFields as $name) {
 				$Field =& $this->fields[$name];
@@ -969,13 +969,13 @@ class Form extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::&_createSection
-	// @desc		Processa uma seção do formulário (conjunto de campos)
-	// @param		xmlNode XmlNode object	Nodo que representa a seção
-	// @return		FormSection object Seção criada
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Create a FormSection object from a section XML node
+	 *
+	 * @param XmlNode $xmlNode Section node
+	 * @return FormSection
+	 * @access private
+	 */
 	function &_createSection($xmlNode) {
 		$FormSection = new FormSection($this);
 		$FormSection->onLoadNode($xmlNode->getAttributes(), array());
@@ -985,17 +985,17 @@ class Form extends Component
 				$child = $xmlNode->getChild($i);
 				if ($child->getName() == '#cdata-section')
 					continue;
-				// seção condicional
+				// inner section
 				if ($child->getTag() == 'CONDSECTION') {
 					$child->setAttribute('CONDITION', 'T');
 					$this->_createSubSection($child, $FormSection);
-				// grupo de botões
+				// buttons group
 				} else if ($child->getTag() == 'BUTTONS') {
 					$this->_createButtonGroup($child, $FormSection);
-				// botão
+				// button
 				} else if ($child->getTag() == 'BUTTON') {
 					$this->_createButton($child, $FormSection);
-				// campo
+				// field
 				} else {
 					$this->_createField($child, $FormSection);
 				}
@@ -1004,15 +1004,13 @@ class Form extends Component
 		return $FormSection;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::_createSubSection
-	// @desc		Processa uma subseção de formulário, que depende de uma
-	//				condição para ser incluída no formulário
-	// @param		xmlNode XmlNode object				Representa a subseção na árvore XML
-	// @param		&parentSection FormSection object	Referência para a seção ou subseção superior
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Create a subsection from a XML condsection node
+	 *
+	 * @param XmlNode $xmlNode Section node
+	 * @param FormSection &$parentSection Parent section
+	 * @access private
+	 */
 	function _createSubSection($xmlNode, &$parentSection) {
 		$parentNode =& $xmlNode->getParentNode();
 		$FormSection = new FormSection($this);
@@ -1025,17 +1023,17 @@ class Form extends Component
 					$child = $xmlNode->getChild($i);
 					if ($child->getName() == '#cdata-section')
 						continue;
-					// seção condicional
+					// inner section
 					if ($child->getTag() == 'CONDSECTION') {
 						$child->setAttribute('CONDITION', 'T');
 						$this->_createSubSection($child, $FormSection);
-					// grupo de botões
+					// buttons group
 					} else if ($child->getTag() == 'BUTTONS') {
 						$this->_createButtonGroup($child, $FormSection);
-					// botão
+					// button
 					} else if ($child->getTag() == 'BUTTON') {
 						$this->_createButton($child, $FormSection);
-					// campo
+					// field
 					} else {
 						$this->_createField($child, $FormSection);
 					}
@@ -1044,18 +1042,15 @@ class Form extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::_createButtonGroup
-	// @desc		Processa um grupo de botões, inserindo-os em uma seção ou subseção
-	// @param		buttons XmlNode object			Grupo de botões de uma seção
-	// @param		&FormSection FormSection object Seção à qual o grupo de botões pertence
-	// @access		private
-	// @return		void
-	// @see			Form::_processSection
-	// @see			Form::_processField
-	//!-----------------------------------------------------------------
-	function _createButtonGroup($buttons, &$FormSection) {
-		if ($FormSection->isVisible()) {
+	/**
+	 * Create a group of buttons from a XML buttons node
+	 *
+	 * @param XmlNode $buttons Buttons node
+	 * @param FormSection &$parentSection Parent section
+	 * @access private
+	 */
+	function _createButtonGroup($buttons, &$parentSection) {
+		if ($parentSection->isVisible()) {
 			$buttonGroup = array();
 			$childrenCount = $buttons->getChildrenCount();
 			for ($i=0; $i<$childrenCount; $i++) {
@@ -1069,41 +1064,37 @@ class Form extends Component
 				}
 			}
 			if (!empty($buttonGroup)) {
-				$FormSection->addChild($buttonGroup);
+				$parentSection->addChild($buttonGroup);
 			}
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::_createButton
-	// @desc		Adiciona um botão a uma seção ou subseção
-	// @param		button FormButton object		Botão a ser inserido
-	// @param		&FormSection FormSection object	Seção à qual o botão pertence
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _createButton($button, &$FormSection) {
-		 if ($FormSection->isVisible()) {
+	/**
+	 * Create a FormButton from a XML button node
+	 *
+	 * @param XmlNode $button Button node
+	 * @param FormSection &$parentSection Parent section
+	 * @access private
+	 */
+	function _createButton($button, &$parentSection) {
+		 if ($parentSection->isVisible()) {
 		 	$obj = new FormButton($this);
 		 	$obj->onLoadNode($button->getAttributes(), $button->getChildrenTagsArray());
 		 	$this->buttons[$obj->getName()] =& $obj;
-		 	$FormSection->addChild($obj);
+		 	$parentSection->addChild($obj);
 		 }
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::_createField
-	// @desc		Cria um objeto FormField, construindo o código HTML
-	//				do campo, e gera o código JavaScript para as validações
-	//				e checagens configuradas na especificação XML
-	// @param		field XmlNode object			Objecto XmlNode referente a um campo de formulário
-	// @param		&FormSection FormSection object	Seção ou subseção onde o campo está incluído
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _createField($field, &$FormSection) {
+	/**
+	 * Create a FormField from a XML field node
+	 *
+	 * @param XmlNode $field Field node
+	 * @param FormSection &$parentSection Parent section
+	 * @access private
+	 */
+	function _createField($field, &$parentSection) {
 		$fieldClassName = NULL;
- 		if ($FormSection->isVisible()) {
+ 		if ($parentSection->isVisible()) {
 			switch($field->getTag()) {
 				case 'AUTOCOMPLETEFIELD' : $fieldClassName = 'AutoCompleteField'; break;
 				case 'CAPTCHAFIELD' : $fieldClassName = 'CaptchaField'; break;
@@ -1133,26 +1124,28 @@ class Form extends Component
 				default : PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FORM_INVALID_FIELDTYPE', $field->getTag()), E_USER_ERROR, __FILE__, __LINE__); break;
 			}
 			if (!TypeUtils::isNull($fieldClassName)) {
-				// instancia e inicializa o campo
 				import("php2go.form.field.{$fieldClassName}");
 				$obj = new $fieldClassName($this);
 				$obj->onLoadNode($field->getAttributes(), $field->getChildrenTagsArray());
-				// adiciona o campo na seção
-				$FormSection->addChild($obj);
-				// adiciona o campo neste formulário
+				// add the field in the parent section
+				$parentSection->addChild($obj);
+				// register the field in the form
 				$this->fields[$obj->getName()] =& $obj;
 			}
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::_loadGlobalSettings
-	// @desc		Define opções de apresentação, configurações de erros e ajuda
-	//				a partir das configurações globais, se existentes
-	// @param		settings array	Conjunto de configurações globais
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Parse presentation and layout settings from the
+	 * global configuration settings
+	 *
+	 * Global settings are applied to all PHP2Go forms, and should
+	 * be defined using the $P2G_USER_CFG['FORMS'] configuration
+	 * key.
+	 *
+	 * @param array $settings Global settings
+	 * @access private
+	 */
 	function _loadGlobalSettings($settings) {
 		(isset($settings['SECTION_REQUIRED_TEXT'])) && $this->requiredText = $settings['SECTION_REQUIRED_TEXT'];
 		(isset($settings['SECTION_REQUIRED_COLOR'])) && $this->requiredColor = $settings['SECTION_REQUIRED_COLOR'];
@@ -1172,14 +1165,15 @@ class Form extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Form::_loadXmlSettings
-	// @desc		Define opções de apresentação provenientes da especificação XML
-	// @param		tag string		Nome do nodo
-	// @param		attrs array		Atributos do nodo
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Load presentation and layout settings from the XML specification
+	 *
+	 * Parses <b>form</b>, <b>style</b> and <b>errors</b> XML nodes.
+	 *
+	 * @param string $tag Node name
+	 * @param array $attrs Node attributes
+	 * @access private
+	 */
 	function _loadXmlSettings($tag, $attrs) {
 		switch ($tag) {
 			case 'FORM' :
