@@ -299,7 +299,7 @@ class FormRule extends PHP2Go
 		// resolve variáveis e expressões no atributo value
 		if (!empty($this->value) && preg_match("/~[^~]+~/", $this->value)) {
 			$Form =& $this->getOwnerForm();
-			$this->value = $Form->evaluateStatement($this->value);
+			$this->value = $Form->resolveVariables($this->value);
 		}
 		// processa expressões de data
 		$regs = array();
