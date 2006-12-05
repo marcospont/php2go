@@ -7,7 +7,7 @@
 </object>
 <script for="{$csvDbName}" event="ondatasetcomplete">
 	setTimeout(function() {
-		new FormDataBind('{$csvDbName}', '{$formName}', '{$tableName}', '{$primaryKey}', {$readonlyForm|if_empty:"false"}, {$forcePost|if_empty:"false"}, '{$p2g.server.REQUEST_URI}');
+		new FormDataBind('{$csvDbName}', '{$formName}', '{$tableName}', '{$primaryKey}', {$readonlyForm|if_empty:"false"}, {$jsrsSubmit|if_empty:"true"}, '{$p2g.server.REQUEST_URI}');
 	}, 100);
 </script>
 <table width="100%" cellpadding="6" cellspacing="0" border="0">

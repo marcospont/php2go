@@ -47,10 +47,10 @@ PHP2Go.include(PHP2Go.baseUrl + 'jsrsclient.js');
  * @param {String} tbl Table name
  * @param {String} pk Table primary key
  * @param {Boolean} readOnly Is the form in readonly state?
- * @param {Boolean} forcePost Must we save records using a simple POST?
+ * @param {Boolean} jsrsSubmit Must we save records using a JSRS request?
  * @param {String} uri URI to be used to save records
  */
-FormDataBind = function(db, frm, tbl, pk, readOnly, forcePost, uri) {
+FormDataBind = function(db, frm, tbl, pk, readOnly, jsrsSubmit, uri) {
 	this.absoluteUri = uri || document.location.pathname;
 	this.tableName = tbl;
 	this.pkName = pk;
@@ -59,7 +59,7 @@ FormDataBind = function(db, frm, tbl, pk, readOnly, forcePost, uri) {
 	this.db = eval("document.all." + db);
 	this.rs = null;
 	this.readOnly = !!readOnly;
-	this.forcePost = !!forcePost;
+	this.jsrsSubmit = !!jsrsSubmit;
 	this.action = null;
 	this.cacheValues = null;
 	this.cachePosition = 1;
@@ -222,7 +222,7 @@ FormDataBind.prototype.editRecord = function() {
  */
 FormDataBind.prototype.saveRecord = function() {
 	if (!this.form.validator || this.form.validator.run()) {
-		if (this.forcePost) {
+		if (!this.jsrsSubmit) {
 			this.form.elements['lastposition'].value = this.rs.AbsolutePosition;
 			this.form.submit();
 		} else {
@@ -279,7 +279,7 @@ FormDataBind.prototype.deleteRecord = function() {
 		return '';
 	}
 	if (confirm(Lang.dataBind.deleteConfirm)) {
-		if (this.forcePost) {
+		if (!this.jsrsSubmit) {
 			this.form.elements['lastposition'].value = this.rs.AbsolutePosition;
 			this.form.elements['removeid'].value = getPrimaryKeyValue();
 			this.form.submit();
