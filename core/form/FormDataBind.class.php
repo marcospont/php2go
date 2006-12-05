@@ -1,155 +1,258 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/FormDataBind.class.php,v 1.45 2006/11/21 23:24:23 mpont Exp $
-// $Date: 2006/11/21 23:24:23 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// ------------------------------------------------
 import('php2go.data.DataSet');
 import('php2go.db.QueryBuilder');
 import('php2go.form.Form');
 import('php2go.template.Template');
 import('php2go.util.service.ServiceJSRS');
-// ------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		FormDataBind
-// @desc		Esta classe, que possui funcionamento restrito no ambiente
-//				Microsoft/Internet Explorer, gera um formulário que utiliza
-//				Data Binding. O formulário gerado está associado a uma fonte
-//				de dados do tipo TDC (Tabular Data Control), ou seja, um
-//				arquivo texto (ou CSV) contendo os dados da tabela
-// @package		php2go.form
-// @extends		Form
-// @uses		DataSet
-// @uses		QueryBuilder
-// @uses		Template
-// @author		Marcos Pont
-// @version		$Revision: 1.45 $
-// @note		O funcionamento deste componente é restrito ao Internet Explorer
-// @note		Exemplo de uso:<br>
-//				<pre>
-//
-//				$form = new FormDataBind('file.xml', 'file.tpl', 'formName', $doc, 'table', 'primary_key');
-//				$form->setFormMethod('POST');
-//				$form->setInputStyle('input_style');
-//				$form->setButtonStyle('button_style');
-//				$form->setDataSetQuery('columnA, columnB', 'table', 'active=1');
-//				$form->setFilterSortOptions('columnA#Column A|columnB#Column B');
-//				$content = $form->getContent();
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * Builds a form based on data binding
+ *
+ * The FormDataBind builds forms associated with a TDC (tabular data
+ * control) data source. When the form loads, the class serializes the
+ * query results in a CSV file. This file is loaded by the browser,
+ * loaded, allowing the user to navigate through the records. Save
+ * and delete operations are performed through JSRS requests.
+ *
+ * Example:
+ * <code>
+ * /* my_form.xml {@*}
+ * <form method="post">
+ *   <style input="input_style" button="button_style"/>
+ *   <section name="Main">
+ *     <editfield name="columnA" label="Column A"/>
+ *     <editfield name="columnB" label="Column B"/>
+ *   </section>
+ * </form>
+ * /* my_form.tpl {@*}
+ * <div>
+ *   <div>{$databind_toolbar}</div>
+ *   <div>
+ *     {$label_columnA}<br/>
+ *     {$columnA}<br/>
+ *     {$label_columnB}<br/>
+ *     {$columnB}
+ *   </div>
+ * </div>
+ * /* page.php {@*}
+ * $doc = new Document('layout.tpl');
+ * $form = new FormDataBind('my_form.xml', 'my_form.tpl', 'my_form', $doc, 'table', 'primary_key');
+ * $form->setDataSetQuery('columnA, columnB', 'table', 'active=1');
+ * $form->setFilterSortOptions('columnA#Column A|columnB#Column B');
+ * $doc->assignByRef('main', $form);
+ * </code>
+ *
+ * Forms built with this class work only under MS Internet Explorer
+ * 5 or higher.
+ *
+ * @package form
+ * @uses DataSet
+ * @uses QueryBuilder
+ * @uses ServiceJSRS
+ * @uses Template
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FormDataBind extends Form
 {
-    var $templateFile;		  		// @var templateFile string 		Nome do arquivo template do formulário
-    var $tableName;					// @var tableName string 			Nome da tabela que está sendo manipulada
-    var $primaryKey;				// @var primaryKey string 			Chave primária da tabela que está sendo manipulada
-    var $queryFields;				// @var queryFields string			Campos da consulta para geração da navegação
-    var $queryTables;				// @var queryTables string			Tabelas da consulta para geração da navegação
-    var $queryClause;				// @var queryClause string			Cláusula WHERE de condição
-    var $queryOrder;				// @var queryOrder string			Coluna ou colunas de ordenação da consulta
-    var $queryLimit;				// @var queryLimit int				Limite ou número de registros desejados na consulta
-    var $csvDbName;					// @var csvDbName string 			Nome do objeto de data bind utilizado
-    var $csvFile;					// @var csvFile string 				Nome do arquivo CSV para armazenamento dos dados
-    var $extraFunctions = array();	// @var extraFunctions array 		"array()" Vetor de funções a serem executadas nos botões de ação/navegação
-    var $forcePost = FALSE;			// @var forcePost bool 				"FALSE" Salvar/Excluir com submissão do formulário e não com JSRS
-    var $parsFilterSort = '';		// @var parsFilterSort string		"" Valores de campo/valor para filtragem/ordenação, no modelo campo1#valor1|campo2#valor2|...|campon#valorn
-	var $Template = NULL;			// @var Template Template object	"NULL" Objeto Template para manipulação do arquivo indicado em $templateFile
+    /**
+     * Name of the table used to load data
+     *
+     * @var string
+     */
+	var $tableName;
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::FormDataBind
-	// @desc		Constrói a instância do objeto FormDataBind, inicializando
-	// 				a conexão ao banco, o template do conteúdo do formulário
-	// 				e as definições para criação da estrutura de Data Binding
-	// @access		public
-	// @param		xmlFile string				Arquivo XML da especificação do formulário
-	// @param 		templateFile string			Arquivo template para geração da interface do formulário
-	// @param 		formName string				Nome do formulário
-	// @param 		&Document Document object	Objeto Document onde o formulário será inserido
-	// @param		tplIncludes array			"array()" Vetor de valores para blocos de inclusão no template
-	// @param 		tableName string			Nome da tabela envolvida nos dados que serão manipulados
-	// @param 		primaryKey string			Nome da coluna que representa a chave primária da tabela indicada em $tableName
-	//!-----------------------------------------------------------------
+	/**
+	 * Primary key of the table used to load data
+	 *
+	 * @var string
+	 */
+    var $primaryKey;
+
+    /**
+     * Query fields (comma-separated)
+     *
+     * @var string
+     */
+    var $queryFields;
+
+    /**
+     * Query tables (including join operations)
+     *
+     * @var string
+     */
+    var $queryTables;
+
+    /**
+     * Query condition clause
+     *
+     * @var string
+     */
+    var $queryClause;
+
+    /**
+     * Query ordering clause
+     *
+     * @var string
+     */
+    var $queryOrder;
+
+    /**
+     * Query limit
+     *
+     * @var int
+     */
+    var $queryLimit;
+
+    /**
+     * Name of the data bind object
+     *
+     * @var string
+     * @access private
+     */
+    var $csvDbName;
+
+    /**
+     * Name of the CSV file
+     *
+     * @var string
+     * @access private
+     */
+    var $csvFile;
+
+    /**
+     * Extra event listeners for the toolbar buttons
+     *
+     * @var array
+     * @access private
+     */
+    var $extraFunctions = array();
+
+    /**
+     * Whether to save form data using a JSRS request
+     *
+     * @var bool
+     * @access private
+     */
+    var $jsrsSubmit = TRUE;
+
+    /**
+     * Data filters
+     *
+     * @var string
+     * @access private
+     */
+    var $parsFilterSort = '';
+
+    /**
+     * Template used to render the form
+     *
+     * @var object Template
+     */
+	var $Template = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $xmlFile Form XML specification
+	 * @param string $templateFile Template file
+	 * @param string $formName Form name
+	 * @param Document &$Document Document instance in which the form will be inserted
+	 * @param array $tplIncludes Hash array of template includes
+	 * @param string $tableName Table used to load form data
+	 * @param string $primaryKey Table's primary key
+	 * @return FormDataBind
+	 */
 	function FormDataBind($xmlFile, $templateFile, $formName, &$Document, $tplIncludes=array(), $tableName, $primaryKey) {
 		parent::Form($xmlFile, $formName, $Document);
-		// inicializa e parseia o template principal
-		$this->templateFile = $templateFile;
 		$this->Template = new Template($templateFile);
 		if (TypeUtils::isHashArray($tplIncludes) && !empty($tplIncludes)) {
 			foreach ($tplIncludes as $blockName => $blockValue)
 				$this->Template->includeAssign($blockName, $blockValue, T_BYFILE);
 		}
 		$this->Template->parse();
-		// configurações principais da geração dos dados
 		$this->csvDbName = "db_" . strtolower($tableName);
 		$this->tableName = $tableName;
 		$this->primaryKey = $primaryKey;
-		// inicializa as imagens de ordem asc/desc com os valores pré-definidos
 		$this->icons['sortasc'] = PHP2GO_ICON_PATH . "fdb_order_asc.gif";
 		$this->icons['sortdesc'] = PHP2GO_ICON_PATH . "fdb_order_desc.gif";
-		// inicializa os handlers JSRS de persistência
 		$Service = new ServiceJSRS();
 		$Service->registerHandler(array($this, '_saveRecord'), 'saveRecord');
 		$Service->registerHandler(array($this, '_deleteRecord'), 'deleteRecord');
 		$Service->handleRequest();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::setImageSortAsc
-	// @desc		Configura o ícone de ordenação ascendente
-	// @param		igmAsc string		Caminho da nova imagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the name of the data bind object
+	 *
+	 * @return string
+	 */
+	function getDbName() {
+		return $this->csvDbName;
+	}
+
+	/**
+	 * Changes the "sortasc" icon used in the databind toolbar
+	 *
+	 * @param string $imgAsc Icon URL
+	 */
 	function setImageSortAsc($imgAsc) {
 		$this->icons['sortasc'] = $imgAsc;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::setImageSortDesc
-	// @desc		Configura o ícone de ordenação descendente
-	// @param		igmDesc string	Caminho da nova imagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Changes the "sortdesc" icon used in the databind toolbar
+	 *
+	 * @param string $imgDesc Icon URL
+	 */
 	function setImageSortDesc($imgDesc) {
 		$this->icons['sortdesc'] = $imgDesc;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::setDataSetQuery
-	// @desc		Define a consulta SQL a ser utilizada para montar
-	//				o dataset dos registros que irão popular o arquivo
-	//				CSV. Os membros $fields, $tables e $clause são
-	//				obrigatórios
-	// @param		fields string	Campos da consulta
-	// @param		tables string	"NULL" Tabelas da consulta. Default é a tabela informada no construtor
-	// @param		clause string	"NULL" Cláusula de condição. Default é cláusula vazia
-	// @param		order string	"NULL" Cláusula de ordenação
-	// @param		limit string	"NULL" Permite expressar um limite para a consulta
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configure the SQL query used to build the CSV file
+	 *
+	 * By default, the class loads the table data using a
+	 * 'select * from table' query. Calling this method,
+	 * you're able to customize this query, by defining
+	 * which fields should be fetched, join operations,
+	 * a condition clause, an ordering clause or a row
+	 * limit restriction.
+	 *
+	 * @param string $fields Query fields. Defaults to '*'
+	 * @param string $tables Query tables. Defaults to the table name provided in the constructor
+	 * @param string $clause Condition clause
+	 * @param string $order Ordering clause
+	 * @param int $limit Limit setting
+	 */
 	function setDataSetQuery($fields, $tables=NULL, $clause=NULL, $order=NULL, $limit=NULL) {
 		$this->queryFields = $fields;
 		$this->queryTables = $tables;
@@ -160,29 +263,36 @@ class FormDataBind extends Form
 			$this->queryLimit = $limit;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::setFilterParameters
-	// @desc		Configura a lista de opções para filtragem e ordenação
-	// 				dos dados. A lista deve respeitar o formato
-	// 				campo1#rótulo1|campo2#rótulo2|...|campoN#rótuloN, onde
-	// campoN		referencia nomes de campos no formulário
-	// @param		options string	Lista de opções de filtragem/ordenação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setFilterSortOptions($options) {
-		$this->parsFilterSort = $options;
+	/**
+	 * Define a set of data filters
+	 *
+	 * Data filters will be displayed inside the databind toolbar. Each field
+	 * will be a valid option to filter or sort records. The $filters argument
+	 * must be in the format field#label|field#label...
+	 *
+	 * Example:
+	 * <code>
+	 * $form->setFilterSortOptions("columnA#Column A|columnB#Column B");
+	 * </code>
+	 *
+	 * @param string $filters Filter options
+	 */
+	function setFilterSortOptions($filters) {
+		$this->parsFilterSort = $filters;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::setExtraButtonFunction
-	// @desc		Permite associar a um dos botões de ação/navegação uma
-	// 				função extra no evento 'onClick'
-	// @param		button string		Nome do botão: FIRST, PREVIOUS, NEXT, LAST, NEW, EDIT, SAVE, DELETE ou CANCEL
-	// @param		function string	Nome da função de script a ser executada
-	// @return 		bool Retorna FALSE se a função não foi corretamente aplicada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Binds an extra callback function with one of the toolbar buttons
+	 *
+	 * Example:
+	 * <code>
+	 * $form->setExtraButtonFunction("NEW", "myCallbackFunc()");
+	 * </code>
+	 *
+	 * @param string $button Button name
+	 * @param unknown_type $function Function call
+	 * @return bool
+	 */
 	function setExtraButtonFunction($button, $function) {
 		$button = strtoupper($button);
 		if (in_array($button, array('FIRST', 'PREVIOUS', 'NEXT', 'LAST', 'NEW', 'EDIT', 'SAVE', 'DELETE', 'CANCEL'))) {
@@ -193,26 +303,18 @@ class FormDataBind extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::disableJsrs
-	// @desc		Desabilita as operações de inserção/alteração/exclusão
-	// 				utilizando JSRS. Neste caso, estas operações deverão
-	// 				ser processadas fora da classe, através do tratamento
-	// 				da submissão do formulário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Disable form submission via JSRS
+	 *
+	 * Form will be submited using a regular POST request.
+	 */
 	function disableJsrs() {
-		$this->forcePost = TRUE;
+		$this->jsrsSubmit = FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::onPreRender
-	// @desc		Gera todos os elementos do formulário no template:
-	//				toolbar, seções, campos, botões
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the form to be rendered
+	 */
 	function onPreRender() {
 		if (!$this->preRendered) {
 			parent::onPreRender();
@@ -228,23 +330,19 @@ class FormDataBind extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::display
-	// @desc	  	Constrói e retorna o código HTML do formulário
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns the form's HTML code
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		$this->onPreRender();
 		return $this->_buildFormStart() . $this->Template->getContent() . "</form>";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::display
-	// @desc		Constrói e imprime o código HTML do formulário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and displays the form's HTML code
+	 */
 	function display() {
 		$this->onPreRender();
 		print $this->_buildFormStart();
@@ -364,7 +462,7 @@ class FormDataBind extends Form
 			$Tpl->assign('csvDbName', $this->csvDbName);
 			$Tpl->assign('databindSource', PHP2GO_OFFSET_PATH . 'cache/' . $this->csvFile);
 			$Tpl->assign('lang', $toolbarValues);
-			$Tpl->assign('forcePost', ($this->forcePost ? 'true' : 'false'));
+			$Tpl->assign('jsrsSubmit', ($this->jsrsSubmit ? 'true' : 'false'));
 			$Tpl->assign('readonlyForm', ($this->readonly ? 'true' : 'false'));
 			$Tpl->assign('globalDisabled', ($this->readonly ? ' disabled' : ''));
 			$Tpl->assign('buttonStyle', parent::getButtonStyle());
@@ -378,7 +476,7 @@ class FormDataBind extends Form
 			$this->Document->addScriptCode("\tInputMask.setup('{$this->formName}_gotoField', DigitMask);", 'Javascript', SCRIPT_END);
 			$this->Template->assignByRef("_ROOT.databind_toolbar", $Tpl);
  		} else {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_FIND_VARIABLE', array('databind_toolbar', $this->templateFile, 'databind_toolbar')), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_FIND_VARIABLE', array('databind_toolbar', $this->Template->Parser->tplBase['src'], 'databind_toolbar')), E_USER_ERROR, __FILE__, __LINE__);
 		}
 	}
 
