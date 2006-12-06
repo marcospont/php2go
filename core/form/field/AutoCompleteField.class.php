@@ -335,6 +335,7 @@ class AutoCompleteField extends EditableField
 	 * This method is also used to respond to autocomplete
 	 * queries via AJAX.
 	 *
+	 * @uses Form::resolveVariables()
 	 * @access protected
 	 */
 	function onDataBind() {
