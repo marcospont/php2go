@@ -677,6 +677,7 @@ class FormField extends Component
 	 * # if the field hasn't a VALUE attribute, try to load the value from the request
 	 * # finally, tries to define the component's value from its DEFAULT attribute
 	 *
+	 * @uses Form::resolveVariables()
 	 * @access protected
 	 */
 	function onDataBind() {

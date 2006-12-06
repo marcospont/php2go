@@ -204,7 +204,7 @@ class EditSearchField extends DbField
 	 */
 	function setUrl($url) {
 		if (!empty($url))
-			$this->attributes['URL'] = $this->_Form->resolveVariables($url);
+			$this->attributes['URL'] = $url;
 	}
 
 	/**
@@ -353,10 +353,12 @@ class EditSearchField extends DbField
 	/**
 	 * Configures component's dynamic properties
 	 *
+	 * @uses Form::resolveVariables()
 	 * @access protected
 	 */
 	function onDataBind() {
 		parent::onDataBind();
+		$this->attributes['URL'] = $this->_Form->resolveVariables($this->attributes['URL']);
 		if ($this->_Form->isPosted) {
 			$lastFilter = HttpRequest::getVar($this->id . '_lastfilter', $this->_Form->formMethod);
 			$lastSearch = HttpRequest::getVar($this->id . '_lastsearch', $this->_Form->formMethod);
