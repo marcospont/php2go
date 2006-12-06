@@ -34,6 +34,22 @@
  * function, which performs a JSRS request to a remote page when
  * the event is triggered.
  *
+ * Example:
+ * <code>
+ * <combofield name="search_options" label="Search by">
+ *   <option value="1" caption="Code"/>
+ *   <option value="2" caption="Name"/>
+ * </combofield>
+ * <editfield name="search_term" label="empty"/>
+ * <button name="search" type="BUTTON">
+ *   <listener
+ *       type="JSRS" event="onClick" file="jsrs/search.php"
+ *       remote="getOptions" callback="parseOptions" debug="F"
+ *       params="Array($('search_options').value, $('search_term').value)"
+ *   />
+ * </button>
+ * </code>
+ *
  * @package form
  * @subpackage listener
  * @uses TypeUtils

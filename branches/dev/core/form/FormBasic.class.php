@@ -142,7 +142,7 @@ class FormBasic extends Form
 	/**
 	 * Class constructor
 	 *
-	 * @param string $xmlFile Form XML specification
+	 * @param string $xmlFile Form XML specification file
 	 * @param string $formName Form name
 	 * @param Document &$Document Document instance in which the form will be inserted
 	 * @return FormBasic
@@ -412,7 +412,7 @@ class FormBasic extends Form
 	/**
 	 * Render a group of buttons
 	 *
-	 * @param array $buttonGroup Group of buttons
+	 * @param array &$buttonGroup Group of buttons
 	 * @access private
 	 */
 	function _buildButtonGroup(&$buttonGroup) {
@@ -473,7 +473,7 @@ class FormBasic extends Form
 	 * Parses presentation and layout settings
 	 * from the XML specification
 	 *
-	 * Parses <b>style</b> and <b>errors</b> XML nodes
+	 * Parses <b>style</b> and <b>errors</b> XML nodes.
 	 *
 	 * @param string $tag Node name
 	 * @param array $attrs Node attributes

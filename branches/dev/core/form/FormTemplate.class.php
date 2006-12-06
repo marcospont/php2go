@@ -1,74 +1,92 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/FormTemplate.class.php,v 1.42 2006/11/21 23:24:23 mpont Exp $
-// $Date: 2006/11/21 23:24:23 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.Form');
-import('php2go.template.Template');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class 		FormTemplate
-// @desc 		Esta classe é uma das extensões da classe que constrói
-// 				formulários que gera o código final integrando a estrutura
-// 				de dados já montada pela classe pai com um template que
-// 				define a disposição dos elementos
-// @package		php2go.form
-// @extends 	Form
-// @uses 		Template
-// @author 		Marcos Pont
-// @version		$Revision: 1.42 $
-// @note		Exemplo de uso:
-//				<pre>
-//
-//				$form = new FormTemplate('file.xml', 'file.tpl', 'formName', $Doc);
-//				$form->setFormMethod('POST');
-//				$form->setInputStyle('input_style');
-//				$content = $form->getContent();
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * Renders forms based on user defined template files
+ *
+ * The FormTemplate class creates forms based on 2 basic arguments: a
+ * <b>XML file</b>, describing sections, fields and buttons, and a
+ * <b>template file</b>, determining how this elements should be
+ * displayed.
+ *
+ * You should follow a pattern when configuring template placeholders
+ * for fields, labels and other form elements:
+ * <code>
+ * /* place holder of a field whose NAME attribute is 'product_code' {@*}
+ * {$product_code}
+ * /* place holder of the label of a field whose NAME attribute is 'country_id' {@*}
+ * {$label_country_id}
+ * /* place holder of the help message of a field whose NAME attribute is 'country_id' {@*}
+ * {$help_country_id}
+ * /* place holder of the name of the section whose ID attribute is 'main' {@*}
+ * {$section_main}
+ * /* block definition for a conditional section whose ID attribute is 'secure_data' {@*}
+ * <!-- START BLOCK : secure_data -->
+ * ... section content ...
+ * <!-- END BLOCK : secure_data -->
+ * </code>
+ *
+ * @package form
+ * @uses Template
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FormTemplate extends Form
 {
-	var $templateFile;				// @var templateFile string			Nome do arquivo template para construção do formulário
-	var $Template; 					// @var Template Template object	Objeto Template para manipulação da interface do formulário
-	var $errorPlaceHolder;			// @var errorPlaceHolder string		Nome da variável para exibição dos erros de validação
+	/**
+	 * Template used to render the form
+	 *
+	 * @var object Template
+	 */
+	var $Template;
 
-	//!-----------------------------------------------------------------
-	// @function 	FormTemplate::FormTemplate
-	// @desc 		Construtor da classe FormTemplate. Inicializa a configuração
-	// 				do formulário controlada por este objeto e cria uma instância
-	// 				da classe Template para integrar com a especificação XML definida
-	// 				em $xmlFile
-	// @param 		xmlFile string				Arquivo XML da especificação do formulário
-	// @param 		templateFile string			Arquivo template para geração da interface do formulário
-	// @param 		formName string				Nome do formulário
-	// @param 		&Document Document object	Objeto Document onde o formulário será inserido
-	// @param		tplIncludes array			"array()" Vetor de valores para blocos de inclusão no template
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Template placeholder used to display
+	 * the validation errors summary
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $errorPlaceHolder;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $xmlFile Form XML specification file
+	 * @param string $templateFile Template file
+	 * @param string $formName Form name
+	 * @param Document &$Document Document instance in which the form will be inserted
+	 * @param array $tplIncludes Hash array of template includes
+	 * @return FormTemplate
+	 */
 	function FormTemplate($xmlFile, $templateFile, $formName, &$Document, $tplIncludes=array()) {
 		parent::Form($xmlFile, $formName, $Document);
 		$this->Template = new Template($templateFile);
@@ -79,16 +97,16 @@ class FormTemplate extends Form
 		$this->Template->parse();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormTemplate::setErrorDisplayOptions
-	// @desc		Define o modo de exibição dos erros na validação client-side
-	// @param		serverPlaceHolder string	Variável do template para exibição dos erros de validação do servidor
-	// @param		clientMode int				Modo de exibição de erros client-side
-	// @param		clientContainerId string	"" ID do container (elemento HTML) para exibição dos erros client-side
-	// @note		Os valores possíveis para $clientMode são FORM_CLIENT_ERROR_ALERT e FORM_CLIENT_ERROR_DHTML
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the display settings of the validation errors summary
+	 *
+	 * The {@link FORM_CLIENT_ERROR_DHTML} mode will only be enabled
+	 * if the $clientContainerId argument is not empty.
+	 *
+	 * @param string $serverPlaceHolder Template placeholder to display server-side errors
+	 * @param int $clientMode Display mode to the client validation errors ({@link FORM_CLIENT_ERROR_ALERT} or {@link FORM_CLIENT_ERROR_DHTML})
+	 * @param string $clientContainerId Element ID used to display client validation errors (when $mode=={@link FORM_CLIENT_ERROR_DHTML})
+	 */
 	function setErrorDisplayOptions($serverPlaceHolder, $clientMode, $clientContainerId='') {
 		$this->errorPlaceHolder = $serverPlaceHolder;
 		if ($clientMode == FORM_CLIENT_ERROR_DHTML && !empty($clientContainerId)) {
@@ -103,13 +121,9 @@ class FormTemplate extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormTemplate::onPreRender
-	// @desc		Gera todos os elementos do formulário no template:
-	//				sumário de erros, seções, campos e botões
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the form to be rendered
+	 */
 	function onPreRender() {
 		if (!$this->preRendered) {
 			parent::onPreRender();
@@ -124,23 +138,19 @@ class FormTemplate extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FormTemplate::getContent
-	// @desc 		Constrói e retorna o código HTML do formulário
-	// @return 		string Código HTML do Formulário
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns the form's HTML code
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		$this->onPreRender();
 		return $this->_buildFormStart() . $this->Template->getContent() . "</form>";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FormTemplate::display
-	// @desc 		Constrói e imprime o código HTML do formulário
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and displays the form's HTML code
+	 */
 	function display() {
 		$this->onPreRender();
 		print $this->_buildFormStart();
@@ -148,12 +158,11 @@ class FormTemplate extends Form
 		print "</form>";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormTemplate::_buildErrors
-	// @desc		Exibe os erros resultantes de validações realizadas no formulário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Display the summary of server-side validation errors
+	 *
+	 * @access private
+	 */
 	function _buildErrors() {
 		$this->Template->setCurrentBlock(TP_ROOTBLOCK);
 		$this->Template->assign('errorStyle', parent::getErrorStyle());
@@ -167,14 +176,13 @@ class FormTemplate extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormTemplate::_buildSection
-	// @desc		Aplica no template os rótulos e códigos dos campos e botões
-	//				referente a suma seção do formulário
-	// @param		&section FormSection object	Seção do formulário
-	// @access 		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Renders a form section
+	 *
+	 * @param FormSection &$section Form section
+	 * @access private
+	 */
 	function _buildSection(&$section) {
 		$sectionId = $section->getId();
 		if ($section->isConditional()) {
@@ -223,13 +231,12 @@ class FormTemplate extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FormTemplate::_buildFormStart
-	// @desc		Gera o código HTML de definição do formulário (tag FORM
-	//				e campo hidden contendo a assinatura do form)
-	// @access 		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns the initial part of the form definition
+	 *
+	 * @access private
+	 * @return string
+	 */
 	function _buildFormStart() {
 		$target = (isset($this->actionTarget) ? " target=\"" . $this->actionTarget . "\"" : '');
 		$enctype = ($this->hasUpload ? " enctype=\"multipart/form-data\"" : '');
@@ -240,13 +247,13 @@ class FormTemplate extends Form
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormTemplate::_loadGlobalSettings
-	// @desc		Define opções de apresentação a partir das configurações globais, se existentes
-	// @param		settings array	Conjunto de configurações globais
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Parses presentation and layout settings from the
+	 * global configuration settings
+	 *
+	 * @param array $settings Global settings
+	 * @access private
+	 */
 	function _loadGlobalSettings($settings) {
 		parent::_loadGlobalSettings($settings);
 		if (isset($settings['ERRORS']['CLIENT_MODE']) && isset($settings['ERRORS']['TEMPLATE_PLACEHOLDER'])) {
@@ -256,14 +263,16 @@ class FormTemplate extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormTemplate::_loadXmlSettings
-	// @desc		Define opções de apresentação provenientes da especificação XML
-	// @param		tag string		Nome do nodo
-	// @param		attrs array		Atributos do nodo
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Parses presentation and layout settings
+	 * from the XML specification
+	 *
+	 * Parses <b>errors</b> XML node.
+	 *
+	 * @param string $tag Node name
+	 * @param array $attrs Node attributes
+	 * @access private
+	 */
 	function _loadXmlSettings($tag, $attrs) {
 		parent::_loadXmlSettings($tag, $attrs);
 		if ($tag == 'ERRORS')

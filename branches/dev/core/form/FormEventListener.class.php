@@ -1,72 +1,156 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/FormEventListener.class.php,v 1.14 2006/11/26 00:19:02 mpont Exp $
-// $Date: 2006/11/26 00:19:02 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const FORM_EVENT_JS "JS"
-// Eventos que executam código Javascript
+/**
+ * Event listeners that execute Javascript code
+ */
 define('FORM_EVENT_JS', 'JS');
-// @const FORM_EVENT_JSRS "JSRS"
-// Eventos que executam scripts PHP utilizando JSRS
+/**
+ * Event listeners that perform JSRS requests
+ */
 define('FORM_EVENT_JSRS', 'JSRS');
-// @const FORM_EVENT_AJAX "AJAX"
-// Eventos que executam requests AJAX
+/**
+ * Event listeners that perform AJAX calls
+ */
 define('FORM_EVENT_AJAX', 'AJAX');
 
-//!-----------------------------------------------------------------
-// @class		FormEventListener
-// @desc		A classe FormEventListener armazena dados dos tratadores de eventos
-//				associados a campos e botões de formulários. É responsável por gerar
-//				o código de chamada da(s) rotina(s) Javascript associadas ao evento
-// @package		php2go.form
-// @extends		PHP2Go
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.14 $
-//!-----------------------------------------------------------------
+/**
+ * Builds form event listeners
+ *
+ * The forms XML specification allows to define event listeners for fields
+ * and/or buttons. This is an organized and simple way to bind Javascript
+ * function calls with DOM events of form elements.
+ *
+ * Examples:
+ * <code>
+ * <editfield name="product_code" label="Product Code" size="20" maxlength="20">
+ *   <listener type="JS" event="onFocus" action="myFunction()"/>
+ *   <listener type="JS" event="onKeyDown"><![CDATA[
+ *     event = $EV(event);
+ *     if (k == 13) {
+ *       callAnotherFunction();
+ *       event.stop();
+ *     }
+ *   ]]></listener>
+ *   <listener
+ *       type="JSRS" event="onChange" file="product_changed.php"
+ *       remote="productChanged" callback="productChangedResult"
+ *       params="this.value" debug="F"
+ *   />
+ * </editfield>
+ * </code>
+ *
+ * @package form
+ * @uses FormEventListener
+ * @uses FormRule
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FormEventListener extends PHP2Go
 {
-	var $type;				// @var type string				Tipo do tratador
-	var $eventName;			// @var eventName string		Nome do evento
-	var $action;			// @var action string			Ação a ser executada (somente JS)
-	var $autoDispatchIf;	// @var autoDispatchIf string	Uma expressão em Javascript que, se for avaliada para true, irá disparar automaticamente o evento no carregamento da página
-	var $functionBody;		// @var functionBody string		Código JavaScript a ser executado (somente JS)
-	var $custom = FALSE;	// @var custom bool				Indica se o evento é custom (fora dos eventos DOM) ou não
-	var $_valid = FALSE;	// @var _valid bool				"FALSE" Indica que as propriedades do listener são válidas
-	var $_Owner = NULL;		// @var _Owner object			"NULL" Campo ou botão ao qual o listener está associado
-	var $_ownerIndex;		// @var _ownerIndex int			Índice da opção à qual o listener pertence (RadioField, CheckGroup)
+	/**
+	 * Type of the listener
+	 *
+	 * @var string
+	 */
+	var $type;
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::FormEventListener
-	// @desc		Construtor da classe
-	// @param		type string				Tipo do tratador
-	// @param		eventName string		Nome do evento JavaScript
-	// @param		action string			"" Código Javascript a ser executado
-	// @param		autoDispatchIf string	"" Expressão que define se o evento é disparado automaticamente ou não
-	// @param		functionBody string		"" Conjunto de rotinas Javascript a serem executadas
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Event to which the listener is bound
+	 *
+	 * @var string
+	 */
+	var $eventName;
+
+	/**
+	 * Action of the listener
+	 *
+	 * @var string
+	 */
+	var $action;
+
+	/**
+	 * Evalutes if the listener should be triggered upon page load
+	 *
+	 * @var string
+	 */
+	var $autoDispatchIf;
+
+	/**
+	 * Listener's function body
+	 *
+	 * @var unknown_type
+	 */
+	var $functionBody;
+
+	/**
+	 * Whether this listener handles a custom event
+	 *
+	 * @var bool
+	 */
+	var $custom = FALSE;
+
+	/**
+	 * Is the listener properties valid?
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $_valid = FALSE;
+
+	/**
+	 * Listener's owner
+	 *
+	 * @var object Component
+	 * @access private
+	 */
+	var $_Owner = NULL;
+
+	/**
+	 * Option index to which the listener is bound
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $_ownerIndex;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $type Type ({@link FORM_EVENT_JS}, {@link FORM_EVENT_JSRS} or {@link FORM_EVENT_AJAX})
+	 * @param string $eventName Event name
+	 * @param string $action Action
+	 * @param string $autoDispatchIf Auto dispatch expression
+	 * @param string $functionBody Function body
+	 * @return FormEventListener
+	 */
 	function FormEventListener($type, $eventName, $action='', $autoDispatchIf='', $functionBody='') {
 		parent::PHP2Go();
 		$this->type = $type;
@@ -76,17 +160,15 @@ class FormEventListener extends PHP2Go
 		$this->functionBody = $functionBody;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::&fromNode
-	// @desc		Este método factory cria uma instância da classe
-	//				FormEventListener a partir de um nodo XML do tipo
-	//				LISTENER, utilizado para definir tratamento de eventos
-	//				para campos e botões de formulários
-	// @param		Node XmlNode object	Nodo da regra na especificação XML
-	// @return		FormEventListener object
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Factory method used to translate a listener node from the
+	 * XML specification of a form into a listener object, according
+	 * to the node's properties
+	 *
+	 * @param XmlNode $Node
+	 * @return FormEventListener
+	 * @static
+	 */
 	function &fromNode($Node) {
 		$type = trim($Node->getAttribute('TYPE'));
 		$eventName = trim($Node->getAttribute('EVENT'));
@@ -127,14 +209,12 @@ class FormEventListener extends PHP2Go
 		return $Listener;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::setOwner
-	// @desc		Define o campo ou botão ao qual o tratador de evento está associado
-	// @param		&Owner object	Campo ou botão
-	// @param		ownerIndex int	"NULL" Índice da opção à qual o listener pertence (RadioField, CheckGroup)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set listener's owner component
+	 *
+	 * @param Component &$Owner Owner component (form field or form button)
+	 * @param int $ownerIndex Option index to which the listener must be bound
+	 */
 	function setOwner(&$Owner, $ownerIndex=NULL) {
 		$this->_Owner =& $Owner;
 		$this->_ownerIndex = $ownerIndex;
@@ -142,13 +222,18 @@ class FormEventListener extends PHP2Go
 			$this->custom = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::getScriptCode
-	// @desc		Monta o código JavaScript de definição do tratador
-	// @param		targetIndex int		"NULL" Índice de um grupo de opções
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the listener's action
+	 *
+	 * When an <b>action</b> is provided, it is returned without
+	 * modifications. When a <b>Javascript function body</b> is used,
+	 * the body is enclosed in a function definition appended in the
+	 * end of the document's body and the returned value is a call
+	 * to the generated function.
+	 *
+	 * @param int $targetIndex Option index to which the listener is bound
+	 * @return string
+	 */
 	function getScriptCode($targetIndex=NULL) {
 		$Form =& $this->_Owner->getOwnerForm();
 		if (!empty($this->functionBody)) {
@@ -171,12 +256,15 @@ class FormEventListener extends PHP2Go
 		return $this->action;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::isValid
-	// @desc		Verifica se os dados do tratador de evento são válidos
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Verify if the listener is valid
+	 *
+	 * Calls the {@link validate()} method, which normally will ensure
+	 * all mandatory properties are filled.
+	 *
+	 * @access protected
+	 * @return bool
+	 */
 	function isValid() {
 		if ($this->_valid == TRUE)
 			return $this->_valid;
@@ -191,25 +279,22 @@ class FormEventListener extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::validate
-	// @desc		Valida as propriedades do tratador de eventos
-	// @access		protected
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Validate listener's properties
+	 *
+	 * @access protected
+	 * @return bool
+	 */
 	function validate() {
 		return (!empty($this->eventName) && (!empty($this->action) || !empty($this->functionBody)));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::renderAutoDispatch
-	// @desc		Gera código necessário para auto executar o tratador
-	//				de evento quando uma determinada condição for satisfeita
-	//				no momento do carregamento da página
-	// @param		targetIndex int		"NULL" Índice de um grupo de opções
-	// @access		protected
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Renders the auto dispatch script block
+	 *
+	 * @param int $targetIndex Option index to which the listener is bound
+	 * @access protected
+	 */
 	function renderAutoDispatch($targetIndex=NULL) {
 		if (!$this->custom && !empty($this->autoDispatchIf)) {
 			$Form =& $this->_Owner->getOwnerForm();
@@ -225,12 +310,11 @@ class FormEventListener extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormEventListener::__toString
-	// @desc		Monta informações do listener, para exibição de mensagens de erro
-	// @access		protected
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds a string representation of the listener
+	 *
+	 * @return string
+	 */
 	function __toString() {
 		$info = $this->_Owner->getName();
 		if (isset($this->_ownerIndex))
