@@ -796,6 +796,8 @@ class Form extends Component
 
 	/**
 	 * Prepares the form to be rendered
+	 *
+	 * @uses Form::resolveVariables()
 	 */
 	function onPreRender() {
 		if (!$this->preRendered) {
@@ -923,7 +925,7 @@ class Form extends Component
 	}
 
 	/**
-	 * Collect sections, fields and buttons from the parsed XML tree
+	 * Collects sections, fields and buttons from the parsed XML tree
 	 *
 	 * @access protected
 	 */
@@ -970,7 +972,7 @@ class Form extends Component
 	}
 
 	/**
-	 * Create a FormSection object from a section XML node
+	 * Creates a FormSection object from a section XML node
 	 *
 	 * @param XmlNode $xmlNode Section node
 	 * @return FormSection
@@ -1005,7 +1007,7 @@ class Form extends Component
 	}
 
 	/**
-	 * Create a subsection from a XML condsection node
+	 * Creates a subsection from a XML condsection node
 	 *
 	 * @param XmlNode $xmlNode Section node
 	 * @param FormSection &$parentSection Parent section
@@ -1043,7 +1045,7 @@ class Form extends Component
 	}
 
 	/**
-	 * Create a group of buttons from a XML buttons node
+	 * Creates a group of buttons from a XML buttons node
 	 *
 	 * @param XmlNode $buttons Buttons node
 	 * @param FormSection &$parentSection Parent section
@@ -1070,7 +1072,7 @@ class Form extends Component
 	}
 
 	/**
-	 * Create a FormButton from a XML button node
+	 * Creates a FormButton from a XML button node
 	 *
 	 * @param XmlNode $button Button node
 	 * @param FormSection &$parentSection Parent section
@@ -1086,7 +1088,7 @@ class Form extends Component
 	}
 
 	/**
-	 * Create a FormField from a XML field node
+	 * Creates a FormField from a XML field node
 	 *
 	 * @param XmlNode $field Field node
 	 * @param FormSection &$parentSection Parent section
@@ -1136,7 +1138,7 @@ class Form extends Component
 	}
 
 	/**
-	 * Parse presentation and layout settings from the
+	 * Parses presentation and layout settings from the
 	 * global configuration settings
 	 *
 	 * Global settings are applied to all PHP2Go forms, and should
@@ -1144,7 +1146,7 @@ class Form extends Component
 	 * key.
 	 *
 	 * @param array $settings Global settings
-	 * @access private
+	 * @access protected
 	 */
 	function _loadGlobalSettings($settings) {
 		(isset($settings['SECTION_REQUIRED_TEXT'])) && $this->requiredText = $settings['SECTION_REQUIRED_TEXT'];
@@ -1166,13 +1168,13 @@ class Form extends Component
 	}
 
 	/**
-	 * Load presentation and layout settings from the XML specification
+	 * Loads presentation and layout settings from the XML specification
 	 *
 	 * Parses <b>form</b>, <b>style</b> and <b>errors</b> XML nodes.
 	 *
 	 * @param string $tag Node name
 	 * @param array $attrs Node attributes
-	 * @access private
+	 * @access protected
 	 */
 	function _loadXmlSettings($tag, $attrs) {
 		switch ($tag) {

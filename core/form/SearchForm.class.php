@@ -1,116 +1,288 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/SearchForm.class.php,v 1.15 2006/11/19 18:30:28 mpont Exp $
-// $Date: 2006/11/19 18:30:28 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.db.QueryBuilder');
-import('php2go.form.FormBasic');
-import('php2go.form.FormTemplate');
 import('php2go.net.Url');
 import('php2go.validation.Validator');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		SearchForm
-// @desc		Esta classe implementa um formulário específico para sistemas
-//				de pesquisa. Seu objetivo é construir, a partir da parametrização
-//				de pesquisa definida para cada campo do formulário, uma cláusula de
-//				condição que será utilizada em uma consulta de banco de dados. Após
-//				montada esta consulta, a classe pode retornar o código SQL produzido
-//				ou armazená-lo na sessão, para que este possa ser utilizado como filtro
-//				de um DataSet ou de um Report em uma outra requisição
-// @package		php2go.form
-// @extends		Component
-// @uses		Callback
-// @uses		Db
-// @uses		FormBasic
-// @uses		FormTemplate
-// @uses		SessionManager
-// @uses		TypeUtils
-// @uses		Url
-// @author		Marcos Pont
-// @version		$Revision: 1.15 $
-//!-----------------------------------------------------------------
+/**
+ * Builds and processes search forms
+ *
+ * The forms XML specification contains a node called <b>search</b>, in
+ * which is possible to customize the behaviour of a given component when
+ * used inside a search form. This class is the one who reads these settings
+ * in order to transform the form's submitted values into a query condition
+ * clause.
+ *
+ * For instance: a text input will generate, by default, the following clause:
+ * <code>
+ * field_name like '%submitted_value%'
+ * </code>
+ *
+ * Once the final condition clause is built, the SearchForm can redirect
+ * to a page requested by the developer, saving the search filter in the
+ * session scope. Besides, the class contains mechanisms to retain search
+ * filters and search field values.
+ *
+ * @package form
+ * @uses Callback
+ * @uses Db
+ * @uses FormBasic
+ * @uses FormTemplate
+ * @uses Url
+ * @uses TypeUtils
+ * @uses Validator
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class SearchForm extends Component
 {
-	var $valid;							// @var valid bool					Armazena o status de validação da busca
-	var $searchRawData = array();		// @var searchRawData array			"array()" Vetor que armazena os dados crus de retorno da pesquisa (cada linha contém valor e configurações de cada campo)
-	var $searchString = '';				// @var searchString string			"" Contém a string de pesquisa já montada (cláusula SQL de condição)
-	var $searchDescription = '';		// @var searchDescription string	"" Contém a versão "human readable" da cláusula de condição montada pela classe
-	var $mainOperator = 'AND';			// @var mainOperator string			"AND" Operador principal a ser utilizado (AND ou OR)
-	var $prefixOperator = '';			// @var prefixOperator string		"" Operador a ser incluído no início da cláusula (AND ou OR)
-	var $acceptEmptySearch = FALSE;		// @var acceptEmptySearch bool		"FALSE" Indica se a pesquisa poderá ser submetida sem filtros
-	var $emptySearchMessage;			// @var emptySearchMessage string	Mensagem de erro exibida para uma busca sem filtros, quando não permitida
-	var $ignoreFields = array();		// @var ignoreFields array			Conjunto de campos que devem ser ignorados na construção da cláusula de condição
-	var $stringMinLength;				// @var stringMinLength int			Restrição de mínimo de caracteres para um campo que usa operadores string (CONTAINING, STARTING, ENDING)
-	var $autoRedirect = FALSE;			// @var autoRedirect bool			"FALSE" Indica se uma busca válida será redirecionada para outra URL
-	var $redirectUrl;					// @var redirectUrl string			URL para onde os resultados da busca devem ser enviados
-	var $paramName = 'p2g_search';		// @var paramName string			"p2g_search" Variável de requisição ou de sessão para a cláusula de busca
-	var $useSession = FALSE;			// @var useSession bool				"FALSE" Utilizar sessão para a persistência da cláusula
-	var $useEncode = FALSE;				// @var useEncode bool				"FALSE" Utilizar codificação base64 no envio da cláusula por GET
-	var $preserveSession = FALSE;		// @var preserveSession bool		"FALSE" Preservar o filtro armazenado na sessão (TRUE) ou deletar quando o formulário de pesquisa for gerado e exibido (FALSE)
-	var $filterPersistence = FALSE;		// @var filterPersistence array		"array()" Configurações de persistência dos filtros de pesquisa
-	var $connectionId = NULL;			// @var connectionId string			"NULL" ID da conexão ao banco de dados (uma conexão é utilizada para formatar strings e datas)
-	var $checkboxMapping = array(		// @var checkboxMapping array		Mapa de conversão para um campo do tipo checkbox
-		'T' => 1,
-		'F' => 0
-	);
-	var $validators = array();			// @var validators array			"array()" Vetor de validadores da pesquisa
-	var $callbackObj = NULL;			// @var callbackObj object			"NULL" Possibilita a associação de um objeto para os callbacks definidos na especificação XML
-	var $sqlCallbacks = array();		// @var sqlCallbacks array			"array()" Armazena callbacks que constróem o código SQL para um campo de pesquisa independente dos outros parâmetros de configuração
-	var $valueCallbacks = array();		// @var valueCallbacks array		"array()" Armazena callbacks de transformação de valor já utilizadas
-	var $Form = NULL;					// @var Form Form object			Formulário construído pela classe para exibição dos filtros
+	/**
+	 * Final condition clause
+	 *
+	 * @var string
+	 */
+	var $searchString = '';
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::SearchForm
-	// @desc		Construtor da classe
-	// @param		xmlFile string	Arquivo XML de especificação do formulário
-	// @param		templateFile string "NULL" Template para o formulário. Se for NULL, a classe FormBasic será utilizada para montar o formulário
-	// @param		formName string	Nome para o formulário
-	// @param		&Doc Document object Documento ao qual o formulário está associado
-	// @param		tplIncludes array array()" Vetor de valores para blocos de inclusão no template
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Human-readable representaton of the condition clause
+	 *
+	 * @var string
+	 */
+	var $searchDescription = '';
+
+	/**
+	 * Holds raw search data collected from the form
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $searchRawData = array();
+
+	/**
+	 * Main operator
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $mainOperator = 'AND';
+
+	/**
+	 * Prefix operator
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $prefixOperator = '';
+
+	/**
+	 * Whether an empty search must be accepted (all form fields are empty)
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $acceptEmptySearch = FALSE;
+
+	/**
+	 * Error message for an empty search
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $emptySearchMessage;
+
+	/**
+	 * Set of form fields to be ignored
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $ignoreFields = array();
+
+	/**
+	 * Minimum length for fields when using string operators
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $stringMinLength;
+
+	/**
+	 * Whether auto redirect is enabled
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $autoRedirect = FALSE;
+
+	/**
+	 * Auto redirect URL
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $redirectUrl;
+
+	/**
+	 * Auto redirect parameter
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $paramName = 'p2g_search';
+
+	/**
+	 * Whether filter must be saved on the session
+	 * scope when using auto redirect
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $useSession = FALSE;
+
+	/**
+	 * Whether filter must be encoded when
+	 * auto redirect is enabled
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $useEncode = FALSE;
+
+	/**
+	 * Preserve already saved search filters
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $preserveSession = FALSE;
+
+	/**
+	 * Auto save/restore form field values
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $filterPersistence = FALSE;
+
+	/**
+	 * DB connection ID (needed to build the condition clause)
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $connectionId = NULL;
+
+	/**
+	 * Conversion mapping for checkbox fields
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $checkboxMapping = array('T' => 1, 'F' => 0);
+
+	/**
+	 * Search validators
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $validators = array();
+
+	/**
+	 * Callback helper object
+	 *
+	 * @var object
+	 * @access private
+	 */
+	var $callbackObj = NULL;
+
+	/**
+	 * SQL callbacks
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $sqlCallbacks = array();
+
+	/**
+	 * Value callbacks
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $valueCallbacks = array();
+
+	/**
+	 * Holds the search form validation status
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $valid;
+
+	/**
+	 * Search form
+	 *
+	 * @var object Form
+	 */
+	var $Form = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * If $templateFile is missing, the form will be rendered
+	 * using the {@link FormBasic} class. Otherwise, it will
+	 * be rendered by {@link FormTemplate}.
+	 *
+	 * @param string $xmlFile Form XML specification file
+	 * @param string $templateFile Template file
+	 * @param string $formName Form name
+	 * @param Document &$Doc Document instance in which the form will be inserted
+	 * @param array $tplIncludes Hash array of template includes
+	 * @return SearchForm
+	 */
 	function SearchForm($xmlFile, $templateFile=NULL, $formName, &$Doc, $tplIncludes=array()) {
 		parent::Component();
-		if (TypeUtils::isNull($templateFile))
+		if (TypeUtils::isNull($templateFile)) {
+			import('php2go.form.FormBasic');
 			$this->Form = new FormBasic($xmlFile, $formName, $Doc);
-		else
+		} else {
+			import('php2go.form.FormTemplate');
 			$this->Form = new FormTemplate($xmlFile, $templateFile, $formName, $Doc, $tplIncludes);
+		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::isValid
-	// @desc		Verifica se o formulário de busca foi postado e é válido,
-	//				seguindo apenas as regras de validação básicas do formulário
-	// @note		A validação segundo os validadores de busca só é executada dentro
-	//				do método run() desta mesma classe
-	// @see			SearchForm::run
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the form is posted and valid
+	 *
+	 * @return bool
+	 */
 	function isValid() {
 		if (!isset($this->valid))
 			$this->valid = ($this->Form->isPosted() && $this->Form->isValid());
@@ -121,169 +293,159 @@ class SearchForm extends Component
 		return $this->valid;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::getSearchRawData
-	// @desc		Retorna um vetor com os valores e configurações dos campos de pesquisa
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Get raw search data
+	 *
+	 * Returns an array containing submitted values and
+	 * search settings of all valid search fields.
+	 *
+	 * @return array
+	 */
 	function getSearchRawData() {
 		return $this->searchRawData;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::getSearchString
-	// @desc		Retorna a cláusula de condição montada a partir dos valores submetidos na pesquisa
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the condition clause produced by the class
+	 *
+	 * @return string
+	 */
 	function getSearchString() {
 		return $this->searchString;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::getSearchDescription
-	// @desc		Retorna a representação textual da cláusula de busca
-	//				construída, substituindo nomes de campos por seus rótulos,
-	//				operadores por seus nomes na linguagem ativa, e valores por
-	//				sua representação compreensível
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the human-readable representation of the condition clause
+	 *
+	 * @return string
+	 */
 	function getSearchDescription() {
 		return $this->searchDescription;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::getMainOperator
-	// @desc		Retorna o operador principal configurado na classe
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the main search operator
+	 *
+	 * @return string
+	 */
 	function getMainOperator() {
 		return $this->mainOperator;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setMainOperator
-	// @desc		Define o operador principal a ser utilizado entre as
-	//				cláusulas de cada campo de pesquisa. Aceita os valores AND e OR
-	// @param		operator string	Operador principal da busca
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the main search operator
+	 *
+	 * The main operator will be used to build the
+	 * condition clause (all fields are operands
+	 * joined into a string using the main operator
+	 * as the glue).
+	 *
+	 * @param string $operator Main operator
+	 */
 	function setMainOperator($operator) {
 		$operator = strtoupper($operator);
 		if ($operator == 'OR' || $operator == 'AND')
 			$this->mainOperator = $operator;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::getPrefixOperator
-	// @desc		Retorna o operador configurado para prefixar a cláusula de pesquisa
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the search prefix operator
+	 *
+	 * @return string
+	 */
 	function getPrefixOperator() {
 		return $this->prefixOperator;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setPrefixOperator
-	// @desc		Define o operador que deve prefixar a cláusula de pesquisa.
-	//				Aceita os valores AND e OR
-	// @note		Esta configuração deve ser utilizada quando a consulta base onde a
-	//				cláusula de pesquisa será utilizada já possui uma cláusula de condição.
-	//				Desta forma, a cláusula vinda do formulário seria combinada com a existente
-	//				utilizando o operador AND ou o operador OR
-	// @param		operator string	Operador que deve prefixar a cláusula montada
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the search prefix operator
+	 *
+	 * Determines the operator that should be prepended in the
+	 * condition clause. Useful when the resultant clause must
+	 * be appended in an SQL query that already has a condition
+	 * clause.
+	 *
+	 * @param string $operator Prefix operator
+	 */
 	function setPrefixOperator($operator) {
 		$operator = strtoupper($operator);
 		if ($operator == 'OR' || $operator == 'AND')
 			$this->prefixOperator = $operator;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setAcceptEmptySearch
-	// @desc		Utilizando este método com o parâmetro $setting == TRUE,
-	//				as buscas sem filtros estarão habilitadas, ou seja, não
-	//				gerarão erro e reapresentação do formulário
-	// @param		setting bool "TRUE" Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Accept/reject empty search requests
+	 *
+	 * Empty seach request mean a form submission where
+	 * all searchable fields are empty.
+	 *
+	 * @param bool $setting Accept/reject
+	 */
 	function setAcceptEmptySearch($setting=TRUE) {
 		$this->acceptEmptySearch = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setEmptySearchMessage
-	// @desc		Define a mensagem de erro para uma busca enviada sem filtros
-	// @param		message string	Mensagem de erro
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set error message for rejected empty search requests
+	 *
+	 * @param string $message Error message
+	 */
 	function setEmptySearchMessage($message) {
 		$this->emptySearchMessage = $message;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::getIgnoreFields
-	// @desc		Retorna o conjunto de campos que devem ser ignorados
-	//				na construção da cláusula de pesquisa
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the field names that should be ignored
+	 *
+	 * @return array
+	 */
 	function getIgnoreFields() {
 		return $this->ignoreFields;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setIgnoreFields
-	// @desc		Define o conjunto de campos que devem ser ignorados
-	//				na validação do formulário de pesquisa e na construção
-	//				da cláusula SQL de pesquisa
-	// @note		A comparação dos nomes desta lista com os nomes dos
-	//				campos do formulário é sensível ao caso
-	// @param		fields array	Array contendo os nomes dos campos (atributo NAME na especificação XML)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the field names that should be ignored
+	 *
+	 * Form fields can also be ignored by the search
+	 * engine through the IGNORE attribute of the SEARCH
+	 * XML node.
+	 *
+	 * Members of the $fields array must contain field
+	 * names (NAME attribute of the XML specification).
+	 * The comparison is case-sensitive.
+	 *
+	 * @param array $fields Field to ignore
+	 */
 	function setIgnoreFields($fields) {
 		$this->ignoreFields = TypeUtils::toArray($fields);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearcForm::setStringMinLength
-	// @desc		Define o tamanho mínimo de caracteres para campos que
-	//				utilizam operadores string (STARTING, ENDING, CONTAINING)
-	// @note		Por padrão, não é feita validação nesse sentido, ou seja,
-	//				um filtro onde apenas um caractere é fornecido poderia comprometer
-	//				a performance da consulta
-	// @param		minlength int	Tamanho mínimo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the minimum length of fields that use
+	 * string operators (STARTING, CONTAINING, ENDING)
+	 *
+	 * @param int $minlength Minlength
+	 */
 	function setStringMinLength($minlength) {
 		if (TypeUtils::isInteger($minlength) && $minlength > 0) {
 			$this->stringMinLength = $minlength;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setAutoRedirect
-	// @desc		Permite definir uma URL de redirecionamento para a pesquisa
-	// @param		setting bool		"TRUE" Utilizar ou não redirecionamento automático
-	// @param		redirectUrl string	URL de redirecionamento
-	// @param		paramName string	Parâmetro de requisição ou de sessão para armazenamento da cláusula montada
-	// @param		useSession bool		"FALSE" Utilizar sessão na persistência da cláusula
-	// @param		useEncode bool		"FALSE" Utilizar codificação base64 no envio da cláusula na requisição GET
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable auto redirect upon search
+	 *
+	 * Auto redirect enables automatic redirection to a
+	 * target URL when the {@link run()} method validates
+	 * the submitted search form and builds the condition
+	 * clause.
+	 *
+	 * @param bool $setting Enable/disable
+	 * @param string $url Target URL
+	 * @param string $paramName Request parameter, or session parameter when $useSession==TRUE
+	 * @param bool $useSession Save condition clause in the session scope
+	 * @param bool $useEncode Encode condition clause
+	 */
 	function setAutoRedirect($setting=TRUE, $url, $paramName='p2g_search', $useSession=FALSE, $useEncode=FALSE) {
 		$this->autoRedirect = (bool)$setting;
 		if ($this->autoRedirect) {
@@ -294,58 +456,41 @@ class SearchForm extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setPreserveSession
-	// @desc		Define se o filtro armazenado na sessão deve ser preservado ou
-	//				deve ser deletado a cada vez que o formulário de pesquisa for
-	//				gerado e exibido
-	// @note		Se os filtros forem submetidos como um parâmetro GET da requisição,
-	//				o valor desta propriedade é indiferente
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Whether search condition clause must be preserved
+	 * in the session scope or destroyed every time the
+	 * form is displayed
+	 *
+	 * @param bool $setting Preserve or destroy
+	 */
 	function setPreserveSession($setting) {
 		$this->preserveSession = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setFilterPersistence
-	// @desc		Define se os valores submetidos pelo formulário de
-	//				pesquisa devem ser persistidos em uma variável de sessão
-	//				e automaticamente recuperados na próxima exibição do
-	//				formulário
-	// @param		enable bool			Habilitar/desabilitar
-	// @note		A escrita na sessão é realizada no momento em que uma busca
-	//				válida é detectada. A recuperação dos valores é realizada
-	//				quando o formulário de busca se encontra no estado inicial
-	//				(não postado)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable automatic save/restore of the form
+	 * field values using the session scope
+	 *
+	 * @param bool $enable Enable/disable
+	 */
 	function setFilterPersistence($enable) {
 		$this->filterPersistence = (bool)$enable;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::clearFilterPersistence
-	// @desc		Limpa os filtros de pesquisa armazenados na sessão, se existentes
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Clears search field values saved in the session scope
+	 */
 	function clearFilterPersistence() {
 		if (isset($_SESSION['p2g_filters'][$this->Form->getSignature()]))
 			unset($_SESSION['p2g_filters'][$this->Form->getSignature()]);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setCheckboxMapping
-	// @desc		Define o mapeamento de valores para campos do tipo checkbox
-	// @param		trueValue mixed		Valor de subsituição para T (marcado)
-	// @param		falseValue mixed	Valor de substituição para F (não marcado)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set value mapping for search fields based on a checkbox input
+	 *
+	 * @param string $trueValue Checked value
+	 * @param string $falseValue Unchecked value
+	 */
 	function setCheckboxMapping($trueValue, $falseValue) {
 		$this->checkboxMapping = array(
 			'T' => $trueValue,
@@ -353,51 +498,51 @@ class SearchForm extends Component
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setConnectionId
-	// @desc		Define o ID da conexão a banco de dados a ser utilizada na classe
-	// @param		id string	ID da conexão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set database connection ID to be used by the class
+	 *
+	 * @param string $id Connection ID
+	 */
 	function setConnectionId($id) {
 		$this->connectionId = $id;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::setCallbackObject
-	// @desc		Define o objeto que será utilizado na pesquisa por callbacks
-	//				definidas na especificação XML
-	// @param		&obj object		Objeto base para callbacks
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set a callback object that should be used to search
+	 * for SQL and value callbacks defined in the XML specification
+	 *
+	 * @param object $obj Callback object
+	 */
 	function setCallbackObject(&$obj) {
 		$this->callbackObj =& $obj;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::addValidator
-	// @desc		Adiciona um validador para os valores de busca submetidos
-	// @param		validator string	Caminho para o validador (usando notação de pontos: dir.dir2.MyClass)
-	// @param		arguments array		"array()" Argumentos para o validador
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Register a search validator
+	 *
+	 * The execute method of the validator will receive the
+	 * raw search data as argument.
+	 *
+	 * @param string $validator Dot path of the validator
+	 * @param array $arguments Validator arguments
+	 */
 	function addValidator($validator, $arguments=array()) {
 		$this->validators[] = array($validator, TypeUtils::toArray($arguments));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::run
-	// @desc		Método principal da classe. Deve ser chamado após a configuração
-	//				do formulário para que a verificação de busca postada e montagem
-	//				da cláusula de condição seja executada
-	// @note		O retorno deste método indica se o formulário não foi postado ou
-	//				foi postado com erros (FALSE) ou foi postado com sucesso (TRUE)
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Validates the search form and builds the condition clause
+	 *
+	 * This method must be called right after the configuration of
+	 * the form. Returns FALSE when the form is not posted or contains
+	 * errors.
+	 *
+	 * Redirects to the target page when auto redirect is enabled.
+	 *
+	 * @uses HttpResponse::redirect()
+	 * @uses Validator::validate()
+	 * @return bool
+	 */
 	function run() {
 		if ($this->isValid()) {
 			if ($this->_buildSearchString()) {
@@ -409,7 +554,7 @@ class SearchForm extends Component
 					$this->Form->addErrors(Validator::getErrors());
 					return FALSE;
 				} else {
-					// persistência dos filtros em sessão
+					// search fields persistence
 					if ($this->filterPersistence) {
 						$signature = $this->Form->getSignature();
 						$formVars = ($this->Form->formMethod == 'POST' ? $_POST : $_GET);
@@ -417,7 +562,7 @@ class SearchForm extends Component
 					} else {
 						$this->clearFilterPersistence();
 					}
-					// auto redirecionamento
+					// auto redirect
 					if ($this->autoRedirect) {
 						$Url = new Url($this->redirectUrl);
 						if ($this->useSession) {
@@ -441,7 +586,7 @@ class SearchForm extends Component
 				return FALSE;
 			}
 		} elseif (!$this->Form->isPosted()) {
-			// recupera filtros de sessão salvos
+			// restore search fields
 			if ($this->filterPersistence) {
 				$signature = $this->Form->getSignature();
 				if (isset($_SESSION['p2g_filters'][$signature])) {
@@ -454,46 +599,41 @@ class SearchForm extends Component
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::onPreRender
-	// @desc		Pré-renderização do formulário de pesquisa
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the form to be rendered
+	 */
 	function onPreRender() {
 		if (!$this->preRendered)
 			$this->Form->onPreRender();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::display
-	// @desc		Imprime o formulário de pesquisa
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function display() {
-		$this->onPreRender();
-		$this->Form->display();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::getContent
-	// @desc		Retorna o conteúdo do formulário de pesquisa
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns the form's HTML code
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		$this->onPreRender();
 		return $this->Form->getContent();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::_buildSearchString
-	// @desc		Método interno de construção da cláusula de condição a partir
-	//				dos valores submetidos para cada campo do formulário
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and displays the form's HTML code
+	 */
+	function display() {
+		$this->onPreRender();
+		$this->Form->display();
+	}
+
+	/**
+	 * Builds the search clause based on the form's
+	 * submitted values and search settings
+	 *
+	 * Returns FALSE when the built search clause is empty.
+	 *
+	 * @access private
+	 * @return bool
+	 */
 	function _buildSearchString() {
 		$fieldNames = array_keys($this->Form->fields);
 		foreach ($fieldNames as $name) {
@@ -508,11 +648,11 @@ class SearchForm extends Component
 		$operators = PHP2Go::getLangVal('OPERATORS');
 		$dbConn =& Db::getInstance($this->connectionId);
 		foreach ($this->searchRawData as $fldName => $args) {
-			// parâmetros de pesquisa cuja SQL é construída por uma callback
+			// SQL callbacks
 			if (isset($args['SQLFUNC'])) {
 				$clause = $this->_resolveSqlCallback($args['SQLFUNC'], $args['VALUE']);
 			}
-			// operador BETWEEN
+			// BETWEEN operator
 			elseif ($args['FIELDTYPE'] == 'RANGEFIELD') {
 				$clause = (isset($args['FIELDFUNC']) ? sprintf($args['FIELDFUNC'], $args['ALIAS']) : $args['ALIAS']);
 				list($tmp, $bottom) = each($args['VALUE']);
@@ -526,7 +666,7 @@ class SearchForm extends Component
 					$bottom = $dbConn->date($bottom);
 					$top = $dbConn->date($top);
 				} elseif ($args['DATATYPE'] == 'DATETIME') {
-					// completa o intervalo com hora, minuto e segundo
+					// fills the value with hour, minute and second
 					$bottom .= " 00:00:00";
 					$top .= " 23:59:59";
 					$bottom = $dbConn->date($bottom, TRUE);
@@ -534,7 +674,7 @@ class SearchForm extends Component
 				}
 				$clause .= $this->_resolveOperator($args['OPERATOR']) . $bottom . ' and ' . $top;
 			}
-			// operadores IN e NOTIN (array como valor)
+			// IN and NOTIN operators
 			elseif ($args['OPERATOR'] == 'IN' || $args['OPERATOR'] == 'NOTIN') {
 				$clause = (isset($args['FIELDFUNC']) ? sprintf($args['FIELDFUNC'], $args['ALIAS']) : $args['ALIAS']);
 				$value = $this->_resolveValueCallback(@$args['VALUEFUNC'], TypeUtils::toArray($args['VALUE']));
@@ -547,7 +687,7 @@ class SearchForm extends Component
 				}
 				$clause .= $this->_resolveOperator($args['OPERATOR']) . '(' . implode(',', $value) . ')';
 			}
-			// operadores string
+			// string operators
 			elseif ($args['OPERATOR'] == 'STARTING' || $args['OPERATOR'] == 'ENDING' || $args['OPERATOR'] == 'CONTAINING') {
 				$clause = (isset($args['FIELDFUNC']) ? sprintf($args['FIELDFUNC'], $args['ALIAS']) : $args['ALIAS']);
 				$value = $this->_resolveValueCallback(@$args['VALUEFUNC'], TypeUtils::parseString($args['VALUE']));
@@ -558,7 +698,7 @@ class SearchForm extends Component
 				$value = $dbConn->quoteString($value);
 				$clause .= $this->_resolveOperator($args['OPERATOR']) . $value;
 			}
-			// outros operadores
+			// other operators
 			else {
 				$clause = (isset($args['FIELDFUNC']) ? sprintf($args['FIELDFUNC'], $args['ALIAS']) : $args['ALIAS']);
 				$value = $this->_resolveValueCallback(@$args['VALUEFUNC'], @$args['VALUE']);
@@ -585,13 +725,17 @@ class SearchForm extends Component
 		return ($this->acceptEmptySearch || !empty($this->searchString));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::_validateSearchField
-	// @desc		Aplica validação básica de valor vazio em um campo de pesquisa
-	// @param		args array	Valor e configurações de um campo de pesquisa
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Validates a search field
+	 *
+	 * # range fields must contain non empty values for both members
+	 * # fields using string operators should respect {@link stringMinLength}
+	 * # other fields should have a non empty value
+	 *
+	 * @param array $args Field's search arguments
+	 * @access private
+	 * @return bool
+	 */
 	function _validadeSearchField($args) {
 		if ($args['FIELDTYPE'] == 'RANGEFIELD') {
 			$sv = TypeUtils::toArray($args['VALUE']);
@@ -603,7 +747,6 @@ class SearchForm extends Component
 				return FALSE;
 			return TRUE;
 		} else {
-			// validação de tamanho mínimo quando é um operador de string
 			if (in_array($args['OPERATOR'], array('STARTING', 'CONTAINING', 'ENDING')) && isset($this->stringMinLength)) {
 				return (!TypeUtils::isNull($args['VALUE']) && strlen($args['VALUE']) >= $this->stringMinLength);
 			} elseif (is_array($args['VALUE'])) {
@@ -612,18 +755,65 @@ class SearchForm extends Component
 				$str = strval($args['VALUE']);
 				return (!empty($str) || strlen($str) > 0);
 			};
-			//return (!TypeUtils::isNull($args['VALUE']));
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::_resolveOperator
-	// @desc		Transforma um valor de operador definido no XML para um
-	//				nome de operador válido para a especificação SQL-ANSI
-	// @param		op string 	Operador
-	// @return		string Código SQL correspondente ao operador
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Resolve an SQL callback
+	 *
+	 * SQL callbacks has the ability to build the full clause
+	 * for a given search field, given its value. An SQL callback
+	 * could be used, for instance, to transform a search field into
+	 * a complex clause based on a subquery.
+	 *
+	 * @param string $callback Callback
+	 * @param string $value Search field's value
+	 * @return string Search clause
+	 * @access private
+	 */
+	function _resolveSqlCallback($callback, $value) {
+		if (empty($callback))
+			return FALSE;
+		if (!isset($this->sqlCallbacks[$callback])) {
+			if (is_object($this->callbackObj) && !function_exists($callback) && method_exists($this->callbackObj, $callback))
+				$this->sqlCallbacks[$callback] = new Callback(array($this->callbackObj, $callback));
+			else
+				$this->sqlCallbacks[$callback] = new Callback($callback);
+		}
+		return $this->sqlCallbacks[$callback]->invoke($value);
+	}
+
+	/**
+	 * Resolves a value callback
+	 *
+	 * Value callbacks can be used to apply transformations
+	 * on the literal part of the condition clauses (the values
+	 * of the search fields).
+	 *
+	 * @param string $callback Callback
+	 * @param string $value Search field's value
+	 * @return string Transformed value
+	 * @access private
+	 */
+	function _resolveValueCallback($callback, $value) {
+		if (empty($callback))
+			return $value;
+		if (!isset($this->valueCallbacks[$callback])) {
+			if (is_object($this->callbackObj) && !function_exists($callback) && method_exists($this->callbackObj, $callback))
+				$this->valueCallbacks[$callback] = new Callback(array($this->callbackObj, $callback));
+			else
+				$this->valueCallbacks[$callback] = new Callback($callback);
+		}
+		return $this->valueCallbacks[$callback]->invoke($value);
+	}
+
+	/**
+	 * Translate an operator name into a valid ANSI operator
+	 *
+	 * @param string $op Operator name
+	 * @access private
+	 * @return string
+	 */
 	function _resolveOperator($op) {
 		switch ($op) {
 			case 'EQ' : return ' = ';
@@ -645,51 +835,6 @@ class SearchForm extends Component
 			default :
 				return ' = ';
 		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::_resolveSqlCallback
-	// @desc		Verifica se um determinado campo possui uma função de
-	//				construção da cláusula SQL, ignorando todos os outros parâmetros
-	//				de configuração
-	// @param		callback string	Callback de construção de cláusula SQL
-	// @param		value mixed		Valor do campo de pesquisa
-	// @return		mixed Cláusula SQL montada para o campo
-	// @access		private
-	//!-----------------------------------------------------------------
-	function _resolveSqlCallback($callback, $value) {
-		if (empty($callback))
-			return FALSE;
-		if (!isset($this->sqlCallbacks[$callback])) {
-			// associação com callback object
-			if (is_object($this->callbackObj) && !function_exists($callback) && method_exists($this->callbackObj, $callback))
-				$this->sqlCallbacks[$callback] = new Callback(array($this->callbackObj, $callback));
-			else
-				$this->sqlCallbacks[$callback] = new Callback($callback);
-		}
-		return $this->sqlCallbacks[$callback]->invoke($value);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	SearchForm::_resolveValueCallback
-	// @desc		Verifica se um determinado campo possui uma função de
-	//				transformação de valor e executa a mesma se existir
-	// @param		callback string	Callback de transformação de valor
-	// @param		value mixed		Valor do campo de pesquisa
-	// @return		mixed Valor de pesquisa (transformado, se a função existir)
-	// @access		private
-	//!-----------------------------------------------------------------
-	function _resolveValueCallback($callback, $value) {
-		if (empty($callback))
-			return $value;
-		if (!isset($this->valueCallbacks[$callback])) {
-			// associação com callback object
-			if (is_object($this->callbackObj) && !function_exists($callback) && method_exists($this->callbackObj, $callback))
-				$this->valueCallbacks[$callback] = new Callback(array($this->callbackObj, $callback));
-			else
-				$this->valueCallbacks[$callback] = new Callback($callback);
-		}
-		return $this->valueCallbacks[$callback]->invoke($value);
 	}
 }
 ?>

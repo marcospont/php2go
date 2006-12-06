@@ -182,7 +182,7 @@ class FormDataBind extends Form
 	/**
 	 * Class constructor
 	 *
-	 * @param string $xmlFile Form XML specification
+	 * @param string $xmlFile Form XML specification file
 	 * @param string $templateFile Template file
 	 * @param string $formName Form name
 	 * @param Document &$Document Document instance in which the form will be inserted
@@ -243,8 +243,8 @@ class FormDataBind extends Form
 	 * By default, the class loads the table data using a
 	 * 'select * from table' query. Calling this method,
 	 * you're able to customize this query, by defining
-	 * which fields should be fetched, join operations,
-	 * a condition clause, an ordering clause or a row
+	 * fields should be fetched, join operations, a
+	 * condition clause, an ordering clause or a row
 	 * limit restriction.
 	 *
 	 * @param string $fields Query fields. Defaults to '*'
@@ -350,19 +350,16 @@ class FormDataBind extends Form
 		print "</form>";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::_saveRecord
-	// @desc		Método privado que responde à requisição de inserção
-	//				ou atualização de um registro via JSRS
-	// @param		values string	Conjunto de valores do registro
-	// @param		table string	Nome da tabela
-	// @param		pk string		Nome da chave primária
-	// @access		private
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Responds to a JSRS request to save a record
+	 *
+	 * @param string $values Field values
+	 * @param string $table Table
+	 * @param string $pk Primary key
+	 * @return mixed
+	 */
 	function _saveRecord($values, $table, $pk) {
 		$Db =& Db::getInstance();
-		// monta o vetor de campos
 		$arrFields = array();
 		$values = explode("#", $values);
 		for($i=0,$s=sizeof($values); $i<$s; $i++) {
@@ -370,7 +367,6 @@ class FormDataBind extends Form
 			if (sizeof($fields) == 2)
 				$arrFields[$fields[0]] = $fields[1];
 		}
-		// executa insert ou update
 		if (empty($arrFields[$pk])) {
 			$res = @$Db->insert($table, $arrFields);
 			if ($res)
@@ -383,16 +379,14 @@ class FormDataBind extends Form
 		return PHP2Go::getLangVal('ERR_CSV_DB_JSRS');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::_deleteRecord
-	// @desc		Método privado que responde à requisição de exclusão
-	//				de um registro via JSRS
-	// @param		table string	Nome da tabela
-	// @param		pk string		Nome da chave primária
-	// @param		value mixed		Valor da chave primária
-	// @access		private
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Responds to a JSRS request to delete a record
+	 *
+	 * @param string $table Table
+	 * @param string $pk PK name
+	 * @param string $value PK value
+	 * @return mixed
+	 */
 	function _deleteRecord($table, $pk, $value) {
 		$Db =& Db::getInstance();
 		$res = @$Db->delete($table, "{$pk} = " . $Db->quoteString($value));
@@ -401,16 +395,13 @@ class FormDataBind extends Form
 		return PHP2Go::getLangVal('ERR_DB_CSV_JSRS');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::_createDbCsvFile
-	// @desc		Cria o arquivo .csv que será utilizado para navegação
-	//				nos registros da tabela a partir dos resultados da
-	//				consulta
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the CSV database and save it to a file
+	 *
+	 * @access private
+	 */
 	function _createDbCsvFile() {
-		// remove os arquivos anteriormente armazenados
+		// remove old database files
 		$dir = @opendir(PHP2GO_CACHE_PATH);
 		while (FALSE !== ($file = readdir($dir))) {
 			if (preg_match("~db.*\.csv~", $file)) {
@@ -418,11 +409,11 @@ class FormDataBind extends Form
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_DELETE_FILE', $file), E_USER_ERROR, __FILE__, __LINE__);
 			}
 		}
-		// construção do dataset
+		// build data set
 		$Query = new QueryBuilder(TypeUtils::ifNull($this->queryFields, '*'), TypeUtils::ifNull($this->queryTables, $this->tableName), $this->queryClause, '', $this->queryOrder);
 		$Query->setLimit($this->queryLimit);
 		$DataSet =& $Query->createDataSet();
-		// serializa o dataset em um arquivo CSV
+		// serialize data set
 		$this->csvFile = $this->csvDbName . '_' . time() . '.csv';
 		$fp = @fopen(PHP2GO_CACHE_PATH . $this->csvFile, 'wb');
 		if ($fp === FALSE) {
@@ -440,18 +431,16 @@ class FormDataBind extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::_buildCsvDbToolbar
-	// @desc		Constrói os botões e ferramentas de navegação, manipulação,
-	// 				ordenação e filtragem de registros e aplica os valores obtidos
-	//				no template do formulário
-	// @note 		Gera um erro caso a barra de navegação não tenha sido
-	// 				definida no template principal
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Build the data bind toolbar
+	 *
+	 * In order to display the data bind toolbar, you should
+	 * declare a variable named "databind_toolbar" inside the
+	 * form's template file.
+	 *
+	 * @access private
+	 */
 	function _buildCsvDbToolbar() {
-		// constrói a barra de ferramentas da classe a partir de um template auxiliar pré-definido
 		if ($this->Template->isVariableDefined("_ROOT.databind_toolbar")) {
 			$toolbarValues = PHP2Go::getLangVal('FORM_DATA_BIND_TOOLBAR_VALUES');
 			$Tpl = new Template(PHP2GO_TEMPLATE_PATH . "formdatabind.tpl");
@@ -480,14 +469,12 @@ class FormDataBind extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::_buildSection
-	// @desc		Atribui no template os rótulos e códigos dos campos e
-	//				botões de uma seção de formulário
-	// @param		&section FormSection object	Seção do formulário
-	// @access 		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Renders a form section
+	 *
+	 * @param FormSection &$section Form section
+	 * @access private
+	 */
 	function _buildSection(&$section) {
 		$sectionId = $section->getId();
 		if ($section->isConditional()) {
@@ -517,7 +504,6 @@ class FormDataBind extends Form
 					}
 				}
 			}
-		// seção normal
 		} else {
 			$this->Template->assign("_ROOT.section_" . $sectionId, $section->name);
 			for ($i = 0; $i < sizeOf($section->getChildren()); $i++) {
@@ -542,14 +528,12 @@ class FormDataBind extends Form
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::_buildFormStart
-	// @desc		Gera o código HTML de definição do formulário mais os
-	//				campos escondidos de controle (assinatura, última posição
-	//				acessada e ID de remoção)
-	// @access 		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns the initial part of the form definition
+	 *
+	 * @access private
+	 * @return string
+	 */
 	function _buildFormStart() {
 		$target = (isset($this->actionTarget)) ? " target=\"" . $this->actionTarget . "\"" : '';
 		$enctype = ($this->hasUpload) ? " enctype=\"multipart/form-data\"" : '';
@@ -562,14 +546,15 @@ class FormDataBind extends Form
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormDataBind::_buildOptionsList
-	// @desc		Constrói a lista de opções para as caixas de seleção
-	// 				dos campos de filtragem e ordenação
-	// @param		type string	Tipo: sort ou filter
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Used to build HTML code for the filter options
+	 * and sort options
+	 *
+	 * @param string $type 'sort' or 'filter'
+	 * @param array $toolbarValues Language entries
+	 * @access private
+	 * @return string
+	 */
 	function _buildOptionsList($type, $toolbarValues) {
 		switch ($type) {
 			case 'sort' :

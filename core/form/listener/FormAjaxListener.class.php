@@ -39,6 +39,29 @@ import('php2go.net.HttpRequest');
  * XML specification, in the #text node of the listener element,
  * or inside "param" child nodes.
  *
+ * Example:
+ * <code>
+ * <lookupfield name="states" label="States" width="200">
+ *   <datasource>
+ *     <keyfield>state_id</keyfield>
+ *     <displayfield>name</displayfield>
+ *     <lookuptable>state</lookuptable>
+ *     <orderby>name</orderby>
+ *   </datasource>
+ *   <listener type="AJAX" event="onChange" url="get_cities.php">
+ *     <param name="method">post</param>
+ *     <param name="async">true</param>
+ *     <param name="params">{state_id:$F('states').getValue()}</param>
+ *     <param name="onSuccess"><![CDATA[
+ *       var cities = $F('cities');
+ *       cities.importOptions(response.responseText);
+ *       cities.focus();
+ *     ]]></param>
+ *   </listener>
+ * </lookupfield>
+ * <lookupfield name="cities" label="Cities" width="200" first="Choose a state first"/>
+ * </code>
+ *
  * @package form
  * @subpackage listener
  * @uses HttpRequest
