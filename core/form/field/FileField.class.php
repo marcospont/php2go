@@ -237,6 +237,7 @@ class FileField extends FormField
 	/**
 	 * Configures component's dynamic properties
 	 *
+	 * @uses Form::resolveVariables()
 	 * @access protected
 	 */
 	function onDataBind() {
