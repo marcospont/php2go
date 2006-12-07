@@ -144,8 +144,10 @@ class FormAjaxListener extends FormEventListener
 	function getScriptCode($targetIndex=NULL) {
 		$Form =& $this->_Owner->getOwnerForm();
 		$Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'ajax.js');
+		// is the owner a submit button?
+		$isSubmit = (TypeUtils::isInstanceOf($this->_Owner, 'FormButton') && $this->_Owner->getAttribute('TYPE') == 'SUBMIT');
 		// form submission
-		if ($this->formSubmit) {
+		if ($this->formSubmit || $isSubmit) {
 			$this->url = $Form->formAction;
 			$this->params['method'] = $Form->formMethod;
 			$this->params['form'] = $Form->formName;
@@ -155,7 +157,7 @@ class FormAjaxListener extends FormEventListener
 		// if a listener AJAX is declared inside a button whose type is "SUBMIT",
 		// the onsubmit event handler of the form must be overlapped by a call
 		// to the Form.ajaxify method
-		if (TypeUtils::isInstanceOf($this->_Owner, 'FormButton') && $this->_Owner->attributes['TYPE'] == 'SUBMIT') {
+		if ($isSubmit) {
 			$Form->Document->addScriptCode(
 				"\tForm.ajaxify($('{$Form->formName}'), function() {\n" .
 				$this->getParamsScript() .
