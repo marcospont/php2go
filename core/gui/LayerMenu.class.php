@@ -1,160 +1,321 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/gui/LayerMenu.class.php,v 1.23 2006/10/26 04:58:32 mpont Exp $
-// $Date: 2006/10/26 04:58:32 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.gui.Menu');
-//------------------------------------------------------------------
 
-// @const LAYER_MENU_SIDE "1"
-// Os itens de menu são dispostos lado a lado, cada qual com seu tamanho
+/**
+ * Root items are rendered side by side
+ */
 define('LAYER_MENU_SIDE', 1);
-// @const LAYER_MENU_EQUAL "2"
-// Todos os itens são criados com a largura do maior item (baseada no comprimento da caption)
+/**
+ * Root items are all rendered with the same width
+ */
 define('LAYER_MENU_EQUAL', 2);
 
-//!-----------------------------------------------------------------
-// @class		LayerMenu
-// @desc		A partir da estrutura de dados definida na classe pai Menu,
-//				esta classe monta o código de geração dos menus utilizando
-//				camadas DHTML para representar os níveis
-// @package		php2go.gui
-// @extends		Menu
-// @author		Marcos Pont
-// @version		$Revision: 1.23 $
-//!-----------------------------------------------------------------
+/**
+ * Builds a DHTML drop down menu
+ *
+ * This class uses the bundled library Coolmenus to
+ * build the menu widget.
+ *
+ * Example:
+ * <code>
+ * /* layout.tpl {@*}
+ * <div style="height:25px;">{$menu}</div>
+ * <div>{$main}</div>
+ *
+ * /* menu.xml {@*}
+ * <menu>
+ *   <item link="page1.php" caption="Page 1"/>
+ *   <item link="page2.php" caption="Page 2">
+ *     <item link="page21.php" caption="Page 2.1"/>
+ *     <item link="page22.php" caption="Page 2.2"/>
+ *     <item link="page23.php" caption="Page 2.3"/>
+ *     <item link="page24.php" caption="Page 2.4"/>
+ *   </item>
+ *   <item link="page3.php" caption="Page 3"/>
+ *   <item link="page4.php" caption="Page 4">
+ *     <item link="page41.php" caption="Page 4.1"/>
+ *     <item link="page42.php" caption="Page 4.2"/>
+ *   </item>
+ * </menu>
+ *
+ * /* menu.css {@*}
+ * .menu, .menuOver, .menuChild, .menuChildOver, .menuBorder {
+ *   position: absolute;
+ *   cursor: pointer;
+ * }
+ * .menu, .menuOver, .menuChild, .menuChildOver {
+ *   font-family: Verdana, Arial, Helvetica, sans-serif;
+ *   font-size: 10px;
+ *   font-weight: bold;
+ *   text-decoration: none;
+ * }
+ * .menu, .menuChild {
+ *   color: #000;
+ *   background-color: #dde4ea;
+ * }
+ * .menuOver, .menuChildOver {
+ *   color: #ed1d24;
+ *   background-color: #eff2f7;
+ * }
+ * .menuBorder {
+ *   background-color: #6d6d6d;
+ * }
+ *
+ * /* page.php {@*}
+ * $doc = new Document('layout.tpl');
+ * $doc->addStyle('menu.css');
+ * $menu = new LayerMenu($doc);
+ * $menu->setSize(500, 15);
+ * $menu->setStartPoint(25, 5);
+ * $menu->setRootStyles('menu', 'menuOver');
+ * $menu->setRootDisposition(LAYER_MENU_EQUAL);
+ * $menu->setChildrenStyles('menuChild', 'menuChildOver', 'menuBorder', 1, 1);
+ * $menu->loadFromXmlFile('menu.xml');
+ * $doc->assignByRef('menu', $menu);
+ * $doc->assign('main', "Hello World!");
+ * $doc->display();
+ * </code>
+ *
+ * @package gui
+ * @link http://www.dhtmlcentral.com/
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class LayerMenu extends Menu
 {
-	var $width; 						// @var width int				Largura do menu
-	var $height = 20; 					// @var height int				"20" Altura do menu na orientação horizontal ou da opção de menu na orientação vertical
-	var $offsetX = 0; 					// @var offsetX int				"0" Deslocamento do menu em relação ao extremo esquerdo da página
-	var $offsetY = 0; 					// @var offsetY int				"0" Deslocamento do menu em relação ao topo
-	var $itemSpacing = 0;				// @var itemSpacing int			"0" Espaçamento entre os itens da raiz do menu
-	var $charWidth = 7;					// @var charWidth int			"7" Largura de caracteres, para cálculo da largura dos itens de menu
-	var $isHorizontal = TRUE; 			// @var isHorizontal bool		"TRUE" Indica se a orientação dos menus é horizontal - TRUE - ou vertical - FALSE
-	var $addressPrefix = ''; 			// @var addressPrefix string	"" Prefixo a ser adicionado em todos os links do menu
-	var $rootStyles = array(); 			// @var rootStyles array		"array()" Estilos para os elementos da raiz do menu
-	var $rootDisposition;				// @var rootDisposition int		Forma como os itens da raiz são dispostos (somente para menu horizontal)
-	var $childrenStyles = array(); 		// @var childrenStyles array	"array()" Estilos para os outros níveis do menu
-	var $childrenHeight = 18; 			// @var childrenHeight int		"18" Altura dos níveis de menu abaixo da raiz
-	var $childrenTimeout = 100; 		// @var childrenTimeout int		"100" Número de milisegundos para fechamento da opção do menu após perder o foco do mouse
-	var $minimumChildWidth = 0;			// @var minimumChildWidth int	"0" Largura mínima para um item de menu
-	var $menuCode = ''; 				// @var menuCode string			"" Código JavaScript resultante para geração do menu
+	/**
+	 * Whether to use horizontal (TRUE) or vertical (FALSE) orientation
+	 *
+	 * @var bool
+	 */
+	var $isHorizontal = TRUE;
 
-	//!-----------------------------------------------------------------
-	// @function	LayerMenu::LayerMenu
-	// @desc		Construtor da classe, inicializa a classe superior
-	// @access		public
-	// @param		&Document Document object	Documento onde o menu será construído
-	//!-----------------------------------------------------------------
+	/**
+	 * Menu width
+	 *
+	 * Total width for horizontal menus, item width for vertical menus.
+	 *
+	 * @var int
+	 */
+	var $width;
+
+	/**
+	 * Menu height
+	 *
+	 * Total height for vertical menus, item height for horizontal menus.
+	 *
+	 * @var int
+	 */
+	var $height = 20;
+
+	/**
+	 * Left X coordinate (absolute position)
+	 *
+	 * @var int
+	 */
+	var $offsetX = 0;
+
+	/**
+	 * Upper Y coordinate (absolute position)
+	 *
+	 * @var int
+	 */
+	var $offsetY = 0;
+
+	/**
+	 * Spacing between root level items
+	 *
+	 * @var int
+	 */
+	var $itemSpacing = 0;
+
+	/**
+	 * Average char width, in pixels
+	 *
+	 * @var int
+	 */
+	var $charWidth = 7;
+
+	/**
+	 * Prefix for all item links
+	 *
+	 * @var string
+	 */
+	var $addressPrefix = '';
+
+	/**
+	 * Root level disposition
+	 *
+	 * @var int
+	 */
+	var $rootDisposition;
+
+	/**
+	 * Style settings for the root level
+	 *
+	 * @var array
+	 */
+	var $rootStyles = array();
+
+	/**
+	 * Style settings for the child levels
+	 *
+	 * @var array
+	 */
+	var $childrenStyles = array();
+
+	/**
+	 * Height of the items of child levels
+	 *
+	 * @var int
+	 */
+	var $childrenHeight = 18;
+
+	/**
+	 * Menu level timeout, in miliseconds
+	 *
+	 * @var int
+	 */
+	var $childrenTimeout = 100;
+
+	/**
+	 * Minimum width of a menu item
+	 *
+	 * @var int
+	 */
+	var $minimumChildWidth = 0;
+
+	/**
+	 * Generated JS code
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $menuCode = '';
+
+	/**
+	 * Class constructor
+	 *
+	 * @param Document &$Document Document instance in which the menu should be rendered
+	 * @return LayerMenu
+	 */
 	function LayerMenu(&$Document) {
 		parent::Menu($Document);
 		$this->rootDisposition = LAYER_MENU_EQUAL;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setSize
-	// @desc 		Ajusta o tamanho do menu
-	// @access 		public
-	// @param 		width int		Largura para o menu
-	// @param 		height int		"0" Altura para o menu. Se não informada, utilizará o padrão pré-definido
-	// @return		void
-	// @note 		Na orientação horizontal, a largura será interpretada como
-	// 				o tamanho geral do menu (todas as opções lado a lado). Já
-	// 				na orientação vertical, será interpretada como a largura
-	// 				do nível zero do menu (raiz)
-	//!-----------------------------------------------------------------
+	/**
+	 * Changes menu orientation to vertical
+	 */
+	function setVertical() {
+		$this->isHorizontal = false;
+	}
+
+	/**
+	 * Set menu size
+	 *
+	 * On horizontal menus, $width means total width and $height
+	 * means height of the root level items.
+	 *
+	 * On vertical menus, $width means width of the root level
+	 * items and $height means total menu height.
+	 *
+	 * @param int $width Width
+	 * @param int $height Height
+	 */
 	function setSize($width, $height = 0) {
 		$this->width = abs($width);
 		if ($height) $this->height = abs($height);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setStartPoint
-	// @desc 		Configura o ponto (X,Y) a partir do qual o menu deverá
-	// 				ser gerado
-	// @access 		public
-	// @param 		left int		Posição X inicial, em relação ao extremo esquerdo
-	// @param 		top int	Posição Y inicial, em relação ao topo
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the menu's absolute position
+	 *
+	 * @param int $left Left X coordinate
+	 * @param int $top Upper Y coordinate
+	 */
 	function setStartPoint($left, $top) {
 		$this->offsetX = TypeUtils::parseIntegerPositive($left);
 		$this->offsetY = TypeUtils::parseIntegerPositive($top);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setVertical
-	// @desc 		Configura o menu para ser gerado verticalmente
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setVertical() {
-		$this->isHorizontal = false;
+	/**
+	 * Set the width of the chars used at the menu item captions
+	 *
+	 * @param int $width Char width
+	 */
+	function setCharWidth($width) {
+		$this->charWidth = TypeUtils::parseIntegerPositive($width);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setAddressPrefix
-	// @desc 		Configura um prefixo a ser inserido em todos os links
-	// 				presentes no menu
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the spacing between root level items
+	 *
+	 * @param int $itemSpacing Spacing, in pixels
+	 */
+	function setItemSpacing($itemSpacing) {
+		$this->itemSpacing = TypeUtils::parseIntegerPositive($itemSpacing);
+	}
+
+	/**
+	 * Define a prefix for all links inside menu items
+	 *
+	 * @param string $prefix Link prefix
+	 */
 	function setAddressPrefix($prefix) {
 		$this->addressPrefix = $prefix;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LayerMenu::setRootDisposition
-	// @desc		Define como deve ser dispostos os itens do primeiro nível do menu
-	// @access		public
-	// @param		disposition int		Tipo de disposição de elementos
-	// @note		Este método somente tem efeito em menus horizontais
-	// @note		Valores possíveis:<br>
-	//				LAYER_MENU_SIDE - os itens são dispostos lado a lado, cada qual com seu tamanho<br>
-	//				LAYER_MENU_EQUAL - todos os itens são criados com a largura do maior item
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the disposition of the root level items
+	 *
+	 * This setting is ignored by vertical menus.
+	 *
+	 * @param int $disposition {@link LAYER_MENU_SIDE} or {@link LAYER_MENU_EQUAL}
+	 */
 	function setRootDisposition($disposition) {
 		if ($disposition == LAYER_MENU_SIDE || $disposition == LAYER_MENU_EQUAL) {
 			$this->rootDisposition = $disposition;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setRootStyles
-	// @desc 		Permite fornecer uma lista de configurações para as
-	// 				opções do nível raiz do menu
-	// @access 		public
-	// @param 		reg string		Estilo tipo CLASS padrão para a opção de menu
-	// @param 		over string		"" Estilo tipo CLASS para a opção logo após o evento onMouseOver
-	// @param 		border string	"" Estilo para a borda, se existir
-	// @param 		borderX int	"1" Tamanho das bordas inferior/superior da opção de menu
-	// @param 		borderY int	"1" Tamanho das bordas laterais da opção de menu
-	// @return		void
-	// @see 		Menu::setChildrenStyles
-	//!-----------------------------------------------------------------
+	/**
+	 * Defines style settings to the menu's root level
+	 *
+	 * @param string $reg CSS class
+	 * @param string $over Hover CSS class
+	 * @param string $border Border CSS class
+	 * @param int $borderX Size of the top/bottom borders
+	 * @param int $borderY Size of the left/right borders
+	 */
 	function setRootStyles($reg, $over = '', $border = '', $borderX = '', $borderY = '') {
 		$this->rootStyles['reg'] = $reg;
 		$this->rootStyles['over'] = ($over == '') ? $reg : $over;
@@ -163,20 +324,15 @@ class LayerMenu extends Menu
 		$this->rootStyles['borderY'] = !empty($borderY) ? $borderY : '0.00001';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setChildrenStyles
-	// @desc 		Permite fornecer uma lista de configurações para as
-	// 				opções dos outros níveis do menu, independentemente das
-	// 				configurações da raiz
-	// @access 		public
-	// @param 		reg string		Estilo tipo CLASS padrão para as opções
-	// @param 		over string		"" Estilo tipo CLASS para as opções logo após o evento onMouseOver
-	// @param 		border string	"" Estilo para as bordas, se existir
-	// @param 		borderX int	"1" Tamanho das bordas inferior/superior das opções de menu
-	// @param 		borderY int	"1" Tamanho das bordas laterais das opções de menu
-	// @return		void
-	// @see 		Menu::setRootStyles
-	//!-----------------------------------------------------------------
+	/**
+	 * Defines style settings to the menu's child levels
+	 *
+	 * @param string $reg CSS class
+	 * @param string $over Hover CSS class
+	 * @param string $border Border CSS class
+	 * @param int $borderX Size of the top/bottom borders
+	 * @param int $borderY Size of the left/right borders
+	 */
 	function setChildrenStyles($reg, $over = '', $border = '', $borderX = '', $borderY = '') {
 		$this->childrenStyles['reg'] = $reg;
 		$this->childrenStyles['over'] = ($over == '') ? $reg : $over;
@@ -185,72 +341,39 @@ class LayerMenu extends Menu
 		$this->childrenStyles['borderY'] = !empty($borderY) ? $borderY : '0.00001';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setChildrenHeight
-	// @desc 		Configura a altura das opções de menu abaixo da raiz
-	// @access 		public
-	// @param 		height int		Altura desejada
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the item height for all child levels
+	 *
+	 * @param int $height Item height
+	 */
 	function setChildrenHeight($height) {
 		$this->childrenHeight = TypeUtils::parseIntegerPositive($height);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::setChildrenTimeout
-	// @desc 		Configura o tempo em milisegundos que uma opção de menu
-	// 				se mantém aberta após a perda do foco do mouse
-	// @access 		public
-	// @param 		timeout int		Timeout desejado
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the timeout of a menu level
+	 *
+	 * Time to wait, in miliseconds, until a menu level is closed,
+	 * right after it looses focus.
+	 *
+	 * @param int $timeout Timeout
+	 */
 	function setChildrenTimeout($timeout) {
 		$this->childrenTimeout = TypeUtils::parseIntegerPositive($timeout);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LayerMenu::setMinimumChildWidth
-	// @desc		Define a largura mínima para qualquer dos itens
-	//				do menu, a partir do segundo nível
-	// @access		public
-	// @param		min int			Largura mínima para itens de menu, em pixels
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the minimum width of an item of the menu's child levels
+	 *
+	 * @param int $min Minimum width
+	 */
 	function setMininumChildWidth($min) {
 		$this->minimumChildWidth = $min;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LayerMenu::setItemSpacing
-	// @desc		Define o espaçamento entre os itens da raiz do menu, em pixels
-	// @access		public
-	// @param		itemSpacing int	Espaçamento entre os itens do menu
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setItemSpacing($itemSpacing) {
-		$this->itemSpacing = TypeUtils::parseIntegerPositive($itemSpacing);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	LayerMenu::setCharWidth
-	// @desc		Define a largura dos caracteres utilizados nas captions
-	//				dos itens de menu. O valor padrão definido na classe para
-	//				esta propriedade é 7 (em pixels)
-	// @param		width int	Largura para os caracteres dos itens de menu
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setCharWidth($width) {
-		$this->charWidth = TypeUtils::parseIntegerPositive($width);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	LayerMenu::onPreRender
-	// @desc		Prepara o menu para renderização: scripts e código
-	//				no HEAD da página necessários
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the menu to be rendered
+	 */
 	function onPreRender() {
 		if (!$this->preRendered) {
 			parent::onPreRender();
@@ -265,57 +388,50 @@ class LayerMenu extends Menu
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::getContent
-	// @desc 		Constrói e retorna o código do menu
-	// @access 		public
-	// @return		string Conteúdo responsável pela geração do menu de camadas
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns the menu's Javascript code
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		$this->onPreRender();
 		$this->_buildCode();
 		return $this->menuCode;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::display
-	// @desc 		Constrói e imprime o código do menu
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and displays the menu's Javascript code
+	 */
 	function display() {
 		$this->onPreRender();
 		$this->_buildCode();
 		print $this->menuCode;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::_buildCode
-	// @desc 		Constrói o código JavaScript de construção do menu a
-	// 				partir dos dados já coletados e a partir das configurações
-	// 				existentes no objeto
-	// @access 		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Internal method used to build the menu's JS code
+	 *
+	 * @access private
+	 */
 	function _buildCode() {
 		$this->menuCode .=
 			"<script type=\"text/javascript\" language=\"Javascript\">\n" .
-			"     {$this->name} = new makeCM(\"{$this->name}\");\n" .
-			"     {$this->name}.resizeCheck = 1;\n" .
-			"     {$this->name}.openOnClick = 1;\n" .
-			"     {$this->name}.rows = " . ((int)$this->isHorizontal) . ";\n" .
-			"     {$this->name}.onlineRoot = \"{$this->addressPrefix}\";\n" .
-			"     {$this->name}.menuPlacement = 0;\n" .
-			"     {$this->name}.pxBetween = {$this->itemSpacing};\n" .
-			"     {$this->name}.fromLeft = {$this->offsetX};\n" .
-			"     {$this->name}.fromTop = {$this->offsetY};\n" .
-			"     {$this->name}.wait = {$this->childrenTimeout};\n" .
-			"     {$this->name}.zIndex = 400;\n";
-		// criação dos níveis para o menu horizontal
+			"     {$this->id} = new makeCM(\"{$this->id}\");\n" .
+			"     {$this->id}.resizeCheck = 1;\n" .
+			"     {$this->id}.openOnClick = 1;\n" .
+			"     {$this->id}.rows = " . ((int)$this->isHorizontal) . ";\n" .
+			"     {$this->id}.onlineRoot = \"{$this->addressPrefix}\";\n" .
+			"     {$this->id}.menuPlacement = 0;\n" .
+			"     {$this->id}.pxBetween = {$this->itemSpacing};\n" .
+			"     {$this->id}.fromLeft = {$this->offsetX};\n" .
+			"     {$this->id}.fromTop = {$this->offsetY};\n" .
+			"     {$this->id}.wait = {$this->childrenTimeout};\n" .
+			"     {$this->id}.zIndex = 400;\n";
+		// horizontal menu
 		if ($this->isHorizontal) {
-			// altura da raiz
+			// root height
 			$rootHeight = $this->height+1;
-			// os itens da raiz devem ser dispostos em larguras iguais
+			// equal width for all root items
 			if ($this->rootDisposition == LAYER_MENU_EQUAL) {
 				$textSize = 1;
 				for ($i = 0; $i < sizeof($this->tree); $i++)
@@ -324,28 +440,29 @@ class LayerMenu extends Menu
 				for ($i=0; $i<sizeof($this->tree); $i++)
 					$rootWidth[$i] = $textSize;
 			}
-			// os itens da raiz são dispostos lado a lado
+			// root items rendered side by side
 			elseif ($this->rootDisposition == LAYER_MENU_SIDE) {
 				for ($i=0; $i<sizeof($this->tree); $i++)
 					$rootWidth[$i] = (strlen($this->tree[$i]['CAPTION']) * $this->charWidth) + 15;
 			}
 			$this->menuCode .=
 				"     var menuSize = " . (isset($this->width) ? $this->width : "screen.width") . "-" . $this->offsetX . "-22;\n" .
-				"     {$this->name}.useBar = 1;\n" .
-				"     {$this->name}.barWidth = menuSize;\n" .
-				"     {$this->name}.barHeight = {$this->height};\n" .
-				"     {$this->name}.barX = {$this->offsetX};\n" .
-				"     {$this->name}.barY = {$this->offsetY};\n" .
-				"     {$this->name}.barClass = \"" . $this->_getStyle(0, 'reg') . "\";\n" .
-				"     {$this->name}.barBorderX = 0;\n" .
-				"     {$this->name}.barBorderY = 0;\n";
+				"     {$this->id}.useBar = 1;\n" .
+				"     {$this->id}.barWidth = menuSize;\n" .
+				"     {$this->id}.barHeight = {$this->height};\n" .
+				"     {$this->id}.barX = {$this->offsetX};\n" .
+				"     {$this->id}.barY = {$this->offsetY};\n" .
+				"     {$this->id}.barClass = \"" . $this->_getStyle(0, 'reg') . "\";\n" .
+				"     {$this->id}.barBorderX = 0;\n" .
+				"     {$this->id}.barBorderY = 0;\n";
 			for ($i = 0; $i <= $this->lastLevel; $i++) {
-				$this->menuCode .= "     {$this->name}.level[$i] = new cm_makeLevel(80, " . (($i==0) ? $this->height : $this->childrenHeight) . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"bottom\", -1, -1, \"\", 10, 10, 0);\n";
+				$this->menuCode .= "     {$this->id}.level[$i] = new cm_makeLevel(80, " . (($i==0) ? $this->height : $this->childrenHeight) . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"bottom\", -1, -1, \"\", 10, 10, 0);\n";
 			}
+		// vertical menu
 		} else {
-			// altura da raiz
+			// root height
 			$rootHeight = $this->childrenHeight;
-			// cálculo da largura máxima dos itens da raiz
+			// calculate maximum width
 			if (isset($this->width)) {
 				$textSize = $this->width;
 			} else {
@@ -354,39 +471,37 @@ class LayerMenu extends Menu
 					$textSize = (strlen($this->tree[$i]['CAPTION']) > $textSize) ? strlen($this->tree[$i]['CAPTION']) : $textSize;
 				$textSize = ($textSize * $this->charWidth) + 15;
 			}
-			// define posições para os itens da raiz
+			// define placement of the root items
 			$placement = $this->offsetY;
 			$rootWidth[0] = $textSize;
 			for ($i = 1; $i < $this->rootSize; $i++) {
 				$rootWidth[$i] = $textSize;
 				$placement .= "," . ($this->offsetY + ($i*$this->childrenHeight));
 			}
-			$this->menuCode .= "     {$this->name}.menuPlacement = new Array($placement);\n";
-			// constrói os níveis do menu
+			$this->menuCode .= "     {$this->id}.menuPlacement = new Array($placement);\n";
+			// build the menu levels
 			for ($i = 0; $i <= $this->lastLevel; $i++) {
-				$this->menuCode .= "     {$this->name}.level[$i] = new cm_makeLevel(" . (isset($this->width) ? $this->width : 100) . ", " . $this->childrenHeight . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"right\", 0, -1, \"\", 10, 10);\n";
+				$this->menuCode .= "     {$this->id}.level[$i] = new cm_makeLevel(" . (isset($this->width) ? $this->width : 100) . ", " . $this->childrenHeight . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"right\", 0, -1, \"\", 10, 10);\n";
 			}
 		}
-		// criação dos itens do menu
+		// recursively build the menu items
 		for ($i = 0; $i < sizeof($this->tree); $i++) {
 			$thisId = "m" . $i;
-			$this->menuCode .= "     {$this->name}.makeMenu('{$thisId}', '', '{$this->tree[$i]['CAPTION']}', '{$this->tree[$i]['LINK']}', '{$this->tree[$i]['TARGET']}', {$rootWidth[$i]}, {$rootHeight});\n";
+			$this->menuCode .= "     {$this->id}.makeMenu('{$thisId}', '', '{$this->tree[$i]['CAPTION']}', '{$this->tree[$i]['LINK']}', '{$this->tree[$i]['TARGET']}', {$rootWidth[$i]}, {$rootHeight});\n";
 			if (!empty($this->tree[$i]['CHILDREN']))
 				$this->_buildChildrenCode($this->tree[$i]['CHILDREN'], $thisId, 0);
 		}
-		$this->menuCode .= "     {$this->name}.construct();\n</script>";
+		$this->menuCode .= "     {$this->id}.construct();\n</script>";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::_buildChildrenCode
-	// @desc 		Função recursiva que monta as criações de instâncias de
-	// 				menu DHTML para a árvore de opções de menu da classe
-	// @access 		private
-	// @param 		children array	Vetor atual/inicial de elementos da árvore
-	// @param 		parentId mixed	Índice do nodo superior ao vetor $children fornecido
-	// @param 		parentLevel int	Nível onde se encontra o nodo superior ao atual
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Recursively builds menu levels
+	 *
+	 * @param array $children Child items
+	 * @param string $parentId Parent item's ID
+	 * @param int $parentLevel Parent level
+	 * @access private
+	 */
 	function _buildChildrenCode($children, $parentId, $parentLevel) {
 		$textSize = 1;
 		for ($i = 0; $i < sizeof($children); $i++) {
@@ -395,24 +510,21 @@ class LayerMenu extends Menu
 		$itemWidth = max(($textSize * $this->charWidth) + 15, $this->minimumChildWidth);
 		for ($i = 0; $i < sizeof($children); $i++) {
 			$thisId = $parentId . "_c" . $i;
-			$this->menuCode .= "     {$this->name}.makeMenu('{$thisId}', '{$parentId}', '{$children[$i]['CAPTION']}', '{$children[$i]['LINK']}', '{$children[$i]['TARGET']}', {$itemWidth}, {$this->childrenHeight}, '', '', '', '', 'right');\n";
+			$this->menuCode .= "     {$this->id}.makeMenu('{$thisId}', '{$parentId}', '{$children[$i]['CAPTION']}', '{$children[$i]['LINK']}', '{$children[$i]['TARGET']}', {$itemWidth}, {$this->childrenHeight}, '', '', '', '', 'right');\n";
 			if (!empty($children[$i]['CHILDREN'])) {
 				$this->_buildChildrenCode($children[$i]['CHILDREN'], $thisId, ($parentLevel + 1));
 			}
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	LayerMenu::_getStyle
-	// @desc 		Retorna um estilo nas configurações passadas para a montagem
-	// 				da raiz e dos demais níveis do menu
-	// @access 		private
-	// @param 		level int			Nível onde está sendo feita a consulta, para
-	// 									que se possa diferenciar entre raiz e demais níveis
-	// @param 		element string    Elemento buscado
-	// @return 		string Valor do elemento buscado, '' se não encontrado e o tipo do valor
-	// 				é texto/string, 1 se não encontrado e o tipo do valor é numérico
-	//!-----------------------------------------------------------------
+	/**
+	 * Utility method to read style properties
+	 *
+	 * @param int $level Current menu level
+	 * @param string $element Style property
+	 * @access private
+	 * @return mixed
+	 */
 	function _getStyle($level, $element) {
 		$repository = ($level > 0) ? $this->childrenStyles : $this->rootStyles;
 		$value = (isset($repository[$element])) ? $repository[$element] : ($element == 'borderX' || $element == 'borderY' ? 1 : '');

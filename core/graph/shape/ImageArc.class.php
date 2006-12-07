@@ -1,65 +1,135 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/graph/shape/ImageArc.class.php,v 1.2 2006/02/28 21:55:57 mpont Exp $
-// $Date: 2006/02/28 21:55:57 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		ImageArc
-// @desc		Representa um arco, com as coordenadas do centro, largura e altura,
-//				ângulo inicial e final, com ou sem preenchimento
-// @package		php2go.graph.shape
-// @extends		Drawable
-// @author		Marcos Pont
-// @version		$Revision: 1.2 $
-//!-----------------------------------------------------------------
+/**
+ * Draws an arc
+ *
+ * An arc is represented by a center coordinate, width,
+ * height, start and end angle and fill style.
+ *
+ * @package graph
+ * @subpackage shape
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class ImageArc extends Drawable
 {
-	var $cx;					// @var cx int				Coordenada X do centro
-	var $cy;					// @var cy int				Coordenada Y do centro
-	var $width;					// @var width int			Largura
-	var $height;				// @var height int			Altura
-	var $startAngle;			// @var startAngle int		Ângulo inicial
-	var $endAngle;				// @var endAngle int		Ângulo final
-	var $fill = FALSE;			// @var fill bool			"FALSE" Tipo de preenchimento
-	var $shadow = 0;			// @var shadow int			"0" Tamanho de sombra para o arco
-	var $shadowColor = NULL;	// @var shadowColor mixed	"NULL" Cor de sombra
-	
-	//!-----------------------------------------------------------------
-	// @function	ImageArc::ImageArc
-	// @desc		Construtor do objeto
-	// @access		public
-	// @param		cx int				Coordenada X do centro
-	// @param		cy int				Coordenada Y do centro
-	// @param		width int			Largura
-	// @param		height int			Altura
-	// @param		startAngle int		Ângulo inicial
-	// @param		endAngle int		Ângulo final
-	// @param		fill bool			"FALSE" Tipo de preenchimento
-	// @param		shadow int			"0" Tamanho de sombra
-	// @param		shadowColor mixed	"NULL" Cor de sombra
-	// @note		O parâmetro $fill aceita os valores IMG_ARC_PIE, IMG_ARC_CHORD, IMG_ARC_NOFILL e IMG_ARC_EDGED
-	//!-----------------------------------------------------------------
+	/**
+	 * Center's X coordinate
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $cx;
+
+	/**
+	 * Center's Y coordinate
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $cy;
+
+	/**
+	 * Width
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $width;
+
+	/**
+	 * Height
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $height;
+
+	/**
+	 * Start angle
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $startAngle;
+
+	/**
+	 * End angle
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $endAngle;
+
+	/**
+	 * Fill style
+	 *
+	 * @var mixed
+	 * @access private
+	 */
+	var $fill = FALSE;
+
+	/**
+	 * Shadow size
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $shadow = 0;
+
+	/**
+	 * Shadow color
+	 *
+	 * @var string|array
+	 * @access private
+	 */
+	var $shadowColor = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * The $fill argument accepts the following
+	 * values: IMG_ARC_PIE, IMG_ARC_CHORD,
+	 * IMG_ARC_NOFILL and IMG_ARC_EDGED.
+	 *
+	 * @param int $cx Center X
+	 * @param int $cy Center Y
+	 * @param int $width Width
+	 * @param int $height Height
+	 * @param float $startAngle Start angle
+	 * @param float $endAngle End angle
+	 * @param mixed $fill Fill style
+	 * @param int $shadow Shadow size
+	 * @param string|array $shadowColor Shadow color
+	 * @return ImageArc
+	 */
 	function ImageArc($cx, $cy, $width, $height, $startAngle, $endAngle, $fill=FALSE, $shadow=0, $shadowColor=NULL) {
 		parent::Drawable();
 		$this->cx = $cx;
@@ -76,18 +146,16 @@ class ImageArc extends Drawable
 		$this->shadow = $shadow;
 		$this->shadowColor = $shadowColor;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	ImageArc::draw
-	// @desc		Desenha o arco na imagem $Img
-	// @access		public
-	// @param		&Img Image object	Imagem para inclusão do arco
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Draws the arc in a given image
+	 *
+	 * @param Image &$Img Target image
+	 */
 	function draw(&$Img) {
 		if ($this->shadow > 0) {
 			$sc = (TypeUtils::isNull($this->shadowColor) ? $Img->currentColor : $Img->allocateColor($this->shadowColor));
-			for ($i=0; $i<$this->shadow; $i++) {				
+			for ($i=0; $i<$this->shadow; $i++) {
 				$cy = $this->cy + $i;
 				if ($this->fill)
 					imagefilledarc($Img->handle, $this->cx, $cy, $this->width, $this->height, $this->startAngle, $this->endAngle, $sc, $this->fill);
