@@ -1,65 +1,165 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/FtpClient.class.php,v 1.20 2006/10/26 04:27:59 mpont Exp $
-// $Date: 2006/10/26 04:27:59 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const FTP_DEFAULT_PORT "21"
-// Porta padrão do cliente FTP
+/**
+ * Default FTP port
+ */
 define('FTP_DEFAULT_PORT', 21);
 
-//!-----------------------------------------------------------------
-// @class 		FtpClient
-// @desc		Implementação de um cliente FTP (protocolo de transferência de arquivos),
-//				utilizando como base as funções da extensão "ftp" do PHP
-// @package		php2go.net
-// @extends 	PHP2Go
-// @uses		System
-// @uses		TypeUtils
-// @author 		Marcos Pont
-// @version		$Revision: 1.20 $
-//!-----------------------------------------------------------------
+/**
+ * FTP client class
+ *
+ * Implementation of a FTP (file transfer protocol) client, based on the
+ * functions provided by the <b>ftp</b> extension.
+ *
+ * Example:
+ * <code>
+ * $ftp = new FtpClient();
+ * $ftp->togglePassiveMode(TRUE);
+ * $ftp->setServer('ftp.debian.org', FTP_DEFAULT_PORT);
+ * if ($ftp->connect()) {
+ *   if ($ftp->login(TRUE)) {
+ *     $ftp->changeDir('debian');
+ *     $list = $ftp->fileList();
+ *     foreach ($list as $entry)
+ *       print $entry . '<br/>';
+ *     $ftp->quit();
+ *   }
+ * }
+ * </code>
+ *
+ * @package net
+ * @uses System
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FtpClient extends PHP2Go
 {
-	var $host; 						// @var host string				Nome ou IP do host
-	var $port = FTP_DEFAULT_PORT;	// @var port int				"FTP_DEFAULT_PORT" Porta para a conexão
-	var $user;						// @var user string				Usuário para conexão no sevidor FTP
-	var $password;					// @var password string			Senha para conexão no servidor FTP
-	var $connectionId; 				// @var connectionId resource	Identificador da conexão
-	var $localPath = ''; 			// @var localPath string		"" Caminho local atual
-	var $remotePath = ''; 			// @var remotePath string		"" Caminho remoto atual
-	var $sysType = ''; 				// @var sysType string			"" Identificador do tipo de sistema do servidor FTP
-	var $timeout;					// @var timeout int				"" Timeout da conexão em segundos
-	var $transferMode = FTP_BINARY;	// @var transferMode int		"FTP_BINARY" Modo de transferência: ASCII ou binário
-	var $connected = FALSE; 		// @var connected bool			"FALSE" Indica se a conexão está ativa ou não
-	var $defaultSettings = array();	// @var defaultSettings array	"array()" Vetor de propriedades default da classe para utilização na função Reset
-	var $defaultMode = "0777";		// @var defaultMode string		"0777" Modo padrão para criação de arquivos
+	/**
+	 * FTP host
+	 *
+	 * @var string
+	 */
+	var $host;
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::FtpClient
-	// @desc 		Construtor da classe
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * FTP port
+	 *
+	 * @var int
+	 */
+	var $port = FTP_DEFAULT_PORT;
+
+	/**
+	 * FTP username
+	 *
+	 * @var string
+	 */
+	var $user;
+
+	/**
+	 * FTP password
+	 *
+	 * @var string
+	 */
+	var $password;
+
+	/**
+	 * Current transfer mode
+	 *
+	 * @var int
+	 */
+	var $transferMode = FTP_BINARY;
+
+	/**
+	 * Connection timeout
+	 *
+	 * @var int
+	 */
+	var $timeout;
+
+	/**
+	 * Default settings
+	 *
+	 * Hash array of property=>value the can be
+	 * used to apply values for multiple class
+	 * properties. Used inside {@link reset}.
+	 *
+	 * @var array
+	 */
+	var $defaultSettings = array();
+
+	/**
+	 * Current local path
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $localPath = '';
+
+	/**
+	 * Current remote path
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $remotePath = '';
+
+	/**
+	 * Holds FTP server systype
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $sysType = '';
+
+	/**
+	 * FTP connection handle
+	 *
+	 * @var resource
+	 * @access private
+	 */
+	var $connectionId;
+
+	/**
+	 * Indicates if the connection is active
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $connected = FALSE;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return FtpClient
+	 */
 	function FtpClient() {
 		parent::PHP2Go();
 		if (!System::loadExtension("ftp"))
@@ -67,24 +167,21 @@ class FtpClient extends PHP2Go
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::__destruct
-	// @desc 		Destrutor do objeto cliente FTP
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 */
 	function __destruct() {
 		$this->quit();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::setServer
-	// @desc 		Configura o servidor e a porta a serem usadas na conexão
-	// @param 		host string		Nome ou IP do servidor FTP
-	// @param 		port int		Porta para conexão
-	// @access 		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set remote host and port
+	 *
+	 * Should be called before {@link connect}.
+	 *
+	 * @param string $host FTP host or IP address
+	 * @param int $port FTP port
+	 */
 	function setServer($host, $port=FTP_DEFAULT_PORT) {
 		if (!$this->isConnected()) {
 			$this->host = $host;
@@ -92,14 +189,14 @@ class FtpClient extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::setUserInfo
-	// @desc 		Configura o nome de usuário e senha para a conexão
-	// @param 		user string			Nome de usuário ou login
-	// @param 		password string		Senha do usuário
-	// @access 		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set user credentials
+	 *
+	 * Should be called before {@link login}.
+	 *
+	 * @param string $user Username
+	 * @param string $password Password
+	 */
 	function setUserInfo($user, $password) {
 		if (!$this->isConnected()) {
 			$this->user = $user;
@@ -107,37 +204,83 @@ class FtpClient extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::setTransferMode
-	// @desc 		Configura o modo de transferência dos arquivos via FTP
-	// @param 		mode int	Aceita as constantes FTP_ASCII e FTP_BINARY pré-definidas no PHP
-	// @access 		public	
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setTransferMode($mode) {
-		if ($mode == FTP_ASCII || $mode == FTP_BINARY)
-			$this->transferMode = $mode;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FtpClient::setTimeout
-	// @desc		Define o timeout, em segundos, para as operações executadas pelo cliente FTP
-	// @param		timeout int		Timeout, em segundos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set connection timeout, in seconds
+	 *
+	 * Should  be called before {@link connect}, or
+	 * it won't have any effect.
+	 *
+	 * @param int $timeout Timeout
+	 */
 	function setTimeout($timeout) {
 		if ($timeout > 0)
 			$this->timeout = $timeout;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::getCurrentDir
-	// @desc 		Busca o diretório remoto atual
-	// @return 		string Diretório remoto atual
-	// @note		Retorna FALSE se a conexão não estiver ativa
-	// @access 		public	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Change transfer mode
+	 *
+	 * Default transfer mode is {@link FTP_BINARY}.
+	 *
+	 * @param int $mode
+	 */
+	function setTransferMode($mode) {
+		if ($mode == FTP_ASCII || $mode == FTP_BINARY)
+			$this->transferMode = $mode;
+	}
+
+	/**
+	 * Opens the FTP connection
+	 *
+	 * @return bool
+	 */
+	function connect() {
+		if ($this->isConnected())
+			$this->quit();
+		if (!isset($this->host))
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FTP_MISSING_HOST'), E_USER_ERROR, __FILE__, __LINE__);
+		$this->connectionId = ftp_connect($this->host, $this->port, $this->timeout);
+		if (!TypeUtils::isResource($this->connectionId))
+			return FALSE;
+		$this->connected = TRUE;
+		// define connection timeout
+		if (isset($this->timeout))
+			ftp_set_option($this->connectionId, FTP_TIMEOUT_SEC, $this->timeout);
+		return TRUE;
+	}
+
+	/**
+	 * Check if the FTP connection is active
+	 *
+	 * @return bool
+	 */
+	function isConnected() {
+		return ($this->connected && isset($this->connectionId) && is_resource($this->connectionId));
+	}
+
+	/**
+	 * Send an authentication request
+	 *
+	 * @param bool $anonymous Whether to use anonymous login
+	 * @return bool
+	 */
+	function login($anonymous=FALSE) {
+		if (!$this->isConnected())
+			$this->connect();
+		if ((!isset($this->user) || !isset($this->password)) && !$anonymous)
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FTP_MISSING_USER_OR_PASS'), E_USER_ERROR, __FILE__, __LINE__);
+		$authUser = ($anonymous ? 'anonymous' : $this->user);
+		$authPass = ($anonymous ? 'anonymous@ftpclient.php2go' : $this->password);
+		return ftp_login($this->connectionId, $authUser, $authPass);
+	}
+
+	/**
+	 * Get current remote path
+	 *
+	 * Returns FALSE when the FTP connection isn't active.
+	 *
+	 * @return string|bool
+	 */
 	function getCurrentDir() {
 		if (!$this->isConnected())
 			return FALSE;
@@ -153,13 +296,13 @@ class FtpClient extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::getSysType
-	// @desc 		Busca informações do tipo de sistema do servidor FTP
-	// @return 		string Identificador do tipo de sistema do servidor FTP ou FALSE em caso de ocorrência de erros
-	// @note		Retorna FALSE se a conexão não estiver ativa	
-	// @access 		public	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get remote server's systype
+	 *
+	 * Returns FALSE if the FTP connection isn't active.
+	 *
+	 * @return bool|string
+	 */
 	function getSysType() {
 		if (!$this->isConnected())
 			return FALSE;
@@ -175,114 +318,32 @@ class FtpClient extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::isConnected
-	// @desc 		Verifica se a conexão com o servidor está ativa
-	// @access 		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function isConnected() {
-		return ($this->connected && isset($this->connectionId) && TypeUtils::isResource($this->connectionId));
-	}
-
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::connect
-	// @desc 		Abre uma conexão com o servidor FTP
-	// @access 		public
-	// @return 		bool
-	//!-----------------------------------------------------------------
-	function connect() {		
-		if ($this->isConnected())
-			$this->quit();
-		if (!isset($this->host))
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FTP_MISSING_HOST'), E_USER_ERROR, __FILE__, __LINE__);
-		$this->connectionId = ftp_connect($this->host, $this->port, $this->timeout);
-		if (!TypeUtils::isResource($this->connectionId))
-			return FALSE;
-		$this->connected = TRUE;
-		// define o timeout se estiver configurado na classe
-		if (isset($this->timeout))
-			ftp_set_option($this->connectionId, FTP_TIMEOUT_SEC, $this->timeout);
-		return TRUE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::login
-	// @desc 		Executa autenticação no servidor FTP
-	// @param 		anonymous bool		"FALSE" Indica se deve ser utilizado usuário anônimo
-	// @access 		public	
-	// @return 		bool
-	//!-----------------------------------------------------------------
-	function login($anonymous=FALSE) {
-		if (!$this->isConnected())
-			$this->connect();
-		if ((!isset($this->user) || !isset($this->password)) && !$anonymous)
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FTP_MISSING_USER_OR_PASS'), E_USER_ERROR, __FILE__, __LINE__);
-		$authUser = ($anonymous ? 'anonymous' : $this->user);
-		$authPass = ($anonymous ? 'anonymous@ftpclient.php2go.org' : $this->password);
-		return ftp_login($this->connectionId, $authUser, $authPass);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FtpClient::restart
-	// @desc		Reinicializa o cliente para execução de uma nova conexão
-	// @access		public
-	// @return		void	
-	//!-----------------------------------------------------------------
-	function restart() {
-		if ($this->isConnected())
-			$this->quit();
-		foreach($this->defaultSettings as $property => $value)
-			$this->$property = $value;
-		unset($this->host);
-		unset($this->user);
-		unset($this->password);
-		unset($this->connectionId);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::quit
-	// @desc 		Encerra a conexão com o servidor FTP, se estiver ativa
-	// @access 		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function quit() {
-		if (!$this->isConnected())
-			return FALSE;
-		$this->connected = (!ftp_quit($this->connectionId));
-		if (!$this->connected)
-			unset($this->connectionId);
-		return (!$this->connected);
-	}
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::site
-	// @desc 		Executa um comando no servidor FTP
-	// @param 		command string    Comando a ser executado
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function site($command) {
-		return ($this->isConnected() ? ftp_site($this->connectionId, $command) : FALSE);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::togglePassiveMode
-	// @desc 		Liga ou desliga o modo passivo
-	// @param 		mode bool		Modo a ser setado. TRUE liga e FALSE desliga
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Toggles FTP passive mode
+	 *
+	 * @param bool $mode Enable/disable
+	 * @return bool
+	 */
 	function togglePassiveMode($mode) {
 		return ($this->isConnected() ? ftp_pasv($this->connectionId, (bool)$mode) : FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::changeDir
-	// @desc 		Muda o diretório remoto atual
-	// @param 		directory string	Novo diretório
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Execute an FTP SITE command
+	 *
+	 * @param string $command Site command
+	 * @return bool
+	 */
+	function site($command) {
+		return ($this->isConnected() ? ftp_site($this->connectionId, $command) : FALSE);
+	}
+
+	/**
+	 * Changes the remote directory
+	 *
+	 * @param string $directory Target directory
+	 * @return bool
+	 */
 	function changeDir($directory) {
 		if (!$this->isConnected())
 			return FALSE;
@@ -292,12 +353,11 @@ class FtpClient extends PHP2Go
 		return (bool)$result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::changeDirUp
-	// @desc 		Sobe um nível na árvore de diretórios do servidor FTP
-	// @access 		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Changes to the parent directory
+	 *
+	 * @return bool
+	 */
 	function changeDirUp() {
 		if (!$this->isConnected())
 			return FALSE;
@@ -307,14 +367,13 @@ class FtpClient extends PHP2Go
 		return (bool)$result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::makeDir
-	// @desc 		Cria um novo diretório no servidor FTP
-	// @param 		directory string	Nome do novo diretório
-	// @param 		moveDir bool		Move o ponteiro para o diretório criado
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Creates a directory in the FTP server
+	 *
+	 * @param string $directory Directory name
+	 * @param bool $moveDir Whether to set the new directory as working directory
+	 * @return bool
+	 */
 	function makeDir($directory, $moveDir=FALSE) {
 		if (!$this->isConnected())
 			return FALSE;
@@ -324,27 +383,28 @@ class FtpClient extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::removeDir
-	// @desc 		Remove um diretório no servidor FTP
-	// @param 		directory string	Nome do diretório a ser removido
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes a directory in the FTP server
+	 *
+	 * @param string $directory Directory name
+	 * @return bool
+	 */
 	function removeDir($directory) {
 		return ($this->isConnected() ? ftp_rmdir($this->connectionId, $directory) : FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::removeDirRecursive
-	// @desc 		Remove arquivos e subdiretórios a partir do diretório informado no parâmetro $directory
-	// @param 		directory string	Nome do diretório a ser removido
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes an FTP directory and all its contents
+	 *
+	 * Operation will stop upon first error. Contents
+	 * removed until that point are not recovered.
+	 *
+	 * @param string $directory Directory name
+	 * @return bool
+	 */
 	function removeDirRecursive($directory) {
 		if ($directory != '') {
-			if (!$this->changeDir($directory)) 
+			if (!$this->changeDir($directory))
 				return FALSE;
 			$files = $this->rawList();
 			if (is_array($files)) {
@@ -358,23 +418,37 @@ class FtpClient extends PHP2Go
 					}
 				}
 				if ($this->changeDirUp() && $this->removeDir($directory))
-					return TRUE;				
+					return TRUE;
 			}
 		}
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::fileList
-	// @desc 		Busca a lista de nomes de arquivos de um diretório remoto
-	// @access 		public
-	// @param		path string			"" Caminho e/ou máscara de arquivo a ser utilizada
-	// @return		mixed Vetor com a lista de arquivos ou FALSE em caso de erros
-	// @note 		Se for fornecido um diretório e uma máscara de arquivos como
-	// 				parâmetro para o método (ex: folder/file*.txt), o diretório
-	// 				atual será trocado para 'folder' e a máscara de arquivos será
-	// 				aplicada sobre o novo diretório
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a list of files of the current remote path or
+	 * from a given path and file mask
+	 *
+	 * Example:
+	 * <code>
+	 * $ftp = new FtpClient();
+	 * $ftp->setServer('host.address');
+	 * $ftp->connect();
+	 * $ftp->login(TRUE);
+	 * $ftp->changeDir('releases');
+	 * $list = $ftp->fileList();
+	 * $filteredList = $ftp->fileList('*.tar.gz');
+	 * $subDirList = $ftp->fileList('old/*.tar.gz');
+	 * $ftp->quit();
+	 * </code>
+	 *
+	 * Returns FALSE when the FTP connection is not active or when
+	 * the files list can't be retrieved.
+	 *
+	 * @param string $path Path and/or file mask
+	 * @uses _parseDir
+	 * @see rawList
+	 * @return array|bool
+	 */
 	function fileList($path='') {
 		if (!$this->isConnected())
 			return FALSE;
@@ -391,18 +465,16 @@ class FtpClient extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::rawList
-	// @desc 		Busca as informações sobre os arquivos de um diretório remoto
-	// @param		path string			"" Caminho e/ou máscara de arquivo a ser utilizada
-	// @param 		parseInfo bool	"TRUE" Retornar as informações em um vetor bidimensional
-	// @note 		Se for fornecido um diretório e uma máscara de arquivos como
-	// 				parâmetro para o método (ex: folder/file*.txt), o diretório
-	// 				atual será trocado para 'folder' e a máscara de arquivos será
-	// 				aplicada sobre o novo diretório
-	// @return		mixed Vetor com a lista de arquivos ou FALSE em caso de erros	
-	// @access 		public	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the raw list of files from the current remote path
+	 * or from a given path and file mask
+	 *
+	 * @param string $path Path and/or file mask
+	 * @param bool $parseInfo Whether to parse returned data into an array
+	 * @uses _parseDir
+	 * @uses _parseRawList
+	 * @return string|array
+	 */
 	function rawList($path='', $parseInfo=TRUE) {
 		if (!$this->isConnected())
 			return FALSE;
@@ -419,58 +491,52 @@ class FtpClient extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::get
-	// @desc 		Realiza o download de um arquivo do servidor FTP remoto
-	// @param 		localFile string		Nome local para o arquivo
-	// @param 		remoteFile string		Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @param 		mode int				"NULL" Modo da transferência (FTP_BINARY ou FTP_ASCII)
-	// @param		resume int				"NULL" Posição, em bytes, a partir da qual a transferência deve ser recomeçado
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Downloads a file from the FTP server
+	 *
+	 * @param string $localFile Local file name
+	 * @param string $remoteFile Remote file name
+	 * @param int $mode Transfer mode
+	 * @param int $resume Resume position
+	 * @return bool
+	 */
 	function get($localFile, $remoteFile, $mode=NULL, $resume=NULL) {
 		if (!$this->isConnected())
 			return FALSE;
-		// usa o modo padrão, se não for fornecido um modo
 		if (empty($mode) || ($mode != FTP_ASCII && $mode != FTP_BINARY))
 			$mode = $this->transferMode;
 		$result = ftp_get($this->connectionId, $localFile, $remoteFile, $mode, (TypeUtils::isInteger($resume) && $resume >= 0 ? $resume : 0));
 		return ($result == FTP_FINISHED);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::fileGet
-	// @desc 		Realiza o download de um arquivo do servidor FTP gravando
-	// 				seu conteúdo no arquivo aberto referenciado pelo parâmetro $filePointer
-	// @param 		filePointer resource	Arquivo aberto onde o conteúdo do arquivo remoto deve ser gravado
-	// @param 		remoteFile string		Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @param 		mode int				"NULL" Modo da transferência [FTP_BINARY | FTP_ASCII]
-	// @param		resume bool				"FALSE" Considerar transferência parcial já executada
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Saves a remote file into a given file pointer
+	 *
+	 * @param resource $filePointer Target file
+	 * @param string $remoteFile Remote file name
+	 * @param int $mode Transfer mode
+	 * @param int $resume Resume position
+	 * @return bool
+	 */
 	function fileGet($filePointer, $remoteFile, $mode=NULL, $resume=FALSE) {
 		if (!$this->isConnected())
 			return FALSE;
 		if (!TypeUtils::isResource($filePointer))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_RESOURCE', array('$filePointer', '$FtpClient->fileGet')), E_USER_ERROR, __FILE__, __LINE__);
-		// usa o modo padrão, se não for fornecido um modo
 		if (empty($mode) || ($mode != FTP_ASCII && $mode != FTP_BINARY))
 			$mode = $this->transferMode;
 		$result = ftp_fget($this->connectionId, $filePointer, $remoteFile, $mode, ($resume ? filesize($filePointer) : 0));
 		return ($result == FTP_FINISHED);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::nGet
-	// @desc 		Realiza o download de todos os arquivos e diretórios
-	// 				a partir do ponto informado no parâmetro $directory
-	// @param 		directory string	"" Diretório a ser utilizado como base	
-	// @param 		mode int			"NULL" Modo da transferência: FTP_BINARY ou FTP_ASCII
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Downloads all file and folders starting from
+	 * the current remote path or from a given directory
+	 *
+	 * @param string $directory Start point
+	 * @param int $mode Transfer mode
+	 * @return bool
+	 */
 	function nGet($directory='', $mode=NULL) {
 		if (!$this->isConnected())
 			return FALSE;
@@ -494,62 +560,56 @@ class FtpClient extends PHP2Go
 		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::put
-	// @desc 		Copia um arquivo local para o servidor FTP remoto
-	// @param 		localFile string	Nome local do arquivo
-	// @param 		remoteFile string	Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @param 		mode int			"NULL" Modo da transferência: FTP_BINARY ou FTP_ASCII
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Uploads a file to the FTP server
+	 *
+	 * @param string $localFile Local file name
+	 * @param string $remoteFile Remote file name
+	 * @param int $mode Transfer mode
+	 * @return int
+	 */
 	function put($localFile, $remoteFile, $mode=NULL) {
 		if (!$this->isConnected())
 			return FALSE;
-		// muda para o diretório de destino, se for fornecido um caminho relativo
+		// change to the target folder, if any
 		list($changeDir, $remoteFile) = $this->_parseDir($remoteFile);
 		if (!empty($changeDir) && !$this->changeDir($changeDir))
 			return FALSE;
-		// usa o modo padrão, se não for fornecido um modo
 		if (empty($mode) || ($mode != FTP_ASCII && $mode != FTP_BINARY))
 			$mode = $this->transferMode;
 		return ftp_put($this->connectionId, $remoteFile, $localFile, $mode);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::filePut
-	// @desc 		Copia o conteúdo do arquivo aberto referenciado pelo
-	// 				ponteiro $filePointer para o servidor FTP remoto
-	// @param 		filePointer resource	Arquivo aberto que deverá ser copiado para o servidor FTP
-	// @param 		remoteFile string		Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @param 		mode int				"NULL" Modo da transferência: FTP_BINARY ou FTP_ASCII
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Uploads the contents of a file to the FTP server
+	 *
+	 * @param resource $filePointer File pointer
+	 * @param string $remoteFile Remote file name
+	 * @param int $mode Transfer mode
+	 * @return bool
+	 */
 	function filePut($filePointer, $remoteFile, $mode=NULL) {
 		if (!$this->isConnected())
 			return FALSE;
 		if (!TypeUtils::isResource($filePointer))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_RESOURCE', array('$filePointer', 'FtpClient::filePut')), E_USER_ERROR, __FILE__, __LINE__);
-		// muda para o diretório de destino, se for fornecido um caminho relativo
+		// change to the target folder, if any
 		list($changeDir, $remoteFile) = $this->_parseDir($remoteFile);
 		if (!empty($changeDir) && !$this->changeDir($changeDir))
 			return FALSE;
-		// usa o modo padrão, se não for fornecido um modo
 		if (empty($mode) || ($mode != FTP_ASCII && $mode != FTP_BINARY))
 			$mode = $this->transferMode;
 		return ftp_fput($this->connectionId, $remoteFile, $filePointer, $mode);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::nPut
-	// @desc 		Copia para o servidor FTP todos os arquivos e diretórios
-	// 				a partir do ponto informado no parâmetro $directory
-	// @param 		directory string	"" Diretório a ser utilizado como base
-	// @param 		mode int			"NULL" Modo da transferência [FTP_BINARY | FTP_ASCII]
-	// @access 		public	
-	// @return	 	bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Uploads all files and directories starting from the
+	 * current remote path or from a given directory
+	 *
+	 * @param string $directory Start point
+	 * @param int $mode Transfer mode
+	 * @return bool
+	 */
 	function nPut($directory='', $mode=NULL) {
 		if (!$this->isConnected())
 			return FALSE;
@@ -581,45 +641,45 @@ class FtpClient extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::delete
-	// @desc 		Apaga um arquivo no servidor FTP
-	// @param 		remoteFile string	Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @access 		public	
-	// @return		bool
-	// @see 		FtpClient::rename
-	//!-----------------------------------------------------------------
-	function delete($remoteFile) {
-		if (!$this->isConnected())
-			return FALSE;
-		return ftp_delete($this->connectionId, $remoteFile);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::rename
-	// @desc 		Renomeia um arquivo no servidor FTP
-	// @param 		remoteFile string	Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @param 		newName string	Novo nome para o arquivo remoto
-	// @access 		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Renames a file on the FTP server
+	 *
+	 * @param string $remoteFile Old name
+	 * @param string $newName New name
+	 * @return bool
+	 */
 	function rename($remoteFile, $newName) {
 		if (!$this->isConnected())
 			return FALSE;
 		return ftp_rename($this->connectionId, $remoteFile, $newName);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::fileLastMod
-	// @desc 		Busca a data da última modificação de um arquivo no servidor FTP
-	// @param 		remoteFile string	Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @param 		formatDate bool		"TRUE" Indica se o timestamp retornado deve ser formatado
-	// @return 		mixed Timestamp ou data da última modificação do arquivo ou FALSE em caso de erros
-	// @note 		Nem todos os servidores suportam a função ftp_mdtm nativa do PHP.
-	// 				Esta função também não pode ser aplicada a diretórios. Nestes casos,
-	// 				fileLastMod retorna FALSE
-	// @access 		public	
-	//!-----------------------------------------------------------------
+	/**
+	 * Deletes a file on the FTP server
+	 *
+	 * @param string $remoteFile Remote file name
+	 * @return bool
+	 */
+	function delete($remoteFile) {
+		if (!$this->isConnected())
+			return FALSE;
+		return ftp_delete($this->connectionId, $remoteFile);
+	}
+
+	/**
+	 * Get last modified date of a remote file
+	 *
+	 * Not all FTP servers support this feature. Besides, it
+	 * doesn't work on remote directories.
+	 *
+	 * Returns FALSE when the FTP connection isn't active or
+	 * when the last modified time can't be read.
+	 *
+	 * @uses Date::formatTime()
+	 * @param string $remoteFile Remote file name
+	 * @param int $formatDate Date format
+	 * @return int|string|bool
+	 */
 	function fileLastMod($remoteFile, $formatDate=TRUE) {
 		if (!$this->isConnected())
 			return FALSE;
@@ -629,14 +689,12 @@ class FtpClient extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::fileSize
-	// @desc		Consulta o tamanho em bytes de um arquivo no servidor FTP
-	// @param 		remoteFile string	Nome do arquivo remoto ou caminho a partir do diretório atual
-	// @return 		mixed Tamanho do arquivo em bytes ou FALSE em caso de erros
-	// @note 		Nem todos os servidores suportam a função ftp_size que é executa neste método	
-	// @access 		public	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the size of a remote file
+	 *
+	 * @param string $remoteFile Remote file name
+	 * @return int|bool
+	 */
 	function fileSize($remoteFile) {
 		if (!$this->isConnected())
 			return FALSE;
@@ -646,14 +704,45 @@ class FtpClient extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::_parseDir
-	// @desc 		Busca o diretório e a máscara de arquivo a partir de
-	// 				um parâmetro $directory passado às funções fileList ou rawList
-	// @access 		private
-	// @param 		str string	Parâmetro $directory
-	// @return 		array Vetor contendo diretório e máscara de arquivos
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the client for a new connection
+	 *
+	 * # Closes the current connection, if any
+	 * # Reset all class properties
+	 * # Apply default settings
+	 */
+	function restart() {
+		if ($this->isConnected())
+			$this->quit();
+		foreach($this->defaultSettings as $property => $value)
+			$this->$property = $value;
+		unset($this->host);
+		unset($this->user);
+		unset($this->password);
+		unset($this->connectionId);
+	}
+
+	/**
+	 * Closes the FTP connection, if it's active
+	 *
+	 * @return bool
+	 */
+	function quit() {
+		if (!$this->isConnected())
+			return FALSE;
+		$this->connected = (!ftp_quit($this->connectionId));
+		if (!$this->connected)
+			unset($this->connectionId);
+		return (!$this->connected);
+	}
+
+	/**
+	 * Parses dir name and/or file mask from $str
+	 *
+	 * @param string $str Input string
+	 * @access private
+	 * @return array
+	 */
 	function _parseDir($str) {
 		if (strpos($str, '/') !== FALSE) {
 			$slashPos = strrpos($str, '/');
@@ -663,22 +752,20 @@ class FtpClient extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	FtpClient::_parseRawList
-	// @desc 		Processa as informações retornadas da listagem de dados
-	// 				de arquivos de um diretório no servidor FTP, armazenando-as
-	// 				em um vetor
-	// @access 		private
-	// @param 		rawList array	Vetor retornado pela função ftp_rawlist
-	// @return 		array Vetor com dados dos arquivos organizados em novos vetores ou FALSE em caso de erros
-	//!-----------------------------------------------------------------
+	/**
+	 * Parses raw information returned by {@link ftp_rawlist()}
+	 * into an array of FTP file entries
+	 *
+	 * @param string $rawList Raw list
+	 * @return array
+	 */
 	function _parseRawList($rawList) {
-		if (TypeUtils::isArray($rawList)) {
+		if (is_array($rawList)) {
 			$newList = array();
 			$fileInfo = array();
 			while (list($k) = each($rawList)) {
 				$element = split(' {1,}', $rawList[$k], 9);
-				if (TypeUtils::isArray($element) && (sizeof($element) == 9)) {
+				if (is_array($element) && sizeof($element) == 9) {
 					unset($fileInfo);
 					$dateF = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 					$year = (FALSE === strpos($element[7], ':') ? $element[7] : date('Y'));
