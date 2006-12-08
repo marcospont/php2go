@@ -1,87 +1,249 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/HttpClient.class.php,v 1.21 2006/04/05 23:43:24 mpont Exp $
-// $Date: 2006/04/05 23:43:24 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileManager');
+import('php2go.net.httpConstants', 'php', FALSE);
 import('php2go.net.HttpCookie');
+import('php2go.net.MimeType');
 import('php2go.net.SocketClient');
 import('php2go.net.Url');
-import('php2go.net.MimeType');
-import('php2go.net.httpConstants', 'php', FALSE);
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		HttpClient
-// @desc		Esta classe implementa um cliente HTTP, que permite a abertura de conexões
-//				HTTP nas versões 1.0 e 1.1 e o envio de comandos GET, POST, TRACE e DELETE
-// @package		php2go.net
-// @uses		FileManager
-// @uses		FileSystem
-// @uses		HttpCookie
-// @uses		MimeType
-// @uses		TypeUtils
-// @uses		Url
-// @extends		SocketClient
-// @author		Marcos Pont
-// @version		$Revision: 1.21 $
-// @note		A classe tem total compatibilidade com o RFC 2616 (Hypertext Transfer Protocol)
-// @note		Suporta comandos POST com múltiplas partes ou dados de formulário, uso de
-//				proxy com autenticação, envio e interpretação de cookies e conexões Keep-Alive
-//!-----------------------------------------------------------------
+/**
+ * HTTP client class
+ *
+ * This class is RCF2616 compliant, works with HTTP 1.0 and HTTP 1.1 and performs
+ * GET, POST, TRACE and DELETE requests. Supports posting of form data and/or files,
+ * use of proxy servers, automatic parsing of location redirects, sending and parsing
+ * cookies and Keep-Alive connections.
+ *
+ * Example:
+ * <code>
+ * $http = new HttpClient();
+ * $http->setFollowRedirects(TRUE);
+ * $http->setUserAgent('MyUserAgent (compatible; MyBrowser; Linux)');
+ * $http->setHost('myhost.org');
+ * $postVars = array(
+ *   'name' => 'John Doe',
+ *   'e_mail' => 'john@foo.org',
+ *   'phone' => '6666666',
+ *   'message' => 'The quick brown fox jumps over the lazy dog',
+ *   'contact' => 'foo@bar.baz.org'
+ * );
+ * /* POST example {@*}
+ * if ($http->doPost('page.php', $postVars) == HTTP_STATUS_OK) {
+ *   print '<pre>' . $http->getResponseBody() . '</pre>';
+ * }
+ * /* multipart POST example (post vars and upload files) {@*}
+ * $uploadFiles = array(
+ *   array(
+ *     'name' => 'file',
+ *     'file' => 'file.txt',
+ *     'data' => file_get_contents('file.txt')
+ *   )
+ * );
+ * if ($http->doMultipartPost('page.php', $postVars, $uploadFiles) == HTTP_STATUS_OK) {
+ *   print '<pre>' . $http->getResponseBody() . '</pre>';
+ * }
+ * </code>
+ *
+ * @package net
+ * @uses HttpCookie
+ * @uses MimeType
+ * @uses Url
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class HttpClient extends SocketClient
 {
-	var $httpHost;					// @var httpHost string			Endereço ou IP do host HTTP utilizado na conexão
-	var $httpPort;					// @var httpPort int			Porta utilizada na conexão HTTP
-	var $httpVersion;				// @var httpVersion string		Versão do protocolo HTTP utilizada
-	var $userAgent;					// @var userAgent string		Descrição do agente enviada nas requisições
-	var $referer;					// @var referer string			Armazena a URI do referente de uma requisição
-	var $keepAlive;					// @var keepAlive bool			Indica se a conexão deve ser do tipo Keep-Alive
-	var $useAuth;					// @var useAuth bool			Indica se a autenticação está habilitada
-	var $authUser;					// @var authUser string			Nome de usuário para autenticação
-	var $authPass;					// @var authPass string			Senha para autenticação
-	var $useProxy;					// @var useProxy bool			Indica se o uso de proxy está habilitado
-	var $proxyHost;					// @var proxyHost string		Endereço ou IP do servidor proxy a ser utilizado
-	var $proxyPort;					// @var proxyPort int			Porta para conexão no servidor proxy
-	var $proxyUser;					// @var proxyUser string		Nome de usuário para autenticação no servidor proxy
-	var $proxyPass;					// @var proxyPass string		Senha para autenticação no servidor proxy
-	var $followRedirects;			// @var followRedirects bool	Indica se a conexão deve seguir comandos de redirecionamento
-	var $debug = FALSE;				// @var debug bool				"FALSE" Controle de debug da classe
-	var $currentMethod = NULL;		// @var currentMethod string	"NULL" Último método executado na conexão HTTP
-	var $requestHeaders = array();	// @var requestHeaders array	"array()" Vetor de cabeçalhos de requisição
-	var $requestBody = '';			// @var requestBody string		"" Corpo da requisição, inclui os dados de formulários e/ou partes da requisição
-	var $responseHeaders = array();	// @var responseHeaders array	"array()" Vetor de cabeçalhos de resposta
-	var $responseBody = '';			// @var responseBody string		"" Corpo da resposta
-	var $cookieHeaders = array();	// @var cookieHeaders array		"array()" Vetor de cabeçalhos Set-Cookie
-	var $cookies = array();			// @var cookies array			"array()" Vetor de cookies nos cabeçalhos de resposta
+	/**
+	 * Current host
+	 *
+	 * @var string
+	 */
+	var $httpHost;
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::HttpClient
-	// @desc		Construtor da classe. Inicializa as propriedades principais do objeto
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Current port
+	 *
+	 * @var int
+	 */
+	var $httpPort;
+
+	/**
+	 * Current HTTP version
+	 *
+	 * @var string
+	 */
+	var $httpVersion;
+
+	/**
+	 * User agent to be sent through HTTP connections
+	 *
+	 * @var string
+	 */
+	var $userAgent;
+
+	/**
+	 * Referer to be sent through HTTP connections
+	 *
+	 * @var string
+	 */
+	var $referer;
+
+	/**
+	 * Enable keep alive mode for opened connections
+	 *
+	 * @var bool
+	 */
+	var $keepAlive;
+
+	/**
+	 * Whether to use authentication
+	 *
+	 * @var bool
+	 */
+	var $useAuth;
+
+	/**
+	 * Auth username
+	 *
+	 * @var string
+	 */
+	var $authUser;
+
+	/**
+	 * Auth password
+	 *
+	 * @var string
+	 */
+	var $authPass;
+
+	/**
+	 * Whether to connect through a proxy server
+	 *
+	 * @var bool
+	 */
+	var $useProxy;
+
+	/**
+	 * Proxy host
+	 *
+	 * @var string
+	 */
+	var $proxyHost;
+
+	/**
+	 * Proxy port
+	 *
+	 * @var int
+	 */
+	var $proxyPort;
+
+	/**
+	 * Proxy user
+	 *
+	 * @var string
+	 */
+	var $proxyUser;
+
+	/**
+	 * Proxy password
+	 *
+	 * @var string
+	 */
+	var $proxyPass;
+
+	/**
+	 * Whether to follow redirections
+	 *
+	 * @var bool
+	 */
+	var $followRedirects;
+
+	/**
+	 * Debug flag
+	 *
+	 * @var bool
+	 */
+	var $debug = FALSE;
+
+	/**
+	 * Last HTTP method used
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $currentMethod = NULL;
+
+	/**
+	 * Request headers
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $requestHeaders = array();
+
+	/**
+	 * Request body
+	 *
+	 * @var string
+	 */
+	var $requestBody = '';
+
+	/**
+	 * Response headers
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $responseHeaders = array();
+
+	/**
+	 * Response body
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $responseBody = '';
+
+	/**
+	 * Incoming/Outgoing cookies
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $cookies = array();
+
+	/**
+	 * Class constructor
+	 *
+	 * @return HttpClient
+	 */
 	function HttpClient() {
 		parent::SocketClient();
 		parent::setTimeout(HTTP_DEFAULT_TIMEOUT);
@@ -96,140 +258,60 @@ class HttpClient extends SocketClient
 		$this->followRedirects = FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::getRequestHeader
-	// @desc		Busca, a partir do nome, o valor de um cabeçalho da requisição
-	// @access		public
-	// @param		name string	Nome do cabeçalho solicitado
-	// @return		string Valor do cabeçalho ou NULL se não existente
-	//!-----------------------------------------------------------------
-	function getRequestHeader($name) {
-		$formattedName = $this->_formatHeaderName($name);
-		if (isset($this->requestHeaders[$formattedName]))
-			return $this->requestHeaders[$formattedName];
-		else
-			return NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::getStatus
-	// @desc		Consulta o status de uma requisição HTTP enviada ao
-	//				servidor, retornando um código inteiro (RFC 2616)
-	// @access		public
-	// @return		int Código de status da requisição enviada
-	// @note		Os códigos inteiros que são enviados como resposta estão
-	//				definidos como constantes na classe
-	//!-----------------------------------------------------------------
-	function getStatus() {
-		$status = $this->getResponseHeader('Status');
-		if (!TypeUtils::isNull($status))
-			return TypeUtils::parseInteger($status);
-		else
-			return NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::getResponseHeader
-	// @desc		Busca o valor de um cabeçalho de resposta a partir de seu nome
-	// @access		public
-	// @param		name string	Nome do cabeçalho solicitado
-	// @return		int Valor do cabeçalho ou NULL se não existente
-	//!-----------------------------------------------------------------
-	function getResponseHeader($name) {
-		$formattedName = $this->_formatHeaderName($name);
-		if (isset($this->responseHeaders[$formattedName]))
-			return $this->responseHeaders[$formattedName];
-		else
-			return NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::getResponseHeaders
-	// @desc		Busca o conjunto de cabeçalhos de resposta à última
-	//				requisição enviada ao servidor HTTP
-	// @access		public
-	// @return		array Vetor associativo de cabeçalhos de resposta ou NULL se
-	//				eles não existirem
-	//!-----------------------------------------------------------------
-	function getResponseHeaders() {
-		return (!empty($this->responseHeaders)) ? $this->responseHeaders : NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::getResponseBody
-	// @desc		Retorna o corpo da resposta do servidor HTTP
-	// @access		public
-	// @return		string Corpo da resposta HTTP
-	//!-----------------------------------------------------------------
-	function getResponseBody() {
-		return $this->responseBody;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setHost
-	// @desc		Configura o host a ser utilizado na próxima conexão HTTP
-	// @access		public
-	// @param		host string	Nome ou IP do host
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the connection host
+	 *
+	 * @param string $host HTTP host or IP address
+	 */
 	function setHost($host) {
 		$this->httpHost = $host;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setPort
-	// @desc		Configura a porta a ser utilizada na próxima conexão HTTP
-	// @access		public
-	// @param		port int		Número da porta
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the connection port
+	 *
+	 * @param int $port Connection port
+	 */
 	function setPort($port) {
 		$this->httpPort = $port;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setHttpVersion
-	// @desc		Seta a versão do protocolo HTTP a ser utilizada
-	// @access		public
-	// @param		version string	Versão do protocolo
-	// @return		void
-	// @note		Os valores aceitos pela classe são "1.0" e "1.1"
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the HTTP version
+	 *
+	 * @param string $version '1.0' or '1.1'
+	 */
 	function setHttpVersion($version) {
 		if (in_array($version, array('1.0', '1.1')))
 			$this->httpVersion = $version;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setUserAgent
-	// @desc		Seta o agente a ser enviado nos cabeçalhos das requisições
-	// @access		public
-	// @param		userAgent string	Descrição do agente
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set connection's user agent
+	 *
+	 * @param string $userAgent User agent
+	 */
 	function setUserAgent($userAgent) {
 		$this->userAgent = $userAgent;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setReferer
-	// @desc		Seta o referente da requisição
-	// @access		public
-	// @param		referer string	Referente a ser utilizado
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set connection's referer
+	 *
+	 * @param string $referer Referer
+	 */
 	function setReferer($referer) {
 		$this->referer = $referer;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setAuth
-	// @desc		Configura os dados de autenticação a serem utilizados
-	// @access		public
-	// @param		userName string	Nome de usuário
-	// @param		password string	Senha
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Set authentication credentials to the
+	 * next opened connection
+	 *
+	 * @param string $userName Username
+	 * @param string $password Password
+	 * @return bool
+	 */
 	function setAuth($userName, $password) {
 		if (trim($userName) != '' && trim($password) != '') {
 			$this->useAuth = TRUE;
@@ -240,16 +322,16 @@ class HttpClient extends SocketClient
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setProxy
-	// @desc		Seta os dados de servidor proxy a serem utilizados
-	// @access		public
-	// @param		host string		Servidor proxy
-	// @param		port int			Porta de conexão
-	// @param		userName string	"" Nome de usuário, se o servidor requer autenticação
-	// @param		password string	"" Senha de usuário, se o servidor requer autenticação
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Set proxy server and proxy credentials to be
+	 * used by the next opened connection
+	 *
+	 * @param string $host Proxy host or IP address
+	 * @param string $port Proxy port
+	 * @param string $userName Proxy username
+	 * @param string $password Proxy password
+	 * @return bool
+	 */
 	function setProxy($host, $port, $userName = '', $password = '') {
 		if (trim($host) != '' && TypeUtils::isInteger($port)) {
 			$this->keepAlive = FALSE;
@@ -265,39 +347,46 @@ class HttpClient extends SocketClient
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setKeepAlive
-	// @desc		Configura o tipo de conexão a ser utilizado
-	// @access		public
-	// @param		setting bool		"TRUE" O valor TRUE habilita conexões do tipo Keep-Alive
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable keep alive mode on
+	 * the current HTTP connection
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setKeepAlive($setting = TRUE) {
 		if (!$this->useProxy)
 			$this->keepAlive = TypeUtils::toBoolean($setting);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setFollowRedirects
-	// @desc		Seta o flag que habilita os redirecionamentos
-	// @access		public
-	// @param		setting bool		"TRUE" O valor TRUE faz com que o
-	//									cliente siga os redirecionamentos
-	//									indicados nos cabeçalhos de resposta
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable automatic following of "redirect" headers
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setFollowRedirects($setting = TRUE) {
 		$this->followRedirects = TypeUtils::toBoolean($setting);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::setRequestHeader
-	// @desc		Insere ou altera um cabeçalho na requisição
-	// @access		public
-	// @param		name string		Nome do cabeçalho
-	// @param		value mixed		Valor para o cabeçalho
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a request header
+	 *
+	 * @param string $name Header name
+	 * @return mixed
+	 */
+	function getRequestHeader($name) {
+		$formattedName = $this->_formatHeaderName($name);
+		if (isset($this->requestHeaders[$formattedName]))
+			return $this->requestHeaders[$formattedName];
+		else
+			return NULL;
+	}
+
+	/**
+	 * Set a request header
+	 *
+	 * @param string $name Header name
+	 * @param string $value Header value
+	 */
 	function setRequestHeader($name, $value) {
 		if (trim($name) != '' && trim($value) != '') {
 			$formattedName = $this->_formatHeaderName(trim($name));
@@ -305,13 +394,12 @@ class HttpClient extends SocketClient
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::removeRequestHeader
-	// @desc		Remove um cabeçalho da requisição
-	// @access		public
-	// @param		name string		Nome do cabeçalho
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes a request header
+	 *
+	 * @param string $name Header name
+	 * @return bool
+	 */
 	function removeRequestHeader($name) {
 		if (trim($name) != '') {
 			$formattedName = $this->_formatHeaderName(trim($name));
@@ -323,13 +411,55 @@ class HttpClient extends SocketClient
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::reset
-	// @desc		Reseta as propriedades do cliente, para criação de novas
-	//				conexões utilizando as configurações padrão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the response status
+	 *
+	 * @return int Response status
+	 */
+	function getStatus() {
+		$status = $this->getResponseHeader('Status');
+		if (!TypeUtils::isNull($status))
+			return TypeUtils::parseInteger($status);
+		else
+			return NULL;
+	}
+
+	/**
+	 * Get a response header by name
+	 *
+	 * @param string $name Header name
+	 * @return mixed
+	 */
+	function getResponseHeader($name) {
+		$formattedName = $this->_formatHeaderName($name);
+		if (isset($this->responseHeaders[$formattedName]))
+			return $this->responseHeaders[$formattedName];
+		else
+			return NULL;
+	}
+
+	/**
+	 * Get all response headers
+	 *
+	 * @return array|NULL
+	 */
+	function getResponseHeaders() {
+		return (!empty($this->responseHeaders)) ? $this->responseHeaders : NULL;
+	}
+
+	/**
+	 * Get the response body
+	 *
+	 * @return string
+	 */
+	function getResponseBody() {
+		return $this->responseBody;
+	}
+
+	/**
+	 * Reset the class properties, and prepare it
+	 * for a new HTTP connection
+	 */
 	function reset() {
 		$this->httpPort = HTTP_DEFAULT_PORT;
 		$this->httpVersion = '1.1';
@@ -343,193 +473,180 @@ class HttpClient extends SocketClient
 		$this->_resetResponse();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::doHead
-	// @desc		Envia o comando HEAD ao servidor HTTP
-	// @access		public
-	// @param		uri string	URI da requisição
-	// @return		int Status contido na resposta do servidor
-	// @note		Retorna FALSE em caso de problemas na conexão com o servidor
-	//!-----------------------------------------------------------------
+	/**
+	 * Performs a HEAD request
+	 *
+	 * @param string $uri Request URI
+	 * @return int Response status
+	 */
 	function doHead($uri) {
-		// verifica a URI
 		if (TypeUtils::isNull($uri) || empty($uri))
 			$uri = '/';
-		// recria a conexão ao host se for necessário
+		// reopen connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
 			if (!$this->_connect()) {
 				return FALSE;
 			}
-		// insere os cabeçalhos básicos
+		// set default headers
 		$this->_setDefaultHeaders($uri);
-		// monta o comando e envia ao servidor
+		// send the command to the server
 		$this->currentMethod = 'HEAD';
 		$data = sprintf("%s %s HTTP/%s%s%s%s", $this->currentMethod, $uri, $this->httpVersion, HTTP_CRLF, $this->_assembleRequestHeaders(), HTTP_CRLF);
 		$this->_sendCommand($data);
 		$this->_getResponse();
 		$this->_ensureConnectionRelease();
 		if ($this->_processUseProxyResponse())
-			$this->doHead($uri);
+			return $this->doHead($uri);
 		return $this->getStatus();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::doGet
-	// @desc		Envia um comando GET ao servidor HTTP, que significa a busca
-	//				de todo e qualquer conteúdo associado à URI incluída na requisição
-	// @access		public
-	// @param		uri string	URI a ser enviada na requisição
-	// @return		int Status contido na resposta do servidor (ver constantes da classe)
-	// @note		Retorna FALSE em caso de problemas na conexão com o servidor
-	//!-----------------------------------------------------------------
+	/**
+	 * Performs a GET request
+	 *
+	 * @param string $uri Request URI
+	 * @return int Response status
+	 */
 	function doGet($uri) {
-		// verifica a URI
 		if (TypeUtils::isNull($uri) || empty($uri))
 			$uri = '/';
-		// recria a conexão ao host se for necessário
+		// reopen connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
 			if (!$this->_connect()) {
 				return FALSE;
 			}
-		// insere os cabeçalhos básicos
+		// set default headers
 		$this->_setDefaultHeaders($uri);
-		// monta o comando e envia ao servidor
+		// send the command to the server
 		$this->currentMethod = 'GET';
 		$data = sprintf("%s %s HTTP/%s%s%s%s", $this->currentMethod, $uri, $this->httpVersion, HTTP_CRLF, $this->_assembleRequestHeaders(), HTTP_CRLF);
 		$this->_sendCommand($data);
 		$this->_getResponse();
 		$this->_ensureConnectionRelease();
-		$this->_processRedirectResponse($uri);
+		$this->_processRedirectResponse();
 		if ($this->_processUseProxyResponse())
-			$this->doGet($uri);
+			return $this->doGet($uri);
 		return $this->getStatus();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::doPost
-	// @desc		Envia um comando POST ao servidor HTTP, juntamente com
-	//				dados de um formulário, no formato www-form-urlencoded
-	// @access		public
-	// @param		uri string		URI da requisição
-	// @param		formData array	Vetor de dados do formulário
-	// @return		int Status contido na resposta do servidor (ver constantes da classe)
-	// @note		Retorna FALSE em caso de problemas na conexão com o servidor
-	//!-----------------------------------------------------------------
-	function doPost($uri, $formData) {
-		// recria a conexão ao host se for necessário
+	/**
+	 * Performs a POST request
+	 *
+	 * @param string $uri URI
+	 * @param array $parameters Hash array of parameters
+	 * @return int Response status
+	 * @uses _assembleParameters
+	 * @uses _sendPost
+	 */
+	function doPost($uri, $parameters) {
+		// reopen connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
 			if (!$this->_connect()) {
 				return FALSE;
 			}
-		// insere os cabeçalhos básicos
+		// set default headers
 		$this->_setDefaultHeaders($uri);
-		// monta o corpo com os dados do formulário
-		$body = $this->_assembleFormData($formData) . HTTP_CRLF . HTTP_CRLF;
+		// build the request body
+		$body = $this->_assembleParameters($parameters) . HTTP_CRLF . HTTP_CRLF;
 		$this->requestBody = $body;
-		// insere cabeçalhos extra
+		// set extra headers
 		$this->setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 		$this->setRequestHeader('Content-Length', strlen($body));
-		// envia o comando e retorna o status da operação
+		// send the command to the server
 		$this->_sendPost($uri);
-		$this->_processRedirectResponse($uri);
+		$this->_processRedirectResponse();
 		if ($this->_processUseProxyResponse())
-			$this->doPost($uri, $formData);
+			return $this->doPost($uri, $parameters);
 		return $this->getStatus();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::doMultipartPost
-	// @desc		Envia um comando POST composto por múltiplas partes, que
-	//				podem conter dados de um formulário e/ou arquivos
-	// @access		public
-	// @param		uri string		URI da requisição
-	// @param		formData array	Vetor de campos de formulário
-	// @param		formFiles array	"NULL" Vetor de arquivos para upload
-	// @return		int Status contido na resposta do servidor (ver constantes da classe)
-	// @note		Retorna FALSE em caso de problemas na conexão com o servidor
-	//!-----------------------------------------------------------------
-	function doMultipartPost($uri, $formData, $formFiles = NULL) {
-		// recria a conexão ao host se for necessário
+	/**
+	 * Performs a multipart POST request
+	 *
+	 * @param string $uri URI
+	 * @param array $parameters Hash array of parameters
+	 * @param array $files Array of upload files
+	 * @return int Response status
+	 * @uses _assembleMultipartData
+	 * @uses _sendPost
+	 */
+	function doMultipartPost($uri, $parameters, $files = NULL) {
+		// reopen the connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
 			if (!$this->_connect()) {
 				return FALSE;
 			}
-		// insere os cabeçalhos básicos
+		// set default headers
 		$this->_setDefaultHeaders($uri);
-		// monta o corpo com os dados do formulário
+		// build the request body
 		$boundary = '----=_NextPart' . date( 'YmdHis' ) . '_' . rand(10000, 99999);
-		$body = $this->_assembleMultipartData($boundary, $formData, $formFiles) . HTTP_CRLF . HTTP_CRLF;
+		$body = $this->_assembleMultipartData($boundary, $parameters, $files) . HTTP_CRLF . HTTP_CRLF;
 		$this->requestBody = $body;
-		// insere cabeçalhos extra
+		// set extra headers
 		$this->setRequestHeader('Content-Type', 'multipart/form-data; boundary=' . $boundary);
 		$this->setRequestHeader('Content-Length', strlen($body));
-		// envia o comando e retorna o status da operação
+		// send the command to the server
 		$this->_sendPost($uri);
-		$this->_processRedirectResponse($uri);
+		$this->_processRedirectResponse();
 		if ($this->_processUseProxyResponse())
-			$this->doMultipartPost($uri, $formData, $formFiles);
+			return $this->doMultipartPost($uri, $parameters, $files);
 		return $this->getStatus();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::doXmlPost
-	// @desc		Envia um comando POST ao servidor contendo dados XML
-	// @access		public
-	// @param		uri string		URI da requisição
-	// @param		xmlData string	Dados XML ou nome do arquivo
-	// @param		byFile bool		"FALSE" Indica se o parâmetro $xmlData representa dados XML ou o nome de um arquivo
-	// @param		charset string	"NULL" Charset do conteúdo XML enviado
-	// @return		int Status contido na resposta do servidor
-	// @note		Retorna FALSE em caso de problemas na conexão com o servidor
-	//!-----------------------------------------------------------------
+	/**
+	 * Send a POST request containing XML
+	 *
+	 * @param string $uri URI
+	 * @param string $xmlData XML data or file name
+	 * @param bool $byFile Whether to parse $xmlData as XML data (FALSE) or XML file name (TRUE)
+	 * @param string $charset Request charset
+	 * @return int Response status
+	 * @uses _sendPost
+	 */
 	function doXmlPost($uri, $xmlData, $byFile=FALSE, $charset=NULL) {
 		if (empty($charset))
-			$charset = PHP2Go::getConfigVal('CHARSET', FALSE);
-		// recria a conexão ao host se for necessário
+			$charset = 'iso-8859-1';
+		// reopen the connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
 			if (!$this->_connect()) {
 				return FALSE;
 			}
-		// insere os cabeçalhos básicos
+		// set default headers
 		$this->_setDefaultHeaders($uri);
-		// cria o corpo da requisição com o conteúdo XML
+		// build the request body
 		if ($byFile) {
-			$FileManager = new FileManager();
-			if ($FileManager->open($xmlData))
-				$body = $FileManager->readFile();
-			else
+			$body = @file_get_contents($xmlData);
+			if (!$body)
 				return FALSE;
 		} else {
 			$body = $xmlData;
 		}
 		$this->requestBody = $body;
-		// insere cabeçalhos extra
+		// set extra headers
 		$this->setRequestHeader('Content-Type', 'text/xml; charset=' . $charset);
 		$this->setRequestHeader('Content-Length', strlen($body));
-		// envia o comando e retorna o status da operação
+		// send command to the server
 		$this->_sendPost($uri);
-		$this->_processRedirectResponse($uri);
+		$this->_processRedirectResponse();
 		if ($this->_processUseProxyResponse())
-			$this->doXmlPost($uri, $xmlData, $byFile, $charset);
+			return $this->doXmlPost($uri, $xmlData, $byFile, $charset);
 		return $this->getStatus();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::doDelete
-	// @desc		Envia o comando DELETE, que busca remover um recurso armazenado no servidor
-	// @access		public
-	// @param		uri string		URI da requisição
-	// @return		int Status contido na resposta do servidor
-	//!-----------------------------------------------------------------
+	/**
+	 * Performs an HTTP DELETE request
+	 *
+	 * @param string $uri URI
+	 * @return int Response status
+	 */
 	function doDelete($uri) {
-		// recria a conexão ao host se for necessário
+		// reopen the connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
 			if (!$this->_connect()) {
 				return FALSE;
 			}
-		// insere os cabeçalhos básicos
+		// set default headers
 		$this->_setDefaultHeaders($uri);
-		// monta o comando e envia ao servidor
+		// send command to the server
 		$data = sprintf("DELETE %s HTTP/%s%s%s%s", $uri, $this->httpVersion, HTTP_CRLF, $this->_assembleRequestHeaders(), HTTP_CRLF);
 		$this->_sendCommand($data);
 		$this->_getResponse();
@@ -537,20 +654,32 @@ class HttpClient extends SocketClient
 		return $this->getStatus();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_sendPost
-	// @desc		Método que envia um comando POST em conjunto com o corpo
-	//				da requisição, utilizado nos métodos doPost, doMultipartPost
-	//				e doXmlPost
-	// @access		private
-	// @param		uri string	URI da requisição
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Opens a connection with the HTTP host
+	 *
+	 * @uses SocketClient::connect()
+	 * @access private
+	 * @return bool
+	 */
+	function _connect() {
+		if (!isset($this->httpHost)) {
+			$this->errorMsg = PHP2Go::getLangVal('ERR_HTTP_MISSING_HOST');
+			return FALSE;
+		}
+		if ($this->useProxy)
+			return parent::connect($this->proxyHost, $this->proxyPort, NULL, HTTP_DEFAULT_TIMEOUT);
+		else
+			return parent::connect($this->httpHost, $this->httpPort, NULL, HTTP_DEFAULT_TIMEOUT);
+	}
+
+	/**
+	 * Send a POST command to the HTTP server
+	 *
+	 * @param string $uri Target URI
+	 */
 	function _sendPost($uri) {
-		// verifica a URI
 		if (TypeUtils::isNull($uri) || empty($uri))
 			$uri = '/';
-		// monta o comando e envia ao servidor
 		$this->currentMethod = 'POST';
 		$data = sprintf("%s %s HTTP/%s%s%s%s", $this->currentMethod, $uri, $this->httpVersion, HTTP_CRLF, $this->_assembleRequestHeaders(), HTTP_CRLF);
 		$this->_sendCommand($data);
@@ -560,28 +689,28 @@ class HttpClient extends SocketClient
 		$this->_ensureConnectionRelease();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_sendCommand
-	// @desc		Envia um comando ao servidor HTTP
-	// @access		private
-	// @param		data string	Dados do comando
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Send a command to the HTTP server
+	 *
+	 * @param string $data Command data
+	 * @access private
+	 */
 	function _sendCommand($data) {
 		parent::write($data);
 		if ($this->debug)
 			print('HTTP DEBUG --- FROM CLIENT : ' . nl2br($data));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_setDefaultHeaders
-	// @desc		Adiciona à requisição os cabeçalhos principais, como host,
-	//				tipo de conexão, uso de proxy, controle de cache, agente,
-	//				tipo de conteúdo autorizado, referente e cookies
-	// @access		private
-	// @param		&uri string	URI incluída na requisição
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Defines the default HTTP headers before performing a request
+	 *
+	 * Default request headers are: Host, Proxy-Connection and Proxy-Authorization
+	 * (when using a proxy server), Connection, Pragma, Cache-Control, Authorization
+	 * (when using authorization), User-Agent, Referer and Cookie
+	 *
+	 * @param string $uri Request URI
+	 * @access private
+	 */
 	function _setDefaultHeaders(&$uri) {
 		if ($this->useProxy) {
 			$this->setRequestHeader('Host', $this->httpHost . ':' . $this->httpPort);
@@ -604,14 +733,12 @@ class HttpClient extends SocketClient
 		$this->setRequestHeader('Cookie', $cookies);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_assembleRequestHeaders
-	// @desc		A partir dos cabeçalhos incluídos na requisição, monta
-	//				uma string com seus nomes e valores
-	// @access		private
-	// @return		string String no formato header: valor <CRLF> header: valor
-	//				para montagem da requisição
-	//!-----------------------------------------------------------------
+	/**
+	 * Serializes the headers of an HTTP request
+	 *
+	 * @access private
+	 * @return string
+	 */
 	function _assembleRequestHeaders() {
 		$headerString = '';
 		foreach($this->requestHeaders as $name => $value) {
@@ -620,48 +747,48 @@ class HttpClient extends SocketClient
 		return $headerString;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_assembleFormData
-	// @desc		Monta uma string contendo os nomes e valores de um formulário
-	//				que serão enviados juntamente com um comando POST
-	// @access		private
-	// @param		formData array	Vetor de dados do formulário
-	// @param		paramName string	"" Utilizado em variáveis de formulário na forma de vetores
-	// @return		string String no formato urlencode com as variáveis do formulário
-	//!-----------------------------------------------------------------
-	function _assembleFormData($formData, $paramName = '') {
-		$formString = '';
-		foreach ($formData as $key => $value)
-			if (!TypeUtils::isArray($value)) {
+	/**
+	 * Builds the body of a POST request
+	 *
+	 * Serializes an N-dimension array of request parameters into
+	 * an HTTP request body.
+	 *
+	 * @param array $parameters Hash array of parameters
+	 * @param string $paramName Used by recursive calls, when parameter values are arrays
+	 * @access private
+	 * @return string
+	 */
+	function _assembleParameters($parameters, $paramName='') {
+		$paramsString = '';
+		foreach ($parameters as $key => $value)
+			if (!is_array($value)) {
 				if (trim($paramName) != '')
-					$formString .= sprintf("&%s[%s]=%s", $paramName, $key, urlencode($value));
+					$paramsString .= sprintf("&%s[%s]=%s", $paramName, $key, urlencode($value));
 				else
-					$formString .= sprintf("&%s=%s", $key, urlencode($value));
+					$paramsString .= sprintf("&%s=%s", $key, urlencode($value));
 			} else {
-				$formString .= '&' . $this->_assembleFormData($formData[$key], $key);
+				$paramsString .= '&' . $this->_assembleFormData($parameters[$key], $key);
 			}
-		return substr($formString, 1);
+		return substr($paramsString, 1);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_assembleMultipartData
-	// @desc		Monta o corpo da requisição HTTP contendo dados de variáveis
-	//				de formulário e dados de arquivo para upload
-	// @access		private
-	// @param		boundary string	Delimitador das partes da requisição
-	// @param		formData array	Vetor de variáveis de formulário
-	// @param		formFiles array	"NULL" Vetor de arquivos a serem enviados na requisição
-	// @return		string String contendo os dados do corpo da requisição
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the body of a multipart POST request
+	 *
+	 * @param string $boundary Part boundary
+	 * @param array $formData Hash array of form variables
+	 * @param array $formFiles Array of upload files
+	 * @return string
+	 */
 	function _assembleMultipartData($boundary, $formData, $formFiles = NULL) {
 		$boundary = '--' . $boundary;
 		$formString = '';
-		if (TypeUtils::isArray($formData)) {
+		if (is_array($formData)) {
 			foreach ($formData as $name => $data) {
 				$formString .= sprintf("%s%sContent-Disposition: form-data; name=\"%s\"%s%s%s%s", $boundary, HTTP_CRLF, $name, HTTP_CRLF, HTTP_CRLF, $data, HTTP_CRLF);
 			}
 		}
-		if (TypeUtils::isArray($formFiles)) {
+		if (is_array($formFiles)) {
 			foreach ($formFiles as $data) {
 				if (!isset($data['type'])) {
 					$data['type'] = MimeType::getFromFileName($data['file']);
@@ -673,26 +800,26 @@ class HttpClient extends SocketClient
 		return $formString;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_getResponse
-	// @desc		Busca a resposta à uma requisição HTTP enviada
-	// @access		private
-	// @param		getBody bool	Indica se o corpo da resposta também deve ser buscado
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _getResponse($getBody = TRUE) {
-		// inicializa os dados de requisição/resposta
+	/**
+	 * Reads an HTTP response
+	 *
+	 * @param bool $getBody Whether to read response body or just the headers
+	 * @access private
+	 */
+	function _getResponse($getBody=TRUE) {
+		// initialize request and response data
 		$this->_resetRequest();
 		$this->_resetResponse();
 		while (1) {
-			// lê linhas do socket até que seja recebida uma linha contendo apenas CRLF
+			// read lines from the socket until a line containing only CRLF is found
 			$rawHeaders = '';
 			while (($line = parent::readLine()) != HTTP_CRLF || $rawHeaders == '')
 				if ($line != HTTP_CRLF) $rawHeaders .= $line;
-			// interpreta os headers da resposta
+			// parse response headers
 			$this->_parseResponseHeaders($rawHeaders);
-			// trata o status CONTINUE
-			if ($this->getStatus() != HTTP_STATUS_CONTINUE) break;
+			// handle 'Continue' status
+			if ($this->getStatus() != HTTP_STATUS_CONTINUE)
+				break;
 			parent::writeLine();
 		}
 		if ($this->debug)
@@ -717,21 +844,21 @@ class HttpClient extends SocketClient
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_parseResponseHeaders
-	// @desc		Este método parseia e armazena os cabeçalhos recebidos
-	//				na resposta capturada em HttpClient::_getResponse
-	// @access		private
-	// @param		headers string	Cabeçalhos recebidos na resposta
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Parse all response headers from the raw headers string
+	 *
+	 * @param string $headers Headers string
+	 * @access private
+	 */
 	function _parseResponseHeaders($headers) {
 		$headers = preg_replace("/^" . HTTP_CRLF . "/", '', $headers);
 		$headersArray = explode(HTTP_CRLF, $headers);
 		$matches = NULL;
 		if (preg_match("'HTTP/(\d\.\d)\s+(\d+).*'i", $headersArray[0], $matches)) {
-			$this->_setResponseHeader('Protocol-Version', $matches[1]);
-			$this->_setResponseHeader('Status', $matches[2]);
+			if ($matches[1])
+				$this->responseHeaders['Protocol-Version'] = $matches[1];
+			if ($matches[2])
+				$this->responseHeaders['Status'] = $matches[2];
 		}
 		array_shift($headersArray);
 		foreach($headersArray as $headerValue) {
@@ -741,51 +868,35 @@ class HttpClient extends SocketClient
 				if (strtoupper($key) == 'SET-COOKIE') {
 					if ($Cookie = $this->_parseCookie($value))
 						$this->cookies[$Cookie->getName()] = $Cookie;
-				} else
-					$this->_setResponseHeader($key, $value);
+				} elseif (!empty($value)) {
+					$this->responseHeaders[$this->_formatHeaderName($key)] = $value;
+				}
 			}
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_setResponseHeader
-	// @desc		Insere um cabeçalho de resposta
-	// @access		private
-	// @param		name string	Nome do cabeçalho
-	// @param		value string	Valor do cabeçalho
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _setResponseHeader($name, $value) {
-		if (trim($value) != '') {
-			$formattedName = $this->_formatHeaderName($name);
-			$this->responseHeaders[$formattedName] = $value;
-		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_parseCookie
-	// @desc		Instancia um objeto HttpCookie para interpretar um cabeçalho
-	// 				Set-Cookie encontrado na resposta
-	// @access		private
-	// @param		cookieString string	Nome, valor e dados do cookie
-	// @return		HttpCookie object	Objeto Cookie criado
-	//!-----------------------------------------------------------------
+	/**
+	 * Create an {@link HttpCookie} object from a Set-Cookie header
+	 *
+	 * @param string $cookieString Cookie header
+	 * @return HttpCookie
+	 * @access private
+	 */
 	function _parseCookie($cookieString) {
 		$Cookie = new HttpCookie();
 		$Cookie->parseFromHeader($cookieString, $this->httpHost);
 		return $Cookie;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_getCookies
-	// @desc		Monta os cookies da requisição a partir dos que estão
-	//				armazenados na última resposta, que não expiraram e que
-	//				correspondem ao domínio/caminho atuais
-	// @access		private
-	// @param		domain string		Domínio atual
-	// @param		path string		Diretório corrente
-	// @return		string String contendo nomes e valores dos cookies válidos
-	//!-----------------------------------------------------------------
+	/**
+	 * Build the Set-Cookie request header from the cookies
+	 * parsed from the last response
+	 *
+	 * @param string $domain Cookies domain
+	 * @param string $path Cookies path
+	 * @return string Header value
+	 * @access private
+	 */
 	function _getCookies($domain, $path) {
 		$cookieString = '';
 		foreach($this->cookies as $cookieName => $Cookie) {
@@ -798,43 +909,37 @@ class HttpClient extends SocketClient
 		return $cookieString;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_ensureConnectionRelease
-	// @desc		Verifica se a conexão deve ser fechada de acordo com as
-	//				configurações e os cabeçalhos de resposta
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if connection should be closed, according to class
+	 * settings and response headers
+	 *
+	 * @access private
+	 */
 	function _ensureConnectionRelease() {
-		// fecha a conexão se keepAlive == FALSE
+		// closes the connection when keep alive is disabled
 		if (parent::isConnected() && !$this->keepAlive)
-			$this->_close();
-		// fecha a conexão se for necessário
+			parent::close();
+		// closes the connection if Connection header is equal to 'close'
 		if (!TypeUtils::isNull($this->getResponseHeader('Connection')))
 			if ($this->keepAlive && strtolower($this->getResponseHeader('Connection')) == 'close') {
 				$this->keepAlive = FALSE;
-				$this->_close();
+				parent::close();
 			}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_processRedirectResponse
-	// @desc		Verifica se a resposta indica redirecionamento para outra
-	//				URI e efetua a operação em caso positivo
-	// @access		private
-	// @param		uri string	Endereço de destino do redirecionamento
-	// @return		void
-	// @note		Os redirecionamentos são disparados quando o status devolvido
-	//				pelo servidor HTTP indica mudança temporária ou permanente de
-	//				um recurso
-	//!-----------------------------------------------------------------
-	function _processRedirectResponse($uri) {
-		// verifica se a configuração da classe permite e se o status indica redirecionamento
+	/**
+	 * Handles a "redirect" HTTP status
+	 *
+	 * Opens a connection with the URL indicated by the "Location" response header.
+	 *
+	 * @access private
+	 */
+	function _processRedirectResponse() {
+		// check if redirects should be followed
 		if ($this->followRedirects && in_array($this->getStatus(), array(HTTP_STATUS_MOVED_PERMANENTLY, HTTP_STATUS_FOUND, HTTP_STATUS_SEE_OTHER))) {
-			// busca o cabeçalho Location na resposta do servidor
+			// get the Location response header
 			$uri = $this->getResponseHeader('Location');
 			if (!TypeUtils::isNull($uri) && !empty($uri)) {
-				// instancia um objeto Url para interpretar o caminho de redirecionamento
 				$Url = new Url($uri);
 				$redirectHost = $Url->getHost();
 				$redirectPort = TypeUtils::ifNull($Url->getPort(), HTTP_DEFAULT_PORT);
@@ -842,12 +947,12 @@ class HttpClient extends SocketClient
 				$redirectQueryString = TypeUtils::ifNull($Url->getQueryString(), '');
 				if (!empty($redirectQueryString))
 					$redirectQueryString = '?' . $redirectQueryString;
-				// atualiza as propriedades da classe caso o host ou a porta sejam modificados
+				// update class properties if host or port had changed
 				if ($redirectHost != $this->httpHost || $redirectPort != $this->httpPort) {
 					$this->httpHost = $redirectHost;
 					$this->httpPort = $redirectPort;
 					if (!$this->useProxy)
-						$this->_close();
+						parent::close();
 				}
 				usleep(100);
 				$this->doGet($redirectFile . $redirectQueryString);
@@ -855,15 +960,17 @@ class HttpClient extends SocketClient
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_processUseProxyResponse
-	// @desc		Trata o indicativo de uso de proxy contido na resposta do servidor
-	// @access		private
-	// @return		bool Retorna TRUE se o método deve ser executado novamente utilizando um proxy
-	//!-----------------------------------------------------------------
+	/**
+	 * Process an "use proxy" HTTP status
+	 *
+	 * Connects to the proxy URL indicated by the "Location" header.
+	 *
+	 * @access private
+	 * @return bool
+	 */
 	function _processUseProxyResponse() {
 		if ($this->getStatus() == HTTP_STATUS_USE_PROXY) {
-			$this->_close();
+			parent::close();
 			$Url = new Url($this->getResponseHeader('Location'));
 			$proxyHost = $Url->getHost();
 			$proxyPort = TypeUtils::ifNull($Url->getPort(), HTTP_DEFAULT_PORT);
@@ -874,63 +981,34 @@ class HttpClient extends SocketClient
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_connect
-	// @desc		Abre uma conexão com o host HTTP configurado na classe
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function _connect() {
-		if (!isset($this->httpHost)) {
-			$this->errorMsg = PHP2Go::getLangVal('ERR_HTTP_MISSING_HOST');
-			return FALSE;
-		}
-		if ($this->useProxy)
-			return parent::connect($this->proxyHost, $this->proxyPort, NULL, HTTP_DEFAULT_TIMEOUT);
-		else
-			return parent::connect($this->httpHost, $this->httpPort, NULL, HTTP_DEFAULT_TIMEOUT);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_close
-	// @desc		Fecha a conexão ativa
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _close() {
-		parent::close();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_resetRequest
-	// @desc		Reseta os dados de requisição HTTP da classe
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Reset request data
+	 *
+	 * @access private
+	 */
 	function _resetRequest() {
 		$this->requestHeaders = array();
 		$this->cookieHeaders = array();
 		$this->cookies = array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_resetResponse
-	// @desc		Reseta os dados de resposta da classe
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Reset response data
+	 *
+	 * @access private
+	 */
 	function _resetResponse() {
 		$this->responseHeaders = array();
 		$this->responseBody = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_getCurrentPath
-	// @desc		Busca o diretório corrente na URI da requisição
-	// @access		private
-	// @param		uri string	URI da requisição
-	// @return		string Diretório corrente, utilizado para filtrar os cookies a serem enviados
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the path part of an URI
+	 *
+	 * @param string $uri URI
+	 * @access private
+	 * @return string
+	 */
 	function _getCurrentPath($uri) {
 		$uriParts = explode('/', $uri);
 		array_pop($uriParts);
@@ -938,13 +1016,13 @@ class HttpClient extends SocketClient
 		return ($currentPath != '') ? $currentPath : '/';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpClient::_formatHeaderName
-	// @desc		Padroniza a nomenclatura de cabeçalhos inseridos em uma requisição
-	// @access		private
-	// @param		headerName string		Nome do cabeçalho
-	// @return		string Nome padronizado
-	//!-----------------------------------------------------------------
+	/**
+	 * Normalize an HTTP header name
+	 *
+	 * @param string $headerName Header name
+	 * @access private
+	 * @return string
+	 */
 	function _formatHeaderName($headerName) {
 		$formatted = ucwords(str_replace('-', ' ', strtolower($headerName)));
 		return str_replace(' ', '-', $formatted);
