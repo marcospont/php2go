@@ -222,7 +222,6 @@ $P2G_LANGUAGE['ERR_CANT_OPEN_SOCKET'] = "Não foi possível abrir o socket na port
 $P2G_LANGUAGE['ERR_SOCKET_NOT_CONNECTED'] = "A conexão com o socket não está ativa!";
 $P2G_LANGUAGE['ERR_SOCKET_EOF'] = "Fim de arquivo atingido, não foi possível completar a operação!";
 $P2G_LANGUAGE['ERR_SOCKET_TIMEOUT'] = "O tempo de espera do socket foi excedido. A operação não pode ser concluída!";
-$P2G_LANGUAGE['ERR_MAIL_MESSAGE_NOT_BUILT'] = "A mensagem não foi corretamente construída e não pode ser enviada!<BR>Execute o método build().";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "Não foi fornecido nenhum destinatário à mensagem!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "Não foi possível assinar o conteúdo da mensagem.<BR>%s";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Erro ao conectar ao servidor SMTP %s!<BR>[Erro %d] - %s";

@@ -224,7 +224,6 @@ $P2G_LANGUAGE['ERR_CANT_OPEN_SOCKET'] = "Nebylo mo&#382;né otev&#345;it socket z
 $P2G_LANGUAGE['ERR_SOCKET_NOT_CONNECTED'] = "Spojení za pou&#382;ití socketu není aktivní!";
 $P2G_LANGUAGE['ERR_SOCKET_EOF'] = "Dosa&#382;en konec souboru, operace nemohla b&#253;t dokon&#269;ena!";
 $P2G_LANGUAGE['ERR_SOCKET_TIMEOUT'] = "Vypr&#353;el &#269;as socketu. Operace nem&#367;&#382;e b&#253;t dokon&#269;ena!";
-$P2G_LANGUAGE['ERR_MAIL_MESSAGE_NOT_BUILT'] = "Zpráva nebyla správn&#283; vytvo&#345;ena a nem&#367;&#382;e b&#253;t odeslána!<BR>Spus&#357;te metodu build().";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "Nejsou zadáni &#382;ádní adresáti pro zprávu!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "Nebylo mo&#382;né podepsat obsah zprávy.<BR>%s";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Chyba p&#345;i spojování se serverem SMTP %s!<BR>[Chyby %d] - %s";
