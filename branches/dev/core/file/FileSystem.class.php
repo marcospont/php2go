@@ -179,7 +179,7 @@ class FileSystem extends PHP2Go
 		if (preg_match("~\.([^\.]+)$~", $fileName, $matches)) {
 			$extension = $matches[1];
 			if ($extension == 'lnk' && System::isWindows())
-				return $this->getFileAttributes(substr($fileName, 0, -4));
+				return FileSystem::getFileExtension(substr($fileName, 0, -4));
 			return $extension;
 		}
 		return '';
