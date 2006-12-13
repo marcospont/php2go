@@ -640,12 +640,17 @@ class Document extends PHP2Go
 	 *
 	 * @param string $event Event name
 	 * @param string $action Associated action
+	 * @param bool $pushStart Whether to add the event listener before all existent ones
 	 */
-	function attachBodyEvent($event, $action) {
+	function attachBodyEvent($event, $action, $pushStart=FALSE) {
+		$event = strtolower($event);
 		$action = str_replace("\"", "'", $action);
 		if (substr($action, -1, 1) != ';')
 			$action .= ';';
-		$this->bodyEvents[$event] = (isset($this->bodyEvents[$event])) ? $this->bodyEvents[$event] . $action : $action;
+		if (!isset($this->bodyEvents[$event]))
+			$this->bodyEvents[$event] = $action;
+		else
+			$this->bodyEvents[$event] = ($pushStart ? $action . $this->bodyEvents[$event] : $this->bodyEvents[$event] . $action);
 	}
 
 	/**
@@ -872,7 +877,7 @@ class Document extends PHP2Go
 				$onLoad .= "\t\t$instruction\n";
 			$onLoad .= "\t}";
 			$this->addScriptCode($onLoad, 'Javascript');
-			$this->attachBodyEvent('onLoad', 'p2gOnLoad();');
+			$this->attachBodyEvent('onload', 'p2gOnLoad();', TRUE);
 		}
 		// inline scripts located in the document's head
 		if (isset($this->scriptExtCode[SCRIPT_START])) {
