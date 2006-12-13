@@ -926,13 +926,21 @@ Event.onDOMReady = function(fn) {
  * @type void
  */
 Event.addLoadListener = function(fn) {
-	var oldLoad = window.onload;
-	if (typeof oldLoad != 'function') {
-		window.onload = fn;
+	/**
+	 * avoid conflicts between window.onload
+	 * and <body onload=""></body>
+	 */
+	if (!document.body) {
+		Event.addListener(window, 'load', fn);
 	} else {
-		window.onload = function() {
-			oldLoad();
-			fn();
+		var oldLoad = window.onload;
+		if (typeof oldLoad != 'function') {
+			window.onload = fn;
+		} else {
+			window.onload = function() {
+				oldLoad();
+				fn();
+			}
 		}
 	}
 };
