@@ -121,6 +121,13 @@ class Pop3 extends SocketClient
 	var $boxSize;
 
 	/**
+	 * Holds messages already fetched in the current connection
+	 *
+	 * @var array
+	 */
+	var $_msgCache = array();
+
+	/**
 	 * Class constructor
 	 *
 	 * @return Pop3
@@ -216,7 +223,7 @@ class Pop3 extends SocketClient
 	 *
 	 * @return int
 	 */
-	function getMsgCount() {
+	function getMessagesCount() {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		else {
@@ -244,6 +251,30 @@ class Pop3 extends SocketClient
 	}
 
 	/**
+	 * Get all available messages
+	 *
+	 * Returns a hash array where the keys are the
+	 * message IDs and the values are arrays containing
+	 * two keys: uniqueId and size.
+	 *
+	 * @return array
+	 */
+	function getAllMessages() {
+		$messageList = array();
+		$uidl = $this->uidl();
+		$list = $this->mList();
+		if ($uidl && $list) {
+			for($i=0; $i<sizeof($uidl); $i++) {
+				$messageList[$uidl[$i][0]] = array(
+					'uniqueId' => $uidl[$i][1],
+					'size' => isset($list[$i]) ? $list[$i][1] : 0
+				);
+			}
+		}
+		return $messageList;
+	}
+
+	/**
 	 * Get the contents of a given message
 	 *
 	 * You should be connected to execute this method.
@@ -252,6 +283,8 @@ class Pop3 extends SocketClient
 	 * @return string
 	 */
 	function getMessage($msgId) {
+		if (isset($this->_msgCache[$msgId]))
+			return $this->_msgCache[$msgId];
 		return $this->retr($msgId);
 	}
 
@@ -265,58 +298,33 @@ class Pop3 extends SocketClient
 	 * @param bool $parse Whether to parse the raw headers and return them as a hash array
 	 * @return string|array|bool
 	 */
-	function getMessageHeaders($msgId, $parse = FALSE) {
+	function getMessageHeaders($msgId, $parse=FALSE) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		if ($headers = $this->top($msgId))
+		if ($headers = $this->top($msgId, 0)) {
 			if ($parse)
 				return $this->_parseHeaders($headers);
-			else
-				return $headers;
-		else
-			return FALSE;
+			return $headers;
+		}
+		return FALSE;
 	}
 
 	/**
 	 * Get the body of a given message
 	 *
 	 * You should be connected to execute this method.
+	 * Returns FALSE when the message body can't be read.
 	 *
 	 * @param string $msgId Message ID
-	 * @return unknown
+	 * @return string|bool
 	 */
 	function getMessageBody($msgId) {
 		if ($content = $this->getMessage($msgId)) {
-			if (StringUtils::match($content, "\r\n\r\n")) {
-				$pos = strpos($content, "\r\n\r\n");
+			$pos = strpos($content, POP3_CRLF . POP3_CRLF);
+			if ($pos !== FALSE)
 				return substr($content, $pos+4);
-			}
 		}
-		return NULL;
-	}
-
-	/**
-	 * List all available messages
-	 *
-	 * Returns a hash array of messages, containing the
-	 * following keys: number, unique-id and size.
-	 *
-	 * @return array
-	 */
-	function listMessages() {
-		$messageList = array();
-		$uidl = $this->uidl();
-		$list = $this->mList();
-		if ($uidl && $list) {
-			for($i=0; $i<sizeof($uidl); $i++) {
-				$messageList[] = array(
-					'number' => $uidl[$i][0],
-					'unique-id' => $uidl[$i][1],
-					'size' => isset($list[$i]) ? $list[$i][1] : 0
-				);
-			}
-		}
-		return $messageList;
+		return FALSE;
 	}
 
 	/**
@@ -324,7 +332,7 @@ class Pop3 extends SocketClient
 	 *
 	 * @return int Number of deleted messages
 	 */
-	function clearMailBox() {
+	function deleteAllMessages() {
 		$deleted = 0;
 		if ($list = $this->mList())
 			foreach($list as $values)
@@ -333,9 +341,20 @@ class Pop3 extends SocketClient
 	}
 
 	/**
+	 * Delete a message from the mailbox
+	 *
+	 * @param string $msgId Message ID
+	 * @return bool
+	 */
+	function deleteMessage($msgId) {
+		return $this->dele($msgId);
+	}
+
+	/**
 	 * Sends the USER command
 	 *
 	 * @param string $userName Username
+	 * @access protected
 	 * @return bool
 	 */
 	function user($userName) {
@@ -356,6 +375,7 @@ class Pop3 extends SocketClient
 	 * This command must be executed right after the USER command.
 	 *
 	 * @param string $password Password
+	 * @access protected
 	 * @return bool
 	 */
 	function pass($password) {
@@ -380,6 +400,7 @@ class Pop3 extends SocketClient
 	 *
 	 * @param string $userName Username
 	 * @param string $password Password
+	 * @access protected
 	 * @return bool
 	 */
 	function apop($userName, $password) {
@@ -406,6 +427,7 @@ class Pop3 extends SocketClient
 	 * Thus, it populates the {@link msgCount} and {@link boxSize}
 	 * properties.
 	 *
+	 * @access protected
 	 * @return bool
 	 */
 	function stat() {
@@ -432,6 +454,7 @@ class Pop3 extends SocketClient
 	 *
 	 * @param string $msgId Message ID
 	 * @return string Message contents
+	 * @access protected
 	 */
 	function retr($msgId) {
 		if ($this->state != POP3_TRANS_STATE)
@@ -450,11 +473,14 @@ class Pop3 extends SocketClient
 	/**
 	 * Sends the TOP command
 	 *
-	 * The TOP command requests the first N lines of a given message
+	 * The TOP command requests the headers of the
+	 * message and the first N lines of the
+	 * message body.
 	 *
 	 * @param string $msgId Message ID
-	 * @param int $numLines Number of lines
-	 * @return string Message data
+	 * @param int $numLines Number of body lines
+	 * @return string Message headers and body
+	 * @access protected
 	 */
 	function top($msgId, $numLines=0) {
 		if ($this->state != POP3_TRANS_STATE)
@@ -475,6 +501,7 @@ class Pop3 extends SocketClient
 	 * will only be purged after the connection is closed.
 	 *
 	 * @param string $msgId Message ID
+	 * @access protected
 	 * @return bool
 	 */
 	function dele($msgId) {
@@ -486,6 +513,8 @@ class Pop3 extends SocketClient
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('DELE', $responseMessage));
 			return FALSE;
 		}
+		if (isset($this->_msgCache[$msgId]))
+			unset($this->_msgCache[$msgId]);
 		return TRUE;
 	}
 
@@ -496,16 +525,17 @@ class Pop3 extends SocketClient
 	 * ID or of all messages in the mailbox.
 	 *
 	 * @param string $msgId Optional message ID
+	 * @access protected
 	 * @return array
 	 */
-	function mList($msgId = NULL) {
+	function mList($msgId=NULL) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		$responseMessage = NULL;
 		if (TypeUtils::isNull($msgId)) {
 			$data = sprintf("LIST%s", POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
-				$lines = explode("\r\n", $this->_readAll());
+				$lines = explode(POP3_CRLF, $this->_readAll());
 				$return = array();
 				foreach($lines as $line) {
 					if (ereg("([0-9]+)[ ]([0-9]+)", $line, $matches)) {
@@ -534,16 +564,17 @@ class Pop3 extends SocketClient
 	 * ID or of all messages in the mailbox.
 	 *
 	 * @param string $msgId Message ID
+	 * @access protected
 	 * @return array
 	 */
-	function uidl($msgId = NULL) {
+	function uidl($msgId=NULL) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		$responseMessage = NULL;
 		if (TypeUtils::isNull($msgId)) {
 			$data = sprintf("UIDL%s", POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
-				$lines = explode("\r\n", $this->_readAll());
+				$lines = explode(POP3_CRLF, $this->_readAll());
 				$return = array();
 				foreach($lines as $line) {
 					if (ereg("([0-9]+)[ ](.+)", $line, $matches)) {
@@ -606,6 +637,7 @@ class Pop3 extends SocketClient
 	 * @return bool
 	 */
 	function quit() {
+		$this->_msgCache = array();
 		if ($this->state == POP3_TRANS_STATE)
 			$this->state = POP3_UPDATE_STATE;
 		else
@@ -670,10 +702,12 @@ class Pop3 extends SocketClient
      */
 	function _readAll() {
         $data = '';
-		while (($line = parent::readLine()) != '.') {
+        $line = parent::readLine();
+        while ($line !== FALSE && trim($line) != '.') {
 			if (StringUtils::left($line, 2) == '..')
 				$line = substr($line, 1);
-			$data .= $line . POP3_CRLF;
+			$data .= trim($line) . POP3_CRLF;
+			$line = parent::readLine();
 		}
 		return StringUtils::left($data, -2);
     }
@@ -681,26 +715,31 @@ class Pop3 extends SocketClient
 	/**
 	 * Parse the headers of a message
 	 *
-	 * @param string $headers Raw message headers
+	 * @param string $rawHeaders Raw message headers
 	 * @access private
 	 * @return array
 	 */
-	function _parseHeaders($headers) {
-		$headers = preg_replace("/\r\n[ \t]+/", ' ', $headers);
-		$headerList = explode("\r\n", $headers);
+	function _parseHeaders($rawHeaders) {
 		$headers = array();
-		foreach ($headerList as $key => $value) {
-			if (strpos($value, ':') !== FALSE) {
-				ereg("([^:]+):(.+)", $value, $matches);
-				$name = trim($matches[1]);
-				$value = trim($matches[2]);
-				if (isset($headers[$name]))
-					if (is_array($headers[$name]))
-						$headers[$name][] = $value;
+		$matches = array();
+		$headerList = explode(POP3_CRLF, $rawHeaders);
+		foreach ($headerList as $headerItem) {
+			if (preg_match("/^([a-zA-Z_\-]+)\:(.*)/", $headerItem, $matches)) {
+				$headerName = trim($matches[1]);
+				$headerValue = trim($matches[2]);
+				if (isset($headers[$headerName])) {
+					if (is_array($headers[$headerName]))
+						$headers[$headerName][] = $headerValue;
 					else
-						$headers[$name] = array($headers[$name], $value);
+						$headers[$headerName] = array($headers[$headerName], $headerValue);
+				} else {
+					$headers[$headerName] = $headerValue;
+				}
+			} else {
+				if (is_array($headers[$headerName]))
+					$headers[$headerName][sizeof($headers[$headerName])-1] .= POP3_CRLF . trim($headerItem);
 				else
-					$headers[$name] = $value;
+					$headers[$headerName] .= POP3_CRLF . trim($headerItem);
 			}
 		}
 		return $headers;
