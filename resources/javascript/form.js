@@ -210,7 +210,7 @@ var Form = {
 			Event.addListener(form, 'submit', function(e) {
 				var frm, evt = $EV(e);
 				var elm = $E(evt.element());
-				evt.stop();				
+				evt.stop();
 				if (frm = elm.getParentByTagName('form'))
 					frm.ajax();
 			}, true);
@@ -250,7 +250,7 @@ var Form = {
 		}
 	}
 };
-Event.addLoadListener(function() {
+Event.addListener(window, 'load', function() {
 	var forms = $C(document.getElementsByTagName('form'));
 	forms.walk(function(item, idx) {
 		Event.addListener(item, 'submit', function() {
