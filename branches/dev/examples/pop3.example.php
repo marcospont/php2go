@@ -15,21 +15,23 @@
 	// enable debug to see the client/server messages
 	$pop->debug = TRUE;
 	// connect to a POP3 host (default port = 110)
-	$pop->connect('your.pop3.host');
+	$pop->connect('your.pop.host');
 	// send authentication data
-	$pop->login('username', 'password');
+	$pop->authenticate('username', 'password');
 
 	// get the message count
-	$count = $pop->getMsgCount();
+	$count = $pop->getMessagesCount();
 	println('<b>Total number os messages in the POP3 server:</b> ' . $count);
+	flush();
 
 	// get the headers of each message
 	for ($i=1; $i<=$count; $i++) {
 		$h = $pop->getMessageHeaders($i, TRUE);
-		println('Date: ' . $h['Date'] . '<br>Subject: ' . $h['Subject'] . '<br>From: ' . htmlspecialchars($h['From']));
+		println('<hr>Date: ' . $h['Date'] . '<br>Subject: ' . $h['Subject'] . '<br>From: ' . $h['From']);
+		flush();
 	}
 
-	//close the connection
-	$pop->close();
+	// close the connection
+	$pop->quit();
 
 ?>
