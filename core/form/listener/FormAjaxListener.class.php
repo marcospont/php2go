@@ -161,7 +161,7 @@ class FormAjaxListener extends FormEventListener
 			$Form->Document->addScriptCode(
 				"\tForm.ajaxify($('{$Form->formName}'), function() {\n" .
 				$this->getParamsScript() .
-				"\t\tvar request = new {$this->class}('{$this->url}', getParams());\n" .
+				"\t\tvar request = new {$this->class}('{$this->url}', params);\n" .
 				"\t\trequest.send();\n" .
 				"\t});",
 			'Javascript', SCRIPT_END);
@@ -177,7 +177,7 @@ class FormAjaxListener extends FormEventListener
 			}
 			$Form->Document->addScriptCode(
 				"\tfunction {$funcName}({$ctorArgs}) {\n{$params}" .
-				"\t\tvar request = new {$this->class}('{$this->url}', getParams());\n" .
+				"\t\tvar request = new {$this->class}('{$this->url}', params);\n" .
 				"\t\trequest.send();\n" .
 				"\t}",
 			'Javascript', SCRIPT_END);
@@ -195,14 +195,13 @@ class FormAjaxListener extends FormEventListener
 	 * @return string
 	 */
 	function getParamsScript() {
-		$buf = "\t\tvar getParams = function() {\n";
+		$buf = "";
 		if (!empty($this->paramsFuncBody)) {
 			$funcBody = rtrim(ltrim($this->paramsFuncBody, "\r\n "));
-			preg_match("/^([\t]+)/", $funcBody, $matches);
-			$funcBody = (isset($matches[1]) ? preg_replace("/^\t{" . strlen($matches[1]) . "}/m", "\t\t\t\t", $funcBody) : $funcBody);
-			$buf .= "\t\t\tvar params = function() {\n{$funcBody}\n\t\t\t}();\n";
+			$funcBody = $this->_convertTabs($funcBody, 3);
+			$buf .= "\t\tvar params = function() {\n{$funcBody}\n\t\t}();\n";
 		} else {
-			$buf .= "\t\t\tvar params = {};\n";
+			$buf .= "\t\tvar params = {};\n";
 		}
 		foreach ($this->params as $name => $value) {
 			switch ($name) {
@@ -211,41 +210,48 @@ class FormAjaxListener extends FormEventListener
 				case 'body' :
 				case 'form' :
 				case 'throbber' :
-					$buf .= "\t\t\tparams.{$name} = '{$value}';\n";
+					$value = trim($value);
+					$buf .= "\t\tparams.{$name} = '{$value}';\n";
 					break;
 				case 'async' :
 				case 'params' :
 				case 'headers' :
 				case 'formFields' :
-					$buf .= "\t\t\tparams.{$name} = {$value};\n";
+					$value = trim($value);
+					$buf .= "\t\tparams.{$name} = {$value};\n";
 					break;
 				case 'container' :
-					$buf .= "\t\t\tparams.{$name} = " . (preg_match("/{.*}/", $value) ? $value : "'{$value}'") . ";\n";
+					$value = trim($value);
+					$buf .= "\t\tparams.{$name} = " . (preg_match("/{.*}/", $value) ? $value : "'{$value}'") . ";\n";
 					break;
 				case 'onLoading' :
 				case 'onLoaded' :
 				case 'onInteractive' :
-					$buf .=	"\t\t\tparams.{$name} = function() {\n" .
-							"\t\t\t{$value}\n" .
-							"\t\t\t}\n";
+					$value = trim(rtrim($value), "\n");
+					$value = $this->_convertTabs($value, 3);
+					$buf .=	"\t\tparams.{$name} = function() {\n" .
+							"{$value}\n" .
+							"\t\t};\n";
 							break;
 				case 'onComplete' :
 				case 'onSuccess' :
 				case 'onFailure' :
 				case 'onJSONResult' :
 				case 'onXMLResult' :
-					$buf .=	"\t\t\tparams.{$name} = function(response) {\n" .
-							"\t\t\t{$value}\n" .
-							"\t\t\t}\n";
+					$value = trim(rtrim($value), "\n");
+					$value = $this->_convertTabs($value, 3);
+					$buf .=	"\t\tparams.{$name} = function(response) {\n" .
+							"{$value}\n" .
+							"\t\t};\n";
 							break;
 				case 'onException' :
-					$buf .=	"\t\t\tparams.{$name} = function(e) {\n" .
-					$buf .= "\t\t\t{$value}\n" .
-							"\t\t\t}\n";
+					$value = trim(rtrim($value), "\n");
+					$value = $this->_convertTabs($value, 3);
+					$buf .=	"\t\tparams.{$name} = function(e) {\n" .
+					$buf .= "{$value}\n" .
+							"\t\t};\n";
 			}
 		}
-		$buf .= "\t\t\treturn params;\n";
-		$buf .= "\t\t}\n";
 		return $buf;
 	}
 
@@ -282,6 +288,21 @@ class FormAjaxListener extends FormEventListener
 			$info .= "; {$this->class}";
 		$info .= ']';
 		return $info;
+	}
+
+	/**
+	 * Normalize tab characters inside a function body or an AJAX param definition
+	 *
+	 * @param string $str Input string
+	 * @param int $n Minimum tab chars on left side
+	 * @access private
+	 * @return string
+	 */
+	function _convertTabs($str, $n) {
+		$matches = array();
+		$tabs = str_repeat("\t", $n);
+		preg_match("/^([\t]+)/", $str, $matches);
+		return (isset($matches[1]) ? preg_replace("/^\t{" . strlen($matches[1]) . "}/m", $tabs, $str) : $str);
 	}
 }
 
