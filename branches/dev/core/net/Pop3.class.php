@@ -193,7 +193,7 @@ class Pop3 extends SocketClient
 	 * @param bool $apop Whether to use the APOP command
 	 * @return bool
 	 */
-	function login($userName, $password, $apop = FALSE) {
+	function authenticate($userName, $password, $apop = FALSE) {
 		if ($this->state == POP3_AUTH_STATE) {
 			if ($apop && $this->apop($userName, $password))
 				return TRUE;
