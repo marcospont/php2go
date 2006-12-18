@@ -59,7 +59,7 @@
 	/**
 	 * build an anchor pointing to the URL
 	 */
-	println('Geração de âncora: ' . $url->getAnchor('Click me!'));
+	println('Build anchor: ' . $url->getAnchor('Click me!'));
 	println('<hr>');
 	/**
 	 * get the normalized URL value
