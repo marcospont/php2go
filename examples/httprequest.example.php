@@ -50,7 +50,7 @@
 	 */
 	println('<b>Get user agent information</b>');
 	$agent =& UserAgent::getInstance();
-	println(nl2br($agent->toString()));
+	println(nl2br($agent->__toString()));
 	println('<b>Is IE?</b> ' . TypeUtils::parseInteger($agent->matchBrowser('ie')));
 	println('<b>Match against a browser list:</b> ' . $agent->matchBrowserList(array('ie5+', 'ns6+', 'opera5+')));
 	println('<b>Accepts gzip encoding?</b> ' . TypeUtils::parseInteger($agent->matchAcceptList('gzip', 'encoding')));
