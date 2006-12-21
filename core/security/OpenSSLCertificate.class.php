@@ -1,210 +1,266 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/security/OpenSSLCertificate.class.php,v 1.12 2006/04/05 23:43:21 mpont Exp $
-// $Date: 2006/04/05 23:43:21 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.datetime.Date');
-import('php2go.file.FileManager');
 import('php2go.security.DistinguishedName');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		OpenSSLCertificate
-// @desc		Classe que armazena e retorna informações sobre um
-//				certificado digital do tipo X509. Utiliza as funções
-//				da biblioteca openssl
-// @package		php2go.security
-// @uses		Conf
-// @uses		DistinguishedName
-// @uses		FileManager
-// @uses		FileSystem
-// @uses		TypeUtils
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.12 $
-//!-----------------------------------------------------------------
+/**
+ * Reads and parses X509 certificates
+ *
+ * This class is built over the functions provided by
+ * the openssl PHP extension.
+ *
+ * @package security
+ * @uses Conf
+ * @uses Date
+ * @uses DistinguishedName
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class OpenSSLCertificate extends PHP2Go
 {
-	var $name;				// @var name string							Nome completo do certificado
-	var $ownerDN;			// @var ownerDN DistinguishedName object	Armazena informações do proprietário do certificado
-	var $hash;				// @var hash string							Hash do certificado
-	var $serialNumber;		// @var serialNumber string					Número serial
-	var $version;			// @var version string						Versão do certificado
-	var $issuerDN;			// @var issuerDN DistinguishedName object	Armazena informações sobre o provedor do certificado
-	var $validFrom;			// @var validFrom int						Timestamp inicial da validade
-	var $validTo;			// @var validTo int							Timestamp de expiração do certificado
-	var $purposes;			// @var purposes array						Vetor de propósitos do certificado
-	var $contents;			// @var contents string						Conteúdo do certificado, capturado do arquivo no servidor
-	var $resource;			// @var resource resource					Resource obtido na operação de leitura do conteúdo do certificado
+	/**
+	 * Certificate's name
+	 *
+	 * @var string
+	 */
+	var $name;
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::OpenSSLCertificate
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		path string		Caminho do certificado no servidor
-	//!-----------------------------------------------------------------
+	/**
+	 * Owner's distinguished name
+	 *
+	 * @var object DistinguishedName
+	 */
+	var $ownerDN;
+
+	/**
+	 * Certificate's hash
+	 *
+	 * @var string
+	 */
+	var $hash;
+
+	/**
+	 * Certificate's serial number
+	 *
+	 * @var string
+	 */
+	var $serialNumber;
+
+	/**
+	 * Certificate's version
+	 *
+	 * @var string
+	 */
+	var $version;
+
+	/**
+	 * Issuer's distinguished name
+	 *
+	 * @var object DistinguishedName
+	 */
+	var $issuerDN;
+
+	/**
+	 * Initial validity timestamp
+	 *
+	 * @var int
+	 */
+	var $validFrom;
+
+	/**
+	 * Expiration timestamp
+	 *
+	 * @var int
+	 */
+	var $validTo;
+
+	/**
+	 * Certificate's purposes
+	 *
+	 * @var string
+	 */
+	var $purposes;
+
+	/**
+	 * Full certificate
+	 *
+	 * @var string
+	 */
+	var $contents;
+
+	/**
+	 * X509 handle
+	 *
+	 * @access private
+	 * @var resource
+	 */
+	var $handle;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $path Certificate's path
+	 * @return OpenSSLCertificate
+	 */
 	function OpenSSLCertificate($path) {
 		parent::PHP2Go();
-		// verifica a disponibilidade da extensão openssl
 		if (!function_exists('openssl_x509_read'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_UNSUPPORTED_EXTENSION', 'openssl'), E_USER_ERROR, __FILE__, __LINE__);
 		$this->_readCertificate($path);
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::__destruct
-	// @desc		Destrutor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 */
 	function __destruct() {
-		if (TypeUtils::isResource($this->resource))
-			openssl_x509_free($this->resource);
+		if (is_resource($this->handle))
+			openssl_x509_free($this->handle);
 		unset($this);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getContent
-	// @desc		Retorna o conteúdo do certificado
-	// @access		public
-	// @return		string Conteúdo do certificado
-	//!-----------------------------------------------------------------
+	/**
+	 * Get certificate's content
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		return (isset($this->contents) ? $this->contents : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getName
-	// @desc		Retorna o nome completo do certificado
-	// @access		public
-	// @return		string Nome completo do certificado
-	//!-----------------------------------------------------------------
+	/**
+	 * Get certificate's name
+	 *
+	 * @return string
+	 */
 	function getName() {
 		return (isset($this->name) ? $this->name : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getOwnerDN
-	// @desc		Retorna o distinguished name do proprietário do certificado
-	// @access		public
-	// @return		DistinguishedName object DN do proprietário do certificado
-	//!-----------------------------------------------------------------
+	/**
+	 * Get owner's distinguished name
+	 *
+	 * @return DistinguishedName
+	 */
 	function getOwnerDN() {
 		return (isset($this->ownerDN) ? $this->ownerDN : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getHash
-	// @desc		Busca o hash do certificado
-	// @access		public
-	// @return		string Hash do certificado
-	//!-----------------------------------------------------------------
+	/**
+	 * Get certificate's hash
+	 *
+	 * @return string
+	 */
 	function getHash() {
 		return (isset($this->hash) ? $this->hash : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getSerialNumber
-	// @desc		Retorna o número serial do certificado
-	// @access		public
-	// @return		string Número serial do certificado
-	//!-----------------------------------------------------------------
+	/**
+	 * Get certificate's serial number
+	 *
+	 * @return string
+	 */
 	function getSerialNumber() {
 		return (isset($this->serialNumber) ? $this->serialNumber : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getVersion
-	// @desc		Busca a versão do certificado digital
-	// @access		public
-	// @return		string Versão do certificado
-	//!-----------------------------------------------------------------
+	/**
+	 * Get certificate's version
+	 *
+	 * @return string
+	 */
 	function getVersion() {
 		return (isset($this->version) ? $this->version : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getIssuerDN
-	// @desc		Busca o distinguished name associado ao provedor do certificado
-	// @access		public
-	// @return		DistinguishedName object DN do provedor
-	//!-----------------------------------------------------------------
+	/**
+	 * Get issuer's distinguished name
+	 *
+	 * @return DistinguishedName
+	 */
 	function getIssuerDN() {
 		return (isset($this->issuerDN) ? $this->issuerDN : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getIssueDate
-	// @desc		Busca a data inicial de validade do certificado digital
-	// @access		public
-	// @param		fmt string	"" Formato da data
-	// @return		string Data inicial de validade
-	// @note		O parâmetro $fmt deve representar um formato válido segundo
-	//				as especificações da função date() no PHP. Se não for fornecido,
-	//				o formato de data utilizado será buscado na configuração
-	//!-----------------------------------------------------------------
+	/**
+	 * Get issue date
+	 *
+	 * The $fmt argument represents the date format
+	 * to be applied on the initial validity timestamp.
+	 * If this parameter is missing, the LOCAL_DATE_FORMAT
+	 * configuration entry will be used.
+	 *
+	 * @param string $fmt Date format
+	 * @return string
+	 */
 	function getIssueDate($fmt='') {
-		$Conf =& Conf::getInstance();
 		if (isset($this->validFrom)) {
-			if (!empty($fmt))
+			if (!empty($fmt)) {
 				return date($fmt, $this->validFrom);
-			else
+			} else {
+				$Conf =& Conf::getInstance();
 				return date($Conf->getConfig('LOCAL_DATE_FORMAT'), $this->validFrom);
+			}
 		}
 		return NULL;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getExpiryDate
-	// @desc		Busca a data de expiração do certificado digital
-	// @access		public
-	// @param		fmt string	"" Formato da data
-	// @return		string Data de expiração
-	// @note		O parâmetro $fmt deve representar um formato válido segundo
-	//				as especificações da função date() no PHP. Se não for fornecido,
-	//				o formato de data utilizado será buscado na configuração
-	//!-----------------------------------------------------------------
+	/**
+	 * Get expiry date
+	 *
+	 * The $fmt argument represents the date format
+	 * to be applied on the expiration timestamp. If
+	 * missing, the LOCAL_DATE_FORMAT configuration
+	 * entry will be used.
+	 *
+	 * @param string $fmt Date format
+	 * @return string
+	 */
 	function getExpiryDate($fmt='') {
 		$Conf =& Conf::getInstance();
 		if (isset($this->validTo)) {
 			if (!empty($fmt))
 				return date($fmt, $this->validTo);
-			else
-				return date($Conf->getConfig('LOCAL_DATE_FORMAT', $this->validTo));
+			return date($Conf->getConfig('LOCAL_DATE_FORMAT', $this->validTo));
 		}
 		return NULL;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::isValid
-	// @desc		Verifica a data de expiração do certificado digital
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Validates the certificate's expiration timestamp
+	 *
+	 * @uses Date::isPast()
+	 * @return bool
+	 */
 	function isValid() {
 		if (isset($this->validTo)) {
+			import('php2go.datetime.Date');
 			$Conf =& Conf::getInstance();
 			$expiryDate = date($Conf->getConfig('LOCAL_DATE_FORMAT'), $this->validTo);
 			return (!Date::isPast($expiryDate));
@@ -212,79 +268,73 @@ class OpenSSLCertificate extends PHP2Go
 		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::getPurposes
-	// @desc		Retorna o vetor de propósitos do certificado digital
-	// @access		public
-	// @return		array Vetor de propósitos
-	//!-----------------------------------------------------------------
+	/**
+	 * Get certificate's purposes
+	 *
+	 * @return array
+	 */
 	function getPurposes() {
 		return (isset($this->purposes) ? $this->purposes : NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::toString
-	// @desc		Monta uma representação string do certificado OpenSSL
-	// @access		public
-	// @return		string Representação string do objeto
-	// @see			PHP2Go::toString
-	//!-----------------------------------------------------------------
-	function toString() {
+	/**
+	 * Builds and returns a string representation of the certificate
+	 *
+	 * @return string
+	 */
+	function __toString() {
 		return sprintf("X.509 Certificate object{\n Name: %s\n Owner: %s\n Hash: %s\n SerialNumber: %s\n Version: %s\n Issuer: %s\n NotBefore: %s\n NotAfter: %s\n}",
-					$this->getName(), $this->ownerDN->toString(),
+					$this->getName(), $this->ownerDN->__toString(),
 					$this->getHash(), $this->getSerialNumber(),
-					$this->getVersion(), $this->issuerDN->toString(),
+					$this->getVersion(), $this->issuerDN->__toString(),
 					$this->getIssueDate(), $this->getExpiryDate()
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::_readCertificate
-	// @desc		Lê o conteúdo do arquivo do certificado e verifica a validade do conteúdo
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Reads, parses and validates the contents of the certificate
+	 *
+	 * @param string $path Certificate's path
+	 * @return bool
+	 */
 	function _readCertificate($path) {
-		if (!FileSystem::exists($path)) {
+		if (!file_exists($path)) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_CERT_PATH'), E_USER_ERROR, __FILE__, __LINE__);
-		} else {
-			$result = FALSE;
-			$Mgr =& new FileManager();
-			if ($Mgr->open($path, FILE_MANAGER_READ_BINARY)) {
-				$this->contents = $Mgr->read(8192);
-				if (TypeUtils::isResource($this->resource = @openssl_x509_read($this->contents))) {
-					if (TypeUtils::isArray($info = @openssl_x509_parse($this->resource))) {
-						$this->_parseCertificate($info);
-						$result = TRUE;
-					}
-				}
-			}
-			if (!$result)
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
 		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	OpenSSLCertificate::_parseCertificate
-	// @desc		Parseia as informações acerca do certificado
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _parseCertificate($info) {
+		if (($fp = @fopen($path, 'rb')) === FALSE) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', ''), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		// read file
+		$this->contents = fread($fp, 8192);
+		fclose($fp);
+		// read certificate
+		if (!is_resource($this->handle = @openssl_x509_read($this->contents))) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		// parse certificate
+		if (!is_array($info = @openssl_x509_parse($this->handle))) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		// populate class properties
 		$this->name = $info['name'];
-		$this->ownerDN =& new DistinguishedName($info['subject']);
+		$this->ownerDN = new DistinguishedName($info['subject']);
 		$this->hash = $info['hash'];
 		$this->serialNumber = $info['serialNumber'];
 		$this->version = $info['version'];
-		$this->issuerDN =& new DistinguishedName($info['issuer']);
+		$this->issuerDN = new DistinguishedName($info['issuer']);
 		$this->validFrom = $info['validFrom_time_t'];
 		$this->validTo = $info['validTo_time_t'];
-		if (TypeUtils::isArray($info['purposes'])) {
+		if (is_array($info['purposes'])) {
 			$tmp = array();
 			foreach ($info['purposes'] as $purpose)
 				$tmp[$purpose[2]] = $purpose[1];
 			$this->purposes = $tmp;
 		}
+		return TRUE;
 	}
 }
 ?>
