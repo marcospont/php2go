@@ -28,8 +28,8 @@
 import('php2go.auth.User');
 import('php2go.cache.CacheManager');
 import('php2go.data.DataSet');
+import('php2go.gui.Widget');
 import('php2go.template.TemplateParser');
-import('php2go.template.widget.Widget');
 import('php2go.text.StringUtils');
 import('php2go.util.HtmlUtils');
 import('php2go.util.json.JSONEncoder');
