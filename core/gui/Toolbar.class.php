@@ -1,78 +1,99 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/template/widget/Toolbar.class.php,v 1.4 2006/10/26 04:32:49 mpont Exp $
-// $Date: 2006/10/26 04:32:49 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const TOOLBAR_MODE_ICONS "1"
-// Modo de construção dos itens da toolbar na forma de ícones
+import('php2go.template.Template');
+
+/**
+ * Each toolbar item is an icon
+ */
 define('TOOLBAR_MODE_ICONS', 1);
-// @const TOOLBAR_MODE_BUTTONS "2"
-// Modo de construção dos itens da toolbar na forma de botões
+/**
+ * Each toolbar item is a button
+ */
 define('TOOLBAR_MODE_BUTTONS', 2);
-// @const TOOLBAR_MODE_LINKS "3"
-// Modo de construção dos itens da toolbar na forma de links (padrão da classe)
+/**
+ * Each toolbar item is a link
+ */
 define('TOOLBAR_MODE_LINKS', 3);
 
-//!-----------------------------------------------------------------
-// @class		Toolbar
-// @desc		A toolbar é uma tabela contendo um conjunto de itens (ícones,
-//				botões ou links). Pode ser gerada horizontalmente ou verticalmente,
-//				permite configuração de estilos (através de nomes de pseudo-classes),
-//				tamanhos e alinhamento
-// @package		php2go.template.widget
-// @extends		Widget
-// @uses		Template
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.4 $
-//!-----------------------------------------------------------------
+/**
+ * Generates a table (horizontal or vertical) of action links
+ *
+ * Available attributes:
+ * # id : toolbar ID
+ * # mode : toolbar mode ({@link TOOLBAR_MODE_ICONS}, {@link TOOLBAR_MODE_BUTTONS} or {@link TOOLBAR_MODE_LINKS})
+ * # align : toolbar align
+ * # class : toolbar CSS class
+ * # horizontal : TRUE or FALSE (vertical)
+ * # width : toolbar width
+ * # items : toolbar items
+ * # itemClass : CSS class for toolbar items
+ * # itemHeight : height for the toolbar items
+ * # descriptionAlign : align of the layer used to show the item's description when the mouse is over it
+ * # descriptionClass : CSS class for the description layer
+ * # activeIndex : index of the active toolbar item (zero based)
+ * # activeClass : CSS class for the active toolbar item
+ *
+ * @package gui
+ * @uses Template
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Toolbar extends Widget
 {
-	var $Template = NULL;	// @var Template Template object	"NULL" Template base para construção da toolbar
-	
-	//!-----------------------------------------------------------------
-	// @function	Toolbar::Toolbar
-	// @desc		Construtor da classe
-	// @param		properties array	Conjunto de propriedades
-	// @access		public
-	//!-----------------------------------------------------------------
-	function Toolbar($properties) {
-		parent::Widget($properties);
-		$this->mandatoryProperties[] = 'items';
-		$this->hasBody = FALSE;
+	/**
+	 * Generates the toolbar code
+	 *
+	 * @access protected
+	 * @var object Template
+	 */
+	var $Template = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param array $attrs Attributes
+	 * @return Toolbar
+	 */
+	function Toolbar($attrs) {
+		parent::Widget($attrs);
+		$this->isContainer = FALSE;
+		$this->mandatoryAttributes[] = 'items';
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Toolbar::loadProperties
-	// @desc		Define as propriedades do widget reunindo os valores default
-	//				e as propriedades fornecidas, e aplicando transformações
-	//				necessárias
-	// @param		properties array	Conjunto de propriedades
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function loadProperties($properties) {
+
+	/**
+	 * Merges user defined attributes with default ones
+	 *
+	 * @param array $attrs Toolbar attributes
+	 */
+	function loadAttributes($attrs) {
 		$defaults = array(
 			'id' => PHP2Go::generateUniqueId(parent::getClassName()),
 			'mode' => TOOLBAR_MODE_LINKS,
@@ -82,56 +103,45 @@ class Toolbar extends Widget
 			'descriptionAlign' => 'center',
 			'activeIndex' => NULL
 		);
-		$properties = array_merge($defaults, $properties);
-		if (TypeUtils::isInteger($properties['width']))
-			$properties['width'] .= 'px';		
-		if (TypeUtils::isInteger($properties['itemHeight']))
-			$properties['itemHeight'] .= 'px';
-		parent::loadProperties($properties);
+		$attrs = array_merge($defaults, $attrs);
+		if (TypeUtils::isInteger($attrs['width']))
+			$attrs['width'] .= 'px';
+		if (TypeUtils::isInteger($attrs['itemHeight']))
+			$attrs['itemHeight'] .= 'px';
+		parent::loadAttributes($attrs);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Toolbar::onPreRender
-	// @desc		Método de pré-processamento da toolbar: cria e configura
-	//				o template base, aplicando as propriedades no widget
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Creates and configures the toolbar template
+	 */
 	function onPreRender() {
 		$this->Template = new Template(PHP2GO_TEMPLATE_PATH . 'toolbar.tpl');
 		$this->Template->parse();
-		// propriedades gerais
-		$this->Template->assign('id', $this->properties['id']);
-		$this->Template->assign('mode', $this->properties['mode']);
-		$this->Template->assign('align', $this->properties['align']);
-		$this->Template->assign('horizontal', $this->properties['horizontal']);
-		if (isset($this->properties['class']))
-			$this->Template->assign('class', " class=\"{$this->properties['class']}\"");
-		if (isset($this->properties['width']))
-			$this->Template->assign('width', $this->properties['width']);
-		// propriedades dos itens
-		$this->Template->assign('items', $this->properties['items']);
-		$this->Template->assign('itemHeight', $this->properties['itemHeight']);
-		if (isset($this->properties['itemClass']))
-			$this->Template->assign('itemClass', " class=\"{$this->properties['itemClass']}\"");
-		// propriedades da description
-		$this->Template->assign('descriptionAlign', $this->properties['descriptionAlign']);
-		if (isset($this->properties['descriptionClass']))
-			$this->Template->assign('descriptionClass', " class=\"{$this->properties['descriptionClass']}\"");
-		// propriedades do índice ativo
-		$this->Template->assign('activeIndex', $this->properties['activeIndex']);
-		if (isset($this->properties['activeClass']))
-			$this->Template->assign('activeClass', " class=\"{$this->properties['activeClass']}\"");
+		$this->Template->assign('id', $this->attributes['id']);
+		$this->Template->assign('mode', $this->attributes['mode']);
+		$this->Template->assign('align', $this->attributes['align']);
+		$this->Template->assign('horizontal', $this->attributes['horizontal']);
+		if (isset($this->attributes['class']))
+			$this->Template->assign('class', " class=\"{$this->attributes['class']}\"");
+		if (isset($this->attributes['width']))
+			$this->Template->assign('width', $this->attributes['width']);
+		$this->Template->assign('items', $this->attributes['items']);
+		$this->Template->assign('itemHeight', $this->attributes['itemHeight']);
+		if (isset($this->attributes['itemClass']))
+			$this->Template->assign('itemClass', " class=\"{$this->attributes['itemClass']}\"");
+		$this->Template->assign('descriptionAlign', $this->attributes['descriptionAlign']);
+		if (isset($this->attributes['descriptionClass']))
+			$this->Template->assign('descriptionClass', " class=\"{$this->attributes['descriptionClass']}\"");
+		$this->Template->assign('activeIndex', $this->attributes['activeIndex']);
+		if (isset($this->attributes['activeClass']))
+			$this->Template->assign('activeClass', " class=\"{$this->attributes['activeClass']}\"");
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Toolbar::render
-	// @desc		Renderiza o conteúdo do template associado à toolbar
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
-	function render() {		
-		return $this->Template->getContent();
+
+	/**
+	 * Renders the toolbar
+	 */
+	function render() {
+		$this->Template->display();
 	}
 }
 ?>
