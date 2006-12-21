@@ -1,150 +1,134 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/template/widget/Widget.class.php,v 1.6 2006/10/26 04:32:49 mpont Exp $
-// $Date: 2006/10/26 04:32:49 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.template.Template');
-//------------------------------------------------------------------
-
-//!-----------------------------------------------------------------
-// @class		Widget
-// @desc		Os widgets são componentes que geram trechos de interface a partir
-//				de um conjunto de parâmetros que adicionam a ele comportamentos ou
-//				características. A class Widget é a base para todos estes componentes,
-//				com alguns controles já implementados: hash de propriedades, controle
-//				de propriedades obrigatórias e conjunto de scripts necessários
-// @package		php2go.template.widget
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.6 $
-//!-----------------------------------------------------------------
-class Widget extends PHP2Go
+/**
+ * Interface control that can be included in page templates
+ *
+ * A widget is an interface control that can be declared inside a
+ * template. There are 2 types of widgets: include widgets, which
+ * are just included somewhere in the template, and container widgets,
+ * which accept internal content (even other widgets), and must be
+ * declared with a "start widget" and an "end widget" declarations.
+ *
+ * This class is the base of all template widgets available in PHP2Go.
+ * If the developer wants to create its own widgets, these widgets must
+ * extend this class in order to be valid.
+ *
+ * @package gui
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
+class Widget extends Component
 {
-	var $content = '';						// @var content string				"" Conteúdo gerado para o widget
-	var $bodyContent;						// @var bodyContent string			Conteúdo (corpo) que é atribuído a widgets que funcionam como "containers"
-	var $properties = array();				// @var properties array			"array()" Conjunto de propriedades do widget
-	var $mandatoryProperties = array();		// @var mandatoryProperties array	"array()" Conjunto de propriedades obrigatórias para o funcionamento correto do widget
-	var $hasBody = TRUE;					// @var hasBody bool				"TRUE" Aceita conteúdo interno. Característica de widgets que funcionam como "containers"
+	/**
+	 * Body content (container widgets only)
+	 *
+	 * @var string
+	 */
+	var $content;
 
-	//!-----------------------------------------------------------------
-	// @function	Widget::Widget
-	// @desc		Construtor da classe
-	// @param		properties array	"array()" Conjunto de propriedades
-	// @access		public
-	//!-----------------------------------------------------------------
-	function Widget($properties=array()) {
+	/**
+	 * Whether this is a container widget
+	 *
+	 * @var bool
+	 */
+	var $isContainer = FALSE;
+
+	/**
+	 * Set of mandatory attributes
+	 *
+	 * @var array
+	 */
+	var $mandatoryAttributes = array();
+
+	/**
+	 * Class constructor
+	 *
+	 * @param array $attrs Attributes
+	 * @return Widget
+	 */
+	function Widget($attrs=array()) {
 		parent::PHP2Go();
-		$this->loadProperties((array)$properties);
+		$this->loadAttributes((array)$attrs);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Widget::setPropertyValue
-	// @desc		Cria ou altera uma propriedade
-	// @param		property string		Nome da propriedade
-	// @param		value mixed			Valor da propriedade
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setPropertyValue($property, $value) {
-		$this->properties[$property] = $value;
+	/**
+	 * Load widget attributes
+	 *
+	 * This method can be overriden in the child classes in order
+	 * to transform property values or merge provided attributes
+	 * with their default values.
+	 *
+	 * @access protected
+	 * @param array $attrs Attributes
+	 */
+	function loadAttributes($attrs) {
+		$this->attributes = $attrs;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Widget::setBody
-	// @desc		Define o "conteúdo" do widget. Este método somente tem
-	//				efeito em widgets do tipo "container"
-	// @param		content string		Conteúdo do widget
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setBody($content) {
-		if (!$this->hasBody)
+	/**
+	 * Set widget's internal content
+	 *
+	 * @param string $content Content
+	 */
+	function setContent($content) {
+		if (!$this->isContainer)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_INCLUDE', parent::getClassName()), E_USER_ERROR, __FILE__, __LINE__);
-		$this->bodyContent = $content;
+		$this->content = $content;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Widget::loadProperties
-	// @desc		Método responsável por carregar para o objeto as propriedades do widget
-	// @note		Pode ser sobrescrito nas classes filhas para adicionar transformações
-	//				ou definição de valores default para propriedades não fornecidas
-	// @param		properties array	Conjunto de propriedades
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function loadProperties($properties) {
-		$this->properties = $properties;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Widget::validate
-	// @desc		Valida a presença das propriedades definidas como
-	//				obrigatórias para a construção do widget
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Validates widget's mandatory attributes
+	 */
 	function validate() {
-		foreach ($this->mandatoryProperties as $property) {
-			if (!isset($this->properties[$property]))
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_MANDATORY_PROPERTY', array($property, parent::getClassName())), E_USER_ERROR, __FILE__, __LINE__);
+		foreach ($this->mandatoryAttributes as $attr) {
+			if (!$this->hasAttribute($attr))
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_MANDATORY_PROPERTY', array($attr, parent::getClassName())), E_USER_ERROR, __FILE__, __LINE__);
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Widget::onPreRender
-	// @desc		Método que pode ser sobrescrito em classes filhas a fim
-	//				de executar operações antes do momento da construção do
-	//				código final do widget
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function onPreRender() {
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Widget::render
-	// @desc		Renderiza o conteúdo final do widget. Cada classe filha
-	//				pode possuir uma implementação própria deste método
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract method. Should be implemented by child classes
+	 *
+	 * @abstract
+	 */
 	function render() {
-		return preg_replace("/{\$?body}/", $this->bodyContent, $this->content);
+		print '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Widget::getContent
-	// @desc		O método getContent é utilizado para disparar a geração do
-	//				conteúdo do widget e devolver este conteúdo ao template
-	// @return		string Conteúdo gerado para o widget
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getContent() {
+	/**
+	 * Used to render and display widget's HTML code
+	 */
+	function display() {
 		$this->validate();
 		$this->onPreRender();
-		return $this->render();
+		$this->render();
 	}
 }
 ?>
