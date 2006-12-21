@@ -70,12 +70,11 @@ define("POP3_CRLF", "\r\n");
  * $pop = new Pop3();
  * $pop->connect('my.pop.host');
  * $pop->login('foo', 'bar');
- * $count = $pop->getMsgCount();
+ * $count = $pop->getMessagesCount();
  * for ($i=1; $i<$count; $i++) {
  *   print $pop->getMessageHeaders($i);
  *   print $pop->getMessageBody($i);
  * }
- * dumpVariable($pop->listMessages());
  * $pop->quit();
  * </code>
  *
