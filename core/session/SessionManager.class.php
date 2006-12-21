@@ -125,7 +125,7 @@ class SessionManager extends PHP2Go
 	 *
 	 * @param string $name Variable name
 	 * @param mixed $value Variable value
-	 * @return Old value, if existent
+	 * @return mixed Old value, if existent
 	 */
 	function setValue($name, $value) {
 		if (array_key_exists($name, $_SESSION))
