@@ -1,155 +1,221 @@
 <?php
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @package net
+ * @version $Id$
+ */
 
-// @const HTTP_DEFAULT_PORT "80"
-// Porta padrão para a criação de conexões HTTP
+/**
+ * Default HTTP port
+ */
 define('HTTP_DEFAULT_PORT', 80);
 
-// @const HTTP_DEFAULT_TIMEOUT "10"
-// Timeout padrão para as conexões HTTP criadas na classe
+/**
+ * Default HTTP connection timeout
+ */
 define('HTTP_DEFAULT_TIMEOUT', 10);
 
-// @const HTTP_CRLF "\r\n"
-// Caractere(s) de final de linha utilizados
+/**
+ * HTTP line end characters
+ */
 define('HTTP_CRLF', "\r\n");
 
-// @const HTTP_STATUS_CONTINUE "100"
-// Indica que o cliente deve continuar com o envio da requisição
+/**
+ * Only a part of the request has been received by the server, but as long as it has not been rejected, the client should continue with the request
+ */
 define('HTTP_STATUS_CONTINUE', 100);
 
-// @const HTTP_STATUS_SWITCHING_PROTOCOLS "101"
-// Indica uma alteração no protocolo utilizado na conexão
+/**
+ * The server switches protocol
+ */
 define('HTTP_STATUS_SWITCHING_PROTOCOLS', 101);
 
-// @const HTTP_STATUS_OK "200"
-// A requisição HTTP foi processada com sucesso
+/**
+ * The request is OK
+ */
 define('HTTP_STATUS_OK', 200);
 
-// @const HTTP_STATUS_CREATED "201"
-// A requisição resultou na criação de um novo recurso, retornado na resposta
+/**
+ * The request is complete, and a new resource is created
+ */
 define('HTTP_STATUS_CREATED', 201);
 
-// @const HTTP_STATUS_ACCEPTED "202"
-// A requisição foi aceita para processamento
+/**
+ * The request is accepted for processing, but the processing is not complete
+ */
 define('HTTP_STATUS_ACCEPTED', 202);
 
-// @const HTTP_STATUS_NON_AUTHORITATIVE "203"
-// A metainformação retornada não é o conjunto definitivo como disponibilizado no servidor de origem
+/**
+ * The returned metainformation in the entity-header is not the definitive set as available from the origin server
+ */
 define('HTTP_STATUS_NON_AUTHORITATIVE', 203);
 
-// @const HTTP_STATUS_NO_CONTENT "204"
-// O servidor não necessita retornar um entidade body na mensagem de resposta
+/**
+ * The server has fulfilled the request but does not need to return an entity-body
+ */
 define('HTTP_STATUS_NO_CONTENT', 204);
 
-// @const HTTP_STATUS_RESET_CONTENT "205"
-// O agente deve resetar o documento que fez com que a requisição fosse enviada
+/**
+ * The user agent should reset the document view which caused the request to be sent
+ */
 define('HTTP_STATUS_RESET_CONTENT', 205);
 
-// @const HTTP_STATUS_PARTIAL_CONTENT "206"
-// O sevidor processou uma requisição GET parcial para o recurso
+/**
+ * The server has fulfilled the partial GET request for the resource
+ */
 define('HTTP_STATUS_PARTIAL_CONTENT', 206);
 
-// @const HTTP_STATUS_MULTIPLE_CHOICES "300"
-// O servidor retorna múltiplas escolhas de redirecionamento
+/**
+ * The requested resource corresponds to any one of a set of representations, each with its own specific location
+ */
 define('HTTP_STATUS_MULTIPLE_CHOICES', 300);
 
-// @const HTTP_STATUS_MOVED_PERMANENTLY "301"
-// O recurso requisitado foi movido permanentemente para uma outra URI
+/**
+ * The requested resource has been assigned a new permanent URI
+ */
 define('HTTP_STATUS_MOVED_PERMANENTLY', 301);
 
-// @const HTTP_STATUS_FOUND "302"
-// O recurso requisitado reside temporariamente em uma outra URI
+/**
+ * The requested resource resides temporarily under a different URI
+ */
 define('HTTP_STATUS_FOUND',302);
 
-// @const HTTP_STATUS_SEE_OTHER "303"
-// A resposta para a requisição aponta para uma outra URI, que deve ser acessada via GET
+/**
+ * The response to the request can be found under a different URI and should be retrieved using GET
+ */
 define('HTTP_STATUS_SEE_OTHER', 303);
 
-// @const HTTP_STATUS_NOT_MODIFIED "304"
-// Se foi enviado um comando GET condicional, este status é retornado se o recurso não foi atualizado
+/**
+ * Indicates that the requested resource is not modified
+ */
 define('HTTP_STATUS_NOT_MODIFIED', 304);
 
-// @const HTTP_STATUS_USE_PROXY "305"
-// O servidor retorna a recomendação do uso de um servidor proxy
+/**
+ * The requested resource must be accessed through the proxy given by the Location field
+ */
 define('HTTP_STATUS_USE_PROXY', 305);
 
-// @const HTTP_STATUS_TEMPORARY_REDIRECT "307"
-// O recurso requisitado reside temporariamente em uma outra URI
+/**
+ * The requested resource resides temporarily under a different URI
+ */
 define('HTTP_STATUS_TEMPORARY_REDIRECT', 307);
 
-// @const HTTP_STATUS_BAD_REQUEST "400"
-// A requisição não pode ser entendida pelo servidor
+/**
+ * The request could not be understood by the server due to malformed syntax
+ */
 define('HTTP_STATUS_BAD_REQUEST', 400);
 
-// @const HTTP_STATUS_UNAUTHORIZED "401"
-// A requisição requer autenticação de usuário, na forma de um cabeçalho WWW-Authenticate
+/**
+ * The request requires user authentication
+ */
 define('HTTP_STATUS_UNAUTHORIZED', 401);
 
-// @const HTTP_STATUS_FORBIDDEN "403"
-// O servidor aceitou a requisição, mas não está habilitado a processá-la
+/**
+ * The server understood the request, but is refusing to fulfill it
+ */
 define('HTTP_STATUS_FORBIDDEN', 403);
 
-// @const HTTP_STATUS_NOT_FOUND "404"
-// O servidor não encontrou nenhum recurso relacionado com a URI da requisição
+/**
+ * The server has not found anything matching the Request-URI
+ */
 define('HTTP_STATUS_NOT_FOUND', 404);
 
-// @const HTTP_STATUS_METHOD_NOT_ALLOWED "405"
-// O método especificado na requisição não é permitido pelo recurso solicitado
+/**
+ * The method specified in the Request-Line is not allowed for the resource identified by the Request-URI
+ */
 define('HTTP_STATUS_METHOD_NOT_ALLOWED', 405);
 
-// @const HTTP_STATUS_NOT_ACCEPTABLE "406"
-// O recurso identificado na requisição não é capaz de gerar resposta a partir dos cabeçalhos enviados
+/**
+ * The resource is not acceptable according to the request headers
+ */
 define('HTTP_STATUS_NOT_ACCEPTABLE', 406);
 
-// @const HTTP_STATUS_PROXY_AUTH_REQUIRED "407"
-// O código é similar ao 401 (Unauthorized), mas indica que o cliente deve autenticar-se em um servidor proxy
+/**
+ * This code is similar to 401, but indicates that the client must first authenticate itself with the proxy
+ */
 define('HTTP_STATUS_PROXY_AUTH_REQUIRED', 407);
 
-// @const HTTP_STATUS_REQUEST_TIMEOUT "408"
-// O servidor não conseguiu responder à requisição em tempo hábil
+/**
+ * The client did not produce a request within the time that the server was prepared to wait
+ */
 define('HTTP_STATUS_REQUEST_TIMEOUT', 408);
 
-// @const HTTP_STATUS_CONFLICT "409"
-// A requisição não pôde ser completada devido a um conflito no recurso solicitado
+/**
+ * The request could not be completed due to a conflict with the current state of the resource
+ */
 define('HTTP_STATUS_CONFLICT', 409);
 
-// @const HTTP_STATUS_GONE "410"
-// O recurso requisitado não está mais disponível no servidor, e não existem endereços de redirecionamento
+/**
+ * The requested resource is no longer available at the server and no forwarding address is known
+ */
 define('HTTP_STATUS_GONE', 410);
 
-// @const HTTP_STATUS_LENGTH_REQUIRED "411"
-// O servidor não pode aceitar a requisição sem a presença de um cabeçalho Content-Length
+/**
+ * The server refuses to accept the request without a defined Content-Length
+ */
 define('HTTP_STATUS_LENGTH_REQUIRED', 411);
 
-// @const HTTP_STATUS_REQUEST_TOO_LARGE "413"
-// A requisição possui um tamanho maior do que o máximo que o servidor é capaz de processar
+/**
+ * The server is refusing to process a request because the request entity is larger than the server is willing or able to process
+ */
 define('HTTP_STATUS_REQUEST_TOO_LARGE', 413);
 
-// @const HTTP_STATUS_URI_TOO_LONG "414"
-// A requisição enviou um valor de URI maior do que o máximo que o servidor é capaz de interpretar
+/**
+ * The server is refusing to service the request because the Request-URI is longer than the server is willing to interpret
+ */
 define('HTTP_STATUS_URI_TOO_LONG', 414);
 
-// @const HTTP_STATUS_SERVER_ERROR "500"
-// Indica que ocorreu um erro interno no servidor, que impede a resposta à requisição enviada
+/**
+ * The server encountered an unexpected condition which prevented it from fulfilling the request
+ */
 define('HTTP_STATUS_SERVER_ERROR', 500);
 
-// @const HTTP_STATUS_NOT_IMPLEMENTED "501"
-// O servidor não suporta a funcionalidade encontrada na requisição
+/**
+ * The server does not support the functionality required to fulfill the request
+ */
 define('HTTP_STATUS_NOT_IMPLEMENTED', 501);
 
-// @const HTTP_STATUS_BAD_GATEWAY "502"
-// O servidor, agindo como gateway ou proxy, recebeu uma resposta inválida de um servidor utilizado para responder à requisição
+/**
+ * The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request
+ */
 define('HTTP_STATUS_BAD_GATEWAY', 502);
 
-// @const HTTP_STATUS_SERVICE_UNAVAILABLE "503"
-// O servidor está temporariamente indisponível para responder à requisição
+/**
+ * The server is currently unable to handle the request due to a temporary overloading or maintenance of the server
+ */
 define('HTTP_STATUS_SERVICE_UNAVAILABLE', 503);
 
-// @const HTTP_STATUS_GATEWAY_TIMEOUT "504"
-// O servidor, agindo como gateway ou proxy, não recebeu uma resposta de outro servidor em tempo hábil
+/**
+ * The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server
+ */
 define('HTTP_STATUS_GATEWAY_TIMEOUT', 504);
 
-// @const HTTP_STATUS_VERSION_NOT_SUPPORTED "505"
-// O servidor não suporta ou não é capaz de interpretar a versão de protocolo HTTP utilizada na requisição
+/**
+ * The server does not support, or refuses to support, the HTTP protocol version that was used in the request message
+ */
 define('HTTP_STATUS_VERSION_NOT_SUPPORTED',	505);
 
 ?>
