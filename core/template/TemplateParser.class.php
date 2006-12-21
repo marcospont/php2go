@@ -981,12 +981,16 @@ class TemplateParser extends PHP2Go
 	//!-----------------------------------------------------------------
 	function _compileWidgetInclude($widgetProperties) {
 		$widgetData = $this->_parseWidgetProperties($widgetProperties);
-		if ($widgetData)
+		if ($widgetData) {
+			// if no path is provided, then use the default path "php2go.gui"
+			if (preg_match('/\w+/', $widgetData['path']))
+				$widgetData['path'] = "php2go.gui.{$widgetData['path']}";
 			return $this->_compilePHPBlock(
 				'$widgetClass = classForPath("' . $widgetData['path'] . '"); ' .
 				'$widget = new $widgetClass(' . $widgetData['properties'] . '); ' .
-				'print "\n" . $widget->getContent() . "\n";'
+				'print "\n"; $widget->display();'
 			);
+		}
 		return FALSE;
 	}
 
@@ -1021,8 +1025,8 @@ class TemplateParser extends PHP2Go
 	//!-----------------------------------------------------------------
 	function _compileWidgetEnd() {
 		return $this->_compilePHPBlock(
-			'$widget->setBody(ob_get_clean()); ' .
-			'print "\n" . $widget->getContent(); ' .
+			'$widget->setContent(ob_get_clean()); ' .
+			'print "\n"; $widget->display(); ' .
 			'$last = array_pop($outputStack); ' .
 			'$widget = $last[0];'
 		);
