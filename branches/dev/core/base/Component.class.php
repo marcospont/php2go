@@ -96,6 +96,16 @@ class Component extends PHP2Go
 	}
 
 	/**
+	 * Check if a given attribute exists
+	 *
+	 * @param string $name Attribute name
+	 * @return bool
+	 */
+	function hasAttribute($name) {
+		return (array_key_exists($name, $this->attributes));
+	}
+
+	/**
 	 * Pre-render the component
 	 *
 	 * Must be overriden by child classes and explictly called
