@@ -246,11 +246,11 @@ class UserAgent extends PHP2Go
 	 * Available browser patterns:
 	 * ns, ns2, ns3, ns4, ns4+, nav, ns6, ns6+, galeon, konqueror,
 	 * nautilus, safari, text, gecko, firefox, firefox0x, firefox1x,
-	 * firefox2x, ie, ie3, ie4, ie4+, ie5, ie55, ie55+, ie6, ie6+, myie,
-	 * opera, opera2, opera3, opera4, opera5, opera6, opera7, opera8,
-	 * opera5+, opera6+, opera7+, opera8+, aol, aol3, aol4, aol5, aol6,
-	 * aol7, aol8, webtv, aoltv, hotjava, hotjava3, hotjava3+, avant,
-	 * k-meleon, crazy, epiphany, netgem, webdav.
+	 * firefox2x, ie, ie3, ie4, ie4+, ie5, ie55, ie55+, ie6, ie6+, ie7,
+	 * myie, opera, opera2, opera3, opera4, opera5, opera6, opera7, opera8,
+	 * opera9, opera5+, opera6+, opera7+, opera8+, opera9+, aol, aol3, aol4,
+	 * aol5, aol6, aol7, aol8, webtv, aoltv, hotjava, hotjava3, hotjava3+,
+	 * avant, k-meleon, crazy, epiphany, netgem, webdav.
 	 *
 	 * Examples:
 	 * <code>
@@ -501,6 +501,7 @@ class UserAgent extends PHP2Go
         $this->browser['ie55+'] = ($this->browser['ie5+'] && !$this->browser['ie5']);
         $this->browser['ie6'] = $this->_match('msie 6', $agent);
         $this->browser['ie6+'] = ($this->browser['ie5+'] && !$this->browser['ie5'] && !$this->browser['ie5_5']);
+        $this->browser['ie7'] = $this->_match('msie 7', $agent);
         $this->browser['myie'] = ($this->browser['ie'] && $this->_match('myie', $agent));
         $this->browser['opera'] = $this->_match('opera', $agent);
         $this->browser['opera2'] = $this->_match('opera[ /]2', $agent);
@@ -510,10 +511,12 @@ class UserAgent extends PHP2Go
         $this->browser['opera6'] = $this->_match('opera[ /]6', $agent);
         $this->browser['opera7'] = $this->_match('opera[ /]7', $agent);
         $this->browser['opera8'] = $this->_match('opera[ /]8', $agent);
+        $this->browser['opera9'] = $this->_match('opera[ /]9', $agent);
         $this->browser['opera5+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][234]', $agent));
         $this->browser['opera6+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][2345]', $agent));
         $this->browser['opera7+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][23456]', $agent));
         $this->browser['opera8+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][234567]', $agent));
+        $this->browser['opera9+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][2345678]', $agent));
         $this->browser['aol'] = $this->_match('aol', $agent);
         $this->browser['aol3'] = ($this->browser['aol'] && $this->browser['ie3']);
         $this->browser['aol4'] = ($this->browser['aol'] && $this->browser['ie4']);
@@ -655,18 +658,22 @@ class UserAgent extends PHP2Go
 			'netgem' => 'Netgem/iPlayer',
 			'text' => 'Text based Browser',
 			'webdav' => 'WebDAV',
+			'opera9+' => 'Opera 9.x',
 			'opera8+' => 'Opera 8.x',
 			'opera7+' => 'Opera 7.x',
 			'opera6+' => 'Opera 6.x',
 			'opera5+' => 'Opera 5.x',
 			'opera4' => 'Opera 4.x',
 			'opera' => 'Opera',
+			'ie7' => 'Microsoft Internet Explorer 7',
 			'ie6+' => 'Microsoft Internet Explorer 6.x',
 			'ie5+' => 'Microsoft Internet Explorer 5.x',
 			'ie4+' => 'Microsoft Internet Explorer 4.x',
 			'ie' => 'Microsoft Internet Explorer',
 			'nav' => 'Netscape Navigator',
-			'firefox' => 'Mozilla Firefox',
+			'firefox2x' => 'Mozilla Firefox 2.x',
+			'firefox1x' => 'Mozilla Firefox 1.x',
+			'firefox0x' => 'Mozilla Firefox 0.x',
 			'ns6+' => 'Mozilla/Netscape 6.x',
 			'ns4' => 'Netscape 4.x',
 			'ns' => 'Netscape'
