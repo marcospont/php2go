@@ -1,59 +1,111 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/template/TemplateParser.class.php,v 1.30 2006/11/21 23:25:26 mpont Exp $
-// $Date: 2006/11/21 23:25:26 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileSystem');
-//------------------------------------------------------------------
+import('php2go.text.StringUtils');
+import('php2go.util.HtmlUtils');
+import('php2go.util.json.JSONEncoder');
 
-// @const TP_ROOTBLOCK "_ROOT"
-// Nome do bloco raiz do template
+/**
+ * Name of the root block of a template
+ */
 define('TP_ROOTBLOCK', '_ROOT');
-
-// @const TEMPLATE_DELIM_COMMENT "1"
-// Delimitador de tag baseado em comentários HTML
+/**
+ * Tag delimiter based on HTML comments
+ */
 define('TEMPLATE_DELIM_COMMENT', 1);
-// @const TEMPLATE_DELIM_BRACE "2"
-// Delimitador de tag baseado em curly braces "{ }"
+/**
+ * Tag delimiter based on curly braces
+ */
 define('TEMPLATE_DELIM_BRACE', 2);
-
+/**
+ * Quoted string pattern
+ */
 define('TEMPLATE_QUOTED_STRING', '(?:"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"|\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\')');
+/**
+ * Number pattern
+ */
 define('TEMPLATE_NUMBER', '(?:\-?\d+(?:\.\d+)?)');
+/**
+ * Variable pattern
+ */
 define('TEMPLATE_VARIABLE', '\$?[\w\:\[\]]+(?:\.\$?[\w\:\[\]]+|->\$?[\w\:\[\]]+(?:\(\))?)*');
+/**
+ * Variable name pattern
+ */
 define('TEMPLATE_VARIABLE_NAME', '([\w\:\[\]]+)');
+/**
+ * Inner variable (used as a tag argument) pattern
+ */
 define('TEMPLATE_INNER_VARIABLE', '\$[\w\:\[\]]+(?:\.\$?[\w\:\[\]]+|->\$?[\w\:\[\]]+(?:\(\))?)*');
+/**
+ * Functions pattern
+ */
 define('TEMPLATE_FUNCTION', '[a-zA-Z_]\w*(::[a-zA-Z_]\w*)?');
+/**
+ * Variable modifier pattern
+ */
 define('TEMPLATE_MODIFIER', '((?:\|@?\w+(?::(?:\w+|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_NUMBER . '|' . TEMPLATE_QUOTED_STRING .'))*)*)');
+/**
+ * Dynamic blocks pattern
+ */
 define('TEMPLATE_BLOCK', '(START|END|INCLUDE|INCLUDESCRIPT|REUSE) BLOCK : ([a-zA-Z0-9_\.\-\\\/\~\s]+)');
+/**
+ * Ignore tags pattern
+ */
 define('TEMPLATE_IGNORE', '(START|END) IGNORE');
+/**
+ * Function call pattern
+ */
 define('TEMPLATE_FUNCTION_CALL', '(START FUNCTION|END FUNCTION|FUNCTION)(?:\s+(.*))?');
+/**
+ * Condition tags pattern
+ */
 define('TEMPLATE_CONDITION', '(IF|ELSE IF|ELSE|END IF)[ ]?(.*)?');
+/**
+ * Loop tags pattern
+ */
 define('TEMPLATE_LOOP', '(LOOP|ELSE LOOP|END LOOP)(?:\s+(.*))?');
+/**
+ * Comments pattern
+ */
 define('TEMPLATE_COMMENT', '^\*.*\*$');
+/**
+ * Widget tags pattern
+ */
 define('TEMPLATE_WIDGET', '(START WIDGET|END WIDGET|WIDGET)(?:\s+(.*))?');
+/**
+ * Assign pattern
+ */
 define('TEMPLATE_ASSIGN', 'ASSIGN(\s+.*)?');
+/**
+ * Capture tags pattern
+ */
 define('TEMPLATE_CAPTURE', '(CAPTURE|END CAPTURE)(?:\s+(.*))?');
 
 //!-----------------------------------------------------------------
@@ -202,7 +254,9 @@ class TemplateParser extends PHP2Go
 		if ($type == T_BYFILE) {
 			if (empty($value))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EMPTY_TEMPLATE_FILE'), E_USER_ERROR, __FILE__, __LINE__);
-			$src = FileSystem::getContents($value);
+			$src = @file_get_contents($value);
+			if ($src === FALSE)
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $value), E_USER_ERROR, __FILE__, __LINE__);
 		} else {
 			$src = $value;
 		}
@@ -771,7 +825,7 @@ class TemplateParser extends PHP2Go
 		if (isset($this->tplIncludes[$includeName])) {
 			$value = $this->tplIncludes[$includeName][0];
 			$type = $this->tplIncludes[$includeName][1];
-		} elseif (FileSystem::exists($includeName)) {
+		} elseif (file_exists($includeName)) {
 			$value = $includeName;
 			$type = T_BYFILE;
 		} else {
