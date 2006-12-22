@@ -31,7 +31,7 @@ import('php2go.file.FileSystem');
 import('php2go.template.Template');
 
 /**
- * Extendeds base template class adding buffering capability and some utility methods
+ * Extends base template class adding buffering capability and some utility methods
  *
  * @package template
  * @uses ADORecordSet
