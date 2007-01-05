@@ -264,6 +264,7 @@ class CaptchaImage extends PHP2Go
 	/**
 	 * Creates and configures the CAPTCHA image
 	 *
+	 * @uses StringUtils::randomString()
 	 * @return Image
 	 * @access private
 	 */

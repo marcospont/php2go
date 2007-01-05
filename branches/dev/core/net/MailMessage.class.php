@@ -946,6 +946,7 @@ class MailMessage extends PHP2Go
 	 * embedded files.
 	 *
 	 * @uses StringUtils::wrap()
+	 * @uses StringUtils::encode()
 	 * @access private
 	 */
 	function _buildBody() {

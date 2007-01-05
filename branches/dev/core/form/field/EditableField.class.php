@@ -412,6 +412,8 @@ class EditableField extends FormField
 
 	/**
 	 * Prepares the component to be rendered
+	 *
+	 * @uses StringUtils::escape()
 	 */
 	function onPreRender() {
 		parent::onPreRender();

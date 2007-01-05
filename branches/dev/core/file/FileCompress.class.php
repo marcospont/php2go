@@ -106,7 +106,7 @@ class FileCompress extends PHP2Go
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_ABSTRACT_CLASS', 'FileCompress'), E_USER_ERROR, __FILE__, __LINE__);
 		} else {
 			$this->currentDir = empty($cwd) ? getcwd() : $cwd;
-			$this->currentDir = ereg("/\|/$", $this->currentDir) ? StringUtils::left($this->currentDir, -1) . '/' : $this->currentDir . '/';
+			$this->currentDir = ereg("/\|/$", $this->currentDir) ? substr($this->currentDir, 0, -1) . '/' : $this->currentDir . '/';
 		}
 	}
 
@@ -228,7 +228,7 @@ class FileCompress extends PHP2Go
 				if ($dirFiles = $this->_parseDirectory($file)) {
 					$fileList = array_merge($fileList, $dirFiles);
 				}
-			} else if (FileSystem::exists($file)) {
+			} elseif (file_exists($file)) {
 				$fileList[] = $file;
 			}
 		}
@@ -371,11 +371,11 @@ class FileCompress extends PHP2Go
 		foreach ($files as $file) {
 			$path = (isset($file['path']) ? $file['path'] . $file['filename'] : $file['filename']);
 			// split path and file name
-			if (StringUtils::match($path, '/')) {
+			if (strpos($path, '/') !== FALSE) {
 				$name = substr($path, strrpos($path, '/')+1);
 				$path = substr($path, 0, strrpos($path, '/'));
 				if ($path != $lastDir) {
-					if (FileSystem::exists($path) || FileSystem::createPath($path)) {
+					if (file_exists($path) || FileSystem::createPath($path)) {
 						if ($name != '' && (isset($file['type']) && $file['type'] == 5)) {
 							@touch($path, (isset($file['time']) ? $file['time'] : time()));
 							@chmod($path, (isset($file['mode']) ? $file['mode'] : $createMode));

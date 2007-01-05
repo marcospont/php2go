@@ -29,7 +29,6 @@
 
 import('php2go.file.FileCompress');
 import('php2go.file.GzFile');
-import('php2go.text.StringUtils');
 
 /**
  * Used to identify the USTAR format
@@ -62,7 +61,6 @@ define('TAR_MAX_UID_GID', 2097151);
  * @package file
  * @uses FileManager
  * @uses GzFile
- * @uses StringUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -162,11 +160,11 @@ class TarFile extends FileCompress
 		if ($this->isPathStorageEnabled())
 			$fileName = preg_replace('/^(\.{1,2}(\/|\\\))+/', '', $path);
 		else
-			$fileName = (StringUtils::match($path, '/') ? substr($path, strrpos($path, '/') + 1) : $path);
+			$fileName = (strpos($path, '/') !== FALSE ? substr($path, strrpos($path, '/') + 1) : $path);
 		// check if file name exceeds maximum length
 		if (strlen($fileName) > TAR_FILENAME_MAXLENGTH) {
 			if (($pos = strrpos($fileName, '/')) !== FALSE) {
-				$filePath = StringUtils::left($fileName, $pos+1);
+				$filePath = substr($fileName, 0, $pos+1);
 				$fileName = substr($fileName, $pos);
 			}
 			// check if file path exceeds maximum size
@@ -224,7 +222,7 @@ class TarFile extends FileCompress
 		if ($this->isPathStorageEnabled()) {
 			$fileName = preg_replace('/^(\.{1,2}(\/|\\\))+/', '', $fileName);
 		} else {
-			$fileName = (StringUtils::match($fileName, '/') ? substr($fileName, strrpos($fileName, '/')+1) : $fileName);
+			$fileName = (strpos($fileName, '/') !== FALSE ? substr($fileName, strrpos($fileName, '/')+1) : $fileName);
 			$fileAttrs['path'] = '';
 		}
 		// build start/end blocks and calculate checksum
@@ -324,7 +322,7 @@ class TarFile extends FileCompress
 	function saveGzip($tarName, $mode = NULL) {
 		$Gz =& FileCompress::getInstance('gz');
 		$Gz->addData($this->getData(), $tarName, array('time' => time()));
-		if (!StringUtils::endsWith($tarName, '.gz') && !StringUtils::endsWith($tarName, '.gzip') && !StringUtils::endsWith($tarName, '.tgz'))
+		if (!preg_match('/\.(gz|gzip|tgz)$/', $tarName))
 			$tarName .= '.gz';
 		$Gz->saveFile($tarName, $mode);
 	}
@@ -337,7 +335,7 @@ class TarFile extends FileCompress
 	function downloadGzip($tarName) {
 		$Gz =& FileCompress::getInstance('gz');
 		$Gz->addData($this->getData(), $tarName, array('time' => time()));
-		if (!StringUtils::endsWith($tarName, '.gz') && !StringUtils::endsWith($tarName, '.gzip') && !StringUtils::endsWith($tarName, '.tgz'))
+		if (!preg_match('/\.(gz|gzip|tgz)$/', $tarName))
 			$tarName .= '.gz';
 		$Gz->downloadFile($tarName);
 	}

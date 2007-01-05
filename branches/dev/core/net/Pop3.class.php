@@ -703,12 +703,12 @@ class Pop3 extends SocketClient
         $data = '';
         $line = parent::readLine();
         while ($line !== FALSE && trim($line) != '.') {
-			if (StringUtils::left($line, 2) == '..')
+			if (substr($line, 0, 2) == '..')
 				$line = substr($line, 1);
 			$data .= trim($line) . POP3_CRLF;
 			$line = parent::readLine();
 		}
-		return StringUtils::left($data, -2);
+		return substr($data, 0, -2);
     }
 
 	/**

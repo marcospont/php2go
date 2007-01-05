@@ -29,7 +29,6 @@
 
 import('php2go.auth.Auth');
 import('php2go.db.QueryBuilder');
-import('php2go.text.StringUtils');
 
 /**
  * Default authentication table
@@ -49,7 +48,6 @@ define('AUTH_DB_DEFAULT_TABLE', 'auth');
  * @package auth
  * @uses Db
  * @uses QueryBuilder
- * @uses StringUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -154,8 +152,8 @@ class AuthDb extends Auth
 			$this->dbFields = implode(', ', $dbFields);
 		} else {
 			$dbFields = trim($dbFields);
-			if (StringUtils::left($dbFields, 1) == ',')
-				$dbFields = trim(substr($dbFields, 1));
+			if ($dbFields[0] == ',')
+				$dbFields = substr($dbFields, 1);
 			$this->dbFields = $dbFields;
 		}
 	}
