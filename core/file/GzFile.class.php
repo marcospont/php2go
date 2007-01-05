@@ -28,7 +28,6 @@
  */
 
 import('php2go.file.FileCompress');
-import('php2go.text.StringUtils');
 
 /**
  * Reads and write GZIP files
@@ -39,7 +38,6 @@ import('php2go.text.StringUtils');
  * @package file
  * @uses FileManager
  * @uses HttpResponse
- * @uses StringUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -93,7 +91,7 @@ class GzFile extends FileCompress
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		} else {
-			$fileName = (StringUtils::match($fileName, '/') ? substr($fileName, strrpos($fileName, '/') + 1) : $fileName);
+			$fileName = (strpos($fileName, '/') !== FALSE ? substr($fileName, strrpos($fileName, '/') + 1) : $fileName);
 			$attrs['time'] = $Mgr->getAttribute('mTime');
 			if (!is_null($comment))
 				$attrs['comment'] = $comment;
@@ -142,8 +140,8 @@ class GzFile extends FileCompress
 	 * @return array Extracted file information
 	 */
 	function extractData($data) {
-		$header = unpack("H2a/H2b/Cflags", StringUtils::left($data, 3));
-		$descriptor = unpack("Vcrc/Vsize", StringUtils::right($data, 8));
+		$header = unpack("H2a/H2b/Cflags", substr($data, 0, 3));
+		$descriptor = unpack("Vcrc/Vsize", substr($data, -8));
 		if ($header['a'] != "1f" || $header['b'] != "8b")
 			return FALSE;
 		$hasFileName = TypeUtils::toBoolean(decbin($header['flags']) & 0x8);

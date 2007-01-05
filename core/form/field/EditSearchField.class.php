@@ -89,6 +89,8 @@ class EditSearchField extends DbField
 
 	/**
 	 * Builds component's HTML code
+	 *
+	 * @uses StringUtils::isEmpty()
 	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());

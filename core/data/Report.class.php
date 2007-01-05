@@ -2090,6 +2090,7 @@ class Report extends PagedDataSet
 	 * Declare {$order_options_combo} or {$order_options_links}
 	 * in the report template file to see this in action
 	 *
+	 * @uses StringUtils::ifEmpty()
 	 * @param string $type Type
 	 * @access private
 	 * @return string
@@ -2250,6 +2251,7 @@ class Report extends PagedDataSet
 	/**
 	 * Highlight search terms inside a record
 	 *
+	 * @uses StringUtils::normalize()
 	 * @param array $data Data set record
 	 * @return array Modified record
 	 * @access private
