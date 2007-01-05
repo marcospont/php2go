@@ -74,7 +74,7 @@ $P2G_USER_CFG['LANGUAGE'] = array(
 	'AUTO_DETECT' => TRUE,
 	//'AVAILABLE' => array('en-us', 'pt-br'),
 	'REQUEST_PARAM' => 'lang',
-	'MESSAGES_PATH' => PHP2GO_ROOT . 'examples/locale/'
+	'MESSAGES_PATH' => dirname(__FILE__) . '/locale/'
 );
 $P2G_USER_CFG['CHARSET'] = 'auto';
 $P2G_USER_CFG['COUNTRY'] = '';
