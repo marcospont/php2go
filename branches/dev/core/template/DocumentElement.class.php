@@ -112,8 +112,7 @@ class DocumentElement extends Template
 	}
 
 	/**
-	 * Overrides parent class implementation to run the parser
-	 * with the contents of the buffer
+	 * Overrides parent class implementation to run the parser with the contents of the buffer
 	 */
 	function parse() {
 		$saveIncludeData = $this->Parser->tplIncludes;
