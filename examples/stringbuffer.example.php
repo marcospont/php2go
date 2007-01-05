@@ -31,6 +31,6 @@
 	$sb->ensureCapacity(40);
 	dumpVariable($sb);
 	$sb->setCharAt(0, "T");
-	println ($sb->toString());
+	println ($sb->__toString());
 
 ?>
