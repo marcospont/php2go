@@ -688,7 +688,7 @@ class FormField extends Component
 				// 1) submitted value
 				$submittedValue = HttpRequest::getVar(preg_replace("/\[\]$/", '', $this->name), $this->_Form->formMethod);
 				if ($submittedValue !== NULL) {
-					if (!is_array($submittedValue) && $magicq)
+					if (is_string($submittedValue) && $magicq)
 						$submittedValue = stripslashes($submittedValue);
 					$this->setValue($submittedValue);
 					$this->setSubmittedValue();
@@ -723,7 +723,7 @@ class FormField extends Component
 					// 2) read from the request
 					$requestValue = HttpRequest::getVar(preg_replace("/\[\]$/", '', $this->name), 'all', 'ROSGPCE');
 					if ($requestValue !== NULL) {
-						if (!is_array($requestValue) && $magicq)
+						if (is_string($requestValue) && $magicq)
 							$requestValue = stripslashes($requestValue);
 						$this->setValue($requestValue);
 					}
