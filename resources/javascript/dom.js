@@ -410,13 +410,19 @@ Element.classNames = function(elm) {
 };
 
 /**
- * Verify if a given element is visible (display != none)
+ * Verify if a given element is visible
  * @param {Object} elm Element
  * @type Boolean
  */
 Element.isVisible = function(elm) {
-	if (elm = $(elm))
-		return (elm.style.display != 'none');
+	if (elm = $(elm)) {
+		while (elm && elm != document) {
+			if (elm.style.display == 'none' || elm.style.visibility == 'hidden')
+				return false;
+			elm = elm.parentNode;
+		}
+		return true;
+	}
 	return false;
 };
 
