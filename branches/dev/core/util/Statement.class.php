@@ -1,75 +1,130 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/util/Statement.class.php,v 1.25 2006/10/26 04:32:49 mpont Exp $
-// $Date: 2006/10/26 04:32:49 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileSystem');
 import('php2go.net.HttpRequest');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		Statement
-// @desc		Um statement representa uma string que pode conter referência para
-//				variáveis ou trechos de código PHP. O funcionamento desta classe consiste
-//				em identificar as variáveis declaradas no conteúdo da string e oferecer mecanismos
-//				de atribuição de valores às variáveis e transformação da string original por outra
-//				com as variáveis substituídas pelos valores a elas atribuídos
-// @package		php2go.util
-// @extends		PHP2Go
-// @uses		FileSystem
-// @uses		HttpRequest
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.25 $
-// @note		O formato padrão de variável é: ~variavel~. Para código PHP, o padrão é ~#codigo#~. O prefixo "~"
-//				e o sufixo "~" podem ser alterados utilizando o método setVariablePattern
-// @note		Esta classe é utilizada para resolver valores para as variáveis declaradas em alguns
-//				atributos especiais das declarações XML de formulários e listas paginadas no PHP2Go
-//!-----------------------------------------------------------------
+/**
+ * Processes variables and PHP blocks inside strings
+ *
+ * A statement represents a string that can contain references to variables
+ * and pieces of PHP code. Based on a variable delimiter, the class parses
+ * the declared variables and offers an API to manually assign values to
+ * them or search them in the global scope.
+ *
+ * The default variable syntax is "~variable~". That means that "~" and
+ * "~" are the prefix and suffix that identify a variable. A pair of "#"
+ * chars inside the delimiters represent a block of PHP code that should
+ * be evaluated.
+ *
+ * Examples:
+ * <code>
+ * $st = new Statement();
+ * $st->setStatement("Hello, this is ~name~. I'm ~age~ years old.");
+ * $st->bindByName('name', 'John', FALSE);
+ * $st->bindByName('age', 30);
+ * $st->displayResult();
+ * $st->setStatement("Hi, this is ~name~. Today is ~#date('d/m/Y')#~.");
+ * $st->bindByName('name', 'Paul', FALSE);
+ * $st->displayResult();
+ * </code>
+ *
+ * @package util
+ * @uses HttpRequest
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Statement extends PHP2Go
 {
-	var $source = '';					// @var source string			"" Conteúdo original da string
-	var $result = '';					// @var result string			"" Resultado final, com substituição de trechos de código e variáveis declaradas
-	var $prefix;						// @var prefix string			Prefixo de variáveis no statement
-	var $suffix;						// @var suffix string			Sufixo de variáveis no statement
-	var $variables = array();			// @var variables array			"array()" Conjunto de variáveis do statement
-	var $code = array();				// @var code array				"array()" Conjunto de trechos de código PHP declarados no statement
-	var $showUnassigned = FALSE;		// @var showUnassigned bool		"FALSE" Exibir ou não variáveis não atribuídas no resultado final
-	var $prepared = FALSE;				// @var prepared bool			"FALSE" Indica que existe um statement interpretado armazenado
+	/**
+	 * Statement source
+	 *
+	 * @var string
+	 */
+	var $source = '';
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::Statement
-	// @desc		Construtor da classe. O parâmetro opcional $source permite
-	//				informar o statement a ser utilizado
-	// @param		source string	"" Statement a ser utilizado
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Statement result (after variables binding)
+	 *
+	 * @var string
+	 */
+	var $result = '';
+
+	/**
+	 * Variables prefix
+	 *
+	 * @var string
+	 */
+	var $prefix = '~';
+
+	/**
+	 * Variables suffix
+	 *
+	 * @var string
+	 */
+	var $suffix = '~';
+
+	/**
+	 * Declared variables
+	 *
+	 * @var array
+	 */
+	var $variables = array();
+
+	/**
+	 * Declared PHP blocks
+	 *
+	 * @var array
+	 */
+	var $code = array();
+
+	/**
+	 * Whether unassigned variables should be displayed
+	 *
+	 * @var bool
+	 */
+	var $showUnassigned = FALSE;
+
+	/**
+	 * Is this an already parsed statement?
+	 *
+	 * @var bool
+	 */
+	var $prepared = FALSE;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $source Statement's source
+	 * @return Statement
+	 */
 	function Statement($source='') {
 		parent::PHP2Go();
-		$this->prefix = '~';
-		$this->suffix = '~';
 		if (!empty($source)) {
 			$this->source = $source;
 			$this->result = $source;
@@ -78,29 +133,16 @@ class Statement extends PHP2Go
 		PHP2Go::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::__destruct
-	// @desc		Destrutor da classe
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function __destruct() {
-		unset($this);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Statement::evaluate
-	// @desc		Método estático de avaliação de um statement utilizando
-	//				apenas variáveis do escopo global, dos objetos de sessão
-	//				e do Registry
-	// @access		public
-	// @param		value string		Código do statement
-	// @param		prefix string		"~" Prefixo para variáveis
-	// @param		suffix string		"~" Sufixo para variáveis
-	// @param		showUnassigned bool	"TRUE" Exibir ou não variáveis não atribuídas
-	// @return		string Código resultante
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Resolves all variables declared in a string based on the global scope
+	 *
+	 * @param string $value Statement's source
+	 * @param string $prefix Variables prefix
+	 * @param string $suffix Variables suffix
+	 * @param bool $showUnassigned Show or hide unassigned variables
+	 * @return string
+	 * @static
+	 */
 	function evaluate($value, $prefix='~', $suffix='~', $showUnassigned=TRUE) {
 		static $Stmt;
 		if (!isset($Stmt))
@@ -112,35 +154,29 @@ class Statement extends PHP2Go
 		return $Stmt->getResult();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::getStatement
-	// @desc		Retorna o conteúdo original do statement
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the statement's source
+	 *
+	 * @return string
+	 */
 	function getStatement() {
 		return $this->source;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::displayStatement
-	// @desc		Exibe o conteúdo original do statement
-	// @param		pre bool	"TRUE" Utilizar pré-formatação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Display the statement's source
+	 *
+	 * @param bool $pre Add PRE tags or not
+	 */
 	function displayStatement($pre=TRUE) {
 		print ($pre ? '<pre>' . $this->source . '</pre>' : $this->source);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::setStatement
-	// @desc		Reinicializa o objeto com um novo statement. As informações
-	//				sobre variáveis e trechos de código são resetadas
-	// @param		source string	Novo statement
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Restarts the object with a new statement
+	 *
+	 * @param string $source Statement's source
+	 */
 	function setStatement($source) {
 		$this->source = $source;
 		$this->result = $source;
@@ -149,25 +185,21 @@ class Statement extends PHP2Go
 		$this->_parseStatement();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::loadFromFile
-	// @desc		Define o statement a partir do conteúdo de um arquivo
-	// @param		fileName string		Caminho do arquivo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Loads the statement from a file
+	 *
+	 * @param string $fileName File path
+	 */
 	function loadFromFile($fileName) {
-		$this->setStatement(FileSystem::getContents($fileName));
+		$this->setStatement(file_get_contents($fileName));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::setVariablePattern
-	// @desc		Define o padrão de reconhecimento de variáveis no statement
-	// @param		prefix string	"" Prefixo
-	// @param		suffix string	"" Sufixo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the variables pattern
+	 *
+	 * @param string $prefix Variables prefix
+	 * @param string $suffix Variables suffix
+	 */
 	function setVariablePattern($prefix='', $suffix='') {
 		if (!empty($prefix) || !empty($suffix)) {
 			$this->prefix = $prefix;
@@ -175,85 +207,86 @@ class Statement extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::setShowUnassigned
-	// @desc		Define a visibilidade de variáveis sem valor atribuído
-	// @param		setting bool	"TRUE" Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable the display of unassigned variables
+	 *
+	 * @param bool $setting Flag value
+	 */
 	function setShowUnassigned($setting=TRUE) {
-		$this->showUnassigned = TypeUtils::toBoolean($setting);
+		$this->showUnassigned = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::getDefinedVars
-	// @desc		Retorna a lista de variáveis declaradas no statement
-	// @access		public
-	// @return		array Vetor de variáveis
-	//!-----------------------------------------------------------------
-	function getDefinedVars() {
-		return array_keys($this->variables);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Statement::getVariablesCount
-	// @desc		Retorna o total de variáveis declaradas
-	// @access		public
-	// @return		int
-	//!-----------------------------------------------------------------
-	function getVariablesCount() {
-		return sizeof($this->variables);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Statement::isEmpty
-	// @desc		Retorna TRUE se o statement não possui variáveis ou trechos de código
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function isEmpty() {
-		return (empty($this->variables) && empty($this->code));
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Statement::isPrepared
-	// @desc		Retorna TRUE se o objeto possui um statement configurado
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if the instance contains an already parsed statement
+	 *
+	 * @return bool
+	 */
 	function isPrepared() {
 		return $this->prepared;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::isDefined
-	// @desc		Verifica se uma determinada variável está declarada no statement
-	// @param		variable string		Nome da variável
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if the statement contains any variables or code blocks
+	 *
+	 * @return bool
+	 */
+	function isEmpty() {
+		return (empty($this->variables) && empty($this->code));
+	}
+
+	/**
+	 * Get all declared variables
+	 *
+	 * @return array
+	 */
+	function getDefinedVars() {
+		return array_keys($this->variables);
+	}
+
+	/**
+	 * Get the number of declared variables
+	 *
+	 * @return int
+	 */
+	function getVariablesCount() {
+		return sizeof($this->variables);
+	}
+
+	/**
+	 * Gets the current value of a variable
+	 *
+	 * @param string $variable Variable name
+	 * @return mixed
+	 */
+	function getVariableValue($variable) {
+		return (array_key_exists($variable, $this->variables) ? $this->variables[$variable]['value'] : NULL);
+	}
+
+	/**
+	 * Checks if a given variable is declared
+	 *
+	 * @param string $variable Variable name
+	 * @return bool
+	 */
 	function isDefined($variable) {
 		return (array_key_exists($variable, $this->variables));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::isBound
-	// @desc		Verifica se uma variável possui valor atribuído
-	// @param		variable string		Nome da variável
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if a given variable has a value
+	 *
+	 * @param string $variable Variable name
+	 * @return bool
+	 */
 	function isBound($variable) {
-		return (isset($this->variables[$variable]) && !TypeUtils::isNull($this->variables[$variable]['value'], TRUE));
+		return (isset($this->variables[$variable]) && $this->variables[$variable]['value'] !== NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::isAllBound
-	// @desc		Verifica se todas as variáveis declaradas no statement possuem valor atribuído
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if all statement's variables are bound
+	 *
+	 * @return bool
+	 */
 	function isAllBound() {
 		if (!$this->prepared)
 			return FALSE;
@@ -265,30 +298,17 @@ class Statement extends PHP2Go
 		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::getVariableValue
-	// @desc		Busca o valor atribuído a uma variável
-	// @param		variable string		Nome da variável
-	// @note		Retorna NULL se a variável não possui valor ou não foi declarada
-	// @access		public
-	// @return		mixed Valor da variável
-	//!-----------------------------------------------------------------
-	function getVariableValue($variable) {
-		return (array_key_exists($variable, $this->variables) ? $this->variables[$variable]['value'] : NULL);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Statement::bindByName
-	// @desc		Define valor para uma variável
-	// @param		variable string		Nome da variável
-	// @param		value mixed			Valor para a variável
-	// @param		quote bool			"TRUE" Inserir double quotes se o valor for uma string
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Assigns a value to a given variable
+	 *
+	 * @param string $variable Variable name
+	 * @param mixed $value Value
+	 * @param bool $quote Whether double quotes should be added when $value is a string
+	 * @return bool
+	 */
 	function bindByName($variable, $value, $quote=TRUE) {
 		if (array_key_exists($variable, $this->variables)) {
-			if ($quote && TypeUtils::isString($value))
+			if ($quote && is_string($value))
 				$value = "\"" . $value . "\"";
 			$this->variables[$variable]['value'] = $value;
 			return TRUE;
@@ -296,19 +316,17 @@ class Statement extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::bindFromRequest
-	// @desc		Este método realiza uma tentativa de atribuir valor
-	//				para uma determinada variável a partir do escopo global:
-	//				requisição (GET, POST, COOKIE), variáveis de ambiente,
-	//				sessão (básica ou objetos) e o objeto global Registry
-	// @param		name string			Nome da variável
-	// @param		quote bool			"TRUE" Inserir quotes se o valor atribuído for uma string
-	// @param		searchOrder string	"NULL" Ordem de pesquisa no escopo global
-	// @note		O padrão da ordem de pesquisa é "ROEGPCS"
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Tries to assign value to a variable from the global scope
+	 *
+	 * The default search order is: ROEGPCS.
+	 *
+	 * @uses HttpRequest::getVar()
+	 * @param string $name Variable name
+	 * @param bool $quote Add quotes on string values
+	 * @param string $searchOrder Search order
+	 * @return bool
+	 */
 	function bindFromRequest($name, $quote=TRUE, $searchOrder=NULL) {
 		if (empty($searchOrder))
 			$searchOrder = 'ROEGPCS';
@@ -323,26 +341,25 @@ class Statement extends PHP2Go
 			} else {
 				$value = HttpRequest::getVar($name, 'all', $searchOrder);
 			}
-			if (!TypeUtils::isNull($value, TRUE)) {
-				$this->variables[$name]['value'] = ($quote && TypeUtils::isString($value) ? "\"" . $value . "\"" : $value);
+			if ($value !== NULL) {
+				$this->variables[$name]['value'] = ($quote && is_string($value) ? "\"" . $value . "\"" : $value);
 				return TRUE;
 			}
 		}
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::appendByName
-	// @desc		Adiciona valor a uma variável
-	// @param		variable string		Nome da variável
-	// @param		value mixed			Valor para a variável
-	// @param		quote bool			"TRUE" Inserir double quotes se o valor for uma string
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Appends a value in a variable
+	 *
+	 * @param string $variable Variable name
+	 * @param mixed $value Value to append
+	 * @param bool $quote Add double quotes if $value is a string
+	 * @return bool
+	 */
 	function appendByName($variable, $value, $quote=TRUE) {
 		if (array_key_exists($variable, $this->variables)) {
-			if ($quote && TypeUtils::isString($value))
+			if ($quote && is_string($value))
 				$value = "\"" . $value . "\"";
 			$this->variables[$variable]['value'] .= $value;
 			return TRUE;
@@ -350,19 +367,21 @@ class Statement extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::bindVariables
-	// @desc		Este método pesquisa no escopo global buscando definir um
-	//				valor para as variáveis do statement. Os superglobals GET,
-	//				POST, COOKIE, SESSION e ENV mais o objeto global Registry e os
-	//				objetos de sessão são os locais utilizados para a pesquisa
-	// @param		quote bool			"TRUE" Inserir quotes se os valores encontrados forem strings
-	// @param		searchOrder string	"ROEGPCS" Ordem de pesquisa
-	// @param		replace bool		"TRUE" Substituir o valor das variáveis que já possuem valor atribuído
-	// @note		R-Registry, O-objetos de sessão, E-environment, G-get, P-post, C-cookie, S-session
-	// @return		int Quantidade de variáveis atribuídas automaticamente
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Tries to assign values to all declared variables based on the global scope
+	 *
+	 * For each declared variable, {@link bindFromRequest} is called. Inside
+	 * it, the variable is searched in the superglobals POST, GET, SESSION, COOKIE
+	 * and ENV, besides of being searched in the Registry singleton and in the
+	 * session objects. The search order (which repository must be read first,
+	 * and so on) is defined by the $searchOrder argument.
+	 *
+	 * @uses bindFromRequest()
+	 * @param bool $quote Add quotes on string values
+	 * @param string $searchOrder Search order
+	 * @param bool $replace Whether existent values should be replaced
+	 * @return int Number of affected variables
+	 */
 	function bindVariables($quote=TRUE, $searchOrder='ROEGPCS', $replace=TRUE) {
 		$affected = 0;
 		reset($this->variables);
@@ -375,15 +394,11 @@ class Statement extends PHP2Go
 		return $affected;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::debugVariables
-	// @desc		Monta e exibe o debug das variáveis definidas/amarradas
-	//				no statement atual. Pode ser utilizado após a função isAllBound,
-	//				para verificar variáveis não amarradas
-	// @param		pre bool	"TRUE" Utilizar pré-formatação
-	// @return		string Depuração das variáveis do statement
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Prints debug information about all declared variables
+	 *
+	 * @param bool $pre Add PRE tags
+	 */
 	function debugVariables($pre=TRUE) {
 		$str = '';
 		reset($this->variables);
@@ -396,16 +411,14 @@ class Statement extends PHP2Go
 		print ($pre ? '<pre>' . $str . '</pre>' : $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::getResult
-	// @desc		Monta o resultado do statement, baseado nos valores atribuídos às variáveis
-	//				e aplicando o resultado dos trechos de código PHP declarados
-	// @return		string Resultado do statement
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Applies all variable values and returns the processed statement
+	 *
+	 * @return string
+	 */
 	function getResult() {
 		$this->result = $this->source;
-		// substituição de trechos de código ([prefixo]#codigo#[sufixo])
+		// substitution of code blocks
 		reset($this->code);
 		foreach ($this->code as $code) {
 			ob_start();
@@ -416,20 +429,21 @@ class Statement extends PHP2Go
 			$pattern = preg_quote("{$this->prefix}{$code}{$this->suffix}", '/');
 			$this->result = preg_replace("/{$pattern}/", $value, $this->result, -1);
 		}
-		// substituição de variáveis por seus valores
-		// atribui string vazia a variáveis sem valor se a propriedade showUnassigned for igual a FALSE
+		// substitution of variables
 		reset($this->variables);
 		foreach ($this->variables as $name => $variable) {
 			if ($variable['array'] == TRUE) {
 				$pattern = $this->prefix . $variable['base'] . "\[\'?" . preg_quote($variable['key'] , '/') . "\'?\]" . $this->suffix;
 				if ($variable['value'] !== NULL)
 					$this->result = preg_replace("/{$pattern}/", $variable['value'], $this->result, -1);
+				// replace variable names by an empty string if showUnassigned==FALSE
 				elseif (!$this->showUnassigned)
 					$this->result = preg_replace("/{$pattern}/", '', $this->result, -1);
 			} else {
 				$pattern = preg_quote("{$this->prefix}{$name}{$this->suffix}", '/');
 				if ($variable['value'] !== NULL)
 					$this->result = preg_replace("/{$pattern}/", $variable['value'], $this->result, -1);
+				// replace variable names by an empty string if showUnassigned==FALSE
 				elseif (!$this->showUnassigned)
 					$this->result = preg_replace("/{$pattern}/", '', $this->result, -1);
 			}
@@ -437,25 +451,21 @@ class Statement extends PHP2Go
 		return $this->result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::displayResult
-	// @desc		Imprime o resultado do processamento do statement
-	// @param		pre bool	"TRUE" Utilizar pré-formatação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes the statement and displays it
+	 *
+	 * @param bool $pre Add PRE tags
+	 */
 	function displayResult($pre=TRUE) {
 		$result = $this->getResult();
 		print ($pre ? '<pre>' . $result . '</pre>' : $result);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Statement::_parseStatement
-	// @desc		Interpreta o conteúdo do statement, buscando por declarações
-	//				de variáveis de trechos de código PHP
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Parses code blocks and variables from the statement's source
+	 *
+	 * @access private
+	 */
 	function _parseStatement() {
 		$this->prepared = TRUE;
 		$matches = array();

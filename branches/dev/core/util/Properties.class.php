@@ -1,127 +1,158 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/util/Properties.class.php,v 1.6 2006/03/15 23:02:42 mpont Exp $
-// $Date: 2006/03/15 23:02:42 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileManager');
-import('php2go.text.StringUtils');
-//------------------------------------------------------------------
-
-//!-----------------------------------------------------------------
-// @class		Properties
-// @desc		Esta classe tem como propósito a interpretação e a geração de
-//				arquivos contendo dados de configuração no formato .ini, recuperando,
-//				alterando e criando seções e/ou chaves de configuração
-// @package		php2go.util
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.6 $
-//!-----------------------------------------------------------------
+/**
+ * Reads and writes files in the ".ini" format
+ *
+ * The Properties class is able to read sections and their values, as well
+ * as to create or change existent sections and keys.
+ *
+ * @package util
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Properties extends PHP2Go
 {
-	var $filename;					// @var filename string			Nome do arquivo
-	var $table;						// @var table array				Tabela de armazenamento dos dados de configuração
-	var $processSections;			// @var processSections bool	Processamento (leitura/escrita) de seções habilitado ou desabilitado
-	var $caseSensitive;				// @var caseSensitive bool		Leitura/escrita de chaves e seções sensível ao caso
-	var $currentSection = NULL;		// @var currentSection string	"NULL" Seção ativa (última carregada ou criada)
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::Properties
-	// @desc		Construtor da classe
-	// @param		filename string			Caminho do arquivo a ser lido ou criado
-	// @param		processSections bool	"FALSE" Processar seções para leitura/escrita
-	// @param		caseSensitive bool		"FALSE" Leitura/escrita de chaves e seções sensível ao caso
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * File path
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $filename;
+
+	/**
+	 * Properties read from the file
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $table;
+
+	/**
+	 * Whether sections should be processed
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $processSections;
+
+	/**
+	 * Whether read/write of keys should be case-sensitive
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $caseSensitive;
+
+	/**
+	 * Current section name
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $currentSection = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $filename File to be read or written
+	 * @param bool $processSections Process sections?
+	 * @param bool $caseSensitive Case-sensitive keys?
+	 * @return Properties
+	 */
 	function Properties($filename, $processSections=FALSE, $caseSensitive=FALSE) {
 		parent::PHP2Go();
 		$this->filename = $filename;
-		$this->processSections = TypeUtils::toBoolean($processSections);
-		$this->caseSensitive = TypeUtils::toBoolean($caseSensitive);
-		if (FileSystem::exists($filename)) {
+		$this->processSections = (bool)$processSections;
+		$this->caseSensitive = (bool)$caseSensitive;
+		if (file_exists($filename)) {
 			$this->_loadFile();
 		} else {
 			$this->table = array();
 			$this->_createFile();
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getFirstSection
-	// @desc		Move o ponteiro de seções para o início e retorna o nome
-	//				da primeira seção do arquivo
-	// @note		Se o processamento de seções estiver desabilitado, retorna NULL
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Gets the name of the first section
+	 *
+	 * Returns FALSE when the processing of sections is disabled.
+	 *
+	 * @return string
+	 */
 	function getFirstSection() {
 		if ($this->processSections) {
 			reset($this->table);
 			return key($this->table);
 		}
-		return NULL;
+		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::fetchFirstSection
-	// @desc		Retorna o conteúdo (chaves e valores) da primeira seção do arquivo
-	// @return		mixed Conteúdo da seção
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Fetches the contents of the first section
+	 *
+	 * Returns FALSE when the processing of sections is disabled.
+	 *
+	 * @return mixed
+	 */
 	function fetchFirstSection() {
 		return $this->getSection($this->getFirstSection());
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getCurrentSection
-	// @desc		Retorna o nome da seção ativa
-	// @return		string Nome da seção
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Gets current section name
+	 *
+	 * @return string
+	 */
 	function getCurrentSection() {
 		return $this->currentSection;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::fetchCurrentSection
-	// @desc		Retorna o conteúdo da seção ativa
-	// @return		mixed Conteúdo da seção
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Fetches current section
+	 *
+	 * @return array
+	 */
 	function fetchCurrentSection() {
 		return $this->getSection($this->currentSection);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getNextSection
-	// @desc		Retorna o nome da seção ativa, e move o ponteiro da lista
-	//				de seções uma posição à frente
-	// @note		Este método retornará FALSE quando o apontador de seções chegar ao final da lista
-	// @return		string Nome da seção ativa
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Moves the internal pointer to the next section
+	 *
+	 * Returns the fetched section name, or FALSE when
+	 * the end was reached or when processing sections
+	 * is disabled.
+	 *
+	 * @return string Next section's name
+	 */
 	function getNextSection() {
 		if ($this->processSections) {
 			if (key($this->table)) {
@@ -132,37 +163,35 @@ class Properties extends PHP2Go
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::fetchNextSection
-	// @desc		Retorna o conteúdo da seção ativa, e move o ponteiro da lista
-	//				de seções uma posição à frente
-	// @note		Este método retornará FALSE quando o apontador de seções chegar ao final da lista	
-	// @return		mixed Conteúdo da seção ativa
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Fetches the next section
+	 *
+	 * Returns FALSE when there is no next action or
+	 * when processing sections is disabled.
+	 *
+	 * @return mixed
+	 */
 	function fetchNextSection() {
 		return $this->getSection($this->getNextSection());
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::hasSection
-	// @desc		Verifica a existência de uma seção na tabela de configurações
-	// @param		section string		Nome da seção
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Checks if a given section exists
+	 *
+	 * @param string $section Section name
+	 * @return bool
+	 */
 	function hasSection($section) {
 		return ($this->processSections ? ($this->table[$section]) : FALSE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getSection
-	// @desc		Retorna o conteúdo de uma seção de configuração
-	// @param		section string		Nome da seção
-	// @return		Valor da seção ou FALSE se ela não existir
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Fetches a section by name
+	 *
+	 * @param string $section Section name
+	 * @return mixed
+	 */
 	function getSection($section) {
 		if (!empty($section)) {
 			if ($this->processSections) {
@@ -171,26 +200,27 @@ class Properties extends PHP2Go
 				return (isset($this->table[$section]) ? $this->table[$section] : FALSE);
 			}
 		}
-		return FALSE;
+		return NULL;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getValue
-	// @desc		Busca o valor de uma chave de configuração
-	// @param		key string		Nome da chave
-	// @param		fallback mixed	"NULL" Valor a ser retornado se a chave não for encontrada
-	// @param		section string	"NULL" Nome da seção
-	// @note		Se o processamento de seções estiver habilitado e o parâmetro $section
-	//				for omitido, a classe utilizará a última seção carregada
-	// @return		mixed Valor da chave (ou valor de $fallback)
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Reads a value, given its key
+	 *
+	 * If $section is omitted, the current loaded section will
+	 * be used. The $fallback value will be used when $key is not found.
+	 *
+	 * @param string $key Key
+	 * @param mixed $fallback Fallback value
+	 * @param string $section Optional section name
+	 * @return mixed
+	 */
 	function getValue($key, $fallback=NULL, $section=NULL) {
 		if (!$this->caseSensitive) {
 			$key = strtoupper($key);
 			$section = strtoupper((string)$section);
 		}
 		if ($this->processSections) {
-			$section = StringUtils::ifEmpty($section, $this->currentSection);
+			$section = (empty($section) ? $this->currentSection : $section);
 			if (!empty($section))
 				return (isset($this->table[$section][$key]) ? $this->table[$section][$key] : $fallback);
 			return $fallback;
@@ -198,66 +228,65 @@ class Properties extends PHP2Go
 			return (isset($this->table[$key]) ? $this->table[$key] : $fallback);
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::matchValue
-	// @desc		Verifica se o valor de uma chave se enquadra em um determinado padrão
-	// @param		key string		Nome da chave
-	// @param		pattern string	Padrão, no formato utilizado pela função preg_match
-	// @param		section string	"NULL" Nome da seção
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------	
+
+	/**
+	 * Checks if the value of a key matches a given pattern
+	 *
+	 * @param string $key Key
+	 * @param string $pattern Pattern
+	 * @param string $section Optional section name
+	 * @return bool
+	 */
 	function matchValue($key, $pattern, $section=NULL) {
 		$tmp = $this->getValue($key, NULL, $section);
-		if (!TypeUtils::isNull($tmp, TRUE))
+		if ($tmp !== NULL)
 			return preg_match($pattern, $tmp);
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getArray
-	// @desc		Lê uma chave de configuração na forma de um array, usando um separador fornecido
-	// @param		key string			Nome da chave
-	// @param		separator string	"|" Separador de valores
-	// @param		fallback array		"array()" Valor a ser retornado caso a chave não exista
-	// @param		section string		"NULL" Nome da seção
-	// @return		mixed Valor da chave (ou valor de $fallback)
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Reads the value of a key as an array
+	 *
+	 * @param string $key Key
+	 * @param string $separator Separator to be used
+	 * @param mixed $fallback Fallback value
+	 * @param string $section Optional section value
+	 * @return mixed
+	 */
 	function getArray($key, $separator='|', $fallback=array(), $section=NULL) {
 		$tmp = $this->getValue($key, $fallback, $section);
 		if ($tmp != $fallback)
 			return explode($separator, (string)$tmp);
 		return $fallback;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getBool
-	// @desc		Lê uma chave de um valor booleano
-	// @param		key string		Nome da chave
-	// @param		fallback mixed	"FALSE" Valor de retorno caso a chave não exista
-	// @param		trueValue mixed	"1" Valor TRUE para executar a comparação
-	// @param		section string	"NULL" Nome da seção
-	// @return		bool Valor da chave (ou valor de $fallback)
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Reads the value of a key as boolean
+	 *
+	 * @param string $key Key
+	 * @param mixed $fallback Fallback value
+	 * @param string $trueValue Representation of a true value, for comparison purposes
+	 * @param string $section Optional section name
+	 * @return bool
+	 */
 	function getBool($key, $fallback=FALSE, $trueValue='1', $section=NULL) {
 		$tmp = $this->getValue($key, $fallback, $section);
 		if ($tmp != $fallback)
 			return ($tmp == $trueValue);
 		return $fallback;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::addSection
-	// @desc		Adiciona uma seção à tabela de configuração
-	// @param		section string	Nome da seção
-	// @param		overwrite bool	"FALSE" Sobrescrever, se existente
-	// @param		entries mixed	"array()" Permite inicializar a sessão com um valor ou um array de valores
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Adds a new section
+	 *
+	 * This section will be set as current section, so that
+	 * further calls to {@link setValue} will add/change keys
+	 * of this section.
+	 *
+	 * @param string $section Section name
+	 * @param bool $overwrite Overwrite current entries, if existent
+	 * @param array $entries Section entries
+	 */
 	function addSection($section, $overwrite=FALSE, $entries=array()) {
 		if ($this->processSections) {
 			if ($overwrite || !isset($this->table[$section]))
@@ -265,99 +294,86 @@ class Properties extends PHP2Go
 			$this->currentSection = $section;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::setValue
-	// @desc		Define o valor de uma chave de configuração
-	// @param		key string		Nome da chave
-	// @param		value mixed		Valor da chave
-	// @param		section string	"NULL" Nome da seção
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Adds or changes a key
+	 *
+	 * @param string $key Key
+	 * @param string $value Key's value
+	 * @param string $section Optional section name
+	 */
 	function setValue($key, $value, $section=NULL) {
 		if (!$this->caseSensitive) {
 			$key = strtoupper($key);
 			$section = strtoupper($section);
 		}
-		// cria chave de um seção		
 		if ($this->processSections) {
-			$section = StringUtils::ifEmpty($section, $this->currentSection);
+			$section = (empty($section) ? $this->currentSection : $section);
 			if (!empty($section))
 				$this->table[$section][$key] = (string)$value;
-		}
-		// cria uma nova chave no map simples
-		else {
+		} else {
 			$this->table[$key] = (string)$value;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::setArray
-	// @desc		Define um array como o valor de uma chave, definindo o caractere
-	//				a ser usado para unir os valores do array
-	// @param		key string		Nome da chave
-	// @param		value array		Array de valores
-	// @param		glue string		"|" String para unir os valores do vetor
-	// @param		section string	"NULL" Nome da seção
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Adds an array key
+	 *
+	 * The array will be imploded using the given $glue string.
+	 *
+	 * @param string $key Key
+	 * @param array $value Key's value
+	 * @param string $glue Array glue
+	 * @param string $section Optional section name
+	 */
 	function setArray($key, $value, $glue='|', $section=NULL) {
 		$value = implode($glue, $value);
 		$this->setValue($key, $value, $section);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::setBool
-	// @desc		Converte um valor booleano em uma representação string e
-	//				usa o resultado para definir o valor de uma chave de configuração
-	// @param		key string		Nome da chave
-	// @param		value bool		Valor da chave
-	// @param		section string	"NULL" Nome da seção
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Adds a boolean key
+	 *
+	 * @param string $key Key
+	 * @param bool $value Key's value
+	 * @param string $section Optional section name
+	 */
 	function setBool($key, $value, $section=NULL) {
 		$value = ($value ? "1" : "0");
 		$this->setValue($key, $value, $section);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Properties::addComment
-	// @desc		Adiciona um comentário na tabela de configuração
-	// @param		comment string	Comentário
-	// @param		section string	"NULL" Nome da seção onde o comentário deve ser adicionado
-	// @note		Os comentários são sempre adicionados ao final das seções, ou ao final
-	//				da tabela, se o processamento de seções estiver desabilitado na classe
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a comment
+	 *
+	 * The comments are always added in the end of sections, or in
+	 * the end of the file, when the processing of sections is disabled.
+	 *
+	 * @param string $comment Comment
+	 * @param string $section Optional section name
+	 */
 	function addComment($comment, $section=NULL) {
 		if (!$this->caseSensitive)
 			$section = strtoupper((string)$section);
-		// cria um comentário junto com as chaves da seção
 		if ($this->processSections) {
-			$section = StringUtils::ifEmpty($section, $this->currentSection);
+			$section = (empty($section) ? $this->currentSection : $section);
 			if (!empty($section)) {
 				$size = (isset($this->table[$section]) ? sizeof($this->table[$section]) : 0);
 				$this->table[$section][";{$size}"] = $comment;
 			}
-		// cria um comentário no final da tabela
 		} else {
 			$size = sizeof($this->table);
 			$this->table[";{$size}"] = $comment;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::getContent
-	// @desc		Monta e retorna o conteúdo da tabela de configuração
-	// @param		lineEnd string	"\n" Quebra de linha
-	// @param		indent string	"" Indentação
-	// @return		string Conteúdo da tabela formatado para exibição	
-	// @access		public
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Renders and returns the file contents
+	 *
+	 * @param string $lineEnd Line end string
+	 * @param string $indent Indentation string
+	 * @return string
+	 */
 	function getContent($lineEnd="\n", $indent='') {
 		$buffer = '';
 		if ($this->processSections) {
@@ -365,7 +381,7 @@ class Properties extends PHP2Go
 				if (!$this->caseSensitive)
 					$section = strtoupper($section);
 				$buffer .= "[{$section}]" . $lineEnd;
-				foreach ($keys as $key => $value) { 
+				foreach ($keys as $key => $value) {
 					if ($key[0] == ';') {
 						$buffer .= $indent . '; ' . $value . $lineEnd;
 					} else {
@@ -386,63 +402,55 @@ class Properties extends PHP2Go
 		}
 		return $buffer;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::reset
-	// @desc		Remonta a tabela de configuração a partir do conteúdo do arquivo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Rebuilds the internal table based on the original file
+	 */
 	function reset() {
 		$this->_loadFile(TRUE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::save
-	// @desc		Salva para o arquivo a tabela de configurações
-	// @param		lineEnd string		"\n" Quebra de linha
-	// @param		indent string		"" Indentação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Renders and saves the file contents
+	 *
+	 * @param string $lineEnd Line end string
+	 * @param string $indent Indentation string
+	 * @return bool
+	 */
 	function save($lineEnd="\n", $indent='') {
-		$Mgr = new FileManager();
-		$Mgr->throwErrors = FALSE;
-		if ($Mgr->open($this->filename, FILE_MANAGER_WRITE_BINARY, LOCK_EX)) {
-			$Mgr->write($this->getContent($lineEnd, $indent));
-			$Mgr->unlock($this->filename, FILE_MANAGER_WRITE_BINARY);
-			$Mgr->close();
+		$fp = @fopen($this->filename, 'w');
+		if ($fp !== FALSE) {
+			flock($fp, LOCK_EX);
+			fputs($fp, $this->getContent($lineEnd, $indent));
+			flock($fp, LOCK_UN);
+			fclose($fp);
 			return TRUE;
 		} else {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_WRITE_FILE', $file), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::_createFile
-	// @desc		Cria o arquivo de configurações
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Used to create the file when it doesn't exist
+	 *
+	 * @access private
+	 */
 	function _createFile() {
 		$fp = @fopen($this->filename, 'w');
 		if ($fp === FALSE)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_CREATE_FILE', $this->filename), E_USER_ERROR, __FILE__, __LINE__);
-		ftruncate($fp, 0);			
+		ftruncate($fp, 0);
 		fclose($fp);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Properties::_loadFile
-	// @desc		Cria a tabela de configurações a partir do conteúdo do arquivo,
-	//				utilizando a função parse_ini_file do PHP. Se a classe
-	//				estiver usando processamento insensível ao caso, todas as chaves
-	//				e nomes de seções serão convertidos para letras maiúsculas
-	// @param		force bool		"FALSE" Forçar remontagem da tabela
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Used to load the contents of the file
+	 *
+	 * @uses parse_ini_file()
+	 * @param unknown_type $force Force table rebuild
+	 * @access private
+	 */
 	function _loadFile($force=FALSE) {
 		if (!isset($this->table) || $force) {
 			$tmp = @parse_ini_file($this->filename, $this->processSections);
@@ -450,7 +458,7 @@ class Properties extends PHP2Go
 				if ($this->processSections) {
 					foreach ($tmp as $section => $values) {
 						if (!$this->caseSensitive)
-							$this->table[strtoupper($section)] = (TypeUtils::isArray($values) ? array_change_key_case($values, CASE_UPPER) : $values);
+							$this->table[strtoupper($section)] = (is_array($values) ? array_change_key_case($values, CASE_UPPER) : $values);
 						else
 							$this->table[$section] = $values;
 					}

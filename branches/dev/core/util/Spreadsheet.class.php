@@ -1,255 +1,486 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/util/Spreadsheet.class.php,v 1.21 2006/11/19 18:02:27 mpont Exp $
-// $Date: 2006/11/19 18:02:27 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileManager');
+import('php2go.datetime.Date');
 import('php2go.net.HttpResponse');
-import('php2go.text.StringUtils');
-import('php2go.util.System');
-//------------------------------------------------------------------
 
-// @const	SPRSH_LITTLE_ENDIAN		"0"
-// Formato de ponto flutuante LITTLE ENDIAN
+/**
+ * Little endian byte order
+ */
 define('SPRSH_LITTLE_ENDIAN', 0);
-// @const	SPTSH_BIG_ENDIAN		"1"
-// Formato de ponto flutuante BIG_ENDIAN
+/**
+ * Big endian byte order
+ */
 define('SPRSH_BIG_ENDIAN', 1);
-// @const	SPRSH_MAX_ROWS			"65536"
-// Número máximo de linhas da planilha
+/**
+ * Max spreadsheet rows
+ */
 define('SPRSH_MAX_ROWS', 65536);
-// @const	SPRSH_MAX_COLS			"256"
-// Número máximo de colunas da planilha
+/**
+ * Max spreadsheet cols
+ */
 define('SPRSH_MAX_COLS', 256);
-// @const	SPRSH_MAX_CHARS			"255"
-// Número máximo de caracteres em uma célula do tipo string
+/**
+ * Max chars inside a spreadsheet cell
+ */
 define('SPRSH_MAX_CHARS', 255);
-// @const	SPRSH_MAX_NOTE			"2048"
-// Tamanho máximo de uma nota de célula
+/**
+ * Max length of a cell note
+ */
 define('SPRSH_MAX_NOTE', 2048);
-// @const	SPRSH_RECORD_LIMIT		"2048"
-// Tamanho máximo em bytes de um registro BIFF
+/**
+ * Max size of a BIFF record in bytes
+ */
 define('SPRSH_RECORD_LIMIT', 2084);
-// @const	SPRSH_FONT_0			"0"
-// Código hexadecimal da fonte índice zero
+/**
+ * First font
+ */
 define('SPRSH_FONT_0', 0);
-// @const	SPRSH_FONT_1			"0x40"
-// Código hexadecimal da fonte índice 1
+/**
+ * Second font
+ */
 define('SPRSH_FONT_1', 0x40);
-// @const	SPRSH_FONT_2			"0x80"
-// Código hexadecimal da fonte índice 2
+/**
+ * Third font
+ */
 define('SPRSH_FONT_2', 0x80);
-// @const	SPRSH_FONT_3			"0xC0"
-// Código hexadecimal da fonte índice 3
+/**
+ * Fourth font
+ */
 define('SPRSH_FONT_3', 0xC0);
-// @const	SPRSH_DATE				"2415033"
-// Constante utilizada no cálculo de datas
+/**
+ * Used on date calculations
+ */
 define('SPRSH_DATE', 2415033);
 
-//!-----------------------------------------------------------------
-// @class		Spreadsheet
-// @desc		Esta classe implementa a exportação de dados para arquivos
-//				no formato BIFF (Binary Interchange File Format), interpretado
-//				por planilhas eletrônicas como o MS Excel
-// @package		php2go.util
-// @extends 	PHP2Go
-// @uses		FileManager
-// @uses		HttpResponse
-// @uses		System
-// @author		Marcos Pont
-// @version		$Revision: 1.21 $
-// @note		A classe é compatível com a versão 2.1 do formato BIFF
-//!-----------------------------------------------------------------
+/**
+ * Streams data in the BIFF (Binary Interchange File Format) format
+ *
+ * The BIFF format can be read by applications like MS Excel and
+ * OpenOffice.org. The class is compliant with BIFF version 2.1.
+ *
+ * @package util
+ * @uses Date
+ * @uses HttpResponse
+ * @uses System
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Spreadsheet extends PHP2Go
 {
-	var $stream = '';						// @var stream string				"" Conteúdo da planilha
-	var $streamSize = 0;					// @var streamSize int				Tamanho da planilha em bytes
-	var $dataStream = '';					// @var dataStream string			"" Stream de dados da planilha
-	var $noteStream = '';					// @var noteStream string			"" Stream que contém as notas de células
-	var $byteOrder = SPRSH_LITTLE_ENDIAN;	// @var byteOrder int				"SPRSH_LITTLE_ENDIAN" Formato de ponto flutuante da plataforma utilizada
-	var $minRowDimension;					// @var minRowDimension int			Menor linha nas dimensões da planilha
-	var $maxRowDimension;					// @var maxRowDimension int			Última linha da planilha
-	var $minColDimension;					// @var minColDimension int			Primeira coluna da planilha
-	var $maxColDimension;					// @var maxColDimension int			Maior índice de coluna da planilha
-	var $protectBool = FALSE;				// @var protectBool bool			"FALSE" Indica se a planilha usa proteção de senha
-	var $protectPasswd;						// @var	protectPasswd string		Senha de proteção da planilha contra escrita
-	var $backup = FALSE;					// @var backup bool					"FALSE" Indica se deve ser feito backup da planilha quando aberta
-	var $defaultColWidth = 8.43;			// @var defaultColWidth float		"8.43" Largura padrão das colunas
-	var $defaultRowHeight = 12.75;			// @var defaultRowHeight float		"12.75" Altura padrão das linhas
-	var $rowInfo = array();					// @var rowInfo array				"array()" Vetor contendo tamanhos customizados de linhas
-	var $colInfo = array();					// @var colInfo array				"array()" Vetor contendo tamanhos customizados de colunas
-	var $printHeaders = TRUE;				// @var printHeaders bool			"TRUE" Indica se devem ser impressos os cabeçalhos de linhas e colunas
-	var $printGridLines = TRUE;				// @var printGridLines bool			"TRUE" Flag para impressão de linhas de grade
-	var $leftMargin = 0.50;					// @var leftMargin float			"0.50" Margem esquerda
-	var $rightMargin = 0.50;				// @var rightMargin float			"0.50" Margem direita
-	var $topMargin = 0.50;					// @var topMargin float				"0.50" Margem superior
-	var $bottomMargin = 0.50;				// @var bottomMargin float			"0.50" Margem inferior
-	var $header = '';						// @var header string				"" Cabeçalho
-	var $headerMargin = 0.50;				// @var headerMargin float			"0.50" Margem do cabeçalho
-	var $footer = '';						// @var footer string				"" Rodapé
-	var $footerMargin = 0.50;				// @var footerMargin float			"0.50" Margem do rodapé
-	var $horizontalBreaks = array();		// @var horizontalBreaks array		"array()" Vetor de quebras de página horizontal
-	var $verticalBreaks = array();			// @var verticalBreaks array		"array()" Vetor de quebras de página vertical
-	var $selected = FALSE;					// @var selected bool				"FALSE" Indica se há seleção na planilha
-	var $selection = array(0, 0, 0, 0);		// @var selection array				"array(0, 0, 0, 0)" Vetor de seleção da planilha: primeira e segunda coordenadas
-	var $freeze = TRUE;						// @var freeze bool               	"TRUE" Indica se há área fixa
-	var $panes = array(0, 0, 0, 0);			// @var panes array					"array(0, 0)" Área fixa de visualização
-	var $activePane;						// @var activePane int				Área fixa ativa
-	var $pictures = array (	'', '', '', '',	// @var pictures array				Vetor de formatos de conteúdo de célula, contendo
-							'', '', '', '',	// 									21 formatos pré-definidos
-							'', '', '', '',
-							'', '', '', '',
-							'', '', '', '',
-							'' );
-	var $fonts;								// @var fonts array					Vetor de fontes da planilha
-	var $fontCount = 0;						// @var fontCount int				"0" Número de fontes inseridas
-	var $cellFormats;						// @var cellFormats array			Vetor de conjuntos de atributos de célula
-	var $cellFormatCount = 0;				// @var cellFormatCount int			"0" Número de formatos definidos na classe
-	var $throwErrors = TRUE;				// @var throwErrors bool			"TRUE" Indica se os erros ocorridos devem ser reportados
+	/**
+	 * Whether errors should be thrown
+	 *
+	 * @var bool
+	 */
+	var $throwErrors = TRUE;
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::Spreadsheet
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Binary stream
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $stream = '';
+
+	/**
+	 * Cell data stream
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $dataStream = '';
+
+	/**
+	 * Cell notes stream
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $noteStream = '';
+
+	/**
+	 * Byte order
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $byteOrder = SPRSH_LITTLE_ENDIAN;
+
+	/**
+	 * Min row dimension
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $minRowDimension;
+
+	/**
+	 * Max row dimension
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $maxRowDimension;
+
+	/**
+	 * Min col dimension
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $minColDimension;
+
+	/**
+	 * Max col dimension
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $maxColDimension;
+
+	/**
+	 * Whether the spreadsheet should be protected with a password
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $protectBool = FALSE;
+
+	/**
+	 * Spreadsheet's password
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $protectPasswd;
+
+	/**
+	 * Backup flag
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $backup = FALSE;
+
+	/**
+	 * Default cell width
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $defaultColWidth = 8.43;
+
+	/**
+	 * Default row height
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $defaultRowHeight = 12.75;
+
+	/**
+	 * Holds customized row heights
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $rowInfo = array();
+
+	/**
+	 * Holds customized cell widths
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $colInfo = array();
+
+	/**
+	 * Print headers flag
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $printHeaders = TRUE;
+
+	/**
+	 * Print grid lines flag
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $printGridLines = TRUE;
+
+	/**
+	 * Left margin
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $leftMargin = 0.50;
+
+	/**
+	 * Right margin
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $rightMargin = 0.50;
+
+	/**
+	 * Top margin
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $topMargin = 0.50;
+
+	/**
+	 * Bottom margin
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $bottomMargin = 0.50;
+
+	/**
+	 * Header text
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $header = '';
+
+	/**
+	 * Header margin
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $headerMargin = 0.50;
+
+	/**
+	 * Footer text
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $footer = '';
+
+	/**
+	 * Footer margin
+	 *
+	 * @var float
+	 * @access private
+	 */
+	var $footerMargin = 0.50;
+
+	/**
+	 * Horizontal page breaks
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $horizontalBreaks = array();
+
+	/**
+	 * Vertical page breaks
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $verticalBreaks = array();
+
+	/**
+	 * Indicates if the spreadsheet contains a selected area
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $selected = FALSE;
+
+	/**
+	 * Selection area
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $selection = array(0, 0, 0, 0);
+
+	/**
+	 * Indicates if the spreadsheet contains frozen panes
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $freeze = TRUE;
+
+	/**
+	 * Frozen panes
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $panes = array(0, 0, 0, 0);
+
+	/**
+	 * Active frozen pane
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $activePane;
+
+	/**
+	 * Cell picures
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $pictures = array (	'', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
+
+	/**
+	 * Cell fonts
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $fonts;
+
+	/**
+	 * Cell formats
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $cellFormats;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return Spreadsheet
+	 */
 	function Spreadsheet() {
 		parent::PHP2Go();
-		// Inicializa as dimensões
 		$this->minRowDimension = SPRSH_MAX_ROWS + 1;
 		$this->maxRowDimension = 0;
 		$this->minColDimension = SPRSH_MAX_COLS + 1;
 		$this->maxColDimension = 0;
-		// Adiciona o formato padrão de célula
 		$this->addCellFormat();
-		// Busca o formato de ponto flutuante
 		$this->_getByteOrder();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::addPictureString
-	// @desc		Adiciona um formato de célula (Ex: 9999.999)
-	// @access		public
-	// @param		picString string		Formato de célula
-	// @return		int Índice criado para este formato
-	// @see			Spreadsheet::addFont
-	// @see			Spreadsheet::addCellFormat
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new cell picture
+	 *
+	 * @param string $picString Cell picture
+	 * @return int New picture index
+	 */
 	function addPictureString($picString) {
+		$count = sizeof($this->pictures);
 		$this->pictures[] = $picString;
-		return sizeof($this->pictures) - 1;
+		return $count;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::addFont
-	// @desc		Cria uma nova fonte na planilha, a partir de seus atributos
-	// @access		public
-	// @param		properties array		Vetor de propriedades da fonte
-	// @return		int Índice da fonte criada
-	// @note		Ao adicionar uma fonte à planilha, o índice retornado
-	//				pode ser utilizado nos métodos writeXXX() para indicar
-	//				o índice da fonte que se deseja utilizar
-	// @see			Spreadsheet::addPictureString
-	// @see			Spreadsheet::addCellFormat
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new cell font
+	 *
+	 * Font properties: name, size, bold, italic,
+	 * underline and strikeout.
+	 *
+	 * @param array $properties Font properties
+	 * @return int New font index
+	 */
 	function addFont($properties) {
-		if ($this->fontCount < 4 && isset($properties['name'])) {
-			$aCount = $this->fontCount;
-			eval("\$properties[font_index] = SPRSH_FONT_$aCount;");
+		if (sizeof($this->fonts) < 4 && isset($properties['name'])) {
+			$count = sizeof($this->fonts);
+			$properties['font_index'] = constant('SPRSH_FONT_' . $count);
 			$this->fonts[] = $properties;
-			$this->fontCount++;
-			return $this->fontCount - 1;
+			return $count;
 		} else {
            	return 0;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::addCellFormat
-	// @desc		Cria um novo formato de célula na planilha, para ser
-	//				utilizado nos métodos de inserção de dados
-	// @access		public
-	// @param		properties array		"array()" Vetor de propriedades do formato
-	// @return		int Índice do formato criado
-	// @note		O índice retornado por este método pode ser utilizado
-	//				diretamente no parâmetro cellFormat das funções de inserção
-	//				de dados writeXXX()
-	// @see			Spreadsheet::addPictureString
-	// @see			Spreadsheet::addFont
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new cell format
+	 *
+	 * Formatting options: align, fill, shaded, box_border,
+	 * left_border, right_border, top_border, bottom_border,
+	 * locked and hidden.
+	 *
+	 * @param array $properties Formatting options
+	 * @return int New format index
+	 */
 	function addCellFormat($properties=array()) {
-		if (TypeUtils::isArray($properties)) {
-			// Busca o somatório do formato da célula
+		if (is_array($properties)) {
+			$count = sizeof($this->cellFormats);
 			$properties['format'] = $this->_buildFormat($properties);
-			// Constrói o status da célula
 			$status = 0x0;
-			if ($properties['locked']) $status += 0x40;
-			if ($properties['hidden']) $status += 0x80;
+			($properties['locked']) && ($status += 0x40);
+			($properties['hidden']) && ($status += 0x80);
 			$properties['status'] = $status;
             $this->cellFormats[] = $properties;
-			$this->cellFormatCount++;
-			return $this->cellFormatCount - 1;
+            return $count;
 		} else {
            	return 0;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::protectSheet
-	// @desc		Habilita proteção com senha na planilha
-	// @access		public
-	// @param		password string	Senha 'plain text' de proteção
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Protects the spreadsheet with a password
+	 *
+	 * @param string $password Password
+	 */
 	function protectSheet($password) {
         $this->protectBool = TRUE;
 		$this->protectPasswd = $this->_encodeSheetPasswd($password);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setBackup
-	// @desc		Habilita a opção de backup na planilha criada
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setBackup() {
-		$this->backup = TRUE;
+	/**
+	 * Enable/disable backup flag
+	 *
+	 * @param bool $flag Flag value
+	 */
+	function setBackup($flag) {
+		$this->backup = (bool)$flag;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setRowHeight
-	// @desc		Configura a altura de uma ou mais linhas da planilha
-	// @access		public
-	// @param		height float	Valor para a altura, em pixels
-	// @param		rowStart int	Primeira linha
-	// @param		rowEnd int	"NULL" Última linha
-	// @return		void
-	// @note		O método pode ser executado sem o terceiro parâmetro,
-	//				permitindo que seja configurada a altura apenas para
-	//				uma linha
-	//!-----------------------------------------------------------------
-	function setRowHeight($height, $rowStart, $rowEnd = NULL) {
+	/**
+	 * Set the height of a row or a range of rows
+	 *
+	 * @param int $height New height
+	 * @param int $rowStart Row index
+	 * @param int $rowEnd End row index
+	 */
+	function setRowHeight($height, $rowStart, $rowEnd=NULL) {
 		if (TypeUtils::isInteger($rowStart) && TypeUtils::isInteger($rowEnd) && $rowEnd > $rowStart && $rowStart >= 0) {
         	for ($i=$rowStart; $i<=$rowEnd; $i++) {
 				if (!in_array($i, $this->rowInfo)) {
@@ -261,18 +492,13 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setColWidth
-	// @desc		Configura a largura de uma ou mais colunas da planilha
-	// @access		public
-	// @param		width int		Valor para a largura, em caracteres
-	// @param		colStart int	Primeira coluna
-	// @param		colEnd int	"NULL" Última coluna
-	// @return		void
-	// @note		O método pode ser executado sem o terceiro parâmetro,
-	//				permitindo que seja configurada a largura apenas para
-	//				uma coluna
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the width of a column or a range of columns
+	 *
+	 * @param int $width New width
+	 * @param int $colStart Column index
+	 * @param int $colEnd End column index
+	 */
 	function setColWidth($width, $colStart, $colEnd = NULL) {
 		if (TypeUtils::isInteger($colStart) && TypeUtils::isInteger($colEnd) && $colEnd > $colStart && $colStart >= 0) {
         	for ($i=$colStart; $i<=$colEnd; $i++) {
@@ -285,66 +511,57 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setPrintGridlines
-	// @desc		Habilita ou desabilita a impressão de linhas de grade
-	// @access		public
-	// @param		flag bool			Habilitação ou desabilitação
-	// @return		void
-	// @see			Spreadsheet::setPrintHeaders
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable printing of grid lines
+	 *
+	 * @param bool $flag Flag value
+	 */
 	function setPrintGridlines($flag) {
-    	$this->printGridlines = TypeUtils::toBoolean($flag);
+    	$this->printGridlines = (bool)$flag;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setPrintHeaders
-	// @desc		Habilita ou desabilita a impressão de cabeçalhos de linhas e colunas
-	// @access		public
-	// @param		flag bool			Habilitação ou desabilitação
-	// @return		void
-	// @see			Spreadsheet::setPrintGridlines
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable printing of headers
+	 *
+	 * @param bool $flag Flag value
+	 */
 	function setPrintHeaders($flag) {
-    	$this->printHeaders = TypeUtils::toBoolean($flag);
+    	$this->printHeaders = (bool)$flag;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setHeader
-	// @desc		Configura o valor e a margem do cabeçalho da planilha
-	// @access		public
-	// @param		header string		Valor para o cabeçalho
-	// @param		margin float		"0.50" Margem do cabeçalho
-	// @return		void
-	// @see			Spreadsheet::setFooter
-	//!-----------------------------------------------------------------
-	function setHeader($header, $margin = 0.50) {
+	/**
+	 * Set contents and margin of the spreadsheet header
+	 *
+	 * The margin values must be expressed in inches.
+	 *
+	 * @param string $header Text
+	 * @param float $margin Margin
+	 */
+	function setHeader($header, $margin=0.50) {
 		$this->header = $header;
 		$this->headerMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setFooter
-	// @desc		Configura o valor e a margem do rodapé da planilha
-	// @access		public
-	// @param		footer string		Valor para o rodapé da planilha
-	// @param		margin float		"0.50" Margem para o rodapé
-	// @return		void
-	// @see			Spreadsheet::setHeader
-	//!-----------------------------------------------------------------
+	/**
+	 * Set contents and margin of the spreadsheet footer
+	 *
+	 * The margin values must be expressed in inches.
+	 *
+	 * @param string $header Text
+	 * @param float $margin Margin
+	 */
 	function setFooter($footer, $margin = 0.50) {
     	$this->footer = $footer;
 		$this->footerMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setMargin
-	// @desc		Configura as 4 margens do corpo da planilha para o mesmo valor
-	// @access		public
-	// @param		margin float		Valor para as margens
-	// @return		void
-	// @note		Todos os parâmetros de margem são medidos em polegadas
-	//!-----------------------------------------------------------------
+	/**
+	 * Set a single value to all spreadsheet margins
+	 *
+	 * The margin values must be expressed in inches.
+	 *
+	 * @param float $margin
+	 */
 	function setMargin($margin) {
     	$this->setLeftMargin($margin);
 		$this->setRightMargin($margin);
@@ -352,92 +569,72 @@ class Spreadsheet extends PHP2Go
 		$this->setBottomMargin($margin);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setLeftMargin
-	// @desc		Configura a margem esquerda da planilha
-	// @access		public
-	// @param		margin float		Valor para a margem esquerda
-	// @return		void
-	// @see			Spreadsheet::setMargin
-	//!-----------------------------------------------------------------
+	/**
+	 * Set left margin
+	 *
+	 * @param float $margin Left margin
+	 */
 	function setLeftMargin($margin) {
 		$this->leftMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setRightMargin
-	// @desc		Configura a margem direita da planilha
-	// @access		public
-	// @param		margin float		Valor para a margem direita
-	// @return		void
-	// @see			Spreadsheet::setMargin
-	//!-----------------------------------------------------------------
+	/**
+	 * Set right margin
+	 *
+	 * @param float $margin Right margin
+	 */
 	function setRightMargin($margin) {
 		$this->rightMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setTopMargin
-	// @desc		Configura a margem superior da planilha
-	// @access		public
-	// @param		margin float		Valor para a margem superior
-	// @return		void
-	// @see			Spreadsheet::setMargin
-	//!-----------------------------------------------------------------
+	/**
+	 * Set top margin
+	 *
+	 * @param float $margin Top margin
+	 */
 	function setTopMargin($margin) {
 		$this->topMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setBottomMargin
-	// @desc		Configura a margem inferior da planilha
-	// @access		public
-	// @param		margin float		Valor para a margem inferior
-	// @return		void
-	// @see			Spreadsheet::setMargin
-	//!-----------------------------------------------------------------
+	/**
+	 * Set bottom margin
+	 *
+	 * @param float $margin Bottom margin
+	 */
 	function setBottomMargin($margin) {
 		$this->bottomMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::addHorizontalBreak
-	// @desc		Adiciona uma quebra de página horizontal
-	// @access		public
-	// @param		rowNum int		Número da linha para a quebra
-	// @return		void
-	// @see			Spreadsheet::addVerticalBreak
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds an horizontal page break
+	 *
+	 * @param int $row Row index
+	 */
 	function addHorizontalBreak($row) {
 		if (!in_array($row, $this->horizontalBreaks)) {
         	$this->horizontalBreaks[] = $row;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::addVerticalBreak
-	// @desc		Adiciona uma quebra de página vertical
-	// @access		public
-	// @param		rowNum int		Número da linha para a quebra
-	// @return		void
-	// @see			Spreadsheet::addHorizontalBreak
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a vertical page break
+	 *
+	 * @param int $col Column index
+	 */
 	function addVerticalBreak($col) {
 		if (!in_array($col, $this->verticalBreaks)) {
         	$this->verticalBreaks[] = $col;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::setSelection
-	// @desc		Armazena quais células deverão ser selecionadas na planilha construída
-	// @access		public
-	// @param		firstRow int		Primeira linha
-	// @param		firstCol int		Primeira coluna
-	// @param		lastRow int		Última linha
-	// @param		lastCol int		Última coluna
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set selection area
+	 *
+	 * @param int $firstRow First row
+	 * @param int $firstCol First column
+	 * @param int $lastRow Last row
+	 * @param int $lastCol Last column
+	 */
 	function setSelection($firstRow, $firstCol, $lastRow, $lastCol) {
 		$this->selected = TRUE;
 		$frow = ($firstRow > $lastRow) ? $lastRow : $firstRow;
@@ -447,16 +644,14 @@ class Spreadsheet extends PHP2Go
 		$this->selection = array($frow, $fcol, $lrow, $lcol);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::freezePanes
-	// @desc		Cria uma área fixa na planilha
-	// @access		public
-	// @param		width int			Largura, em número de colunas
-	// @param		height int			Altura, em número linhas
-	// @param		leftCol int			"NULL" Primeira coluna visível à direita da área fixa
-	// @param		topRow int			"NULL" Primeira linha superior vísivel
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a frozen pane
+	 *
+	 * @param int $width Width (number of columns)
+	 * @param int $height Height (number of rows)
+	 * @param int $leftCol First visible column on left side
+	 * @param int $topRow First visible row on top side
+	 */
 	function freezePanes($width, $height, $leftCol=NULL, $topRow=NULL) {
 		if (!TypeUtils::isInteger($width) || !TypeUtils::isInteger($height) || $height > 0 || $width > 0) {
 			$this->freeze = TRUE;
@@ -467,65 +662,50 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::writeData
-	// @desc		Função principal de inserção de conteúdo na planilha.
-	//				Identifica a categoria da informação e executa um método
-	//				específico
-	// @access		public
-	// @param		row int			Índice da linha, baseado em zero
-	// @param		col int			Índice da coluna, baseado em zero
-	// @param		value mixed		Valor a ser inserido na célula
-	// @param		columnWidth int	"0" Largura para a célula, em caracteres
-	// @param		picture int		"0" Índice do formato de conteúdo
-	// @param		font int			"0" Índice da fonte utilizada
-	// @param		format int		"0" Índice do formato de célula
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes data on a given position
+	 *
+	 * @param int $row Row index
+	 * @param int $col Column index
+	 * @param mixed $value Value
+	 * @param int $columnWidth Column width
+	 * @param int $picture Picture index
+	 * @param int $font Font index
+	 * @param int $format Format index
+	 * @return bool
+	 */
 	function writeData($row, $col, $value, $columnWidth=0, $picture=0, $font=0, $format=0) {
-		// Números
 		if ( preg_match("/^=?[+-]?(\d|\.\d)?\d*(\.\d+)?([eE][+-]?(\d|\.\d)?\d*(\.\d+)?)?$/", ereg_replace(',', '.', $value)) ) {
 			return $this->writeNumber($row, $col, $value, $columnWidth, $picture, $font, $format);
-		}
-        // Datas
-		else if ( preg_match("/^(\d{2}[\/-]\d{2}[\/-]\d{4}|\d{4}[\/-]\d{2}[\/-]\d{2}).*$/", ereg_replace("\/", "-", $value) ) ) {
+		} else if ( preg_match("/^(\d{2}[\/-]\d{2}[\/-]\d{4}|\d{4}[\/-]\d{2}[\/-]\d{2}).*$/", ereg_replace("\/", "-", $value) ) ) {
 			return $this->writeDateTime($row, $col, $value, $columnWidth, $picture, $font, $format);
-		}
-		// URL
-		else if ( preg_match("/^(f|ht)tps?:\/\/.+$/", $value) ) {
+		} else if ( preg_match("/^(f|ht)tps?:\/\/.+$/", $value) ) {
         	//$this->writeUrl($row, $col, $value, $columnWidth, $picture, $font, $format);
+        	return $this->writeString($row, $col, $value, $columnWidth, $picture, $font, $format);
         	return FALSE;
-		}
-		// E-mail
-		else if ( preg_match("/^mailto:.+$/", $value) ) {
+		} else if ( preg_match("/^mailto:.+$/", $value) ) {
         	//$this->writeUrl($row, $col, $value, $columnWidth, $picture, $font, $format);
-        	return FALSE;
-		}
-		// Célula em branco
-		else if ( StringUtils::allTrim($value) == '' ) {
+        	return $this->writeString($row, $col, $value, $columnWidth, $picture, $font, $format);
+		} else if ( trim($value) == '' ) {
         	//$this->writeBlank($row, $col, $columnWidth, $format);
-        	return FALSE;
-		}
-		// Outros valores
-		else {
+        	return $this->writeString($row, $col, '', $columnWidth, $picture, $font, $format);
+		} else {
         	return $this->writeString($row, $col, $value, $columnWidth, $picture, $font, $format);
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::writeNumber
-	// @desc		Insere um valor numérico inteiro ou decimal em uma
-	//				determinada célula da planilha
-	// @access		public
-	// @param		row int			Índice da linha
-	// @param		col int			Índice da coluna
-	// @param		value mixed		Valor inteiro ou decimal
-	// @param		columnWidth int	"0" Largura para a célula, em caracteres
-	// @param		picture int		"0" Índice do formato de conteúdo
-	// @param		font int			"0" Índice da fonte utilizada
-	// @param		format int		"0" Índice do formato de célula
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes a numeric value on a given position
+	 *
+	 * @param int $row Row index
+	 * @param int $col Column index
+	 * @param int|float $value Numeric value
+	 * @param int $columnWidth Column width
+	 * @param int $picture Picture index
+	 * @param int $font Font index
+	 * @param int $format Format index
+	 * @return bool
+	 */
 	function writeNumber($row, $col, $value, $columnWidth=0, $picture=0, $font=0, $format=0) {
 		if (!$this->_checkBounds($row, $col)) {
 			if ($this->throwErrors) {
@@ -552,20 +732,18 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::writeDateTime
-	// @desc		Insere um valor de data e/ou hora em uma determinada
-	//				célula da planilha
-	// @access		public
-	// @param		row int			Índice da linha
-	// @param		col int			Índice da coluna
-	// @param		value string		Data
-	// @param		columnWidth int	"0" Largura para a célula, em caracteres
-	// @param		picture int		"0" Índice do formato de conteúdo
-	// @param		font int			"0" Índice da fonte utilizada
-	// @param		format int		"0" Índice do formato de célula
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes a datetime value on a given position
+	 *
+	 * @param int $row Row index
+	 * @param int $col Column index
+	 * @param string $value Datetime value
+	 * @param int $columnWidth Column width
+	 * @param int $picture Picture index
+	 * @param int $font Font index
+	 * @param int $format Format index
+	 * @return bool
+	 */
 	function writeDateTime($row, $col, $value, $columnWidth=0, $picture=0, $font=0, $format=0) {
 		if (!$this->_checkBounds($row, $col)) {
 			if ($this->throwErrors) {
@@ -593,20 +771,18 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::writeString
-	// @desc		Insere um valor de texto em uma determinada célula
-	//				da planilha
-	// @access		public
-	// @param		row int			Índice da linha
-	// @param		col int			Índice da coluna
-	// @param		value string		Texto a ser inserido
-	// @param		columnWidth int	"0" Largura para a célula, em caracteres
-	// @param		picture int		"0" Índice do formato de conteúdo
-	// @param		font int			"0" Índice da fonte utilizada
-	// @param		format int		"0" Índice do formato de célula
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes a string on a given position
+	 *
+	 * @param int $row Row index
+	 * @param int $col Column index
+	 * @param string $value Value to be written
+	 * @param int $columnWidth Column width
+	 * @param int $picture Picture index
+	 * @param int $font Font index
+	 * @param int $format Format index
+	 * @return bool
+	 */
 	function writeString($row, $col, $value, $columnWidth=0, $picture=0, $font=0, $format=0) {
 		if (!$this->_checkBounds($row, $col)) {
 			if ($this->throwErrors) {
@@ -632,16 +808,15 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::writeBlank
-	// @desc		Insere uma célula sem conteúdo na planilha
-	// @access		public
-	// @param		row int			Índice da linha
-	// @param		col int			Índice da coluna
-	// @param		columnWidth int	"0" Largura para a célula, em caracteres
-	// @param		format int		"0" Índice do formato de célula
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes a blank string on a given position
+	 *
+	 * @param int $row Row index
+	 * @param int $col Column index
+	 * @param int $columnWidth Column width
+	 * @param int $format Format index
+	 * @return bool
+	 */
 	function writeBlank($row, $col, $columnWidth=0, $format=0) {
 		if (!$this->_checkBounds($row, $col)) {
 			if ($this->throwErrors) {
@@ -658,19 +833,20 @@ class Spreadsheet extends PHP2Go
 			return TRUE;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::writeArray
-	// @desc		Adiciona um array de dados em uma determinada linha da planilha
-	// @param		row int			Índice da linha
-	// @param		array array		Array de dados
-	// @param		columnWidth int	"0" Largura para as células, em caracteres
-	// @param		font int		"0" Índice da fonte
-	// @param		format int		"0" Índice do formato de célula
-	// @param		startCol int	"0" Coluna inicial
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Writes an array of values on a given row
+	 *
+	 * The method determines data type by calling
+	 * {@link gettype} for each array entry.
+	 *
+	 * @param int $row Row index
+	 * @param array $array Array of values
+	 * @param int $columnWidth Column width
+	 * @param int $font Font index
+	 * @param int $format Format index
+	 * @param int $startCol Index of the start column
+	 */
 	function writeArray($row, $array, $columnWidth=0, $font=0, $format=0, $startCol=0) {
 		$array = (array)$array;
 		$col = abs(intval($startCol));
@@ -689,15 +865,14 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::addCellNote
-	// @desc		Adiciona uma nota a uma determinada célula
-	// @param		row int			Índice da linha
-	// @param		col int			Índice da coluna
-	// @param		value string	Nota para a célula
-	// @access		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a note on a given position
+	 *
+	 * @param int $row Row index
+	 * @param int $col Column index
+	 * @param string $value Cell note
+	 * @return bool
+	 */
 	function addCellNote($row, $col, $value) {
 		if (!$this->_checkBounds($row, $col)) {
 			if ($this->throwErrors) {
@@ -720,61 +895,51 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::download
-	// @desc		Retorna o conteúdo da planilha para o usuário, gerando
-	//				antes os headers específicos
-	// @param		fileName string		Nome do arquivo para download
-	// @param		mimeType string		"" Permite sobrescrever o mime-type default
-	// @access		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Sends the proper download headers and flushes the spreadsheet contents
+	 *
+	 * @uses _prepareSpreadsheet()
+	 * @uses HttpResponse::download()
+	 * @param string $fileName File name
+	 * @param string $mimeType MIME type
+	 */
 	function download($fileName, $mimeType='') {
 		if (!headers_sent()) {
 			$this->_prepareSpreadsheet();
-			HttpResponse::download($fileName, $this->streamSize, $mimeType);
+			HttpResponse::download($fileName, strlen($this->stream), $mimeType);
 			print $this->stream;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::toFile
-	// @desc		Prepara e grava em arquivo o conteúdo da planilha
-	// @param		fileName string		Nome do arquivo
-	// @param		fileMode int		Modo para o arquivo criado
-	// @access		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Renders and saves the spreadsheet contents to a file
+	 *
+	 * @uses _prepareSpreadsheet()
+	 * @param string $fileName File name
+	 * @param int $fileMode File mode
+	 * @return bool
+	 */
 	function toFile($fileName, $fileMode=NULL) {
 		$this->_prepareSpreadsheet();
-		$Mgr = new FileManager();
-		$Mgr->throwErrors = FALSE;
-		if ($Mgr->open($fileName, FILE_MANAGER_WRITE_BINARY)) {
-        	$Mgr->write($this->stream);
-			if (!TypeUtils::isNull($fileMode))
-				$Mgr->changeMode($fileMode);
-			$Mgr->close();
+		$fp = @fopen($fileName, 'wb');
+		if ($fp !== FALSE) {
+			fputs($fp, $this->stream);
+			fclose($fp);
+			if ($fileMode != NULL)
+				chmod($fileName, $fileMode);
 			return TRUE;
 		} else {
-        	if ($this->throwErrors) {
+        	if ($this->throwErrors)
             	PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_WRITE_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
-			}
 			return FALSE;
 		}
 	}
 
-	//------------------------------------------------------------------
-	// MÉTODOS INTERNOS
-	//------------------------------------------------------------------
-
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_prepareSpreadsheet
-	// @desc		Executa as funções de gravação dos registros BIFF e
-	//				dos dados contidos na planilha
-	// @access		private
-	// @return		void
-	// @note		Este método é executado a partir de download() e toFile()
-	//!-----------------------------------------------------------------
+	/**
+	 * Renders spreadsheet's binary stream
+	 *
+	 * @access private
+	 */
 	function _prepareSpreadsheet() {
 		$this->_writeBeginOfFile();
 		$this->_writeCodePage();
@@ -791,10 +956,7 @@ class Spreadsheet extends PHP2Go
 		$this->_writeColInfo();
 		$this->_writePictures();
 		$this->_writeRowInfo();
-		// ----------------- dados
 		$this->stream .= $this->dataStream;
-		$this->streamSize += strlen($this->dataStream);
-		// ----------------- dados
 		$this->_writeProtect();
 		$this->_appendStream($this->noteStream);
 		$this->_writeWindow1();
@@ -804,61 +966,26 @@ class Spreadsheet extends PHP2Go
 		$this->_writeEndOfFile();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_appendStream
-	// @desc		Concatena um registro no stream binário da planilha
-	// @access		private
-	// @param		value string		Valor do registro
-	// @return		void
-	// @note		Se o tamanho do valor for superior a 2080 bytes,
-	//				será executado o método _writeContinue() para gerar
-	//				blocos encadeados
-	//!-----------------------------------------------------------------
+	/**
+	 * Appends a value in the spreadsheet's binary stream
+	 *
+	 * @param string $value Value to append
+	 * @access private
+	 */
 	function _appendStream($value) {
 		if (strlen($value) > SPRSH_RECORD_LIMIT) {
  			$continueData = $this->_writeContinue($value);
         	$this->stream .= $continueData;
-			$this->streamSize += strlen($continueData);
 		} else {
         	$this->stream .= $value;
-			$this->streamSize += strlen($value);
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeContinue
-	// @desc		Cria uma seqüência de blocos de 2080 bytes para permitir
-	//				a inserção de registros maiores do que o limite imposto
-	//				pela versão 2.1 do formato BIFF
-	// @access		private
-	// @param		data string		Valor a ser processado
-	// @return		string Valor reconstruído em blocos contínuos separados por
-	//				um cabeçalho contendo o id CONTINUE
-	//!-----------------------------------------------------------------
-	function _writeContinue($data) {
-        $limit      = 2080;
-        $record     = 0x003C;         // Record identifier
-		// Mantém os primeiros 2080 bytes intactos
-        $result = substr($data, 0, 2) . pack("v", $limit - 4) . substr($data, 4, $limit - 4);
-        // Insere os próximos bytes de N em N, onde N tem tamanho 2080
-        for($i = 2080; $i < strlen($data) - $limit; $i += $limit) {
-            $result .= pack("vv", $record, $limit);
-            $result .= substr($data, $i, $limit - 4);
-        }
-		// Insere o conteúdo restante
-        $result .= pack("vv", $record, strlen($data) - $i);
-        $result .= substr($data, $i, strlen($data) - $i);
-		// Retorna o resultado final
-        return $result;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_getByteOrder
-	// @desc		Verifica o formato de ponto flutuante da plataforma
-	//				do usuário (big endian ou little endian)
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks the floating point format of the server
+	 *
+	 * @access private
+	 */
 	function _getByteOrder() {
 		// IEEE 64-bit 3F F3 C0 CA 42 83 DE 1B
 		$numberA = pack("d", 1.2345);
@@ -870,15 +997,13 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_buildFormat
-	// @desc		Constrói o número composto pelas configurações de um formato de célula
-	// @access		private
-	// @param		properties array		Vetor de propriedades do formato
-	// @return		int Número composto pela soma das configurações do formato
-	// @note		Este método é executado em addCellFormat()
-	// @see			Spreadsheet::addCellFormat
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds a hash from the properties of a cell format
+	 *
+	 * @param array $properties Cell format properties
+	 * @return int Hash
+	 * @access private
+	 */
 	function _buildFormat($properties) {
     	$format = 0x0;
 		if ($properties['align']) {
@@ -901,13 +1026,13 @@ class Spreadsheet extends PHP2Go
 		return $format;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_encodeSheetPasswd
-	// @desc		Codifica a senha textual da planilha fornecida pelo usuário
-	// @access		private
-	// @param		password string	Senha 'plain text'
-	// @return		string Senha codificada
-	//!-----------------------------------------------------------------
+	/**
+	 * Encodes the spreadsheet's password
+	 *
+	 * @param string $password Plain text password
+	 * @return string Encoded password
+	 * @access private
+	 */
 	function _encodeSheetPasswd($password) {
 		$i = 1;
 		$encoded = 0x0000;
@@ -926,17 +1051,14 @@ class Spreadsheet extends PHP2Go
 		return $encoded;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_checkBounds
-	// @desc		Verifica se uma dupla linha,coluna está dentro dos limites
-	//				aceitos pela planilha
-	// @access		private
-	// @param		row int		Índice da linha
-	// @param		col int		Índice da coluna
-	// @return		bool
-	// @note        Atualiza as dimensões utilizadas, indicadas nas propriedades
-	//				minRowDimension, maxRowDimension, minColDimension e maxColDimension
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if a row/column pair respects the spreadsheet limits
+	 *
+	 * @param int $row Row index
+	 * @param int $col Column index
+	 * @access private
+	 * @return bool
+	 */
 	function _checkBounds($row, $col) {
     	if ($row < 0 || $row > SPRSH_MAX_ROWS)
         	return FALSE;
@@ -953,16 +1075,14 @@ class Spreadsheet extends PHP2Go
 		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_adjustColWidth
-	// @desc		Recalcula o tamanho de uma coluna em caracteres a
-	//				cada célula inserida
-	// @access		private
-	// @param		col int		Índice da coluna
-	// @param		colWidth int	Tamanho desejado para a célula
-	// @param		len int		Tamanho da string (define a largura mínima a ser utilizada)
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Rebuilds the column width based on the length of inserted values
+	 *
+	 * @param int $col Column index
+	 * @param int $colWidth Desired column width
+	 * @param int $len Value length: defines the minimum width
+	 * @access private
+	 */
 	function _adjustColWidth($col, $colWidth, $len) {
 		if ($colWidth > 0) {
 			$this->colInfo[$col] = $colWidth;
@@ -978,46 +1098,67 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function    Spreadsheet::_transformDate
-	// @desc		Converte um valor expresso em data ou data/hora para
-	//				número de dias no calendário Juliano
-	// @access		private
-	// @param		date string		Data
-	// @return		string Data convertida ou vazio caso a extensão calendar não esteja presente no sistema
-	// @note		Este método é executado em writeDateTime()
-	//!-----------------------------------------------------------------
+	/**
+	 * Converts a date or datetime string into a julian day count
+	 *
+	 * @uses Date::isEuroDate()
+	 * @uses Date::isUsDate()
+	 * @uses Date::isSqlDate()
+	 * @uses System::loadExtension()
+	 * @uses juliantojd()
+	 * @param string $date Date or datetime
+	 * @return int Julian day count
+	 * @access private
+	 */
 	function _transformDate($date) {
-		if (!System::loadExtension('calendar')) {
+		if (!System::loadExtension('calendar'))
 			return '';
-		} else {
-			$dateParts = array();
-			if (Date::isEuroDate($date, $dateParts)) {
-				$dtVal = juliantojd($dateParts[2], $dateParts[1], $dateParts[3]) - SPRSH_DATE + 1;
-			} elseif (Date::isUsDate($date, $dateParts) || Date::isSqlDate($date, $dateParts)) {
-				$dtVal = juliantojd($dateParts[2], $dateParts[3], $dateParts[1]) - SPRSH_DATE + 1;
-			}
-			if (isset($dateParts[5]))
-				$dtVal += ( TypeUtils::parseInteger($dateParts[5]) / 24 );
-			if (isset($dateParts[6]))
-				$dtVal += ( TypeUtils::parseInteger($dateParts[6]) / 1440 );
-			if (isset($dateParts[7]))
-				$dtVal += ( TypeUtils::parseInteger($dateParts[7]) / 86400 );
-			return $dtVal;
+		$dateParts = array();
+		if (Date::isEuroDate($date, $dateParts)) {
+			$dtVal = juliantojd($dateParts[2], $dateParts[1], $dateParts[3]) - SPRSH_DATE + 1;
+		} elseif (Date::isUsDate($date, $dateParts) || Date::isSqlDate($date, $dateParts)) {
+			$dtVal = juliantojd($dateParts[2], $dateParts[3], $dateParts[1]) - SPRSH_DATE + 1;
 		}
+		if (isset($dateParts[5]))
+			$dtVal += ( TypeUtils::parseInteger($dateParts[5]) / 24 );
+		if (isset($dateParts[6]))
+			$dtVal += ( TypeUtils::parseInteger($dateParts[6]) / 1440 );
+		if (isset($dateParts[7]))
+			$dtVal += ( TypeUtils::parseInteger($dateParts[7]) / 86400 );
+		return $dtVal;
 	}
 
-	//------------------------------------------------------------------
-	// MÉTODOS PARA GRAVAÇÃO DE REGISTROS BIFF
-	//------------------------------------------------------------------
+	/**
+	 * Writes a sequence of CONTINUE records
+	 *
+	 * Write a sequence of blocks of 2080 bytes to allow records greater
+	 * than the limit imposed by the BIFF 2.1 format.
+	 *
+	 * @param string $data Block data
+	 * @access private
+	 * @return string
+	 */
+	function _writeContinue($data) {
+        $limit = 2080;
+        $record = 0x003C;
+		// keep first 2080 bytes
+        $result = substr($data, 0, 2) . pack("v", $limit - 4) . substr($data, 4, $limit - 4);
+        // add next blocks of 2080 bytes
+        for($i = 2080; $i < strlen($data) - $limit; $i += $limit) {
+            $result .= pack("vv", $record, $limit);
+            $result .= substr($data, $i, $limit - 4);
+        }
+		// add remaining bytes
+        $result .= pack("vv", $record, strlen($data) - $i);
+        $result .= substr($data, $i, strlen($data) - $i);
+        return $result;
+	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeBeginOfFile
-	// @desc		Grava o registro BOF no stream binário
-	// @access		private
-	// @return		void
-	// @see			Spreadsheet::_writeEndOfFile
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes BOF (begin of file) record
+	 *
+	 * @access private
+	 */
 	function _writeBeginOfFile() {
 		$id = 0x0009;
 		$length = 0x0004;
@@ -1026,24 +1167,22 @@ class Spreadsheet extends PHP2Go
 		$this->_appendStream(pack('vvvv', $id, $length, $version, $type));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeCodePage
-	// @desc		Grava o registro CODEPAGE no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the CODEPAGE record
+	 *
+	 * @access private
+	 */
 	function _writeCodePage() {
 		$id = 0x0042;
 		$length = 0x0002;
 		$this->_appendStream(pack('vvv', $id, $length, 0x8001));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeBackup
-	// @desc		Grava o registro BACKUP no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the BACKUP record
+	 *
+	 * @access private
+	 */
 	function _writeBackup() {
 		$id = 0x0040;
 		$length = 0x0002;
@@ -1054,36 +1193,33 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writePrintHeaders
-	// @desc		Grava o registro PRINTROWHEADERS no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the PRINTROWHEADERS record
+	 *
+	 * @access private
+	 */
 	function _writePrintHeaders() {
 		$id = 0x002A;
 		$length = 0x0002;
 		$this->_appendStream(pack('vvv', $id, $length, TypeUtils::parseInteger($this->printHeaders)));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writePrintGridLines
-	// @desc		Grava o registro PRINTGRIDLINES no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the PRINTGRIDLINES record
+	 *
+	 * @access private
+	 */
 	function _writePrintGridLines() {
 		$id = 0x002B;
 		$length = 0x0002;
 		$this->_appendStream(pack('vvv', $id, $length, TypeUtils::parseInteger($this->printGridLines)));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeBreaks
-	// @desc		Grava os registros HBREAK e VBREAK no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the HBREAK and VBREAK records
+	 *
+	 * @access private
+	 */
 	function _writeBreaks() {
 		$hCount = count($this->horizontalBreaks);
 		if ($hCount > 0) {
@@ -1107,24 +1243,22 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeDefaultRowHeight
-	// @desc		Grava o registro DEFAULTROWHEIGHT no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the DEFAULTROWHEIGHT record
+	 *
+	 * @access private
+	 */
 	function _writeDefaultRowHeight() {
 		$id = 0x0025;
 		$length = 0x0002;
 		$this->_appendStream(pack('vvv', $id, $length, $this->defaultRowHeight * 20));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeWsBool
-	// @desc		Grava o registro WSBOOL no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the WSBOOL record
+	 *
+	 * @access private
+	 */
 	function _writeWsBool() {
 		$id = 0x0081;
 		$length = 0x0002;
@@ -1132,15 +1266,13 @@ class Spreadsheet extends PHP2Go
 		$this->_appendStream(pack('vvv', $id, $length, $optionFlags));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeFonts
-	// @desc		Grava as fontes declaradas para a planilha
-	// @access		private
-	// @return		void
-	// @see			Spreadsheet::_getFont
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the cell fonts
+	 *
+	 * @access private
+	 */
 	function _writeFonts() {
-		for ($i=0; $i<$this->fontCount; $i++) {
+		for ($i=0,$s=sizeof($this->fonts); $i<$s; $i++) {
 			$font = $this->fonts[$i];
 			$fontName = $font['name'];
 			$fontSize = $font['size'] ? $font['size'] * 20 : 10 * 20;
@@ -1156,12 +1288,11 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeHeader
-	// @desc		Grava o registro HEADER no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the HEADER record
+	 *
+	 * @access private
+	 */
 	function _writeHeader() {
 		$id = 0x0014;
 		$length = 1;
@@ -1169,12 +1300,11 @@ class Spreadsheet extends PHP2Go
 		$this->_appendStream(pack('vvC', $id, $length + $len, $len) . $this->header);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeFooter
-	// @desc		Grava o registro FOOTER no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the FOOTER record
+	 *
+	 * @access private
+	 */
 	function _writeFooter() {
 		$id = 0x0015;
 		$length = 1;
@@ -1182,13 +1312,11 @@ class Spreadsheet extends PHP2Go
 		$this->_appendStream(pack('vvC', $id, $length + $len, $len) . $this->footer);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeMargins
-	// @desc		Grava os registros de margem no stream binário
-	// @access		private
-	// @return		void
-	// @note		Os registros são LEFTMARGIN, RIGHTMARGIN, TOPMARGIN e BOTTOMMARGIN
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the LEFTMARGIN, RIGHTMARGIN, TOPMARGIN and BOTTOMMARGIN records
+	 *
+	 * @access private
+	 */
 	function _writeMargins() {
 		$length = 0x0008;
 		$left = ($this->byteOrder == SPRSH_BIG_ENDIAN) ? strrev(pack('d', $this->leftMargin)) : pack('d', $this->leftMargin);
@@ -1205,12 +1333,11 @@ class Spreadsheet extends PHP2Go
 		$this->_appendStream(pack('vv', $id, $length) . $bottom);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeColInfo
-	// @desc		Grava as larguras de coluna no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the records containing the column widths
+	 *
+	 * @access private
+	 */
 	function _writeColInfo() {
 		$id = 0x007D;
 		$length = 0x000B;
@@ -1219,12 +1346,11 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writePictures
-	// @desc		Grava os formatos de célula no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the cell pictures
+	 *
+	 * @access private
+	 */
 	function _writePictures() {
 		$formatCount = count($this->pictures);
 		$id = 0x001F;
@@ -1238,12 +1364,11 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeRowInfo
-	// @desc		Grava os tamanhos de linha definidos pelo usuário no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the row heights
+	 *
+	 * @access private
+	 */
 	function _writeRowInfo() {
 		foreach($this->rowInfo as $row => $height) {
 			$col_start = 0;
@@ -1255,12 +1380,11 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeProtect
-	// @desc		Grava a indicação de planilha protegida por senha
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the protection password, if enabled
+	 *
+	 * @access private
+	 */
 	function _writeProtect() {
 		if ($this->protectBool && !empty($this->protectPasswd)) {
 			$id = 0x0012;
@@ -1276,12 +1400,11 @@ class Spreadsheet extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeWindow1
-	// @desc		Grava o registro WINDOW1 no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the WINDOW1 record
+	 *
+	 * @access private
+	 */
 	function _writeWindow1() {
 		$id = 0x003D;
 		$length = 0x0012;
@@ -1300,12 +1423,11 @@ class Spreadsheet extends PHP2Go
 								$scrollbarRatio));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeWindow2
-	// @desc		Grava o registro WINDOW2 no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the WINDOW2 record
+	 *
+	 * @access private
+	 */
 	function _writeWindow2() {
 		$id = 0x003E;
 		$length = 0x000E;
@@ -1322,13 +1444,11 @@ class Spreadsheet extends PHP2Go
 								$this->freeze, $displayZero, $topRow, $leftCol, 1, $headersRgb, $gridRgb));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeSelection
-	// @desc		Grava o registro SELECTION no stream binário, que
-	//				contém a área selecionada da planilha
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the SELECTION record
+	 *
+	 * @access private
+	 */
 	function _writeSelection() {
 		$id = 0x001D;
 		$length = 0x000F;
@@ -1338,12 +1458,11 @@ class Spreadsheet extends PHP2Go
 								$this->selection[1], $this->selection[3]));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writePanes
-	// @desc		Grava o registro PANE no stream binário
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the PANE record
+	 *
+	 * @access private
+	 */
 	function _writePanes() {
 		$id = 0x0041;
 		$length = 0x000A;
@@ -1366,13 +1485,11 @@ class Spreadsheet extends PHP2Go
 		$this->_appendStream(pack('vvvvvvv', $id, $length, $this->panes[0], $this->panes[1], $this->panes[3], $this->panes[2], $this->activePane));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Spreadsheet::_writeEndOfFile
-	// @desc		Grava o registro EOF no stream binário
-	// @access		private
-	// @return		void
-	// @see			Spreadsheet::_writeBeginOfFile
-	//!-----------------------------------------------------------------
+	/**
+	 * Writes the EOF (end of file) record
+	 *
+	 * @access private
+	 */
 	function _writeEndOfFile() {
 		$id = 0x000A;
 		$this->_appendStream(pack('v', $id));
