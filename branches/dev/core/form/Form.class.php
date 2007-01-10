@@ -591,7 +591,6 @@ class Form extends Component
 	 * Tries to resolve variable values from the global scope and from the
 	 * set of manually defined variables.
 	 *
-	 * @uses Statement
 	 * @param string $source Text node or attribute value
 	 * @return string Value after variables resolution
 	 */

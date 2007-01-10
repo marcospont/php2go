@@ -95,6 +95,7 @@ define('AUTH_STATE_VALID', 6);
  * </code>
  *
  * @package auth
+ * @uses Callback
  * @uses HttpRequest
  * @uses SessionObject
  * @uses StringUtils
