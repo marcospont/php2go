@@ -396,6 +396,8 @@ class EditableField extends FormField
 	 */
 	function onDataBind() {
 		parent::onDataBind();
+		if (!is_string($this->value))
+			$this->value = strval($this->value);
 		switch ($this->mask) {
 			case 'DATE-EURO' :
 			case 'DATE-US' :
