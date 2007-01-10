@@ -176,17 +176,17 @@ class Hashmap extends PHP2Go
 		$value = $this->get($key);
 		$type = strtolower($type);
 		switch ($type) {
-			case 'string' : return TypeUtils::isString($value);
+			case 'string' : return is_string($value);
 			case 'integer' : return TypeUtils::isInteger($value);
 			case 'float' :
 			case 'double' : return TypeUtils::isFloat($value);
-			case 'array' : return TypeUtils::isArray($value);
+			case 'array' : return is_array($value);
 			case 'hash' : return TypeUtils::isHashArray($value);
-			case 'resource' : return TypeUtils::isResource($value);
+			case 'resource' : return is_resource($value);
 			case 'boolean' :
-			case 'bool' : return TypeUtils::isBoolean($value);
-			case 'object' : return TypeUtils::isObject($value);
-			case 'null' : return TypeUtils::isNull($value);
+			case 'bool' : return is_bool($value);
+			case 'object' : return is_object($value);
+			case 'null' : return is_null($value);
 		}
 		return FALSE;
 	}
@@ -227,7 +227,7 @@ class Hashmap extends PHP2Go
 	 * @return bool
 	 */
 	function containsValue($value, $strict=FALSE) {
-		return (array_search($value, $this->elements, $strict));
+		return (array_search($value, $this->elements, $strict) !== FALSE);
 	}
 
 	/**
