@@ -176,6 +176,7 @@ class FileField extends FormField
 	 * uploaded file and validates its integrity using the
 	 * {@link UploadValidator}.
 	 *
+	 * @uses Validator::validate()
 	 * @return bool
 	 */
 	function isValid() {
