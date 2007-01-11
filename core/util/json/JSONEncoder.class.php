@@ -1,81 +1,103 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/util/json/JSONEncoder.class.php,v 1.1 2006/06/23 04:09:27 mpont Exp $
-// $Date: 2006/06/23 04:09:27 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		JSONEncoder
-// @desc		Esta classe codifica strings na notação JSON (Javascript
-//				Object Notation). Tem muita utilidade em aplicações que
-//				adotam XMLHttpRequest para realizar comunicações entre o lado
-//				cliente (Javascript) e o lado servidor (PHP). Além de ser um
-//				formato leve e de fácil leitura, é de fácil interpretação: pode
-//				ser diretamente processado pela função eval(), sem necessidade de
-//				qualquer outro componente ou biblioteca
-// @extends		PHP2Go
-// @package		php2go.util.json
-// @author		Marcos Pont
-// @version		$Revision: 1.1 $
-//!-----------------------------------------------------------------
+/**
+ * Serializes PHP variables using JSON
+ *
+ * JSON stands for Javascript Object Notation. It's a lightweight
+ * data transfer format, widely used to interchange information between
+ * client and server side by the most common AJAX libraries.
+ *
+ * Examples:
+ * <code>
+ * // prints true
+ * print JSONEncoder::encode(TRUE);
+ * // prints [1,2,3]
+ * print JSONEncoder::encode(array(1, 2, 3));
+ * // prints {a: 1, b: "foo", c: true}
+ * print JSONEncoder::encode(array('a'=>1, 'b'=>'foo', 'c'=>TRUE));
+ * </code>
+ *
+ * @package util
+ * @subpackage json
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class JSONEncoder extends PHP2Go
 {
-	var $objRef = array();		// @var objRef array		Guarda objetos já visitados, para evitar ciclos/recursões
-	var $throwErrors = TRUE;	// @var throwErrors bool	"TRUE" Flag que indica se erros devem ser reportados ou ignorados
+	/**
+	 * Whether errors should be thrown or not
+	 *
+	 * @var bool
+	 */
+	var $throwErrors = TRUE;
 
-	//!-----------------------------------------------------------------
-	// @function	JSONEncoder::JSONEncoder
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Holds already visited objects, to avoid cyclic references
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $objRef = array();
+
+	/**
+	 * Class constructor
+	 *
+	 * @return JSONEncoder
+	 */
 	function JSONEncoder() {
 		parent::PHP2Go();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONEncoder::encode
-	// @desc		Método utilitário para codificação de um
-	//				valor PHP em notação JSON
-	// @param		value mixed			Valor a ser codificado
-	// @param		throwErrors bool	"TRUE" Reportar ou ignorar errors
-	// @return		string
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Shortcut method to encode a variable
+	 *
+	 * @param mixed $value Input value
+	 * @param bool $throwErrors Abort execution upon errors or not
+	 * @return string Generated JSON string
+	 * @static
+	 */
 	function encode($value, $throwErrors=TRUE) {
 		$encoder = new JSONEncoder();
 		$encoder->throwErrors = $throwErrors;
 		return $encoder->encodeValue($value);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONEncoder::encodeValue
-	// @desc		Codifica um determinado valor em notação JSON
-	// @note		Variáveis cujo tipo ou valor não puder ser convertido
-	//				irão gerar um erro e retornarão NULL
-	// @param		value mixed	Valor a ser convertido
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Encodes a given value using JSON syntax
+	 *
+	 * Values that can't be encoded will produce a
+	 * NULL result or throw an error.
+	 *
+	 * @param mixed $value Input value
+	 * @return string Generated JSON string
+	 */
 	function encodeValue($value) {
 		if (is_bool($value)) {
 			return ($value ? 'true' : 'false');
@@ -104,13 +126,13 @@ class JSONEncoder extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONEncoder::_encodeObject
-	// @desc		Codifica um objeto
-	// @param		&obj object	Objeto a ser codificado
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Encodes a PHP object
+	 *
+	 * @param object $obj PHP object
+	 * @return string Serialized object
+	 * @access private
+	 */
 	function _encodeObject(&$obj) {
 		$vars = get_object_vars($obj);
 		$items = array();
@@ -122,21 +144,21 @@ class JSONEncoder extends PHP2Go
 		return '{' . join(',', $items) . '}';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONEncoder::_encodeArray
-	// @desc		Codifica um array
-	// @note		Arrays associativos correspondem a objetos anônimos na
-	//				notação JSON. Um array somente é numérico quando suas chaves
-	//				são todas numéricas, começando em zero e sem falhas
-	// @param		&arr array	Array a ser codificado
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Encodes a PHP array
+	 *
+	 * Hash arrays are mapped to anonymous objects in JSON. A PHP array
+	 * is serialized as a JSON array only when all keys are numeric and
+	 * no gaps are found.
+	 *
+	 * @param array $arr PHP array
+	 * @return string Serialized array
+	 * @access private
+	 */
 	function _encodeArray(&$arr) {
 		$items = array();
 		if (TypeUtils::isHashArray($arr)) {
 			foreach ($arr as $key => $value) {
-				//$encoded = $value;
 				$encoded = $this->encodeValue($value);
 				if ($encoded)
 					$items[] = '"' . strval($key) . '":' . $encoded;
@@ -152,13 +174,13 @@ class JSONEncoder extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONEncoder::_encodeString
-	// @desc		Codifica uma string
-	// @param 		&str string	Texto a ser codificado em notação JSON
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Encodes a string
+	 *
+	 * @param string $str PHP string
+	 * @access private
+	 * @return string
+	 */
 	function _encodeString(&$str) {
 		$result = '';
 		$len = strlen($str);
@@ -183,13 +205,13 @@ class JSONEncoder extends PHP2Go
 		return '"' . $result . '"';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONEncoder::_wasVisited
-	// @desc		Verifica se um determinado objeto já foi visitado
-	// @param		&obj object	Objeto
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if an object was already visited
+	 *
+	 * @param object &$obj PHP object
+	 * @access private
+	 * @return bool
+	 */
 	function _wasVisited(&$obj) {
 		foreach ($this->objRef as $ref) {
 			if ($ref === $obj)

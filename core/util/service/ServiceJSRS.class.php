@@ -30,11 +30,12 @@
 import('php2go.util.Callback');
 
 /**
- * Handle JSRS requests
+ * Handles JSRS requests
  *
- * JSRS is an acronym for Javascript Remote Scripting, a library used to
- * perform calls to PHP functions from inside a Javascript code block.
- * Internally, the request is performed through a hidden IFRAME element.
+ * JSRS is an acronym for Javascript Remote Scripting. It's a library that
+ * is able to perform calls to PHP functions from inside a Javascript code
+ * block. Internally, the request is performed through a hidden IFRAME
+ * element.
  *
  * This class is used to handle these requests, parsing and calling the
  * requested function, printing its results.
