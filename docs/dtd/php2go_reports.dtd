@@ -1,7 +1,5 @@
 <!-- This file is the document type specification for the PHP2Go reports API. -->
-<!-- $Header: /www/cvsroot/php2go/docs/dtd/php2go_reports.dtd,v 1.10 2006/10/20 03:28:21 mpont Exp $ -->
-<!-- $Revision: 1.10 $ -->
-<!-- $Date: 2006/10/20 03:28:21 $ -->
+<!-- $Id$ -->
 <!ENTITY % boolean "( T | F )">
 <!ENTITY % identifier "NMTOKEN">
 <!ENTITY % word "NMTOKEN">
