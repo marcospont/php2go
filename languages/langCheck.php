@@ -1,29 +1,31 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/languages/langCheck.php,v 1.1 2006/06/15 01:26:44 mpont Exp $
-// $Date: 2006/06/15 01:26:44 $
-// $Revision: 1.1 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 require_once('../p2gConfig.php');
 
@@ -43,14 +45,14 @@ foreach ($langNames as $lang) {
 	$diff1 = $diff2 = array();
 	$compare = (array)include($lang . '.inc');
 	getDiff($base, $compare, $diff1);
-	getDiff($compare, $base, $diff2);		
-	print '<b>' . $lang . '</b>';		
+	getDiff($compare, $base, $diff2);
+	print '<b>' . $lang . '</b>';
 	dumpVariable($diff1);
 	dumpVariable($diff2);
 }
 
 /**
- * Builds the difference array between 2 arrays, recursively 
+ * Builds the difference array between 2 arrays, recursively
  *
  * @param array $a Base array
  * @param array $b Comparison array
@@ -67,6 +69,6 @@ function getDiff($a, $b, &$diff, $pfx='') {
 				getDiff($value, $b[$key], $diff, (empty($pfx) ? $key : $pfx . '.' . $key));
 		}
 	};
-}	
+}
 
 ?>

@@ -1,31 +1,31 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	                                    |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	                                    |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// Translated and maintained by: Stefan Riedel <stefanrhro@web.de>
-//
-// $Header: /www/cvsroot/php2go/languages/de-german.inc,v 1.25 2006/11/19 18:00:06 mpont Exp $
-// $Revision: 1.25 $
-// $Date: 2006/11/19 18:00:06 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Stefan Riedel <stefanrhro@web.de>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 $P2G_LANGUAGE['ERR_OLD_PHP_VERSION'] = "PHP2Go kann mit den aktuellen Servereinstellungen nicht arbeiten!<BR>Ihre PHP- Version ist <I>%s</I>. Wir empfehlen jedoch mindestens <I>%s</I>.<BR>Installieren Sie PHP ab ein größer oder gleich Version um mit PHP2GO normal arbeiten zu können!";
 $P2G_LANGUAGE['ERR_UNSUPPORTED_EXTENSION'] = "Die Erweiterung <I>%s</I> wird von der aktuellen PHP Version leider nicht unterstützt.";
