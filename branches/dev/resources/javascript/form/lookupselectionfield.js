@@ -1,28 +1,30 @@
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/resources/javascript/form/lookupselectionfield.js,v 1.7 2006/11/19 17:59:14 mpont Exp $
-// $Date: 2006/11/19 17:59:14 $
-// $Revision: 1.7 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 /**
  * @fileoverview
@@ -260,7 +262,7 @@ LookupSelectionField.prototype.add = function() {
 	$C(s).walk(function(o, idx) {
 		if (o.selected) {
 			try {
-				self.raiseEvent('add', [o]);				
+				self.raiseEvent('add', [o]);
 			} catch(e) {
 				alert(e.message);
 				throw $break;
@@ -280,11 +282,11 @@ LookupSelectionField.prototype.addAll = function() {
 	var self = this, s = this.available.options, t = this.selected.options, a, r;
 	$C(s).walk(function(o, idx) {
 		try {
-			self.raiseEvent('add', [o]);				
+			self.raiseEvent('add', [o]);
 		} catch(e) {
 			alert(e.message);
 			throw $break;
-		}		
+		}
 		self.addSingle(o);
 	});
 	this.updateButtons();
@@ -299,11 +301,11 @@ LookupSelectionField.prototype.remove = function() {
 	var selectedField = $F(this.selected);
 	selectedField.removeSelectedOptions(function(o) {
 		try {
-			self.raiseEvent('remove', [o]);				
+			self.raiseEvent('remove', [o]);
 		} catch(e) {
 			alert(e.message);
 			throw $break;
-		}		
+		}
 		(!self.changed) && (self.changed = true);
 		if (self.addedList.contains(o.value))
 			self.addedList.remove(o.value);
