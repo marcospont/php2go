@@ -1,149 +1,157 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/xml/AbstractSAXParser.class.php,v 1.7 2006/11/19 18:01:01 mpont Exp $
-// $Date: 2006/11/19 18:01:01 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileSystem');
 import('php2go.xml.XmlParser');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		AbstractSAXParser
-// @desc		Classe abstrata que tem como propósito interpretar contéudo XML
-//				utilizando o parser expat do PHP e métodos tratadores de eventos
-//				(handlers). Estes métodos devem ser implementados nas classes filhas.
-// @package		php2go.xml
-// @extends		PHP2Go
-// @uses		FileSystem
-// @uses		XmlParser
-// @uses		TypeUtils
-// @version		$Revision: 1.7 $
-// @author		Marcos Pont
-//!-----------------------------------------------------------------
+/**
+ * Abstract implementation of a SAX parser
+ *
+ * This implementation is based on the expat parser bundled with PHP. The class
+ * maps all events to methods. These methods must be implemented by child classes.
+ *
+ * @package xml
+ * @uses XmlParser
+ */
 class AbstractSAXParser extends PHP2Go
 {
-	var $srcEncoding = NULL;			// @var srcEncoding string		"NULL" Codificação (charset) a ser utilizado na interpretação do conteúdo XML
-	var $namespaceAware = FALSE;		// @var namespaceAware bool		"FALSE" Indica se as informações de namespace devem ser processadas
-	var $preserveWhitespace = FALSE;	// @var preserveWhitespace bool	"FALSE" Preservar espaços em branco no conteúdo XML
-	var $parserOptions = array();		// @var parserOptions array		"array()" Conjunto de opções para o parser XML
+	/**
+	 * Encoding to be used by the XML parser
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $srcEncoding = NULL;
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::AbstractSAXParser
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Whether namespaces should be parsed
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $namespaceAware = FALSE;
+
+	/**
+	 * Preserve whitespace chars found in the XML file
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $preserveWhitespace = FALSE;
+
+	/**
+	 * Parser options
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $parserOptions = array();
+
+	/**
+	 * Class constructor
+	 *
+	 * @return AbstractSAXParser
+	 */
 	function AbstractSAXParser() {
 		parent::PHP2Go();
-		// classe abstrata
 		if ($this->isA('AbstractSAXParser', FALSE))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_ABSTRACT_CLASS', 'AbstractSAXParser'), E_USER_ERROR, __FILE__, __LINE__);
-		// verifica a existência da xml extension
 		if (!function_exists('xml_parser_create'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_UNSUPPORTED_EXTENSION', 'xml'), E_USER_ERROR, __FILE__, __LINE__);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::setSourceEncoding
-	// @desc		Define a codificação de entrada a ser utilizada na interpretação do conteúdo XML
-	// @param		encoding string		Codificação de entrada
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set parser input encoding
+	 *
+	 * @param string $encoding Encoding
+	 */
 	function setSourceEncoding($encoding) {
 		$this->srcEncoding = $encoding;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::setTargetEncoding
-	// @desc		Define a codificação de saída a ser utilizada nos dados lidos do XML
-	// @param		encoding string		Codificação de saída
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set parser output encoding
+	 *
+	 * @param string $encoding Output encoding
+	 */
 	function setTargetEncoding($encoding) {
 		$this->parserOptions[XML_OPTION_TARGET_ENCODING] = $encoding;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::setParserOption
-	// @desc		Define o valor de uma opção do parser XML
-	// @param		option int		Opção
-	// @param		value mixed		Valor para a opção
-	// @note		Para detalhes sobre as opções disponíveis, consulte a documentação
-	//				em http://www.php.net/xml_parser_set_option
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set an option of the XML parser
+	 *
+	 * For more details, please read the documentation of the
+	 * {@link xml_parser_set_option()} function.
+	 *
+	 * @param int $option Option
+	 * @param mixed $value Value
+	 */
 	function setParserOption($option, $value) {
 		$this->parserOptions[$option] = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::setNamespaceAwareness
-	// @desc		Define se os namespaces devem ou não ser processados pelo parser XML
-	// @param		setting bool	"TRUE" Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable parsing of namespaces
+	 *
+	 * @param bool $setting Flag value
+	 */
 	function setNamespaceAwareness($setting=TRUE) {
-		$this->namespaceAware = TypeUtils::toBoolean($setting);
+		$this->namespaceAware = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::setPreserveWhitespace
-	// @desc		Define se os espaços em branco contidos no conteúdo XML devem ser preservados
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable preservation of whitespace chars
+	 *
+	 * @param bool $setting Flag value
+	 */
 	function setPreserveWhitespace($setting) {
-		$this->preserveWhitespace = TypeUtils::toBoolean($setting);
+		$this->preserveWhitespace = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::parse
-	// @desc		Interpreta o conteúdo de um arquivo XML ou uma string XML,
-	//				chamando os métodos tratadores de eventos definidos na classe
-	// @param		xmlContent mixed	Caminho do arquivo XML ou string XML
-	// @param		srcType int			"T_BYFILE" T_BYFILE: arquivo, T_BYVAR: string
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Parses XML content
+	 *
+	 * @param string $xmlContent XML contents or file path
+	 * @param int $srcType Source type: {@link T_BYFILE} or {@link T_BYVAR}
+	 * @return bool
+	 */
 	function parse($xmlContent, $srcType=T_BYFILE) {
-		// buscar conteúdo, quando $srcType==T_BYFILE
 		if ($srcType == T_BYFILE)
-			$xmlContent = FileSystem::getContents($xmlContent);
-		// remover espaços em branco
+			$xmlContent = file_get_contents($xmlContent);
 		if (!$this->preserveWhitespace)
 			$xmlContent = eregi_replace(">[[:space:]]+<", "><", $xmlContent);
-		// criação do parser
+		// creates the XML parser
 		$parser = XmlParser::createParser(
 			$xmlContent, $this->srcEncoding,
 			$this->parserOptions, $this->namespaceAware
 		);
-		// configuração dos tratadores de eventos
+		// setup event handlers
 		xml_set_object($parser, $this);
 		if ($this->namespaceAware) {
 			xml_set_element_handler($parser, 'startElementNS', 'endElement');
@@ -166,127 +174,107 @@ class AbstractSAXParser extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::startElement
-	// @desc		Método que trata o evento de início de elemento (nodo XML)
-	// @param		parser resource		Parser XML
-	// @param		name string			Nome do elemento
-	// @param		attrs array			Atributos do elemento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles the start of a XML element
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $name Element name
+	 * @param array $attrs Element attributes
+	 */
 	function startElement($parser, $name, $attrs) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::startElementNS
-	// @desc		Método que trata o evento de início de elemento, para os
-	//				casos em que o processamento de namespaces estiver ativo na classe
-	// @param		parser resource		Parser XML
-	// @param		name string			Namespace e nome do elemento
-	// @param		attrs array			Atributos do elemento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles the start of a XML element, when namespaces parsing is enabled
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $name Element name
+	 * @param array $attrs Element attributes
+	 */
 	function startElementNS($parser, $name, $attrs) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::endElement
-	// @desc		Método que trata o evento de fim de elemento (nodo XML)
-	// @param		parser resource		Parser XML
-	// @param		name string			Nome do elemento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles the end of a XML element
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $name Element name
+	 */
 	function endElement($parser, $name) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::characterData
-	// @desc		Método que trata as seções CDATA (character data) do conteúdo XML
-	// @param		parser resource		Parser XML
-	// @param		data string			Character data, na forma de string
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles a block of CDATA
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $data Character data
+	 */
 	function characterData($parser, $data) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::startNamespace
-	// @desc		Método que recebe a notificação do início da declaração de um namespace no conteúdo XML
-	// @param		parser resource		Parser XML
-	// @param		prefix string		Prefixo do namespace
-	// @param		uri string			URI do namespace
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles the start of a namespace declaration
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $prefix NS prefix
+	 * @param string $uri NS URI
+	 */
 	function startNamespace($parser, $prefix, $uri) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::endNamespace
-	// @desc		Método que recebe a notificação do final da declaração de um namespace no conteúdo XML
-	// @param		parser resource		Parser XML
-	// @param		prefix string		Prefixo do namespace
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles the end of a namespace declaration
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $prefix NS prefix
+	 */
 	function endNamespace($parser, $prefix) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::notationDecl
-	// @desc		Recebe a notificação de uma declaração de notação no conteúdo XML
-	// @param		parser resource		Parser XML
-	// @param		notationName string	Nome da notação
-	// @param		base string			Base para resolução dos identificadores de sistema (SYSTEM). Atualmente é enviado sempre como uma string vazia
-	// @param		systemId string		Identificador de sistema da declaração externa da notação
-	// @param		publicId string		Identificador público da declaração externa da notação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles a notation declaration
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $notationName Notation name
+	 * @param string $base Base for resolving the system identifier (system_id) of the notation declaration
+	 * @param string $systemId System identifier
+	 * @param string $publicId Public identifier
+	 */
 	function notationDecl($parser, $notationName, $base, $systemId, $publicId) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::processingInstruction
-	// @desc		Recebe a notificação da declaração de uma instrução de processamento (PI)
-	// @param		parser resource		Parser XML
-	// @param		target string		Alvo da PI (Ex: php)
-	// @param		data string			Dados da instrução (Ex: código PHP)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles a processing instruction
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $target Processing instruction target
+	 * @param string $data Instruction data
+	 */
 	function processingInstruction($parser, $target, $data) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::externalEntityRef
-	// @desc		Método que trata uma referência para uma entidade externa no conteúdo XML
-	// @param		parser resource			Parser XML
-	// @param		openEntityNames string	Lista separada por espaços das entidades que aguardam pela interpretação desta entidade
-	// @param		base string				Base de resolução do identificador de sistema da entidade externa (SYSTEM). Atualmente é enviado sempre como uma string vazia
-	// @param		systemId string			Identificador de sistema da entidade externa
-	// @param		publicId string			Identificador público da entidade externa
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles a reference to an external entity
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $openEntityNames Space-separated list of open entity names
+	 * @param string $base Base for resolving the system identifier
+	 * @param string $systemId System identifier
+	 * @param string $publicId Public identifier
+	 */
 	function externalEntityRef($parser, $openEntityNames, $base, $systemId, $publicId) {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	AbstractSAXParser::unparsedEntityDecl
-	// @desc		Recebe a notificação de uma declaração de entidade externa
-	//				associada a uma declaração de notação (NDATA)
-	// @param		parser resource		Parser XML
-	// @param		entityName string	Nome da entidade
-	// @param		base string			Base para resolução do identificador de sistema da entidade
-	// @param		systemId string		Identificador de sistema da entidade
-	// @param		publicId string		Identificador público da entidade
-	// @param		notationName string	Nome da notação associada
-	//!-----------------------------------------------------------------
+	/**
+	 * Handles unparsed entity declarations
+	 *
+	 * @param resource $parser XML parser
+	 * @param string $entityName Entity name
+	 * @param string $base Base for resolving the system identifier
+	 * @param string $systemId System identifier
+	 * @param string $publicId Public identifier
+	 * @param string $notationName Name of the entity's notation
+	 */
 	function unparsedEntityDecl($parser, $entityName, $base, $systemId, $publicId, $notationName) {
 	}
 }
