@@ -1,7 +1,5 @@
 <!-- This file is the document type specification for the PHP2Go forms API. -->
-<!-- $Header: /www/cvsroot/php2go/docs/dtd/php2go_forms.dtd,v 1.38 2006/11/19 18:43:37 mpont Exp $ -->
-<!-- $Revision: 1.38 $ -->
-<!-- $Date: 2006/11/19 18:43:37 $ -->
+<!-- $Id$ -->
 <!ENTITY % boolean "( T | F )">
 <!ENTITY % color "CDATA">
 <!ENTITY % identifier "NMTOKEN">
