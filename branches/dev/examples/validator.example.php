@@ -1,18 +1,40 @@
 <?php
-	
-	// $Header: /www/cvsroot/php2go/examples/validator.example.php,v 1.6 2006/04/05 23:43:20 mpont Exp $
-	// $Revision: 1.6 $
-	// $Date: 2006/04/05 23:43:20 $
-	// vim: set expandtab tabstop=4 shiftwidth=4:
-	
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2006 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2006 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
+
 	require_once('config.example.php');
 	import('php2go.validation.Validator');
-	
+
 	echo '<b>PHP2Go Example</b> : package php2go.validation<br><br>';
-	
+
 	// AlphaCharsValidator
 	//----------------------------------------------------------------------
-	$wrongValues = array();	
+	$wrongValues = array();
 	$values = array('version 5.0.1', 'black & white', 'wrong value', 'php 4.0', 'ããã');
 	if (Validator::validateMultiple('php2go.validation.AlphaCharsValidator', $values, array(
 		'space'=>TRUE, 'number'=>TRUE, 'punctuation'=>TRUE),
@@ -22,8 +44,8 @@
 		print 'AlphaCharsValidator => ERROR<br>Valores Errados:<br>'; var_dump($wrongValues);
 	}
 	echo '<br><br><hr><br>';
-	
-	
+
+
 	// ChoiceValidator
 	//----------------------------------------------------------------------
 	$choice = 'male';
@@ -34,12 +56,12 @@
 		echo 'ChoiceValidator => ERROR';
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// CreditCardValidator
-	//----------------------------------------------------------------------	
-	$number = '5555555555552232';	
+	//----------------------------------------------------------------------
+	$number = '5555555555552232';
 	if (Validator::validate(
-		'php2go.validation.CreditCardValidator', 
+		'php2go.validation.CreditCardValidator',
 		$number,
 		array(
 			'name' => 'Cartão de Crédito',
@@ -53,9 +75,9 @@
 		echo 'CreditCardValidator => ERROR';
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// DateValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$date = '10/12/2003 10:55';
 	if (Validator::validate('php2go.validation.DateValidator', $date, array('type' => 'EURO'))) {
 		echo 'DateValidator => OK';
@@ -63,9 +85,9 @@
 		echo 'DateValidator => ERROR';
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// EmailValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$wrongValues = array();
 	$emails = array(
 		'foo@bar.baz',
@@ -81,9 +103,9 @@
 		var_dump($wrongValues);
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// IntervalValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$wrongValues = array();
 	$values = array(
 		2, 12, 29, 66, 55, 17, 20.12, 36.099, 70.01
@@ -95,9 +117,9 @@
 		var_dump($wrongValues);
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// IPAddressValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$wrongValues = array();
 	$ipAddresses = array(
 		'192.168.1.1',
@@ -114,9 +136,9 @@
 		var_dump($wrongValues);
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// MaxValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$wrongValues = array();
 	$values = array(
 		1,2,3,4,5,6,7,8,9,10.01
@@ -128,9 +150,9 @@
 		var_dump($wrongValues);
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// MinValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$value = 10;
 	if (Validator::validate('php2go.validation.MinValidator', $value, array('min' => 1))) {
 		echo 'MinValidator => OK';
@@ -138,21 +160,21 @@
 		echo 'MinValidator => ERROR';
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// RegexValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$pattern = "^[a-zA-Z]{3}-[1-9][0-9]{3}$";
 	$type = 'POSIX';
 	$value = 'FOO-2003';
 	if (Validator::validate('php2go.validation.RegexValidator', $value, array('pattern' => $pattern, 'type' => $type))) {
 		echo 'RegexValidator => OK';
 	} else {
-		echo 'RegexValidator => ERROR';		
+		echo 'RegexValidator => ERROR';
 	}
 	echo '<br><br><hr><br>';
-	
+
 	// UrlValidator
-	//----------------------------------------------------------------------	
+	//----------------------------------------------------------------------
 	$wrongValues = array();
 	$urlArray = array(
 		'http://www.domain.org/subdomain/url.html?get=value#fragment',
@@ -168,5 +190,5 @@
 		var_dump($wrongValues);
 	}
 	echo '<br><br><hr><br>';
-	
+
 ?>
