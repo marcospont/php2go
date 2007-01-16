@@ -193,7 +193,7 @@ class XmlDocument extends PHP2Go
 	/**
 	 * Converts the XML document into a XML string
 	 *
-	 * The {@link XmlNode::render()} method of each document node
+	 * The {@link XmlNode::render()} method of each node
 	 * is called recursively.
 	 *
 	 * @param string $lineEnd Line end string
