@@ -137,6 +137,7 @@ class AbstractSAXParser extends PHP2Go
 	/**
 	 * Parses XML content
 	 *
+	 * @uses XmlParser::createParser()
 	 * @param string $xmlContent XML contents or file path
 	 * @param int $srcType Source type: {@link T_BYFILE} or {@link T_BYVAR}
 	 * @return bool

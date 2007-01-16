@@ -56,9 +56,8 @@ foreach ($langNames as $lang) {
  *
  * @param array $a Base array
  * @param array $b Comparison array
- * @param array $diff Computed diff
+ * @param array &$diff Computed diff
  * @param string $pfx Accumulative prefix for recursive calls
- * @return void
  */
 function getDiff($a, $b, &$diff, $pfx='') {
 	foreach ($a as $key => $value) {
