@@ -72,7 +72,7 @@ define('REPORT_PREVNEXT', 2);
 define('REPORT_FIRSTPREVNEXTLAST', 3);
 
 /**
- * Build and display paged data sets loaded from a database
+ * Builds and displays paged data sets loaded from a database
  *
  * Based on a XML specification, which contains data source
  * information and configuration settings, and a template file
