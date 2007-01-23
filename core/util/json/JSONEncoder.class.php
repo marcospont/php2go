@@ -114,14 +114,14 @@ class JSONEncoder extends PHP2Go
 		} elseif (is_object($value)) {
 			if ($this->_wasVisited($value)) {
 				if ($this->throwErrors)
-					PHP2Go::raiseError(sprintf("O codificador JSON encontrou um ciclo em uma instância da classe %s!", get_class($value)), E_USER_ERROR, __FILE__, __LINE__);
+					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_JSON_CYCLE', get_class($value)), E_USER_ERROR, __FILE__, __LINE__);
 				return NULL;
 			}
 			$this->objRef[] = $value;
 			return $this->_encodeObject($value);
 		} else {
 			if ($this->throwErrors)
-				PHP2Go::raiseError(sprintf("Ocorreu um erro ao converter o tipo %s para uma string JSON.", gettype($value)), E_USER_ERROR, __FILE__, __LINE__);
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_JSON_ENCODE', gettype($value)), E_USER_ERROR, __FILE__, __LINE__);
 			return NULL;
 		}
 	}
