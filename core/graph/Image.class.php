@@ -329,7 +329,7 @@ class Image extends PHP2Go
 	}
 
 	/**
-	 * Set image's tranparent color
+	 * Set image's transparent color
 	 *
 	 * @param string|array $color Color identifier
 	 */

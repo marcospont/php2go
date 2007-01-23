@@ -226,7 +226,6 @@ class AuthDb extends Auth
 		}
 		if (!empty($this->extraClause))
 			$Query->addClause($this->extraClause);
-		// executa a consulta
 		$oldMode = $Db->setFetchMode(ADODB_FETCH_ASSOC);
 		$Rs =& $Db->query($Query->getQuery());
 		$Db->setFetchMode($oldMode);

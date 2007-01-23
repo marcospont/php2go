@@ -42,14 +42,14 @@ class FileCache extends AbstractCache
 {
 	/**
 	 * Base directory
-	 * 
+	 *
 	 * Defaults to the OS temp dir.
 	 *
 	 * @var string
 	 * @access private
 	 */
 	var $baseDir;
-	
+
 	/**
 	 * Automatic serialize/unserialize cache objects
 	 *
@@ -57,7 +57,7 @@ class FileCache extends AbstractCache
 	 * @access private
 	 */
 	var $autoSerialize = TRUE;
-	
+
 	/**
 	 * Should files be locked for read/write operations?
 	 *
@@ -65,7 +65,7 @@ class FileCache extends AbstractCache
 	 * @access private
 	 */
 	var $lockFiles = FALSE;
-	
+
 	/**
 	 * Whether to build obfuscated file names for cache objects
 	 *
@@ -124,12 +124,12 @@ class FileCache extends AbstractCache
 
 	/**
 	 * Reads a given cache object (in a given cache group) from the file system
-	 * 
+	 *
 	 * When using {@link lastValidTime}, the cache file is considered stale
-	 * if older than this property value. When using {@link lifeTime}, the 
-	 * last modified date of the cache file mustn't be older than current 
+	 * if older than this property value. When using {@link lifeTime}, the
+	 * last modified date of the cache file mustn't be older than current
 	 * timestamp minus the lifetime value.
-	 * 
+	 *
 	 * The object is considered stale if the cache file doesn't exist, can't
 	 * be read or contains an invalid checksum (when checksum control is enabled).
 	 *
@@ -192,7 +192,7 @@ class FileCache extends AbstractCache
 
 	/**
 	 * Saves a cache object (using a given cache group) in the file system
-	 * 
+	 *
 	 * The operation returns FALSE when the file can't be opened in write mode.
 	 *
 	 * @param mixed $data Object data
@@ -240,7 +240,7 @@ class FileCache extends AbstractCache
 
 	/**
 	 * Clear all cache object from a given group
-	 * 
+	 *
 	 * If a group ID is not provided, all contents of the cache
 	 * base directory are removed.
 	 *
@@ -270,7 +270,7 @@ class FileCache extends AbstractCache
 	}
 
 	/**
-	 * Build a file path grom a given pair of $id and $group
+	 * Build a file path from a given pair of $id and $group
 	 *
 	 * @param string $id ID
 	 * @param string $group Group

@@ -685,11 +685,11 @@ class Auth extends PHP2Go
 		$lastUser->unregister();
 		if ($this->User->isAuthenticated())
 			$this->User->logout();
-		// invalidar a sessão
+		// check if session should be invalidated
 		$destroy = PHP2Go::getConfigVal('AUTH.DESTROY_ON_LOGOUT', FALSE);
 		if ($destroy === TRUE)
 			$this->User->destroy();
-		// callbacks
+		// logout callback
 		if (isset($this->logoutCallback))
 			$this->logoutCallback->invoke($lastUser);
 		if ($rebuildLogin && isset($this->loginFunction))

@@ -70,7 +70,7 @@ class SearchForm extends Component
 	var $searchString = '';
 
 	/**
-	 * Human-readable representaton of the condition clause
+	 * Human-readable representation of the condition clause
 	 *
 	 * @var string
 	 */

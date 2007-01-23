@@ -321,7 +321,7 @@ class AutoCompleteField extends EditableField
 		$this->setFullSearch(resolveBooleanChoice(@$attrs['FULLSEARCH']));
 		// auto-select when only 1 result is returned
 		$this->setAutoSelect(resolveBooleanChoice(@$attrs['AUTOSELECT']));
-		// nodo de seleção de valor (quando as escolhas possuem conteúdo HTML)
+		// node to read option's value from, when options contain HTML code
 		$this->setChoiceValueNode(@$attrs['CHOICEVALUENODE']);
 		// CSS styles
 		$this->setItemStyle(@$attrs['NORMALSTYLE'], 'normal');

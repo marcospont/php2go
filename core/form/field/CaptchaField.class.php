@@ -210,7 +210,6 @@ class CaptchaField extends FormField
 	 */
 	function onPreRender() {
 		parent::onPreRender();
-		// revalida a propriedade "readonly"
 		if ($this->readOnly === NULL) {
 			if ($this->_Form->readonly)
 				$this->setReadonly();

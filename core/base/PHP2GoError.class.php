@@ -507,7 +507,7 @@ class PHP2GoError extends PHP2Go
 			// cookies
 			if (!empty($_COOKIE))
 				$info['COOKIES'] = $_COOKIE;
-			// variáveis de sessão
+			// session variables
 			if (!empty($_SESSION)) {
 				$info['SESSION'] = array();
 				foreach ($_SESSION as $key=>$value) {

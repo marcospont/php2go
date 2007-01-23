@@ -337,7 +337,7 @@ class FeedReader extends PHP2Go
 					if (isset($attrs['rdf:about']))
 						$this->_currentItem->setElement('rdf:about', $attrs['rdf:about']);
 					break;
-				// imagem and textinput: elements with internal attributes
+				// image and textinput: elements with internal attributes
 				case 'image' :
 				case 'textinput' :
 					$this->_currentCompElement = array($name, (!empty($attrs) ? $attrs : array()), FALSE);

@@ -930,7 +930,7 @@ class Report extends PagedDataSet
 	 */
 	function setHidden($fieldName) {
 		if (is_array($fieldName)) {
-			// as colunas não podem pertencer ao conjunto de colunas de cabeçalho de grupo (groupDisplay)
+			// a grouped column can't be hidden
 			foreach ($fieldName as $field)
 				if (in_array($field, $this->groupDisplay))
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_REPORT_GROUP_HIDDEN', $field), E_USER_ERROR, __FILE__, __LINE__);
@@ -939,7 +939,7 @@ class Report extends PagedDataSet
 			else
 				$this->hidden = array_merge($this->hidden, $fieldName);
 		} else {
-			// a coluna não pode pertencer ao conjunto de colunas de cabeçalho de grupo (groupDisplay)
+			// a grouped column can't be hidden
 			if (in_array($fieldName, $this->groupDisplay))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_REPORT_GROUP_HIDDEN', $fieldName), E_USER_ERROR, __FILE__, __LINE__);
 			if (!isset($this->hidden))
@@ -1573,7 +1573,7 @@ class Report extends PagedDataSet
 			parent::moveFirst();
 			$this->Template->setCurrentBlock(TP_ROOTBLOCK);
 			if ($this->hasHeader) {
-				// gera o cabeçalho
+				// generate the headers line
 				$this->Template->createBlock('loop_line');
 				$this->_dataHeader();
 				// generate all line blocks
