@@ -554,6 +554,7 @@ class UserAgent extends PHP2Go
         $this->os['win2k'] = $this->_match('wi(n|ndows)[ -]?(2000|nt 5.0)', $agent);
         $this->os['winxp'] = $this->_match('wi(n|ndows)[ -]?(xp|nt 5.1)', $agent);
         $this->os['win2003'] = $this->_match('win(n|ndows)[ -]?(2003|nt 5.2)', $agent);
+		$this->os['winvista'] = $this->_match('win(n|ndows)[ -]}(vista|nt 6.0)', $agent);
         $this->os['winnt'] = $this->_match('wi(n|ndows)[ -]?nt', $agent);
         $this->os['win32'] = ($this->os['win95'] || $this->os['win98'] || $this->os['winnt'] || $this->_match('win32', $agent) || $this->_match('32bit', $agent));
         $this->os['aix'] = $this->_match('aix', $agent);
@@ -665,7 +666,7 @@ class UserAgent extends PHP2Go
 			'opera5+' => 'Opera 5.x',
 			'opera4' => 'Opera 4.x',
 			'opera' => 'Opera',
-			'ie7' => 'Microsoft Internet Explorer 7',
+			'ie7' => 'Microsoft Internet Explorer 7.x',
 			'ie6+' => 'Microsoft Internet Explorer 6.x',
 			'ie5+' => 'Microsoft Internet Explorer 5.x',
 			'ie4+' => 'Microsoft Internet Explorer 4.x',
@@ -695,6 +696,7 @@ class UserAgent extends PHP2Go
 	 */
 	function _detectOSName() {
 		$vstr = array(
+			'winvista' => 'Microsoft Windows Vista',
 			'win2003' => 'Microsoft Windows 2003',
 			'winxp' => 'Microsoft Windows XP',
 			'win2k' => 'Microsoft Windows 2000',
