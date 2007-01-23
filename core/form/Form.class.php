@@ -1194,6 +1194,13 @@ class Form extends Component
 				$headerText = (isset($attrs['HEADERTEXT']) ? resolveI18nEntry($attrs['HEADERTEXT']) : NULL);
 				$this->setErrorStyle(@$attrs['STYLE'], $mode, $headerText, @$attrs['HEADERSTYLE']);
 				break;
+			case 'HELP' :
+				$mode = @constant($attrs['MODE']);
+				$options = array();
+				if (isset($attrs['OPTIONS']))
+					parse_str($attrs['OPTIONS'], $options);
+				$this->setHelpDisplayOptions($mode, $options);
+				break;
 		}
 	}
 }

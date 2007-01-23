@@ -92,7 +92,7 @@
 <!ENTITY % rul.list.srch.opto "option* | listener* | rule* | search?">
 <!ENTITY % rul.list.srch.ds "datasource, ( listener* | rule* | search? )">
 <!ENTITY % rul.list.srch.dso "datasource?, ( listener* | rule* | search? )">
-<!ELEMENT form ( style? | errors? | section+ | variable* )>
+<!ELEMENT form ( style? | errors? | help? | section+ | variable* )>
 <!ATTLIST form
 	method %method; #IMPLIED
 	action %text; #IMPLIED
@@ -124,6 +124,11 @@
 	clientmode %identifier; #IMPLIED
 	clientcontainer %identifier; #IMPLIED
 	tplplaceholder %identifier; #IMPLIED
+>
+<!ELEMENT help EMPTY>
+<!ATTLIST help
+	mode %identifier; #IMPLIED
+	options %text; #IMPLIED
 >
 <!ELEMENT section ( %fld.cond; )*>
 <!ATTLIST section
