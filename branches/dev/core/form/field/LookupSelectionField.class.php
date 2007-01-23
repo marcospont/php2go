@@ -129,7 +129,7 @@ class LookupSelectionField extends FormField
 	}
 
 	/**
-	 * Define the source select input as the control the
+	 * Define the source select input as the control that
 	 * should be activated when the component's label is clicked
 	 *
 	 * @return string

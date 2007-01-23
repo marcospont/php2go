@@ -417,7 +417,7 @@ class FileCompress extends PHP2Go
 	}
 
 	/**
-	 * Download the generated archive
+	 * Download the generated archive or compressed file
 	 *
 	 * @param string $fileName File name
 	 */

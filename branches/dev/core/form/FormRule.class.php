@@ -245,7 +245,7 @@ class FormRule extends PHP2Go
 
 	/**
 	 * Builds and returns Javascript statement that registers
-	 * this rule in the clinet-side form validator
+	 * this rule in the client-side form validator
 	 *
 	 * @return string
 	 */

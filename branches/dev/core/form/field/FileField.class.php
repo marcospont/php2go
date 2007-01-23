@@ -185,7 +185,6 @@ class FileField extends FormField
 			$attrs = $this->attributes;
 			$attrs['FIELDNAME'] = $this->getName();
 			$result &= Validator::validate('php2go.validation.UploadValidator', $attrs);
-			// define o handler de upload (dados do arquivo original e do destino) como o valor submetido para o campo
 			$Uploader =& FileUpload::getInstance();
 			if ($handler = $Uploader->getHandlerByName($this->getName()))
 				parent::setSubmittedValue($handler);

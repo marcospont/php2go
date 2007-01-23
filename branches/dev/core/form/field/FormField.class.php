@@ -484,7 +484,7 @@ class FormField extends Component
 	}
 
 	/**
-	 * Change de obligatoriness state of the component
+	 * Change the obligatoriness state of the component
 	 *
 	 * @param bool $setting Set this to TRUE to flag the field as required
 	 */

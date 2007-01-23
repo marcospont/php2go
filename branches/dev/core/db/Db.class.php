@@ -34,12 +34,12 @@ import('php2go.util.Callback');
 
 /**
  * Database connection class
- * 
+ *
  * The Db class is a simple wrapper over the connection class provided
  * by the ADODb database abstract library. Overrides the most important
  * functions of the ADOConnection class, and adds new utility methods
  * to perform SQL/DML commands and manage database statements.
- * 
+ *
  * @package db
  * @uses Callback
  * @uses Date
@@ -54,38 +54,38 @@ class Db extends PHP2Go
 	 * @var bool
 	 */
 	var $connected;
-	
+
 	/**
 	 * Rows affected by last SQL command
 	 *
 	 * @var int
 	 */
 	var $affectedRows;
-	
+
 	/**
 	 * Holds the SQL executed command
-	 * 
+	 *
 	 * This is useful to gather information on
 	 * error situations.
 	 *
 	 * @var array
 	 */
 	var $lastStatement = array();
-	
+
 	/**
 	 * Tells if result sets cache is enabled
 	 *
 	 * @var bool
 	 */
 	var $makeCache;
-	
+
 	/**
 	 * Holds lifetime for cached result sets
 	 *
 	 * @var int
 	 */
 	var $cacheSecs;
-	
+
 	/**
 	 * Internal instance of the ADODb connection class
 	 *
@@ -95,9 +95,9 @@ class Db extends PHP2Go
 
 	/**
 	 * Class constructor
-	 * 
+	 *
 	 * Shouldn't be called directly. Prefer calling always {@link getInstance},
-	 * so that you'll open only one connection for each ID, and will have the 
+	 * so that you'll open only one connection for each ID, and will have the
 	 * ability to use a custom connection class.
 	 *
 	 * @param unknown_type $id
@@ -117,7 +117,7 @@ class Db extends PHP2Go
 			$connFunc = ($connParameters['PERSISTENT'] ? 'PConnect' : 'Connect');
 			if (!$this->AdoDb || !$this->AdoDb->$connFunc(@$connParameters['HOST'], $connParameters['USER'], @$connParameters['PASS'], $connParameters['BASE']))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_DATABASE_CONNECTION_FAILED'), E_USER_ERROR, __FILE__, __LINE__);
-		}		
+		}
 		// default fetch mode
 		if (array_key_exists('FETCH_MODE', $connParameters))
 			$this->AdoDb->SetFetchMode($connParameters['FETCH_MODE']);
@@ -142,18 +142,18 @@ class Db extends PHP2Go
 
   	/**
   	 * Get the singleton of a database connection
-  	 * 
-  	 * Always use this method whenever you need a database 
-  	 * connection. The $id parameter represents the connection 
-  	 * ID that you want to use. If this argument is missing, 
-  	 * the value of the DATABASE.DEFAULT_CONNECTION configuration 
+  	 *
+  	 * Always use this method whenever you need a database
+  	 * connection. The $id parameter represents the connection
+  	 * ID that you want to use. If this argument is missing,
+  	 * the value of the DATABASE.DEFAULT_CONNECTION configuration
   	 * setting will be used.
-  	 * 
+  	 *
   	 * When there's a customized connection class set in the
   	 * global configuration (DATABASE.CONNECTION_CLASS_PATH),
   	 * getInstance will return an instance of this class instead
   	 * of returning an instance of the default connection class.
-  	 * 
+  	 *
   	 * Examples:
   	 * <code>
   	 * /* use the default connection ID {@*}
@@ -205,11 +205,11 @@ class Db extends PHP2Go
 
 	/**
 	 * Enable cache for all result sets
-	 * 
+	 *
 	 * When enabling cache, the result sets will be retrieved
 	 * from cache during a number of seconds provided by the
 	 * $seconds argument.
-	 * 
+	 *
 	 * If you want to purge cached result sets, call:
 	 * <code>
 	 * $db->setCache(TRUE, 0);
@@ -232,7 +232,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Enable debug for all SQL commands
-	 * 
+	 *
 	 * When debug mode is on, all commands executed in the
 	 * database are displayed in the screen.
 	 *
@@ -244,7 +244,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Set the error handler function for all database errors
-	 * 
+	 *
 	 * To disable error handling on database operations, you
 	 * can set error handler to FALSE, or use the @ operator
 	 * when executing database commands.
@@ -260,7 +260,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Set fetch mode for query operations
-	 * 
+	 *
 	 * @link http://phplens.com/lens/adodb/docs-adodb.htm#setfetchmode
 	 * @param int $mode Fetch mode
 	 * @return int Old setting
@@ -304,7 +304,7 @@ class Db extends PHP2Go
   	function getConnectionId() {
   		return ($this->connected ? $this->AdoDb->_connectionID : NULL);
   	}
-  	
+
   	/**
   	 * Get database driver name
   	 *
@@ -316,7 +316,7 @@ class Db extends PHP2Go
 
   	/**
   	 * Return information about the database server
-  	 * 
+  	 *
   	 * The value returned is an array containing the 'description'
   	 * and 'version' keys.
   	 *
@@ -328,7 +328,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Get the error message reported by the database
-	 * 
+	 *
 	 * Returns FALSE if there's no error message available.
 	 *
 	 * @return string|bool
@@ -433,7 +433,7 @@ class Db extends PHP2Go
 			// sybase, sybase_ase
 			case 'sybase' :
 				$stmt = "exec {$stmt}";
-				break;			
+				break;
 			default :
 				break;
 		}
@@ -445,7 +445,7 @@ class Db extends PHP2Go
 
   	/**
   	 * Generate and return the next value of a given database sequence
-  	 * 
+  	 *
   	 * If the database driver doesn't support sequences, ADODb will use
   	 * regular tables instead. If the sequence doesn't exist, it is created.
   	 *
@@ -460,7 +460,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Get database last insert ID
-	 * 
+	 *
 	 * Returns 0 if database doesn't support this feature.
 	 *
 	 * @return int
@@ -471,7 +471,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Get the first cell (0,0) of a result set
-	 * 
+	 *
 	 * Example:
 	 * <code>
 	 * /* this will print the name of the first user in the returned result set {@*}
@@ -534,11 +534,11 @@ class Db extends PHP2Go
 
 	/**
 	 * Get a set of active records
-	 * 
+	 *
 	 * Run a query on table $table, using $clause as condition clause,
 	 * and return the results as a list of objects that can be manipulated.
 	 * These objects are based on the Active Record pattern.
-	 * 
+	 *
 	 * Options:
 	 * # class : active records class name (defaults to ADODB_Active_Record)
 	 * # primaryKeys : allows to manually set the table primary keys (by default, this is auto detected)
@@ -587,12 +587,12 @@ class Db extends PHP2Go
 
 	/**
 	 * Builds a query that counts records based on a normal SQL query
-	 * 
-	 * The method will use nested SQL if avaiable. Otherwise, it will remove
+	 *
+	 * The method will use nested SQL if available. Otherwise, it will remove
 	 * grouping and ordering clauses, replace most significant select/from
 	 * pair by "select count(*) from", and perform other transformations
 	 * in order to get the number of records.
-	 * 
+	 *
 	 * @param string|array $stmt SQL query or prepared statement
 	 * @param array $bindVars Bind variables
 	 * @param bool $optimize Set this to FALSE to disable query transformations (removal or grouping and ordering clauses)
@@ -714,7 +714,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Start a new transaction
-	 * 
+	 *
 	 * ADODb supports nested transactions.
 	 * Returns FALSE when the database driver doesn't support transactions.
 	 *
@@ -744,7 +744,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Completes the active transaction
-	 * 
+	 *
 	 * The ADODb library verifies if the active transaction was
 	 * flagged as failed. If yes, a rollback operation will be
 	 * performed. Otherwise, the transaction will be committed.
@@ -805,7 +805,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Correctly quotes a string
-	 * 
+	 *
 	 * Add and escape quotes inside a string according to the
 	 * rules of the active database driver.
 	 *
@@ -819,9 +819,9 @@ class Db extends PHP2Go
 
 	/**
 	 * Prepare a given date string to be saved by the database
-	 * 
+	 *
 	 * Date strings written in EURO or US formats are converted.
-	 * Time part can be preserved by setting $time=TRUE. If you 
+	 * Time part can be preserved by setting $time=TRUE. If you
 	 * don't want the method to add quotes in the date string,
 	 * set $bind=TRUE.
 	 *
@@ -849,7 +849,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Execute a command on the database
-	 * 
+	 *
 	 * The difference between {@link execute} and {@link query} is that
 	 * the first should be used to perform operations that return a boolean
 	 * result (success or failure). The second should only be used to
@@ -919,7 +919,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Execute an SQL query on the database, rescricting the returned number of rows
-	 * 
+	 *
 	 * <code>
 	 * /* get first 30 rows {@*}
 	 * $db->limitQuery("select * from users", 30);
@@ -965,17 +965,17 @@ class Db extends PHP2Go
 
 	/**
 	 * Build and execute an INSERT on the database
-	 * 
+	 *
 	 * Options:
 	 * # forceType (int) - read ADODb docs for more details
 	 * # sequenceName (string) - sequence to be used to generate a new primary key value
-	 * 
+	 *
 	 * The primary key value will be determined by calling
 	 * {@link lastInsertId} (when database driver supports
 	 * auto-increment columns).
-	 * 
+	 *
 	 * Returns the PK value of the new record, or FALSE in case of errors.
-	 * 
+	 *
 	 * Examples:
 	 * <code>
 	 * $db->insert('person', $personData);
@@ -1028,10 +1028,10 @@ class Db extends PHP2Go
 
 	/**
 	 * Build and execute an UPDATE command on the database
-	 * 
-	 * Options: 
+	 *
+	 * Options:
 	 * # forceType (int) (see ADODb docs for more details).
-	 * 
+	 *
 	 * Example:
 	 * <code>
 	 * $db->update('person', $_POST, 'id_person='.$_POST['id_person']);
@@ -1070,7 +1070,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Update columns of type CLOB/BLOB
-	 * 
+	 *
 	 * Examples:
 	 * <code>
 	 * $db->updateLob('person', 'photo', '/upload/pic.gif', 'id_person='.$idPerson, 'BLOB', T_BY_FILE);
@@ -1094,10 +1094,10 @@ class Db extends PHP2Go
 
 	/**
 	 * Insert or update the database row represented by $arrFields
-	 * 
+	 *
 	 * If the record is already on the database, an UPDATE command
 	 * is executed. Otherwise, an INSERT is performed.
-	 * 
+	 *
 	 * Return values:
 	 * # returns 0 in case of error
 	 * # returns 1 if an UPDATE was executed
@@ -1138,7 +1138,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Apply integrity tests on a given table/column
-	 * 
+	 *
 	 * Example:
 	 * <code>
 	 * /* setup a list of table/column pairs that refer person.id_person {@*}
@@ -1190,7 +1190,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Publish the first record returned by an SQL query in the registry
-	 * 
+	 *
 	 * This commands expects an SQL query or prepared statement in
 	 * the $sqlCode argument. This command is executed (using $bindVars,
 	 * if available), and the first returned row is registered in the
@@ -1298,7 +1298,7 @@ class Db extends PHP2Go
 
 	/**
 	 * Abstract method, must be implemented by custom connection class
-	 * 
+	 *
 	 * @abstract
 	 */
 	function onBeforeClose() {

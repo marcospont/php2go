@@ -44,7 +44,7 @@ define('PHP2GO_DEFAULT_CHARSET', 'iso-8859-1');
  * Initializes the framework
  *
  * This class is used inside the initialization script, and has the
- * responsability of starting up all basic servies of the framework:
+ * responsability of starting up all basic services of the framework:
  * configuration, internationalization and session.
  *
  * @package php2go
@@ -219,7 +219,7 @@ class Init
 		);
 		$conf = $this->_Conf->getConfig('SESSION');
 		if (!is_array($conf)) {
-			// valores no formato antigo
+			// values in the old format
 			$conf = array(
 				'NAME' => $this->_Conf->getConfig('SESSION_NAME', 'PHP2GO_SESSID'),
 				'LIFETIME' => $this->_Conf->getConfig('SESSION_LIFETIME', NULL),
@@ -230,21 +230,22 @@ class Init
 		} else {
 			$conf = array_merge($defaults, $conf);
 		}
-		// nome do cookie de sessão
+		// session cookie name
 		if ($conf['NAME'])
 			ini_set('session.name', $conf['NAME']);
 		ini_set('session.cache_limiter', 'must_revalidate');
 		ini_set('session.use_cookies', TRUE);
 		ini_set('session.cookie_lifetime', 0);
-		// sessão previsamente inicializada
+		// previously started session
+		/*
 		if (ini_get('session.auto_start') == TRUE) {
 			$_SESSION = array();
 			if (isset($_COOKIE[session_name()]))
 				setcookie(session_name(), '', time()-86400, '/');
 			session_unset();
 			@session_destroy();
-		}
-		// utilizar ou não apenas cookies
+		}*/
+		// use only cookies or not
 		if ($conf['COOKIES_ONLY']) {
 			ini_set('session.use_only_cookies', TRUE);
 			ini_set('session.use_trans_sid', FALSE);
@@ -254,7 +255,7 @@ class Init
 			ini_set('session.use_trans_sid', TRUE);
 			ini_set('url_rewriter.tags', 'a=href,frame=src,input=src,form=fakeentry,fieldset=');
 		}
-		// configurações de garbage collection
+		// garbage collection settings
 		ini_set('session.gc_probability', 1);
 		if (is_int($conf['LIFETIME']))
 			ini_set('session.gc_maxlifetime', $conf['LIFETIME']);
@@ -280,7 +281,7 @@ class Init
 	 * @access private
 	 */
 	function _initLocale() {
-		// linguagem
+		// language
 		$conf = $this->_Conf->getConfig('LANGUAGE');
 		$jsLangCode = (isset($_REQUEST['locale']) && preg_match("/resources\/javascript\/lang.php$/", @$_SERVER['PHP_SELF']) ? $_REQUEST['jslang'] : NULL);
 		$userDefined = FALSE;
@@ -289,37 +290,37 @@ class Init
 				$default = (isset($conf['DEFAULT']) ? $conf['DEFAULT'] : PHP2GO_DEFAULT_LANGUAGE);
 				$param = (!empty($conf['REQUEST_PARAM']) ? $conf['REQUEST_PARAM'] : NULL);
 				$supported = (isset($conf['AVAILABLE']) ? (array)$conf['AVAILABLE'] : array_keys($this->localeTable));
-				// geração de arquivo de linguagem Javascript
+				// JS language file generation
 				if ($jsLangCode) {
 					$language = $jsLangCode;
 					$userDefined = FALSE;
 				}
-				// alteração dinâmica de linguagem por GET ou POST
+				// dynamic language change from GET or POST
 				elseif (!empty($param) && !empty($_REQUEST[$param]) && in_array($_REQUEST[$param], $supported)) {
 					$language = $_REQUEST[$param];
 					$userDefined = TRUE;
 				}
-				// linguagem armazenada em um cookie
+				// language code stored in a cookie
 				elseif (isset($_COOKIE['PHP2GO_LANGUAGE']) && in_array($_COOKIE['PHP2GO_LANGUAGE'], $supported)) {
 					$language = $_COOKIE['PHP2GO_LANGUAGE'];
 					$userDefined = TRUE;
 				}
-				// linguagem definida anteriormente armazenada na sessão
+				// language code previously stored in the session
 				elseif (isset($_SESSION['PHP2GO_LANGUAGE']) && in_array($_SESSION['PHP2GO_LANGUAGE'], $supported)) {
 					$language = $_SESSION['PHP2GO_LANGUAGE'];
 				}
-				// verifica se foi solicitada auto detecção
+				// check if auto detection is enabled
 				elseif (@$conf['AUTO_DETECT'] == TRUE) {
 					$language = $this->_Negotiator->negotiateLanguage($supported, $default);
 				}
-				// utiliza a linguagem padrão definida pelo usuário
+				// use user-defined default language
 				else {
 					$language = $default;
 				}
 			} else {
 				$language = (string)$conf;
 			}
-			// aplica a linguagem definida
+			// applies the choosen language
 			$this->_applyLocale($language, $userDefined);
 		} else {
 			$this->_applyLocale(PHP2GO_DEFAULT_LANGUAGE);
@@ -408,27 +409,27 @@ class Init
 		global $ADODB_LANG;
 		if (isset($this->localeTable[$language])) {
 			$this->locale = $language;
-			// busca cada uma das definições para a linguagem
+			// get locale settings
 			$locale = $this->localeTable[$language][0];
 			$langName = $this->localeTable[$language][1];
 			$adodbLang = $this->localeTable[$language][2];
-			// define a localização utilizando a função setlocale
+			// defines locale using setlocale()
 			if (version_compare(PHP_VERSION, '4.3.0', '>=')) {
 				$params = array_merge(array(LC_ALL), $locale);
 				call_user_func_array('setlocale', $params);
 			} else {
 				setlocale(LC_ALL, $locale[0]);
 			}
-			// modifica a configuração
+			// set configuration entries
 			$this->_Conf->setConfig('LOCALE', $locale[0]);
 			$this->_Conf->setConfig('LANGUAGE_CODE', $language);
 			$this->_Conf->setConfig('LANGUAGE_NAME', $langName);
-			// grava na sessão se foi definida pelo usuário
+			// if language code is user-defined, save it in the session scope
 			if ($userDefined) {
 				$_SESSION['PHP2GO_LANGUAGE'] = $language;
 				setcookie('PHP2GO_LANGUAGE', $language, time()+86400, '/');
 			}
-			// carrega a tabela de linguagem do framework
+			// load framework's language table
 			$this->_Lang->clearLanguageBase();
 			$this->_Lang->loadLanguageTableByFile(PHP2GO_ROOT . 'languages/' . $langName . '.inc', 'PHP2GO');
 			$ADODB_LANG = $adodbLang;

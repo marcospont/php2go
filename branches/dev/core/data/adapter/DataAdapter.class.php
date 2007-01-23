@@ -102,7 +102,7 @@ class DataAdapter extends PHP2Go
 	/**
 	 * Class constructor
 	 *
-	 * Must be explictly called by child adapters
+	 * Must be explicitly called by child adapters
 	 *
 	 * @param array $params Configuration arguments
 	 * @return DataAdapter

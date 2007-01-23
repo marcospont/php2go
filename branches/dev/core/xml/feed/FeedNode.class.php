@@ -32,7 +32,7 @@ import('php2go.datetime.Date');
 /**
  * Base class of FeedChannel and FeedItem classes
  *
- * Contains utility methos to handle attributes and child nodes present
+ * Contains utility methods to handle attributes and child nodes present
  * in the data structure of a feed. Also used as a helper of a feed
  * rendering process.
  *

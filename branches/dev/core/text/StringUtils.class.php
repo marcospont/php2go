@@ -537,13 +537,13 @@ class StringUtils extends PHP2Go
 				return preg_replace("%(?<!\\\\)'%", "\\'", $str);
 			case 'javascript' :
 				$expressions = array(
-					"/(<scr)(ipt)/i" => "$1\"+\"$2", // quebrar tags "<script"
+					"/(<scr)(ipt)/i" => "$1\"+\"$2", // break "<script" tags
 					'/\\\\/' => '\\\\', // backslashes
 					'/\'/' => "\'", // single quotes
 					'/"/' => '\\"', // double quotes
-					"/\r/"=>'\\r', // caractere CR
-					"/\n/"=>'\\n', // caractere LF
-					"/\t/" => "\\t" // tabulações
+					"/\r/"=>'\\r', // CR char
+					"/\n/"=>'\\n', // LF char
+					"/\t/" => "\\t" // tab char
 				);
 				$str = str_replace("\\", "\\\\", $str);
 				$str = preg_replace(array_keys($expressions), array_values($expressions), $str);

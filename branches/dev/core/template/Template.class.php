@@ -42,7 +42,7 @@ import('php2go.template.TemplateParser');
  * for function calls, capture areas, nested repetition blocks.
  *
  * To read more about the pattern understood by the template parser, please
- * consult the examples included in the framework's distribuition.
+ * consult the examples included in the framework's distribution.
  *
  * @package template
  * @uses CacheManager

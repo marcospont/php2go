@@ -109,7 +109,7 @@ class FormButton extends Component
 		(!$this->preRendered) && ($this->onPreRender());
 		if ($this->attributes['IMG'] != '') {
 			if ($this->attributes['TYPE'] == 'SUBMIT') {
-				// buinds an IMAGE input
+				// builds an IMAGE input
 				print sprintf("<input id=\"%s\" name=\"%s\" type=\"image\" value=\"%s\" src=\"%s\" border=\"0\"%s%s%s%s%s%s>",
 					$this->id, $this->name, $this->value, $this->attributes['IMG'], $this->attributes['ALTHTML'], $this->attributes['SCRIPT'],
 					$this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['DISABLED'], $this->attributes['STYLE']

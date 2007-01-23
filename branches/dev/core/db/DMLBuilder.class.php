@@ -54,27 +54,27 @@ define('OCI_EMPTY_BLOB', 'EMPTY_BLOB()');
 
 /**
  * Builds DML commands
- * 
+ *
  * Based on the table name and a hash array of fields and
  * values, this class is able to build INSERT and UPDATE
  * commands.
- * 
- * It supports bind variables, handling of empty values and 
+ *
+ * It supports bind variables, handling of empty values and
  * conversion of values to the formats, according with the
  * column native types.
- * 
+ *
  * Example:
  * <code>
  * $db =& Db::getInstance();
  * $dml = new DMLBuilder($db);
  * $dml->prepare(
- *   DML_BUILDER_UPDATE, 'person', 
- *   array('name'=>$newName), 
+ *   DML_BUILDER_UPDATE, 'person',
+ *   array('name'=>$newName),
  *   'id_person=?', array($idPerson)
  * );
  * $result = @$dml->execute();
  * </code>
- * 
+ *
  * @package db
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
@@ -88,21 +88,21 @@ class DMLBuilder extends PHP2Go
 	 * @var bool
 	 */
 	var $ignoreEmptyValues = FALSE;
-	
+
 	/**
 	 * Force an update command even when database row is unchanged
 	 *
 	 * @var bool
 	 */
 	var $forceUpdate = FALSE;
-	
+
 	/**
 	 * Use bind variables
 	 *
 	 * @var bool
 	 */
 	var $useBind = FALSE;
-	
+
 	/**
 	 * Active mode
 	 *
@@ -110,7 +110,7 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	var $_mode;
-	
+
 	/**
 	 * Active table name
 	 *
@@ -118,7 +118,7 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	var $_table;
-	
+
 	/**
 	 * Active field values
 	 *
@@ -126,7 +126,7 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	var $_values = array();
-	
+
 	/**
 	 * Active condition clause
 	 *
@@ -134,7 +134,7 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	var $_clause;
-	
+
 	/**
 	 * Bind variables used in the condition clause
 	 *
@@ -142,7 +142,7 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	var $_clauseBindVars = array();
-	
+
 	/**
 	 * Bind variables used in the fields
 	 *
@@ -150,7 +150,7 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	var $_bindVars = array();
-	
+
 	/**
 	 * Holds a hash array containing all changed values in an UPDATE command
 	 *
@@ -158,7 +158,7 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	var $_updateVars = array();
-	
+
 	/**
 	 * Holds an instance of the database connection class
 	 *
@@ -182,7 +182,7 @@ class DMLBuilder extends PHP2Go
 
 	/**
 	 * Prepare a DML command
-	 * 
+	 *
 	 * Examples:
 	 * <code>
 	 * /* Preparing an INSERT command {@*}
@@ -216,7 +216,7 @@ class DMLBuilder extends PHP2Go
 
 	/**
 	 * Build and return the SQL code of the active statement
-	 * 
+	 *
 	 * Should be called after {@link prepare}.
 	 *
 	 * @return string
@@ -235,8 +235,8 @@ class DMLBuilder extends PHP2Go
 	}
 
 	/**
-	 * Build and prepare the active statent
-	 * 
+	 * Build and prepare the active statement
+	 *
 	 * Should be called after {@link prepare}.
 	 *
 	 * @uses getSql()
@@ -263,12 +263,12 @@ class DMLBuilder extends PHP2Go
 
 	/**
 	 * Return a hash array of changed fields
-	 * 
+	 *
 	 * This information is captured when an UPDATE statement is
-	 * prepared and executed inside this class. The list of 
-	 * updated fields can be useful to track  changes on 
+	 * prepared and executed inside this class. The list of
+	 * updated fields can be useful to track  changes on
 	 * database records.
-	 * 
+	 *
 	 * Should be called after {@link execute}.
 	 *
 	 * @return array
@@ -279,7 +279,7 @@ class DMLBuilder extends PHP2Go
 
 	/**
 	 * Build, prepare and run the the DML command
-	 * 
+	 *
 	 * @uses getSql()
 	 * @uses Db::prepare()
 	 * @uses Db::execute()
@@ -388,7 +388,7 @@ class DMLBuilder extends PHP2Go
 					$curVal = '';
 				// define new value for comparison
 				if ($this->forceUpdate || strcmp($curVal, $values[$colUpper])) {
-					// valores vazios
+					// empty values
 					if ($this->_isEmpty($values[$colUpper])) {
 						if (empty($curVal) && $this->ignoreEmptyValues) {
 							continue;
@@ -450,7 +450,7 @@ class DMLBuilder extends PHP2Go
 
 	/**
 	 * Retrieve the column list of the active table
-	 * 
+	 *
 	 * This method uses internal static variables to cache
 	 * information about tables already visited.
 	 *
