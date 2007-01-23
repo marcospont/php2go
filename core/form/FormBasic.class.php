@@ -486,8 +486,8 @@ class FormBasic extends Form
 			(isset($attrs['SECTIONTITLE'])) && ($this->sectionTitleStyle = $attrs['SECTIONTITLE']);
 			(isset($attrs['WIDTH'])) && ($this->formWidth = intval($attrs['WIDTH']));
 			(isset($attrs['ALIGN']) && in_array(strtoupper($attrs['ALIGN']), array('LEFT', 'CENTER', 'RIGHT'))) && ($this->formAlign = strtolower($attrs['ALIGN']));
-			(array_key_exists('TABLEPADDING', $attrs)) && ($this->tblCPadding = intavl($attrs['TABLEPADDING']));
-			(array_key_exists('TABLESPACING', $attrs)) && ($this->tblCPadding = intavl($attrs['TABLESPACING']));
+			(array_key_exists('TABLEPADDING', $attrs)) && ($this->tblCPadding = intval($attrs['TABLEPADDING']));
+			(array_key_exists('TABLESPACING', $attrs)) && ($this->tblCPadding = intval($attrs['TABLESPACING']));
 			(array_key_exists('LABELWIDTH', $attrs)) && ($this->labelW = floatval($attrs['LABELWIDTH']));
 			(isset($attrs['LABELALIGN']) && in_array(strtoupper($attrs['LABELALIGN']), array('LEFT', 'CENTER', 'RIGHT'))) && ($this->labelAlign = strtolower($attrs['LABELALIGN']));
 		} elseif ($tag == 'ERRORS') {
