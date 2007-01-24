@@ -232,7 +232,7 @@ class FormAjaxListener extends FormEventListener
 					$buf .=	"\t\tparams.{$name} = function() {\n" .
 							"{$value}\n" .
 							"\t\t};\n";
-							break;
+					break;
 				case 'onComplete' :
 				case 'onSuccess' :
 				case 'onFailure' :
@@ -243,13 +243,14 @@ class FormAjaxListener extends FormEventListener
 					$buf .=	"\t\tparams.{$name} = function(response) {\n" .
 							"{$value}\n" .
 							"\t\t};\n";
-							break;
+					break;
 				case 'onException' :
 					$value = trim(rtrim($value), "\n");
 					$value = $this->_convertTabs($value, 3);
 					$buf .=	"\t\tparams.{$name} = function(e) {\n" .
-					$buf .= "{$value}\n" .
+							"{$value}\n" .
 							"\t\t};\n";
+					break;
 			}
 		}
 		return $buf;
