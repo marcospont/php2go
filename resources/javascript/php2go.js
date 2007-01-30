@@ -252,6 +252,7 @@ var PHP2Go = {
 		switch (type) {
 			case 'INTEGER' : a = parseInt(a, 10), b = parseInt(b, 10); break;
 			case 'FLOAT' : a = parseFloat(a, 10), b = parseFloat(b, 10); break;
+			case 'CURRENCY' : a = parseFloat(a, 10), b = parseFloat(b, 10); break;
 			case 'DATE' : a = Date.toDays(a), b = Date.toDays(b); break;
 		}
 		switch (op) {
