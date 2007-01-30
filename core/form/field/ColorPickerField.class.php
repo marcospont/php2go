@@ -76,13 +76,12 @@ class ColorPickerField extends FormField
 			$options = "{mode:\"popup\",trigger:\"{$this->id}_button\"}";
 			print sprintf(
 				"<input id=\"%s\" name=\"%s\" type=\"text\" value=\"%s\" size=\"8\" maxlength=\"7\" title=\"%s\"%s%s%s%s%s%s%s>" .
-				"<button id=\"%s_button\" type=\"button\" %s%s style=\"cursor:pointer;%s;background:transparent;border:none;vertical-align:text-bottom\"><img src=\"%s\" border=\"0\" alt=\"\"/></button>" .
+				"<button id=\"%s_button\" type=\"button\" %s style=\"cursor:pointer;%s;background:transparent;border:none;vertical-align:text-bottom\"><img src=\"%s\" border=\"0\" alt=\"\"/></button>" .
 				"<script type=\"text/javascript\">new ColorPickerField(\"%s\", %s);</script>",
-				$this->id, $this->name, $this->value, $this->label, $this->attributes['SCRIPT'], $this->attributes['TABINDEX'],
-				$this->attributes['ACCESSKEY'], $this->attributes['DISABLED'], $this->attributes['STYLE'], $this->attributes['DATASRC'],
-				$this->attributes['DATAFLD'], $this->id, HtmlUtils::statusBar('Selecionar uma cor'), $this->attributes['TABINDEX'],
-				($ua->matchBrowser('opera') ? "padding-left:4px;padding-right:0" : "width:20px"), PHP2GO_ICON_PATH . 'colorpicker.gif',
-				$this->id, $options
+				$this->id, $this->name, $this->value, $this->label, $this->attributes['SCRIPT'], $this->attributes['TABINDEX'], $this->attributes['ACCESSKEY'],
+				$this->attributes['DISABLED'], $this->attributes['STYLE'], $this->attributes['DATASRC'], $this->attributes['DATAFLD'], $this->id,
+				$this->attributes['TABINDEX'], ($ua->matchBrowser('opera') ? "padding-left:4px;padding-right:0" : "width:20px"),
+				PHP2GO_ICON_PATH . 'colorpicker.gif', $this->id, $options
 			);
 		}
 	}
