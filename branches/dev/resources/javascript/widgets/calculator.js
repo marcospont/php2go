@@ -481,14 +481,20 @@ Calculator.prototype.result = function() {
 		if (t.inputMask) {
 			var p = 0, m = t.inputMask.mask;
 			if (v != "") {
-				// currency format
+				// currency mask
 				if (m == CurrencyMask) {
-					v = Math.truncate(parseFloat(v), 2).toString();
-					if (v.indexOf('.') == -1)
-						v += "00";
-					v = v.replace(/[^\-0-9]+/, "");
+					v = Math.truncate(parseFloat(v), 2).toString().replace(".", ",");
+					if (v.indexOf(',') == -1)
+						v += ",00";
+					if (v.indexOf(',') == (v.length-2))
+						v += "0";
+					v = v.replace(/[^\-0-9,]+/, "");
 				}
-				// float integer part validation
+				// integer mask
+				else if (m == IntegerMask) {
+					v = Math.round(parseFloat(v)).toString();
+				}
+				// float mask with integer part validation
 				else if (m.intSize) {
 					p = v.indexOf('.');
 					(p == -1) && (p = v.length);
