@@ -138,7 +138,7 @@ class JSONEncoder extends PHP2Go
 		$items = array();
 		foreach ($vars as $name => $value) {
 			$encoded = $this->encodeValue($value);
-			if ($encoded)
+			if ($encoded !== NULL)
 				$items[] = '"' . strval($name) . '":' . $encoded;
 		}
 		return '{' . join(',', $items) . '}';
@@ -160,14 +160,14 @@ class JSONEncoder extends PHP2Go
 		if (TypeUtils::isHashArray($arr)) {
 			foreach ($arr as $key => $value) {
 				$encoded = $this->encodeValue($value);
-				if ($encoded)
+				if ($encoded !== NULL)
 					$items[] = '"' . strval($key) . '":' . $encoded;
 			}
 			return '{' . implode(',', $items) . '}';
 		} else {
 			for ($i=0,$s=sizeof($arr); $i<$s; $i++) {
 				$encoded = $this->encodeValue($arr[$i]);
-				if ($encoded)
+				if ($encoded !== NULL)
 					$items[] = $encoded;
 			}
 			return '[' . implode(',', $items) . ']';
