@@ -111,6 +111,7 @@ class EditSelectionField extends FormField
 		$Tpl->parse();
 		$Tpl->assign('id', $this->id);
 		$Tpl->assign('label', $this->label);
+		$Tpl->assign('style', $this->attributes['USERSTYLE']);
 		$Tpl->assign('editId', $this->_EditField->getId());
 		$Tpl->assign('editLabel', $this->_EditField->getLabel());
 		$Tpl->assignByRef('edit', $this->_EditField);

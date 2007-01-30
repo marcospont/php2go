@@ -1,5 +1,5 @@
 
-<fieldset id="{$id}" title="{$label}" style="border:0;padding:0;margin:0">
+<fieldset id="{$id}" title="{$label}" style="border:0;padding:0;margin:0"{$style}>
 <input id="{$id}_lastfilter" name="{$id}_lastfilter" type="hidden" value=""/>
 <input id="{$id}_lastsearch" name="{$id}_lastsearch" type="hidden" value=""/>
 <table id="{$id}_top" cellpadding="0" cellspacing="0" border="0">
