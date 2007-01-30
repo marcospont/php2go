@@ -6,7 +6,7 @@
 	<variable name="subset" default="1"/>
 
 	<section name="PHP2Go Form Components Part 1" id="section">
-	
+
 		<combofield name="subset" label="Choose the Subset" default="~subset~">
 			<option value="1" caption="Subset 1"/>
 			<option value="2" caption="Subset 2"/>
@@ -86,6 +86,17 @@
 				<orderby>name</orderby>
 			</datasource>
 		</lookupchoicefield>
+
+		<!--
+			text input with security image.
+			used to test tell computers from humans apart.
+		-->
+		<captchafield
+			name="captcha" label="CaptchaField" required="T"
+			size="10" length="6" width="160" height="50"
+			noiselevel="20" fontsize="20" fontshadow="4"
+			imagepath="tmp/" imagetype="IMAGETYPE_PNG"
+		/>
 
 		<!-- button group -->
 		<buttons>
