@@ -520,12 +520,16 @@ class FormField extends Component
 	 */
 	function setStyle($style) {
 		$style = trim($style);
-		if ($style == 'empty')
+		if ($style == 'empty') {
 			$this->attributes['STYLE'] = '';
-		elseif ($style != '')
+			$this->attributes['USERSTYLE'] = '';
+		} elseif ($style != '') {
 			$this->attributes['STYLE'] = " class=\"{$style}\"";
-		else
+			$this->attributes['USERSTYLE'] = " class=\"{$style}\"";
+		} else {
 			$this->attributes['STYLE'] = $this->_Form->getInputStyle();
+			$this->attributes['USERSTYLE'] = "";
+		}
 	}
 
 	/**
@@ -839,10 +843,10 @@ class FormField extends Component
 					$result['GROUPBY'] = '';
 				if (!isset($result['ORDERBY']))
 					$result['ORDERBY'] = '';
-				if (!isset($this->dataSource['GROUPFIELD']))
-					$this->dataSource['GROUPFIELD'] = '';
-				if (!isset($this->dataSource['GROUPDISPLAY']))
-					$this->dataSource['GROUPDISPLAY'] = $this->dataSource['GROUPFIELD'];
+				if (!isset($result['GROUPFIELD']))
+					$result['GROUPFIELD'] = '';
+				if (!isset($result['GROUPDISPLAY']))
+					$result['GROUPDISPLAY'] = $result['GROUPFIELD'];
 			}
 		}
 		return $result;
