@@ -264,18 +264,18 @@
 	readonly %boolean; "F"
 	resizemode ( HORIZONTAL | VERTICAL | BOTH | NONE ) "NONE"
 >
-<!ELEMENT editsearchfield ( datasource, datafilter+ )>
+<!ELEMENT editsearchfield ( datasource, datafilter+, lookupfield )>
 <!ATTLIST editsearchfield
 	%coreattrs;
 	%lengthattrs;
 	autodispatch %boolean; "F"
+	autotrim %boolean; "F"
 	btnimg %text; #IMPLIED
 	btnvalue %text; #IMPLIED
 	debug %boolean; "F"
 	url %text; #IMPLIED
-	%editattrs;
 >
-<!ELEMENT editselectionfield ( editfield, lookupfield )>
+<!ELEMENT editselectionfield ( editfield, lookupfield, listener+ )>
 <!ATTLIST editselectionfield
 	%baseattrs;
 	insfield %identifier; #IMPLIED
@@ -315,7 +315,7 @@
 	%comboattrs;
 	default %text; #IMPLIED
 >
-<!ELEMENT lookupselectionfield ( lookupfield, lookupfield )>
+<!ELEMENT lookupselectionfield ( lookupfield, lookupfield, listener+ )>
 <!ATTLIST lookupselectionfield
 	%coreattrs;
 	insfield %identifier; #IMPLIED
@@ -430,7 +430,7 @@
 >
 <!ELEMENT datafilter EMPTY>
 <!ATTLIST datafilter
-	id %identifier; #IMPLIED
+	id %identifier; #REQUIRED
 	label %text; #REQUIRED
 	expression %text; #REQUIRED
 	mask %mask; #IMPLIED
