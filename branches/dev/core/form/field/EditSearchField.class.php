@@ -99,6 +99,7 @@ class EditSearchField extends DbField
 		$Tpl->assign('id', $this->id);
 		$Tpl->assign('frm', $this->_Form->formName);
 		$Tpl->assign('label', $this->label);
+		$Tpl->assign('style', $this->attributes['USERSTYLE']);
 		$Tpl->assign('labelStyle', $this->_Form->getLabelStyle());
 		$Tpl->assign('buttonStyle', $this->_Form->getButtonStyle());
 		$comboValue = $this->_LookupField->getValue();

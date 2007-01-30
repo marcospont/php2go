@@ -108,6 +108,7 @@ class LookupSelectionField extends FormField
 		$Tpl->parse();
 		$Tpl->assign('id', $this->id);
 		$Tpl->assign('label', $this->label);
+		$Tpl->assign('style', $this->attributes['USERSTYLE']);
 		$Tpl->assign('separator', $this->listSeparator);
 		$Tpl->assign('tableWidth', $this->attributes['TABLEWIDTH']);
 		$Tpl->assign('labelStyle', $this->_Form->getLabelStyle());

@@ -265,10 +265,12 @@ class DataGrid extends DbField
 		$this->Template = new Template(PHP2GO_TEMPLATE_PATH . 'datagrid.tpl');
 		$this->Template->parse();
 		$this->Template->globalAssign('id', $this->id);
+		$this->Template->assign('style', $this->attributes['USERSTYLE']);
 		$this->Template->assign('width', $this->attributes['TABLEWIDTH']);
 		if ($this->attributes['SHOWHEADER']) {
 			$headers = TypeUtils::toArray(@$this->attributes['HEADERS']);
 			$this->Template->createBlock('loop_line');
+			$this->Template->assign('row_id', 'header');
 			for ($i=1,$s=$this->_Rs->fieldCount(); $i<$s; $i++) {
 				$Field =& $this->_Rs->fetchField($i);
 				$this->Template->createAndAssign('loop_header_cell', array(
@@ -282,7 +284,7 @@ class DataGrid extends DbField
 		while ($dataRow = $this->_Rs->fetchRow()) {
 			$submittedRow = ($isPosted ? @$this->value[$dataRow[0]] : NULL);
 			$this->Template->createBlock('loop_line');
-			$this->Template->assign('row_id', $dataRow[0]);
+			$this->Template->assign('row_id', 'row_' . $dataRow[0]);
 			$this->Template->createAndAssign('loop_cell', array(
 				'align' => 'left',
 				'style' => $this->attributes['CELLSTYLE'],

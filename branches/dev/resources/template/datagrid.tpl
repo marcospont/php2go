@@ -1,5 +1,5 @@
 
-<table id="{$id}" cellpadding="1" cellspacing="0" border="0"{$width}>
+<table id="{$id}" cellpadding="1" cellspacing="0" border="0"{$width}{$style}>
   <!-- START BLOCK : loop_line -->
   <tr id="{$id}_{$row_id}">
     <!-- START BLOCK : loop_header_cell -->
