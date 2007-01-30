@@ -114,7 +114,8 @@ class Init
 			'cs' => array(array('cs_CZ', 'cz'), 'czech', 'cz'),
 			'it' => array(array('it_IT', 'it'), 'italian', 'it'),
 			'de-de' => array(array('de_DE', 'de', 'ge'), 'de-german', 'de'),
-			'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr')
+			'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr'),
+			'th' => array(array('th_TH'), 'thai', 'th')
 		);
 		$this->_Conf =& Conf::getInstance();
 		$this->_Lang =& LanguageBase::getInstance();
