@@ -201,6 +201,10 @@ class RuleValidator extends AbstractValidator
 					$src = TypeUtils::parseFloat($source);
 					$trg = TypeUtils::parseFloat($target);
 					break;
+				case 'CURRENCY' :
+					$src = TypeUtils::parseFloat(str_replace(array('.', ','), array('', '.'), $source));
+					$trg = TypeUtils::parseFloat(str_replace(array('.', ','), array('', '.'), $target));
+					break;
 				default :
 					$src = $source;
 					$trg = $target;
