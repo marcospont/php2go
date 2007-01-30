@@ -309,7 +309,7 @@ class FormRule extends PHP2Go
 			} elseif ($this->type == 'JSFUNC' && TypeUtils::isNull($this->functionBody)) {
 				$this->_valid = FALSE;
 			// validates the comparison data type
-			} elseif (!TypeUtils::isNull($this->compareType) && !preg_match("/^(INTEGER|FLOAT|DATE)$/", $this->compareType)) {
+			} elseif (!TypeUtils::isNull($this->compareType) && !preg_match("/^(DATE|INTEGER|FLOAT|CURRENCY)$/", $this->compareType)) {
 				$this->compareType = 'STRING';
 			} else {
 				if ($this->type == 'REQIF')
