@@ -257,6 +257,20 @@ class FormAjaxListener extends FormEventListener
 	}
 
 	/**
+	 * Configure listener's dynamic properties
+	 *
+	 * @access protected
+	 */
+	function onDataBind() {
+		parent::onDataBind();
+		// resolve variables and expressions on the URL attribute
+		if (preg_match("/~[^~]+~/", $this->url)) {
+			$Form =& $this->getOwnerForm();
+			$this->url = $Form->resolveVariables($this->url);
+		}
+	}
+
+	/**
 	 * Validates the listener's properties
 	 *
 	 * @access protected
