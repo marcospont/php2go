@@ -210,6 +210,25 @@ class FormEventListener extends PHP2Go
 	}
 
 	/**
+	 * Get the rule's owner field
+	 *
+	 * @return FormField
+	 */
+	function &getOwner() {
+		return $this->_Owner;
+	}
+	/**
+	 * Get the listener's owner form
+	 *
+	 * @return Form
+	 */
+	function &getOwnerForm() {
+		$result = NULL;
+		if (is_object($this->_Owner))
+			$result =& $this->_Owner->getOwnerForm();
+		return $result;
+	}
+	/**
 	 * Set listener's owner component
 	 *
 	 * @param Component &$Owner Owner component (form field or form button)
@@ -277,6 +296,14 @@ class FormEventListener extends PHP2Go
 			$this->_valid = FALSE;
 			return $this->_valid;
 		}
+	}
+
+	/**
+	 * Configure listener's dynamic properties
+	 *
+	 * @access protected
+	 */
+	function onDataBind() {
 	}
 
 	/**
