@@ -741,6 +741,10 @@ class FormField extends Component
 				}
 			}
 		}
+		for ($i=0,$s=sizeof($this->listeners); $i<$s; $i++) {
+			$Listener =& $this->listeners[$i];
+			$Listener->onDataBind();
+		}
 		if (!$this->composite) {
 			for ($i=0,$s=sizeof($this->rules); $i<$s; $i++) {
 				$Rule =& $this->rules[$i];

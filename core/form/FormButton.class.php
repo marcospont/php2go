@@ -68,7 +68,7 @@ class FormButton extends Component
 	var $value = '';
 
 	/**
-	 * Whether the buttons is disabled
+	 * Whether the button is disabled
 	 *
 	 * @var bool
 	 */
@@ -81,6 +81,14 @@ class FormButton extends Component
 	 * @access protected
 	 */
 	var $listeners = array();
+
+	/**
+	 * Indicates the data bind phase was already executed
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $dataBind = FALSE;
 
 	/**
 	 * Parent form
@@ -409,11 +417,26 @@ class FormButton extends Component
 	}
 
 	/**
+	 * Configure button's dynamic properties
+	 *
+	 * @access protected
+	 */
+	function onDataBind() {
+		for ($i=0,$s=sizeof($this->listeners); $i<$s; $i++) {
+			$Listener =& $this->listeners[$i];
+			$Listener->onDataBind();
+		}
+		$this->dataBind = TRUE;
+	}
+
+	/**
 	 * Prepare the button to be rendered
 	 */
 	function onPreRender() {
 		if (!$this->preRendered) {
 			parent::onPreRender();
+			if (!$this->dataBind)
+				$this->onDataBind();
 			if ($this->disabled === NULL) {
 				if ($this->_Form->readonly)
 					$this->setDisabled();
