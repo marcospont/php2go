@@ -141,6 +141,21 @@ class FormJSRSListener extends FormEventListener
 	}
 
 	/**
+	 * Configure listener's dynamic properties
+	 *
+	 * @access protected
+	 */
+	function onDataBind() {
+		parent::onDataBind();
+		$Form =& $this->getOwnerForm();
+		// resolve variables and expressions on FILE and PARAMS attributes
+		if (preg_match("/~[^~]+~/", $this->remoteFile))
+			$this->remoteFile = $Form->resolveVariables($this->remoteFile);
+		if (preg_match("/~[^~]+~/", $this->params))
+			$this->params = $Form->resolveVariables($this->params);
+	}
+
+	/**
 	 * Validates the listener's properties
 	 *
 	 * @access protected
