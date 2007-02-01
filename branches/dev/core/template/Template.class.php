@@ -79,6 +79,14 @@ class Template extends Component
 	var $currentBlock = NULL;
 
 	/**
+	 * Config variables
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplConfigVars = array(0 => array());
+
+	/**
 	 * Global template variables
 	 *
 	 * @var array
@@ -93,14 +101,6 @@ class Template extends Component
 	 * @access private
 	 */
 	var $tplInternalVars = array();
-
-	/**
-	 * Loop control variables
-	 *
-	 * @var array
-	 * @access private
-	 */
-	var $tplLoop = array();
 
 	/**
 	 * Capture control variables
@@ -142,6 +142,14 @@ class Template extends Component
 	 * @access private
 	 */
 	var $Parser = NULL;
+
+	/**
+	 * TemplateConfigFile instance
+	 *
+	 * @var object TemplateConfigFile
+	 * @access private
+	 */
+	var $ConfigLoader = NULL;
 
 	/**
 	 * Class constructor
@@ -247,7 +255,7 @@ class Template extends Component
 				$cacheId = dechex(crc32($this->Parser->tplBase['src']));
 			if ($this->cacheOptions['useMTime']) {
 				if (!isset($this->tplMTime) && $this->Parser->tplBase['type'] == T_BYFILE)
-					$this->tplMTime = FileSystem::lastModified($this->Parser->tplBase['src'], TRUE);
+					$this->tplMTime = filemtime($this->Parser->tplBase['src']);
 				$Cache->Storage->setLastValidTime($this->tplMTime);
 			} elseif ($this->cacheOptions['lifeTime']) {
 				$Cache->Storage->setLifeTime($this->cacheOptions['lifeTime']);
@@ -659,7 +667,7 @@ class Template extends Component
 	 */
 	function display() {
 		$this->onPreRender();
-		//highlight_string($this->Parser->tplBase['compiled']);
+		highlight_string($this->Parser->tplBase['compiled']);
 		eval('?>' . $this->Parser->tplBase['compiled']);
 	}
 
@@ -833,6 +841,35 @@ class Template extends Component
 			return $loop->recordCount();
 		} else {
 			return 0;
+		}
+	}
+
+	/**
+	 * Load a set of config variables
+	 *
+	 * @param array $props Properties from the CONFIG tag
+	 * @access private
+	 */
+	function _loadConfigVars($props) {
+		if (!isset($this->ConfigLoader)) {
+			import('php2go.template.TemplateConfigFile');
+			$this->ConfigLoader = new TemplateConfigFile($this, array(
+				'caseSensitive' => @$props['caseSensitive'],
+				'booleanize' => @$props['booleanize']
+			));
+		}
+		$scope = @$props['scope'];
+		switch ($scope) {
+			case 'parent' :
+				$this->tplConfigVars[1] = array_merge($this->tplConfigVars[1], $this->ConfigLoader->get($props['file'], @$props['section']));
+				break;
+			case 'global' :
+				for ($i=0,$s=sizeof($this->tplConfigVars); $i<$s; $i++)
+					$this->tplConfigVars[$i] = array_merge($this->tplConfigVars[$i], $this->ConfigLoader->get($props['file'], @$props['section']));
+				break;
+			default :
+				$this->tplConfigVars[0] = array_merge($this->tplConfigVars[0], $this->ConfigLoader->get($props['file'], @$props['section']));
+				break;
 		}
 	}
 
