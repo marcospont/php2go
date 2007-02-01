@@ -64,13 +64,17 @@ define('TEMPLATE_VARIABLE_NAME', '([\w\:\[\]]+)');
  */
 define('TEMPLATE_INNER_VARIABLE', '\$[\w\:\[\]]+(?:\.\$?[\w\:\[\]]+|->\$?[\w\:\[\]]+(?:\(\))?)*');
 /**
+ * Config variable
+ */
+define('TEMPLATE_CONFIG_VARIABLE', '\#\w+(?:\.\w+)?\#');
+/**
  * Functions pattern
  */
 define('TEMPLATE_FUNCTION', '[a-zA-Z_]\w*(::[a-zA-Z_]\w*)?');
 /**
  * Variable modifier pattern
  */
-define('TEMPLATE_MODIFIER', '((?:\|@?\w+(?::(?:\w+|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_NUMBER . '|' . TEMPLATE_QUOTED_STRING .'))*)*)');
+define('TEMPLATE_MODIFIER', '((?:\|@?\w+(?::(?:\w+|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_NUMBER . '|' . TEMPLATE_QUOTED_STRING .'))*)*)');
 /**
  * Dynamic blocks pattern
  */
@@ -107,6 +111,10 @@ define('TEMPLATE_ASSIGN', 'ASSIGN(\s+.*)?');
  * Capture tags pattern
  */
 define('TEMPLATE_CAPTURE', '(CAPTURE|END CAPTURE)(?:\s+(.*))?');
+/**
+ * Config tag pattern
+ */
+define('TEMPLATE_CONFIG', 'CONFIG(?:\s+(.*))?');
 
 /**
  * Template parser class
@@ -226,6 +234,14 @@ class TemplateParser extends PHP2Go
 	var $loopNestingLevel = 0;
 
 	/**
+	 * Template inclusion depth
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $includeDepth = 0;
+
+	/**
 	 * Parser version
 	 *
 	 * @var string
@@ -314,7 +330,7 @@ class TemplateParser extends PHP2Go
 				TP_ROOTBLOCK, TP_ROOTBLOCK
 			));
 			$compiled .= strval($this->_parseTemplate($src, $controlBlock));
- 			$compiled = preg_replace("~\?>\s*<\?php~", '', $compiled);
+ 			$compiled = preg_replace("~\?>\s*<\?(php)?~", '', $compiled);
 			if (substr($compiled, -1) == "\n")
 				$compiled = substr($compiled, 0, -1);
 			// repetition blocks balancing
@@ -582,8 +598,14 @@ class TemplateParser extends PHP2Go
 						break;
 				}
 			}
+			// config
+			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_CONFIG . '$~i', $tag[1], $tagParts)) {
+				if (!$this->_validateTag('CONFIG', @$tagParts[1], TRUE, array(), $controlBlock))
+					return FALSE;
+				$tplOutput[] = $this->_compileConfig($tagParts[1]);
+			}
 			// variable
-			elseif (!$this->controlFlags['ignore'] && preg_match('~^(' . TEMPLATE_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '$~xs', $tag[1], $tagParts)) {
+			elseif (!$this->controlFlags['ignore'] && preg_match('~^(' . TEMPLATE_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '$~xs', $tag[1], $tagParts)) {
 				$varDef = preg_replace('/^\$/', "", $tagParts[1]);
 				if (!preg_match('~' . TEMPLATE_QUOTED_STRING . '~', $varDef) && array_search($varDef, $this->tplDef[$controlBlock]['vars']) === FALSE)
 					$this->tplDef[$controlBlock]['vars'][] = $varDef;
@@ -605,7 +627,7 @@ class TemplateParser extends PHP2Go
 				}
 			}
 		}
-		// build and return the output code
+		// merge code blocks and literal blocks
 		$output = '';
 		for ($i=0, $s=sizeof($tplOutput); $i<$s; $i++) {
 			if (preg_match('/^<\?(php)? print/', $tplOutput[$i]))
@@ -659,7 +681,7 @@ class TemplateParser extends PHP2Go
 				// build modifier arguments
 				preg_match_all('~:(' . TEMPLATE_QUOTED_STRING . '|[^:]+)~', $modArgs[$i], $matches);
 				for ($j=0; $j<sizeof($matches[1]); $j++) {
-					if (preg_match('~' . TEMPLATE_INNER_VARIABLE . '~', $matches[1][$j]))
+					if (preg_match('~(?:' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . ')~', $matches[1][$j]))
 						$modCallArgs[$j] = $this->_compileVariableName($matches[1][$j]);
 					else
 						$modCallArgs[$j] = $matches[1][$j];
@@ -705,36 +727,42 @@ class TemplateParser extends PHP2Go
 		}
 		if ($p2gInternal && empty($name)) {
 			return $variableBase;
-		} else {
-			$compiled = '';
-			$state = 0;
-			preg_match_all('~(?:\$?[\w\:\[\]]+(?:\(\))?|\.|\-\>)~x', $name, $matches);
-			$tokens = $matches[0];
-			foreach ($tokens as $token) {
-				if ($token == '.') {
-					if ($state != 4)
-						$compiled .= ($state == 3 ? "]" : "']");
-					$state = 0;
-				} elseif ($token == '->') {
-					$compiled .= ($state == 4 ? '->' : ($state == 3 ? "]->" : "']->"));
-					$state = 2;
-				} elseif ($token[0] == '$') {
-					$tmp = substr($token, 1);
-					$tmpVarBase = ($p2gInternal ? '$block[$instance][\'vars\']' : $variableBase);
-					$resolved = "{$tmpVarBase}['{$tmp}']";
-					$compiled .= ($state == 2 ? "{{$resolved}}" : "[{$resolved}");
-					$state = ($state == 2 ? 4 : 3);
-				} else {
-					$compiled .= ($state == 2 ? $token : "['{$token}");
-					$state = ($state == 2 ? 4 : 1);
-				}
-			}
-			if ($state == 1)
-				$compiled .= "']";
-			if ($state == 3)
-				$compiled .= "]";
-			return "{$variableBase}{$compiled}";
 		}
+		// config variables access
+		$matches = array();
+		if (preg_match('~^#(\w+)(?:\.(\w+))?#$~', $name, $matches)) {
+			if (isset($matches[2]))
+				return '$this->tplConfigVars[0][\'' . $matches[1] . '\'][\'vars\'][\'' . $matches[2] . '\']';
+			return '$this->tplConfigVars[0][\'' . $matches[1] . '\']';
+		}
+		$compiled = '';
+		$state = 0;
+		preg_match_all('~(?:\$?[\w\:\[\]]+(?:\(\))?|\.|\-\>)~x', $name, $matches);
+		$tokens = $matches[0];
+		foreach ($tokens as $token) {
+			if ($token == '.') {
+				if ($state != 4)
+					$compiled .= ($state == 3 ? "]" : "']");
+				$state = 0;
+			} elseif ($token == '->') {
+				$compiled .= ($state == 4 ? '->' : ($state == 3 ? "]->" : "']->"));
+				$state = 2;
+			} elseif ($token[0] == '$') {
+				$tmp = substr($token, 1);
+				$tmpVarBase = ($p2gInternal ? '$block[$instance][\'vars\']' : $variableBase);
+				$resolved = "{$tmpVarBase}['{$tmp}']";
+				$compiled .= ($state == 2 ? "{{$resolved}}" : "[{$resolved}");
+				$state = ($state == 2 ? 4 : 3);
+			} else {
+				$compiled .= ($state == 2 ? $token : "['{$token}");
+				$state = ($state == 2 ? 4 : 1);
+			}
+		}
+		if ($state == 1)
+			$compiled .= "']";
+		if ($state == 3)
+			$compiled .= "]";
+		return "{$variableBase}{$compiled}";
 	}
 
 	/**
@@ -808,7 +836,7 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileAssign($expression) {
 		$exprParts = array();
-		if (preg_match('~^' . TEMPLATE_VARIABLE_NAME . '\s*[=]\s*((' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '|' . TEMPLATE_QUOTED_STRING . '|' . TEMPLATE_NUMBER . '|\b\w+\b)$~', trim($expression), $exprParts)) {
+		if (preg_match('~^' . TEMPLATE_VARIABLE_NAME . '\s*[=]\s*((' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '|' . TEMPLATE_QUOTED_STRING . '|' . TEMPLATE_NUMBER . '|\b\w+\b)$~', trim($expression), $exprParts)) {
 			return $this->_compilePHPBlock(
 				'$block[$instance][\'vars\'][\'' . $exprParts[1] . '\'] = ' .
 				(isset($exprParts[4]) ? $this->_compileVariable($exprParts[3], $exprParts[4]) : $exprParts[2]) . ';'
@@ -955,8 +983,13 @@ class TemplateParser extends PHP2Go
 				else
 					return (strpos($value, '<?') === 0 ? $value : $this->_compilePHPBlock($value));
 			} else {
+				$this->includeDepth++;
 				$src = $this->_prepareTemplate($value, $type);
-				return strval($this->_parseTemplate($src, $controlBlock));
+				$compiled = $this->_compilePHPBlock('array_unshift(\$this->tplConfigVars, \$this->tplConfigVars[0]);');
+				$compiled .= strval($this->_parseTemplate($src, $controlBlock));
+				$compiled .= $this->_compilePHPBlock('array_shift(\$this->tplConfigVars);');
+				$this->includeDepth--;
+				return $compiled;
 			}
 		}
 		return '';
@@ -983,7 +1016,7 @@ class TemplateParser extends PHP2Go
 	function _compileIf($expression, $elseif=FALSE) {
 		$match = array();
         preg_match_all('~(?>
-        		' . TEMPLATE_FUNCTION . ' | ' . TEMPLATE_INNER_VARIABLE . ' | ' . TEMPLATE_QUOTED_STRING . ' |
+        		' . TEMPLATE_FUNCTION . ' | ' . TEMPLATE_INNER_VARIABLE . ' | ' . TEMPLATE_CONFIG_VARIABLE . ' | ' . TEMPLATE_QUOTED_STRING . ' |
                 \-?0[xX][0-9a-fA-F]+|\-?\d+(?:\.\d+)?|\.\d+|!==|===|==|!=|<>|<<|>>|<=|>=|\&\&|\|\||\(|\)|,|\!|\^|=|\&|\~|<|>|\||\%|\+|\-|\/|\*|\@|
                 \b\w+\b|\S+)~x', $expression, $match);
         $tokens = $match[0];
@@ -1075,7 +1108,7 @@ class TemplateParser extends PHP2Go
                 	if (preg_match('~^' . TEMPLATE_FUNCTION . '$~', $token)) {
                 	}
                 	// variables: parse
-                	elseif (preg_match('~^' . TEMPLATE_INNER_VARIABLE . '$~', $token, $tokenParts)) {
+                	elseif (preg_match('~^(?:' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . ')$~', $token, $tokenParts)) {
                 		$token = $this->_compileVariable($tokenParts[0], NULL);
                 	}
                 	// strings and numbers: do nothing
@@ -1121,6 +1154,11 @@ class TemplateParser extends PHP2Go
 			case 'even' :
 				$result = '(' . $expr . ' % 2) == 1';
 				break;
+			case 'null' :
+				if ($expr[0] != '(')
+					$expr = '(' . $expr . ')';
+				$result = 'is_null' . $expr;
+				break;
 			case 'empty' :
 				if ($expr[0] != '(')
 					$expr = '(' . $expr . ')';
@@ -1156,7 +1194,7 @@ class TemplateParser extends PHP2Go
 	 * @access private
 	 */
 	function _compileLoopStart($loopProperties) {
-		$props = $this->_parseProperties($loopProperties, FALSE);
+		$props = $this->_parseProperties($loopProperties);
 		if (!isset($props['var'])) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('var', 'LOOP')), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
@@ -1169,25 +1207,30 @@ class TemplateParser extends PHP2Go
 		}
 		// assign key and value, or just value
 		if (isset($props['key']))
-			$leftSide = 'list($block[$instance][\'vars\'][\'' . $props['key'] . '\'], $block[$instance][\'vars\'][\'' . $props['item'] . '\']) =';
+			$leftSide = 'list($block[$instance][\'vars\'][' . $props['key'] . '], $block[$instance][\'vars\'][' . $props['item'] . ']) =';
 		else
-			$leftSide = '$block[$instance][\'vars\'][\'' . $props['item'] . '\'] =';
-		// if the name attribute is present, the control variables are initialized and updated upon each iteration
-		$name = @$props['name'];
+			$leftSide = '$block[$instance][\'vars\'][' . $props['item'] . '] =';
 		$this->loopNestingLevel++;
 		$output = '$_loop' . $this->loopNestingLevel . ' = ' . $props['var'] . '; if (!empty($_loop' . $this->loopNestingLevel . ')) { ';
-		if ($name) {
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'iteration\'] = -1; ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'rownum\'] = 0; ';
+		// if the name attribute is present, the control variables are initialized and updated upon each iteration
+		if (isset($props['name'])) {
+			if ($props['name'][0] == '$') {
+				$nameVar = '$_loopName' . $this->loopNestingLevel;
+				$output .= $nameVar . ' = ' . $props['name'] . '; ';
+			} else {
+				$nameVar = $props['name'];
+			}
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'iteration\'] = -1; ';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'rownum\'] = 0; ';
 			$output .= 'if (($_total = $this->_getLoopTotal($_loop' . $this->loopNestingLevel . '))  > 0) { ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'total\'] = $_total; ';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'total\'] = $_total; ';
 			$output .= 'while ((' . $leftSide . ' $this->_getLoopItem($_loop' . $this->loopNestingLevel . ', ' . (isset($props['key']) ? 'TRUE' : 'FALSE') . ')) !== FALSE) { ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'iteration\']++; ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'rownum\']++; ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'first\'] = ($this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'iteration\'] == 0); ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'last\'] = ($this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'iteration\'] == ($this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'total\'] - 1)); ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'prev\'] = ($this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'rownum\'] - 1); ';
-			$output .= '$this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'next\'] = ($this->tplInternalVars[\'loop\'][\'' . $name . '\'][\'rownum\'] + 1);';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'iteration\']++; ';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'rownum\']++; ';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'first\'] = ($this->tplInternalVars[\'loop\'][' . $nameVar . '][\'iteration\'] == 0); ';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'last\'] = ($this->tplInternalVars[\'loop\'][' . $nameVar . '][\'iteration\'] == ($this->tplInternalVars[\'loop\'][' . $nameVar . '][\'total\'] - 1)); ';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'prev\'] = ($this->tplInternalVars[\'loop\'][' . $nameVar . '][\'rownum\'] - 1); ';
+			$output .= '$this->tplInternalVars[\'loop\'][' . $nameVar . '][\'next\'] = ($this->tplInternalVars[\'loop\'][' . $nameVar . '][\'rownum\'] + 1);';
 		} else {
 			$output .= 'if (($_total = $this->_getLoopTotal($_loop' . $this->loopNestingLevel . '))  > 0) { ';
 			$output .= 'while ((' . $leftSide . ' $this->_getLoopItem($_loop' . $this->loopNestingLevel . ', ' . (isset($props['key']) ? 'TRUE' : 'FALSE') . ')) !== FALSE) {';
@@ -1300,6 +1343,21 @@ class TemplateParser extends PHP2Go
 		);
 	}
 
+	function _compileConfig($configProperties) {
+		$props = $this->_parseProperties($configProperties);
+		if (!isset($props['file'])) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('file', 'CONFIG')), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		$output = 'array(';
+		foreach ($props as $key => $value)
+			$output .= "'{$key}' => {$value},";
+		$output = substr($output, 0, -1) . ')';
+		return $this->_compilePHPBlock(
+			'$this->_loadConfigVars(' . $output . ');'
+		);
+	}
+
 	/**
 	 * Parses tag properties written in the syntax
 	 * "prop=val prop2=val2 ..."
@@ -1311,7 +1369,7 @@ class TemplateParser extends PHP2Go
 	 */
 	function _parseProperties($properties, $compileToString=TRUE) {
 		$match = array();
-		preg_match_all('~(?:' . TEMPLATE_QUOTED_STRING . TEMPLATE_MODIFIER . '|' . TEMPLATE_NUMBER . '|' . TEMPLATE_INNER_VARIABLE . TEMPLATE_MODIFIER . '|(?>[^"\'=\s]+))+|[=]~m', $properties, $match);
+		preg_match_all('~(?:' . TEMPLATE_QUOTED_STRING . TEMPLATE_MODIFIER . '|' . TEMPLATE_NUMBER . '|(?:' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . ')' . TEMPLATE_MODIFIER . '|(?>[^"\'=\s]+))+|[=]~m', $properties, $match);
 		$tokens = $match[0];
 		$props = array();
 		$state = 0;
@@ -1343,13 +1401,10 @@ class TemplateParser extends PHP2Go
 							$token = ($compileToString ? 'FALSE' : FALSE);
 						elseif (preg_match('~^(empty|null)$~i', $token))
 							$token = ($compileToString ? 'NULL' : NULL);
-						elseif (preg_match('~^(' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '$~', $token, $tokenParts)) {
-							if (!$compileToString && $tokenParts[1][0] != '$' && empty($tokenParts[2]))
-								$token = substr($token, 1, -1);
-							else
-								$token = $this->_compileVariable($tokenParts[1], $tokenParts[2]);
-						} elseif (!$compileToString && preg_match('~^' . TEMPLATE_QUOTED_STRING . '$~', $token))
+						elseif (!$compileToString && preg_match('~^' . TEMPLATE_QUOTED_STRING . '$~', $token))
 							$token = substr($token, 1, -1);
+						elseif (preg_match('~^(' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '$~', $token, $tokenParts))
+							$token = $this->_compileVariable($tokenParts[1], $tokenParts[2]);
 						elseif (!$compileToString && preg_match('~^' . TEMPLATE_NUMBER . '$~', $token))
 							$token = floatval($token);
 						elseif (!$compileToString && defined($token))
