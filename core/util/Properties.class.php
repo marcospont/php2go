@@ -380,17 +380,21 @@ class Properties extends PHP2Go
 			foreach ($this->table as $section => $keys) {
 				if (!$this->caseSensitive)
 					$section = strtoupper($section);
-				$buffer .= "[{$section}]" . $lineEnd;
-				foreach ($keys as $key => $value) {
-					if ($key[0] == ';') {
-						$buffer .= $indent . '; ' . $value . $lineEnd;
-					} else {
-						if (!$this->caseSensitive)
-							$key = strtoupper($key);
-						$buffer .= $indent . "$key = \"$value\"" . $lineEnd;
+				if (is_array($keys)) {
+					$buffer .= "[{$section}]" . $lineEnd;
+					foreach ($keys as $key => $value) {
+						if ($key[0] == ';') {
+							$buffer .= $indent . '; ' . $value . $lineEnd;
+						} else {
+							if (!$this->caseSensitive)
+								$key = strtoupper($key);
+							$buffer .= $indent . "$key = \"$value\"" . $lineEnd;
+						}
 					}
+					$buffer .=  $lineEnd;
+				} else {
+					$buffer .= $indent . "$section = \"$keys\"" . $lineEnd;
 				}
-				$buffer .=  $lineEnd;
 			}
 		} else {
 			foreach ($this->table as $key => $value) {
@@ -456,11 +460,15 @@ class Properties extends PHP2Go
 			$tmp = @parse_ini_file($this->filename, $this->processSections);
 			if ($tmp !== FALSE) {
 				if ($this->processSections) {
-					foreach ($tmp as $section => $values) {
-						if (!$this->caseSensitive)
-							$this->table[strtoupper($section)] = (is_array($values) ? array_change_key_case($values, CASE_UPPER) : $values);
-						else
-							$this->table[$section] = $values;
+					if (is_array($tmp)) {
+						foreach ($tmp as $section => $values) {
+							if (!$this->caseSensitive)
+								$this->table[strtoupper($section)] = (is_array($values) ? array_change_key_case($values, CASE_UPPER) : $values);
+							else
+								$this->table[$section] = $values;
+						}
+					} else {
+						$this->table = ($this->caseSensitive ? $tmp : array_change_key_case($tmp, CASE_UPPER));
 					}
 				} else {
 					if (!$this->caseSensitive)
