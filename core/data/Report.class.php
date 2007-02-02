@@ -511,6 +511,23 @@ class Report extends PagedDataSet
 	}
 
 	/**
+	 * Builds an URL pointing to the current page
+	 *
+	 * @return string
+	 */
+	function getCurrentPageUrl($extraParams='') {
+		(!$this->_loaded) && ($this->build());
+		$url = $this->_generatePageLink($this->_currentPage);
+		if (!empty($extraParams)) {
+			if (strpos($url, '?') !== FALSE)
+				$url .= '&' . ltrim($extraParams, '&?');
+			else
+				$url .= '?' . ltrim($extraParams, '&?');
+		}
+		return $url;
+	}
+
+	/**
 	 * Builds an URL pointing to the first report page
 	 *
 	 * Returns FALSE if we're at the first page.
@@ -518,6 +535,7 @@ class Report extends PagedDataSet
 	 * @return string|FALSE
 	 */
 	function getFirstPageUrl() {
+		(!$this->_loaded) && ($this->build());
 		return $this->_generatePageLink(1);
 	}
 
@@ -529,6 +547,7 @@ class Report extends PagedDataSet
 	 * @return string|FALSE
 	 */
 	function getLastPageUrl() {
+		(!$this->_loaded) && ($this->build());
 		return $this->_generatePageLink(parent::getPageCount());
 	}
 
@@ -540,6 +559,7 @@ class Report extends PagedDataSet
 	 * @return string|FALSE
 	 */
 	function getPreviousPageUrl() {
+		(!$this->_loaded) && ($this->build());
 		if ($previousPage = parent::getPreviousPage())
 			return $this->_generatePageLink($previousPage);
 		return FALSE;
@@ -553,8 +573,25 @@ class Report extends PagedDataSet
 	 * @return string|FALSE
 	 */
 	function getNextPageUrl() {
+		(!$this->_loaded) && ($this->build());
 		if ($nextPage = parent::getNextPage())
 			return $this->_generatePageLink($nextPage);
+		return FALSE;
+	}
+
+	/**
+	 * Builds an URL pointing to a given page number
+	 *
+	 * Returns FALSE if the page is out of the available range of pages (1-N).
+	 *
+	 * @param int $page Page number
+	 * @return string|FALSE
+	 */
+	function getPageUrl($page) {
+		(!$this->_loaded) && ($this->build());
+		$page = intval($page);
+		if ($page >= 1 && $page <= parent::getPageCount())
+			return $this->_generatePageLink($page);
 		return FALSE;
 	}
 
