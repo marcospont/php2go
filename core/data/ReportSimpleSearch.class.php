@@ -118,6 +118,7 @@ class ReportSimpleSearch extends AbstractList
 		parent::AbstractList();
 		$this->maskFunctions = array();
 		$this->searchSent = FALSE;
+		$this->_checkRequest();
 	}
 
 	/**
@@ -174,7 +175,6 @@ class ReportSimpleSearch extends AbstractList
 	 */
 	function getSearchClause() {
 		// parse search arguments from the request
-		$this->_checkRequest();
 		if (!$this->searchSent)
 			return '';
 		// split fields list, operators list and values list
