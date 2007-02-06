@@ -239,7 +239,7 @@ class DataSetDb extends DataAdapter
 	 * Closes internal {@link RecordSet}
 	 */
 	function close() {
-		if (is_object($this->RecordSet)) {
+		if (isset($this->RecordSet) && is_object($this->RecordSet)) {
 			$this->RecordSet->close();
 			unset($this->RecordSet);
 		}
