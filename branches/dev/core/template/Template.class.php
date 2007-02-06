@@ -79,6 +79,14 @@ class Template extends Component
 	var $currentBlock = NULL;
 
 	/**
+	 * Holds the next instance number for all dynamic blocks already instantiated
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $blockIndex = array();
+
+	/**
 	 * Config variables
 	 *
 	 * @var array
@@ -154,21 +162,21 @@ class Template extends Component
 	/**
 	 * Class constructor
 	 *
-	 * @param string $tplFile Template source (string or file name)
+	 * @param string $source Template source (string or file name)
 	 * @param int $type Source type ({@link T_BYFILE} or {@link T_BYVAR})
 	 * @return Template
 	 */
-	function Template($tplFile, $type=T_BYFILE) {
+	function Template($source, $type=T_BYFILE) {
 		parent::Component();
-		$this->Parser = new TemplateParser($tplFile, $type);
+		$this->Parser = new TemplateParser($this, $source, $type);
 		$this->tplGlobalVars = array(
 			'ldelim' => '{',
 			'rdelim' => '}'
 		);
-		$this->tplInternalVars['loop'] = array();
-		$this->tplInternalVars['user'] =& User::getInstance();
 		$Conf =& Conf::getInstance();
 		$this->tplInternalVars['conf'] =& $Conf->getAll();
+		$this->tplInternalVars['loop'] = array();
+		$this->tplInternalVars['user'] =& User::getInstance();
 		$this->cacheOptions['enabled'] = FALSE;
 		$this->cacheOptions['group'] = 'php2goTemplate';
 		$globalConf = $Conf->getConfig('TEMPLATES');
@@ -210,8 +218,16 @@ class Template extends Component
 	 * @param int $type Tag delimiter type
 	 */
 	function setTagDelimiter($type) {
-		if ($type == TEMPLATE_DELIM_COMMENT || $type == TEMPLATE_DELIM_BRACE)
-			$this->Parser->tagDelimType = $type;
+		if ($type == TEMPLATE_DELIM_COMMENT || $type == TEMPLATE_DELIM_BRACE) {
+			switch ($type) {
+				case TEMPLATE_DELIM_BRACE :
+					$this->Parser->tagDelimiters = array('{', '}');
+					break;
+				default :
+					$this->Parser->tagDelimiters = array('<!--', '-->');
+					break;
+			}
+		}
 	}
 
 	/**
@@ -246,32 +262,7 @@ class Template extends Component
 	 * @uses TemplateParser::loadCacheData()
 	 */
 	function parse() {
-		if ($this->cacheOptions['enabled']) {
-			import('php2go.cache.CacheManager');
-			$Cache = CacheManager::factory('file');
-			if ($this->Parser->tplBase['type'] == T_BYFILE)
-				$cacheId = realpath($this->Parser->tplBase['src']);
-			else
-				$cacheId = dechex(crc32($this->Parser->tplBase['src']));
-			if ($this->cacheOptions['useMTime']) {
-				if (!isset($this->tplMTime) && $this->Parser->tplBase['type'] == T_BYFILE)
-					$this->tplMTime = filemtime($this->Parser->tplBase['src']);
-				$Cache->Storage->setLastValidTime($this->tplMTime);
-			} elseif ($this->cacheOptions['lifeTime']) {
-				$Cache->Storage->setLifeTime($this->cacheOptions['lifeTime']);
-			}
-			if ($this->cacheOptions['baseDir'])
-				$Cache->Storage->setBaseDir($this->cacheOptions['baseDir']);
-			$data = $Cache->load($cacheId, $this->cacheOptions['group']);
-			if ($data && isset($data['parserVersion']) && $data['parserVersion'] == $this->Parser->parserVersion) {
-				$this->Parser->loadCacheData($data);
-			} else {
-				$this->Parser->parse();
-				$Cache->save($this->Parser->getCacheData(), $cacheId, $this->cacheOptions['group']);
-			}
-		} else {
-			$this->Parser->parse();
-		}
+		$this->Parser->parse();
 		$this->_initializeContent();
 	}
 
@@ -282,12 +273,9 @@ class Template extends Component
 	 * block instances are destroyed.
 	 */
 	function resetTemplate() {
-		if ($this->isPrepared()) {
-			$this->_initializeContent();
-			$keys = array_keys($this->Parser->blockIndex);
-			foreach ($keys as $block)
-				$this->Parser->blockIndex[$block] = 0;
-		}
+		if (!$this->Parser->prepared)
+			$this->Parser->parse();
+		$this->_initializeContent();
 	}
 
 	/**
@@ -475,11 +463,11 @@ class Template extends Component
 		if ($block == TP_ROOTBLOCK)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_REPLICATE_ROOT_BLOCK'), E_USER_ERROR, __FILE__, __LINE__);
 		// get the last instance of the parent block
-		$parent =& $this->_getLastInstance($this->Parser->blockParent[$block]);
+		$parent =& $this->_getLastInstance($this->Parser->tplDef[$block]['parent']);
 		// already instantiated or not
 		if (!isset($parent['blocks'][$block])) {
-			$this->Parser->blockIndex[$block]++;
-			$index = "{$block}:{$this->Parser->blockIndex[$block]}";
+			$this->blockIndex[$block]++;
+			$index = "{$block}:{$this->blockIndex[$block]}";
 			$parent['blocks'][$block] = $index;
 			$this->tplContent[$index] = array();
 		} else {
@@ -518,7 +506,7 @@ class Template extends Component
 	 * @param string $block Block name
 	 */
 	function setCurrentBlock($block) {
-		if (!isset($this->Parser->tplDef[$block]) || ($block != TP_ROOTBLOCK && $this->Parser->blockIndex[$block] == 0))
+		if (!isset($this->Parser->tplDef[$block]) || ($block != TP_ROOTBLOCK && $this->blockIndex[$block] == 0))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_FIND_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
 		$this->currentBlockName = $block;
 		$this->currentBlock =& $this->_getLastInstance($block);
@@ -667,7 +655,7 @@ class Template extends Component
 	 */
 	function display() {
 		$this->onPreRender();
-		highlight_string($this->Parser->tplBase['compiled']);
+		//highlight_string($this->Parser->tplBase['compiled']);
 		eval('?>' . $this->Parser->tplBase['compiled']);
 	}
 
@@ -687,6 +675,8 @@ class Template extends Component
 		);
 		$this->currentBlockName = TP_ROOTBLOCK;
 		$this->currentBlock =& $this->tplContent[TP_ROOTBLOCK . ':0'][0];
+		foreach (array_keys($this->Parser->tplDef) as $blockName)
+			$this->blockIndex[$blockName] = 0;
 	}
 
 	/**
@@ -733,7 +723,7 @@ class Template extends Component
 	 * @return array
 	 */
 	function &_getLastInstance($blockName) {
-		$index = "$blockName:{$this->Parser->blockIndex[$blockName]}";
+		$index = "$blockName:{$this->blockIndex[$blockName]}";
 		$lastInstanceKey = sizeof($this->tplContent[$index]) - 1;
 		$lastInstance =& $this->tplContent[$index][$lastInstanceKey];
 		return $lastInstance;
@@ -749,7 +739,7 @@ class Template extends Component
 	 * @return string
 	 */
 	function _getFullPath($block, $variable) {
-		$index = "$block:{$this->Parser->blockIndex[$block]}";
+		$index = "$block:{$this->blockIndex[$block]}";
 		$lastInstanceKey = sizeof($this->tplContent[$index]) - 1;
 		return "{$index}:{$lastInstanceKey}:{$variable}";
 	}
