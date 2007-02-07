@@ -474,6 +474,7 @@ class Document extends PHP2Go
 	 * @see addScriptCode
 	 */
 	function addScript($scriptFile, $language="Javascript", $charset=NULL) {
+		$scriptFile = htmlentities($scriptFile);
 		if (!array_key_exists($scriptFile, $this->scriptFiles)) {
 			$this->scriptFiles[$scriptFile] = sprintf("<script language=\"%s\" src=\"%s\" type=\"text/%s\"%s></script>\n",
 				$language, $scriptFile, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), (!empty($charset) ? " charset=\"{$charset}\"" : '')
@@ -520,6 +521,7 @@ class Document extends PHP2Go
 	 * @see addStyleCode
 	 */
 	function addStyle($styleFile, $media=NULL, $charset=NULL) {
+		$styleFile = htmlentities($styleFile);
 		if (!array_key_exists($styleFile, $this->styles))
 			$this->styles[$styleFile] = sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s>\n",
 				$styleFile, (!empty($media) ? " media=\"{$media}\"" : ''), (!empty($charset) ? " charset=\"{$charset}\"" : '')
@@ -537,6 +539,7 @@ class Document extends PHP2Go
 	 * @see addStyleCode
 	 */
 	function importStyle($styleUrl) {
+		$styleUrl = htmlentities($styleUrl);
 		if (!in_array($styleUrl, $this->importedStyles)) {
 			$this->importedStyles[] = $styleUrl;
 			$this->styleExtCode .= sprintf("@import url(%s);\n", trim($styleUrl));
@@ -567,6 +570,7 @@ class Document extends PHP2Go
 	 * @param string $linkTitle Link title
 	 */
 	function addAlternateLink($type, $linkUrl, $linkTitle) {
+		$linkUrl = htmlentities($linkUrl);
 		if (!array_key_exists($linkUrl, $this->alternateLinks))
 			$this->alternateLinks[$linkUrl] = sprintf("<link rel=\"alternate\" type=\"%s\" href=\"%s\"%s>\n", $type, $linkUrl, (!empty($linkTitle) ? " title=\"" . $linkTitle . "\"" : ""));
 	}
@@ -580,6 +584,7 @@ class Document extends PHP2Go
 	 * @param string $iconUrl Relative or absolute path to the icon
 	 */
 	function setShortcutIcon($iconUrl) {
+		$iconUrl = htmlentities($iconUrl);
 		$this->appendHeaderContent("<link rel=\"shortcut icon\" href=\"{$iconUrl}\">");
 	}
 
