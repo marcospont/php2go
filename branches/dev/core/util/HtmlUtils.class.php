@@ -228,7 +228,7 @@ class HtmlUtils extends PHP2Go
 	 * @return string
 	 * @static
 	 */
-	function window($url, $windowType, $windowWidth=640, $windowHeight=480, $windowX=0, $windowY=0, $windowTitle='', $windowReturn=FALSE) {
+	function window($url, $windowType=255, $windowWidth=640, $windowHeight=480, $windowX=0, $windowY=0, $windowTitle='', $windowReturn=FALSE) {
 		if ($windowTitle == '')
 			$windowTitle = PHP2Go::generateUniqueId('window');
 		if ($windowReturn)
