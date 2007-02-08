@@ -327,7 +327,7 @@ class ReportSimpleSearch extends AbstractList
 		if ($index !== FALSE) {
 			$filter = $this->get($index);
 			if (isset($this->maskFunctions[$filter['mask']])) {
-				$fn = $this->maskFunctions[$filter['mask']];
+				$fn =& $this->maskFunctions[$filter['mask']];
 				return $fn->invoke($value);
 			} else
 				return $value;

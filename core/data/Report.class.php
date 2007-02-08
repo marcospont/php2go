@@ -653,7 +653,6 @@ class Report extends PagedDataSet
 		$this->isPrintable = TRUE;
 		$pageBreak = intval($pageBreak);
 		$this->pageBreak = ($pageBreak ? $pageBreak : REPORT_DEFAULT_PAGE_BREAK);
-		$this->_SimpleSearch->clear();
 	}
 
 	/**
@@ -1124,6 +1123,7 @@ class Report extends PagedDataSet
 				$this->Template->assign('title', (!empty($this->title) ? sprintf("<span class=\"%s\">%s</span>", $this->style['title'], $this->title) : ''));
 				$this->Template->assign('report', array(
 					'base_uri' => $this->baseUri,
+					'printable' => $this->isPrintable,
 					'search_sent' => $this->_SimpleSearch->searchSent,
 					'style' => $this->style
 				));
@@ -1661,6 +1661,7 @@ class Report extends PagedDataSet
 		$this->Template->globalAssign('report', array(
 			'base_uri' => $this->baseUri,
 			'use_header' => $this->hasHeader,
+			'printable' => $this->isPrintable,
 			'search_sent' => $this->_SimpleSearch->searchSent,
 			'style' => $this->style,
 			'total_rows' => (int)parent::getTotalRecordCount(),
