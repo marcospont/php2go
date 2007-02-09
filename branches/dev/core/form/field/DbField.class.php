@@ -124,10 +124,12 @@ class DbField extends FormField
 	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		if (isset($children['DATASOURCE']))
+		if (isset($children['DATASOURCE'])) {
 			$this->dataSource = parent::parseDataSource($children['DATASOURCE']);
-		else
+			$this->isGrouping = (!empty($this->dataSource['GROUPFIELD']));
+		} else {
 			$this->dataSource = array();
+		}
 	}
 
 	/**
