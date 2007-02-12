@@ -98,6 +98,7 @@ $P2G_LANGUAGE['ERR_CANT_FIND_BLOCK_REUSE'] = "Nebylo mo&#382;né najít blok %s pr
 $P2G_LANGUAGE['ERR_CANT_PUT_ON_PREPARED_TEMPLATE'] = "Element %s byl ji&#382; konfigurován pomocí metody DocumentElement::parse(). Není mo&#382;né p&#345;idávat elementy metodou put().";
 $P2G_LANGUAGE['ERR_TEMPLATE_NOT_PREPARED'] = "P&#345;edloha %s nebyla p&#345;ipravena. Spus&#357;te metodu %s::parse(); p&#345;ed spou&#353;t&#283;ním operací na tomto objektu.";
 $P2G_LANGUAGE['ERR_TEMPLATE_ALREADY_PREPARED'] = "Tato p&#345;edloha ji&#382; byla zpracována. Funkci parse() je mo&#382;né volat pouze jednou.";
+$P2G_LANGUAGE['ERR_TPLPARSE_DEFINED_BLOCK'] = "The block %s was already defined!";
 $P2G_LANGUAGE['ERR_TPLPARSE_UNBALANCED_BLOCKDEF'] = "Definice bloku <I>%s</I> není uzav&#345;ená!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INCOMPLETE_BLOCKDEF'] = "Specifikace bloku <I>%s</I> není kompletní v rámci tagu %s!";
 $P2G_LANGUAGE['ERR_TPLPARSE_BLOCKINSIDELOOP'] = "Není mo&#382;né definovat dynamické bloky uvnit&#345; cykl&#367;!";

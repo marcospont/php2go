@@ -99,6 +99,7 @@ $P2G_LANGUAGE['ERR_CANT_FIND_BLOCK_REUSE'] = "Impossible de trouver le bloc %s d
 $P2G_LANGUAGE['ERR_CANT_PUT_ON_PREPARED_TEMPLATE'] = "L'élément %s était déjà configuré avec la méthode DocumentElement::parse(). Impossible d'ajouter des éléments avec la méthode put().";
 $P2G_LANGUAGE['ERR_TEMPLATE_NOT_PREPARED'] = "Le gabarit %s n'était pas préparé. Gérez la méthode %s::parse(); avant et exécutez les opérations avec l'objet.";
 $P2G_LANGUAGE['ERR_TEMPLATE_ALREADY_PREPARED'] = "Ce gabarit était déjà préparé. Vous devez appeler la méthode parse() une seule fois.";
+$P2G_LANGUAGE['ERR_TPLPARSE_DEFINED_BLOCK'] = "The block %s was already defined!";
 $P2G_LANGUAGE['ERR_TPLPARSE_UNBALANCED_BLOCKDEF'] = "La définition du bloc <I>%s</I> est déséquilibrée!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INCOMPLETE_BLOCKDEF'] = "La spécification du bloc <I>%s</I> est incomplet à l'intérieur du tag %s!";
 $P2G_LANGUAGE['ERR_TPLPARSE_BLOCKINSIDELOOP'] = "Impossible de définir des blocs dynamiques à l'intérieur de boucles!";

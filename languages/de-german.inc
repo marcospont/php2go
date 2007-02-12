@@ -98,6 +98,7 @@ $P2G_LANGUAGE['ERR_CANT_FIND_BLOCK_REUSE'] = "Es war nicht möglich den Block %s 
 $P2G_LANGUAGE['ERR_CANT_PUT_ON_PREPARED_TEMPLATE'] = "Das Element %s wurde schon mit der Methode DocumentElement::parse() konfiguriert. Es ist nicht empfehlenswert Elemente nach Element mit put() hinzuzufügen.";
 $P2G_LANGUAGE['ERR_TEMPLATE_NOT_PREPARED'] = "Das Template %s wurde nicht vorbereitet. Benutzen Sie die Methode %s::parse(); bevor Sie mit dem Objekt weitere Operationen durchführen.";
 $P2G_LANGUAGE['ERR_TEMPLATE_ALREADY_PREPARED'] = "Dieses Template wurde bereits bearbeitet. Du musst vorher die Funktion parse() aufrufen.";
+$P2G_LANGUAGE['ERR_TPLPARSE_DEFINED_BLOCK'] = "The block %s was already defined!";
 $P2G_LANGUAGE['ERR_TPLPARSE_UNBALANCED_BLOCKDEF'] = "Die Definition des Blockes <i>%s</i> ist nicht korrekt!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INCOMPLETE_BLOCKDEF'] = "Die Zuordnung des Blockes <I>%s</I> im Tag %s ist nicht komplett!";
 $P2G_LANGUAGE['ERR_TPLPARSE_BLOCKINSIDELOOP'] = "Es ist nicht möglich dynamische Blöcke in Schleifen zu definieren!";
