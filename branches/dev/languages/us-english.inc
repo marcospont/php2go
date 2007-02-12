@@ -98,6 +98,7 @@ $P2G_LANGUAGE['ERR_CANT_FIND_BLOCK_REUSE'] = "It wasn't possible to find the blo
 $P2G_LANGUAGE['ERR_CANT_PUT_ON_PREPARED_TEMPLATE'] = "The element %s was already configured with the method DocumentElement::parse(). It's not possible to add elements with the method put().";
 $P2G_LANGUAGE['ERR_TEMPLATE_NOT_PREPARED'] = "The template %s wasn't prepared. Run the method %s::parse(); before executing operations with the object.";
 $P2G_LANGUAGE['ERR_TEMPLATE_ALREADY_PREPARED'] = "This template has already been prepared. You must call parse() method only once.";
+$P2G_LANGUAGE['ERR_TPLPARSE_DEFINED_BLOCK'] = "The block %s was already defined!";
 $P2G_LANGUAGE['ERR_TPLPARSE_UNBALANCED_BLOCKDEF'] = "The definition of the block <I>%s</I> is unbalanced!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INCOMPLETE_BLOCKDEF'] = "The specification of the block <I>%s</I> is incomplete inside the tag %s!";
 $P2G_LANGUAGE['ERR_TPLPARSE_BLOCKINSIDELOOP'] = "It's not possible to define dynamic blocks inside loops!";

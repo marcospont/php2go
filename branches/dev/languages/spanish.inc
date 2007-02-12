@@ -98,6 +98,7 @@ $P2G_LANGUAGE['ERR_CANT_FIND_BLOCK_REUSE'] = "No fue posible encontrar el bloque
 $P2G_LANGUAGE['ERR_CANT_PUT_ON_PREPARED_TEMPLATE'] = "El elemento %s ya fue configurado con el método DocumentElement::parse(). No es posible agregar elementos con el método put().";
 $P2G_LANGUAGE['ERR_TEMPLATE_NOT_PREPARED'] = "La plantilla %s no fue preparada. Ejecute el método %s::parse(); antes de ejecutar operaciones con el objeto.";
 $P2G_LANGUAGE['ERR_TEMPLATE_ALREADY_PREPARED'] = "Esta plantilla ya ha sido preparada. Usted debería llamar solamente una vez el método parse().";
+$P2G_LANGUAGE['ERR_TPLPARSE_DEFINED_BLOCK'] = "The block %s was already defined!";
 $P2G_LANGUAGE['ERR_TPLPARSE_UNBALANCED_BLOCKDEF'] = "La definición del bloque <I>%s</I> está desbalanceada!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INCOMPLETE_BLOCKDEF'] = "La especificación del bloque <I>%s</I> dentro de la etiqueta %s está incompleta!";
 $P2G_LANGUAGE['ERR_TPLPARSE_BLOCKINSIDELOOP'] = "No es posible definir bloques dinámicos dentro de bucles (loops)!";
