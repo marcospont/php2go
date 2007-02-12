@@ -329,13 +329,14 @@ class Template extends Component
 			if (sizeof($parts) == 1) {
 				return (isset($this->Parser->tplDef[$block]));
 			} else {
-				$i = 1;
-				$ptr = $this->Parser->tplDef[$parts[0]];
-				while ($i < sizeof($parts)) {
-					if (!array_key_exists($parts[$i], $ptr['blocks']))
+				$i = sizeof($parts)-1;
+				$ptr = $parts[$i];
+				if (!isset($this->Parser->tplDef[$ptr]))
+					return FALSE;
+				while (--$i >= 0) {
+					if ($parts[$i] != $this->Parser->tplDef[$ptr]['parent'])
 						return FALSE;
-					$ptr = @$this->Parser->tplDef[$parts[$i]];
-					$i++;
+					$ptr = $this->Parser->tplDef[$ptr]['parent'];
 				}
 				return TRUE;
 			}
@@ -616,7 +617,10 @@ class Template extends Component
 		if (!empty($value) && ($type == T_BYFILE || $type == T_BYVAR)) {
 			if ($type == T_BYFILE && !is_readable($value))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $value), E_USER_ERROR, __FILE__, __LINE__);
-			$this->Parser->tplIncludes[$blockName] = array($value, $type);
+			$this->Parser->tplIncludes[$blockName] = array(
+				'src' => $value,
+				'type' => $type
+			);
 		}
 	}
 
