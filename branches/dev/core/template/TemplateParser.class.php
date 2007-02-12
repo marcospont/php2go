@@ -150,12 +150,20 @@ class TemplateParser extends PHP2Go
 	var $tplDef = array();
 
 	/**
-	 * Holds information about the declared include blocks
+	 * Holds name based include blocks
 	 *
 	 * @var array
 	 * @access private
 	 */
 	var $tplIncludes = array();
+
+	/**
+	 * Holds file based include blocks
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplFileIncludes = array();
 
 	/**
 	 * Aggregates bundled and custom variable modifiers
@@ -351,17 +359,16 @@ class TemplateParser extends PHP2Go
 			if ($cached) {
 				$compiled = $cached['compiled'];
 				$this->tplDef = array_merge($this->tplDef, $cached['tplDef']);
+				$this->tplFileIncludes = array_merge($this->tplFileIncludes, $cached['tplFileIncludes']);
 			} else {
 				// save and reinitialize current control variables
 				if ($this->includeDepth > 0) {
 					$blockStack = $this->blockStack;
 					$controlStack = $this->controlStack;
-					$tplDef = $this->tplDef;
+					$tplFileIncludes = $this->tplFileIncludes;
 					$this->blockStack = array();
 					$this->controlStack = array();
-					$this->tplDef = array(
-						$controlBlock => $tplDef[$controlBlock]
-					);
+					$this->tplFileIncludes = array();
 				}
 				// parse source
 				$compiled .= $this->_compileTemplate($src, $controlBlock);
@@ -378,13 +385,14 @@ class TemplateParser extends PHP2Go
 				// save it to cache
 				$this->_Cache->save(array(
 					'compiled' => $compiled,
-					'tplDef' => $this->tplDef
+					'tplDef' => $this->tplDef,
+					'tplFileIncludes' => $this->tplFileIncludes
 				), $cacheId, $this->_Template->cacheOptions['group']);
 				// restore control variables
 				if ($this->includeDepth > 0) {
 					$this->blockStack = $blockStack;
 					$this->controlStack = $controlStack;
-					$this->tplDef = array_merge($tplDef, $this->tplDef);
+					$this->tplFileIncludes = $tplFileIncludes;
 				}
 			}
 		} else {
@@ -404,13 +412,14 @@ class TemplateParser extends PHP2Go
 
 		// 3rd phase: recurse into include blocks
 		$matches = array();
-		preg_match_all("~(\r?\n?[\s]*){$this->tagDelimiters[0]}\s*" . TEMPLATE_INCLUDE . "\s*{$this->tagDelimiters[1]}~s", $compiled, $matches, PREG_OFFSET_CAPTURE);
-		if (sizeof($matches) > 0) {
+		preg_match_all("~(\r?\n?[\s]*){$this->tagDelimiters[0]}\s*" . TEMPLATE_INCLUDE . "\s*{$this->tagDelimiters[1]}~si", $compiled, $matches, PREG_OFFSET_CAPTURE);
+		$totalMatches = sizeof($matches[0]);
+		if ($totalMatches > 0) {
 			$offset = 0;
 			$result = '';
-			for ($i=0,$s=sizeof($matches[0]); $i<$s; $i++) {
+			for ($i=0; $i<$totalMatches; $i++) {
 				$result .= substr($compiled, $offset, $matches[0][$i][1]-$offset);
-				$result .= $this->_compileInclude($matches[2][$i][0], $controlBlock);
+				$result .= $this->_compileInclude($matches[2][$i][0]);
 				$offset = $matches[0][$i][1] + strlen($matches[0][$i][0]);
 			}
 			$result .= substr($compiled, $offset);
@@ -542,11 +551,31 @@ class TemplateParser extends PHP2Go
 						$tplOutput[] = $this->_compilePHPBlock('} $block =& $this->_popStack($stack, $blockName, $instance, $instanceCount); }');
 						break;
 					case 'INCLUDE' :
-						// include blocks are processed in a separated phase
-						$tplOutput[] = $tag[0];
+						$blockName = trim($tagParts[2]);
+						if (isset($this->tplIncludes[$blockName])) {
+							$this->tplIncludes[$blockName]['block'] = $controlBlock;
+							$tplOutput[] = $tag[0];
+						} elseif (file_exists($blockName)) {
+							$key = PHP2Go::generateUniqueId('tplFileInclude');
+							while (isset($this->tplIncludes[$key]) || isset($this->tplFileIncludes[$key]))
+								$key = PHP2Go::generateUniqueId('tplFileInclude');
+							$this->tplFileIncludes[$key] = array(
+								'src' => $blockName,
+								'type' => T_BYFILE,
+								'block' => $controlBlock
+							);
+							$tplOutput[] = str_replace($blockName, $key, $tag[0]);
+						}
 						break;
 					case 'INCLUDESCRIPT' :
-						$tplOutput[] = $this->_compileInclude($tagParts[2], $controlBlock, TRUE);
+						$blockName = trim($tagParts[2]);
+						if (!isset($this->tplIncludes[$blockName]) && file_exists($blockName)) {
+							$this->tplFileIncludes[$blockName] = array(
+								'src' => $blockName,
+								'type' => T_BYFILE
+							);
+						}
+						$tplOutput[] = $this->_compileInclude($blockName, TRUE);
 						break;
 					default :
 						$tplOutput[] = $tag[0];
@@ -996,33 +1025,23 @@ class TemplateParser extends PHP2Go
 	 * </code>
 	 *
 	 * @param string $includeName Include name or file path
-	 * @param string &$controlBlock Active dynamic block
 	 * @param bool $evaluate Indicates if this is an "includescript" tag
 	 * @return string Compiled code
 	 * @access private
 	 */
-	function _compileInclude($includeName, &$controlBlock, $evaluate=FALSE) {
-		$defined = TRUE;
+	function _compileInclude($includeName, $evaluate=FALSE) {
+		$includes = array_merge($this->tplIncludes, $this->tplFileIncludes);
 		$includeName = trim($includeName);
-		if (isset($this->tplIncludes[$includeName])) {
-			$src = $this->tplIncludes[$includeName][0];
-			$type = $this->tplIncludes[$includeName][1];
-		} elseif (file_exists($includeName)) {
-			$src = $includeName;
-			$type = T_BYFILE;
-		} else {
-			$defined = FALSE;
-		}
-		if ($defined) {
+		if (isset($includes[$includeName])) {
 			if ($evaluate) {
-				if ($type == T_BYFILE)
-					return $this->_compilePHPBlock('include("' . $src . '");');
+				if ($includes[$includeName]['type'] == T_BYFILE)
+					return $this->_compilePHPBlock('include("' . $includes[$includeName]['src'] . '");');
 				else
-					return (strpos($src, '<?') === 0 ? $src : $this->_compilePHPBlock($src));
+					return (strpos($includes[$includeName]['src'], '<?') === 0 ? $includes[$includeName]['src'] : $this->_compilePHPBlock($includes[$includeName]['src']));
 			} else {
 				$this->includeDepth++;
 				$compiled = $this->_compilePHPBlock('array_unshift(\$this->tplConfigVars, \$this->tplConfigVars[0]);');
-				$this->_parseTemplate($src, $type, $compiled, $controlBlock);
+				$this->_parseTemplate($includes[$includeName]['src'], $includes[$includeName]['type'], $compiled, $includes[$includeName]['block']);
 					$compiled .= $this->_compilePHPBlock('array_shift(\$this->tplConfigVars);');
 				$this->includeDepth--;
 				return $compiled;
