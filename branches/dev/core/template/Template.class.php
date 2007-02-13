@@ -168,7 +168,7 @@ class Template extends Component
 	 */
 	function Template($source, $type=T_BYFILE) {
 		parent::Component();
-		$this->Parser = new TemplateParser($this, $source, $type);
+		$this->Parser = new TemplateParser($source, $type);
 		$this->tplGlobalVars = array(
 			'ldelim' => '{',
 			'rdelim' => '}'
@@ -262,7 +262,7 @@ class Template extends Component
 	 * @uses TemplateParser::loadCacheData()
 	 */
 	function parse() {
-		$this->Parser->parse();
+		$this->Parser->parse($this);
 		$this->_initializeContent();
 	}
 

@@ -158,14 +158,6 @@ class TemplateParser extends PHP2Go
 	var $tplIncludes = array();
 
 	/**
-	 * Holds file based include blocks
-	 *
-	 * @var array
-	 * @access private
-	 */
-	var $tplFileIncludes = array();
-
-	/**
 	 * Aggregates bundled and custom variable modifiers
 	 *
 	 * @var array
@@ -263,16 +255,12 @@ class TemplateParser extends PHP2Go
 	/**
 	 * Class constructor
 	 *
-	 * @param Template &$Template Owner template
 	 * @param string $src Source (variable or file)
 	 * @param int $type Source type ({@link T_BYFILE} or {@link T_BYVAR})
 	 * @return TemplateParser
 	 */
-	function TemplateParser(&$Template, $src, $type) {
+	function TemplateParser($src, $type) {
 		parent::PHP2Go();
-		if (!TypeUtils::isInstanceOf($Template, 'Template'))
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_OBJECT', 'Template'), E_USER_ERROR, __FILE__, __LINE__);
-		$this->_Template =& $Template;
 		$this->tplBase = array(
 			'source' => $src,
 			'type' => ($type == T_BYFILE || $type == T_BYVAR ? $type : T_BYVAR),
@@ -281,7 +269,6 @@ class TemplateParser extends PHP2Go
 		$this->tplDef = array(
 			TP_ROOTBLOCK => array(
 				'vars' => array(),
-				'blocks' => array(),
 				'parent' => NULL
 			)
 		);
@@ -293,9 +280,14 @@ class TemplateParser extends PHP2Go
 
 	/**
 	 * Triggers the parsing of the template
+	 *
+	 * @param Template &$Template Owner template
 	 */
-	function parse() {
+	function parse(&$Template) {
 		if (!$this->prepared) {
+			if (!TypeUtils::isInstanceOf($Template, 'Template'))
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_OBJECT', 'Template'), E_USER_ERROR, __FILE__, __LINE__);
+			$this->_Template =& $Template;
 			$controlBlock = TP_ROOTBLOCK;
 			// initialization code
 			$this->tplBase['compiled'] = $this->_compilePHPBlock(sprintf(
@@ -324,10 +316,10 @@ class TemplateParser extends PHP2Go
 	 *
 	 * @param string $src Template source (string contents or file path)
 	 * @param int $type Source type ({@link T_BYFILE} or {@link T_BYVAR})
-	 * @param string &$compiled Used to return compiled contents
+	 * @param string &$output Used to return compiled contents
 	 * @param string &$controlBlock Active dynamic block
 	 */
-	function _parseTemplate($src, $type, &$compiled, &$controlBlock)
+	function _parseTemplate($src, $type, &$output, &$controlBlock)
 	{
 		// 1st phase: prepare template source
 		if ($type == T_BYFILE) {
@@ -357,21 +349,25 @@ class TemplateParser extends PHP2Go
 				$this->_Cache->Storage->setLastValidTime($time);
 			$cached = $this->_Cache->load($cacheId, $this->_Template->cacheOptions['group']);
 			if ($cached) {
-				$compiled = $cached['compiled'];
-				$this->tplDef = array_merge($this->tplDef, $cached['tplDef']);
-				$this->tplFileIncludes = array_merge($this->tplFileIncludes, $cached['tplFileIncludes']);
+				$output .= $cached['output'];
+				$includes = $cached['includes'];
+				foreach ($cached['def'] as $block => $def) {
+					if ($block != TP_ROOTBLOCK && array_key_exists($block, $this->tplDef))
+						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
+					$this->tplDef[$block] = $def;
+				}
 			} else {
 				// save and reinitialize current control variables
 				if ($this->includeDepth > 0) {
 					$blockStack = $this->blockStack;
 					$controlStack = $this->controlStack;
-					$tplFileIncludes = $this->tplFileIncludes;
 					$this->blockStack = array();
 					$this->controlStack = array();
-					$this->tplFileIncludes = array();
 				}
 				// parse source
-				$compiled .= $this->_compileTemplate($src, $controlBlock);
+				$compiled = $this->_compileTemplate($src, $controlBlock);
+				$output .= $compiled['output'];
+				$includes = $compiled['includes'];
 				// repetition blocks balancing
 				if (!empty($this->blockStack)) {
 					$last = array_pop($this->blockStack);
@@ -384,20 +380,21 @@ class TemplateParser extends PHP2Go
 				}
 				// save it to cache
 				$this->_Cache->save(array(
-					'compiled' => $compiled,
-					'tplDef' => $this->tplDef,
-					'tplFileIncludes' => $this->tplFileIncludes
+					'output' => $output,
+					'includes' => $includes,
+					'def' => $this->tplDef,
 				), $cacheId, $this->_Template->cacheOptions['group']);
 				// restore control variables
 				if ($this->includeDepth > 0) {
 					$this->blockStack = $blockStack;
 					$this->controlStack = $controlStack;
-					$this->tplFileIncludes = $tplFileIncludes;
 				}
 			}
 		} else {
 			// parse source
-			$compiled .= $this->_compileTemplate($src, $controlBlock);
+			$compiled = $this->_compileTemplate($src, $controlBlock);
+			$output .= $compiled['output'];
+			$includes = $compiled['includes'];
 			// repetition blocks balancing
 			if (!empty($this->blockStack)) {
 				$last = array_pop($this->blockStack);
@@ -412,18 +409,18 @@ class TemplateParser extends PHP2Go
 
 		// 3rd phase: recurse into include blocks
 		$matches = array();
-		preg_match_all("~(\r?\n?[\s]*){$this->tagDelimiters[0]}\s*" . TEMPLATE_INCLUDE . "\s*{$this->tagDelimiters[1]}~si", $compiled, $matches, PREG_OFFSET_CAPTURE);
+		preg_match_all("~(\r?\n?[\s]*){$this->tagDelimiters[0]}\s*" . TEMPLATE_INCLUDE . "\s*{$this->tagDelimiters[1]}~si", $output, $matches, PREG_OFFSET_CAPTURE);
 		$totalMatches = sizeof($matches[0]);
 		if ($totalMatches > 0) {
 			$offset = 0;
 			$result = '';
 			for ($i=0; $i<$totalMatches; $i++) {
-				$result .= substr($compiled, $offset, $matches[0][$i][1]-$offset);
-				$result .= $this->_compileInclude($matches[2][$i][0]);
+				$result .= substr($output, $offset, $matches[0][$i][1]-$offset);
+				$result .= $this->_compileInclude($matches[2][$i][0], $includes[$i]['block']);
 				$offset = $matches[0][$i][1] + strlen($matches[0][$i][0]);
 			}
-			$result .= substr($compiled, $offset);
-			$compiled = $result;
+			$result .= substr($output, $offset);
+			$output = $result;
 		}
 	}
 
@@ -437,7 +434,8 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileTemplate($src, &$controlBlock) {
 		$tagBlocks = array();
-		$tplOutput = array();
+		$outputBlocks = array();
+		$includes = array();
 		// gather all tags and code blocks
 		$matches = array();
 		preg_match_all("~(\r?\n?[\s]*){$this->tagDelimiters[0]}\s*(.*?)\s*{$this->tagDelimiters[1]}|{([^}]+)}~s", $src, $matches, PREG_OFFSET_CAPTURE);
@@ -469,13 +467,13 @@ class TemplateParser extends PHP2Go
 					}
 					$this->controlFlags['ignore'] = FALSE;
 				}
-				$tplOutput[] = '';
+				$outputBlocks[] = '';
 			}
 			// assign
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_ASSIGN . '$~i', $tag[1], $tagParts)) {
 				if (!$this->_validateTag('ASSIGN', @$tagParts[1], TRUE, array(), $controlBlock))
 					return FALSE;
-				$tplOutput[] = $this->_compileAssign($tagParts[1]);
+				$outputBlocks[] = $this->_compileAssign($tagParts[1]);
 			}
 			// function calls
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_FUNCTION_CALL . '$~i', $tag[1], $tagParts)) {
@@ -484,20 +482,20 @@ class TemplateParser extends PHP2Go
 					case 'FUNCTION' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileFunctionCall(@$tagParts[2]);
+						$outputBlocks[] = $this->_compileFunctionCall(@$tagParts[2]);
 						break;
 					case 'START FUNCTION' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileFunctionCall($tagParts[2], TRUE, $controlBlock);
+						$outputBlocks[] = $this->_compileFunctionCall($tagParts[2], TRUE, $controlBlock);
 						break;
 					case 'END FUNCTION' :
 						if (!$last = $this->_validateTag($operation, @$tagParts[2], FALSE, array('START FUNCTION'), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileFunctionEnd($last[2]);
+						$outputBlocks[] = $this->_compileFunctionEnd($last[2]);
 						break;
 					default :
-						$tplOutput[] = $tag[0];
+						$outputBlocks[] = $tag[0];
 						break;
 				}
 			}
@@ -508,20 +506,20 @@ class TemplateParser extends PHP2Go
 					case 'WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileWidgetInclude($tagParts[2]);
+						$outputBlocks[] = $this->_compileWidgetInclude($tagParts[2]);
 						break;
 					case 'START WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileWidgetStart($tagParts[2], $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetStart($tagParts[2], $controlBlock);
 						break;
 					case 'END WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('START WIDGET'), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileWidgetEnd();
+						$outputBlocks[] = $this->_compileWidgetEnd();
 						break;
 					default :
-						$tplOutput[] = $tag[0];
+						$outputBlocks[] = $tag[0];
 						break;
 				}
 			}
@@ -534,7 +532,7 @@ class TemplateParser extends PHP2Go
 							PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_BLOCKINSIDELOOP'), E_USER_ERROR, __FILE__, __LINE__);
 							return FALSE;
 						}
-						$tplOutput[] = $this->_compileBlockStart($tagParts[2], $controlBlock);
+						$outputBlocks[] = $this->_compileBlockStart($tagParts[2], $controlBlock);
 						$controlBlock = $tagParts[2];
 						break;
 					case 'END' :
@@ -548,37 +546,22 @@ class TemplateParser extends PHP2Go
 							return FALSE;
 						}
 						$controlBlock = (empty($this->blockStack) ? TP_ROOTBLOCK : $this->blockStack[sizeof($this->blockStack)-1]);
-						$tplOutput[] = $this->_compilePHPBlock('} $block =& $this->_popStack($stack, $blockName, $instance, $instanceCount); }');
+						$outputBlocks[] = $this->_compilePHPBlock('} $block =& $this->_popStack($stack, $blockName, $instance, $instanceCount); }');
 						break;
 					case 'INCLUDE' :
 						$blockName = trim($tagParts[2]);
-						if (isset($this->tplIncludes[$blockName])) {
-							$this->tplIncludes[$blockName]['block'] = $controlBlock;
-							$tplOutput[] = $tag[0];
-						} elseif (file_exists($blockName)) {
-							$key = PHP2Go::generateUniqueId('tplFileInclude');
-							while (isset($this->tplIncludes[$key]) || isset($this->tplFileIncludes[$key]))
-								$key = PHP2Go::generateUniqueId('tplFileInclude');
-							$this->tplFileIncludes[$key] = array(
-								'src' => $blockName,
-								'type' => T_BYFILE,
-								'block' => $controlBlock
-							);
-							$tplOutput[] = str_replace($blockName, $key, $tag[0]);
-						}
+						$includes[] = array(
+							'name' => $blockName,
+							'block' => $controlBlock
+						);
+						$outputBlocks[] = $tag[0];
 						break;
 					case 'INCLUDESCRIPT' :
 						$blockName = trim($tagParts[2]);
-						if (!isset($this->tplIncludes[$blockName]) && file_exists($blockName)) {
-							$this->tplFileIncludes[$blockName] = array(
-								'src' => $blockName,
-								'type' => T_BYFILE
-							);
-						}
-						$tplOutput[] = $this->_compileInclude($blockName, TRUE);
+						$outputBlocks[] = $this->_compileIncludeScript($blockName);
 						break;
 					default :
-						$tplOutput[] = $tag[0];
+						$outputBlocks[] = $tag[0];
 						break;
 				}
 			}
@@ -591,13 +574,13 @@ class TemplateParser extends PHP2Go
 							return FALSE;
 						$this->controlFlags['loop'] = TRUE;
 						$this->controlStack[] = array('LOOP', $controlBlock);
-						$tplOutput[] = $this->_compileLoopStart($tagParts[2]);
+						$outputBlocks[] = $this->_compileLoopStart($tagParts[2]);
 						break;
 					case 'ELSE LOOP' :
 						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('LOOP'), $controlBlock))
 							return FALSE;
 						$this->controlStack[] = array('ELSE LOOP', $controlBlock);
-						$tplOutput[] = $this->_compilePHPBlock('} } else {');
+						$outputBlocks[] = $this->_compilePHPBlock('} } else {');
 						break;
 					case 'END LOOP' :
 						$last = (!empty($this->controlStack) ? $this->controlStack[sizeof($this->controlStack)-1] : array());
@@ -605,11 +588,11 @@ class TemplateParser extends PHP2Go
 							return FALSE;
 						if (array_search('LOOP', $this->controlStack) === FALSE && array_search('ELSE LOOP', $this->controlStack) === FALSE)
 							$this->controlFlags['loop'] = FALSE;
-						$tplOutput[] = $this->_compilePHPBlock(@$last[0] == 'ELSE LOOP' ? '} unset($_loop' . $this->loopNestingLevel . '); }' : '} } unset($_loop' . $this->loopNestingLevel . ');  }');
+						$outputBlocks[] = $this->_compilePHPBlock(@$last[0] == 'ELSE LOOP' ? '} unset($_loop' . $this->loopNestingLevel . '); }' : '} } unset($_loop' . $this->loopNestingLevel . ');  }');
 						$this->loopNestingLevel--;
 						break;
 					default :
-						$tplOutput[] = $tag[0];
+						$outputBlocks[] = $tag[0];
 						break;
 				}
 			}
@@ -621,27 +604,27 @@ class TemplateParser extends PHP2Go
 		 				if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 		 					return FALSE;
 						$this->controlStack[] = array('IF', $controlBlock);
-						$tplOutput[] = $this->_compileIf($tagParts[2]);
+						$outputBlocks[] = $this->_compileIf($tagParts[2]);
 						break;
 					case 'ELSE IF' :
 		 				if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array('IF', 'ELSE IF'), $controlBlock))
 		 					return FALSE;
 						$this->controlStack[] = array('ELSE IF', $controlBlock);
-						$tplOutput[] = $this->_compileIf($tagParts[2], TRUE);
+						$outputBlocks[] = $this->_compileIf($tagParts[2], TRUE);
 						break;
 					case 'ELSE' :
 		 				if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('IF', 'ELSE IF'), $controlBlock))
 		 					return FALSE;
 						$this->controlStack[] = array('ELSE', $controlBlock);
-						$tplOutput[] = $this->_compilePHPBlock('} else {');
+						$outputBlocks[] = $this->_compilePHPBlock('} else {');
 						break;
 					case 'END IF' :
 		 				if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('IF', 'ELSE IF', 'ELSE'), $controlBlock))
 		 					return FALSE;
-		 				$tplOutput[] = $this->_compilePHPBlock('}');
+		 				$outputBlocks[] = $this->_compilePHPBlock('}');
 						break;
 					default :
-						$tplOutput[] = $tag[0];
+						$outputBlocks[] = $tag[0];
 						break;
 				}
 			}
@@ -652,15 +635,15 @@ class TemplateParser extends PHP2Go
 					case 'CAPTURE' :
 						if (!$this->_validateTag($operation, @$tagParts[2], NULL, array(), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileCaptureStart(@$tagParts[2], $controlBlock);
+						$outputBlocks[] = $this->_compileCaptureStart(@$tagParts[2], $controlBlock);
 						break;
 					case 'END CAPTURE' :
 						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('CAPTURE'), $controlBlock))
 							return FALSE;
-						$tplOutput[] = $this->_compileCaptureEnd();
+						$outputBlocks[] = $this->_compileCaptureEnd();
 						break;
 					default :
-						$tplOutput[] = $tag[0];
+						$outputBlocks[] = $tag[0];
 						break;
 				}
 			}
@@ -668,40 +651,43 @@ class TemplateParser extends PHP2Go
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_CONFIG . '$~i', $tag[1], $tagParts)) {
 				if (!$this->_validateTag('CONFIG', @$tagParts[1], TRUE, array(), $controlBlock))
 					return FALSE;
-				$tplOutput[] = $this->_compileConfig($tagParts[1]);
+				$outputBlocks[] = $this->_compileConfig($tagParts[1]);
 			}
 			// variable
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^(' . TEMPLATE_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '$~xs', $tag[1], $tagParts)) {
 				$varDef = preg_replace('/^\$/', "", $tagParts[1]);
 				if (!preg_match('~' . TEMPLATE_QUOTED_STRING . '~', $varDef) && array_search($varDef, $this->tplDef[$controlBlock]['vars']) === FALSE)
 					$this->tplDef[$controlBlock]['vars'][] = $varDef;
-				$tplOutput[] = $this->_compileVariable($tagParts[1], $tagParts[2], TRUE);
+				$outputBlocks[] = $this->_compileVariable($tagParts[1], $tagParts[2], TRUE);
 			}
 			// comments
 			elseif (preg_match('~^' . TEMPLATE_COMMENT . '$~ms', $tag[1])) {
-				$tplOutput[] = '';
+				$outputBlocks[] = '';
 			}
 			// others: recursive call
 			else {
 				if ($tag[0][0] == '{') {
-					$tplOutput[] = '{' . $this->_compileTemplate(substr($tag[0], 1), $controlBlock);
+					$outputBlocks[] = '{' . $this->_compileTemplate(substr($tag[0], 1), $controlBlock);
 				} else {
 					$pos = strpos($tag[0], $tag[1]);
 					$startCode = substr($tag[0], 0, $pos);
 					$endCode = substr($tag[0], $pos + strlen($tag[1]));
-					$tplOutput[] = $startCode . $this->_compileTemplate($tag[1], $controlBlock) . $endCode;
+					$outputBlocks[] = $startCode . $this->_compileTemplate($tag[1], $controlBlock) . $endCode;
 				}
 			}
 		}
 		// merge code blocks and literal blocks
 		$output = '';
-		for ($i=0, $s=sizeof($tplOutput); $i<$s; $i++) {
-			if (preg_match('/^<\?(php)? print/', $tplOutput[$i]))
+		for ($i=0, $s=sizeof($outputBlocks); $i<$s; $i++) {
+			if (preg_match('/^<\?(php)? print/', $outputBlocks[$i]))
 				$codeBlocks[$i] .= $tagBlocks[$i][3];
-			$output .= $codeBlocks[$i] . $tplOutput[$i];
+			$output .= $codeBlocks[$i] . $outputBlocks[$i];
 		}
 		$output .= $codeBlocks[$i];
-		return $output;
+		return array(
+			'output' => $output,
+			'includes' => $includes
+		);
 	}
 
 	/**
@@ -1006,48 +992,72 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileBlockStart($blockName, $parentBlock) {
 		$this->blockStack[] = $blockName;
+		if (array_key_exists($blockName, $this->tplDef))
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $blockName), E_USER_ERROR, __FILE__, __LINE__);
 		$this->tplDef[$blockName] = array(
 			'vars' => array(),
-			'blocks' => array(),
 			'parent' => $parentBlock
 		);
 		return $this->_compilePHPBlock('if (isset($block[$instance][\'blocks\'][\'' . $blockName . '\'])) { $this->_pushStack($stack, $blockName, $block, $instance, $instanceCount); $blockName = "' . $blockName . '"; $block =& $this->tplContent[$block[$instance][\'blocks\'][\'' . $blockName . '\']]; $instance = 0; $instanceCount = sizeof($block); for (; $instance<$instanceCount; $instance++) { $block[$instance][\'vars\'] = array_merge($this->tplGlobalVars, $block[$instance][\'vars\']);');
 	}
 
 	/**
-	 * Compiles "include block" and "includescript block" tags
+	 * Compiles an "include block" tag
 	 *
 	 * Examples:
 	 * <code>
 	 * <!-- include block : templates/includes/include.tpl -->
 	 * <!-- include block : include_block -->
-	 * <!-- includescript block : templates/php/run_scripts.php -->
 	 * </code>
 	 *
 	 * @param string $includeName Include name or file path
-	 * @param bool $evaluate Indicates if this is an "includescript" tag
 	 * @return string Compiled code
 	 * @access private
 	 */
-	function _compileInclude($includeName, $evaluate=FALSE) {
-		$includes = array_merge($this->tplIncludes, $this->tplFileIncludes);
-		$includeName = trim($includeName);
-		if (isset($includes[$includeName])) {
-			if ($evaluate) {
-				if ($includes[$includeName]['type'] == T_BYFILE)
-					return $this->_compilePHPBlock('include("' . $includes[$includeName]['src'] . '");');
-				else
-					return (strpos($includes[$includeName]['src'], '<?') === 0 ? $includes[$includeName]['src'] : $this->_compilePHPBlock($includes[$includeName]['src']));
-			} else {
-				$this->includeDepth++;
-				$compiled = $this->_compilePHPBlock('array_unshift(\$this->tplConfigVars, \$this->tplConfigVars[0]);');
-				$this->_parseTemplate($includes[$includeName]['src'], $includes[$includeName]['type'], $compiled, $includes[$includeName]['block']);
-					$compiled .= $this->_compilePHPBlock('array_shift(\$this->tplConfigVars);');
-				$this->includeDepth--;
-				return $compiled;
-			}
+	function _compileInclude($includeName, $controlBlock) {
+		if (array_key_exists($includeName, $this->tplIncludes)) {
+			$src = $this->tplIncludes[$includeName]['src'];
+			$type = $this->tplIncludes[$includeName]['type'];
+		} elseif (file_exists($includeName)) {
+			$src = $includeName;
+			$type = T_BYFILE;
+		} else {
+			return '';
 		}
-		return '';
+		$this->includeDepth++;
+		$output = $this->_compilePHPBlock('array_unshift(\$this->tplConfigVars, \$this->tplConfigVars[0]);');
+		$this->_parseTemplate($src, $type, $output, $controlBlock);
+		$output .= $this->_compilePHPBlock('array_shift(\$this->tplConfigVars);');
+		$this->includeDepth--;
+		return $output;
+	}
+
+	/**
+	 * Compiles an "includescript block" tag
+	 *
+	 * Examples:
+	 * <code>
+	 * <!-- includescript block : templates/php/run_scripts.php -->
+	 * <!-- includescript block : include_block_name -->
+	 * </code>
+	 *
+	 * @param Include name or file path $includeName
+	 * @return string Compiled code
+	 * @access private
+	 */
+	function _compileIncludeScript($includeName) {
+		if (array_key_exists($includeName, $this->tplIncludes)) {
+			$src = $this->tplIncludes[$includeName]['src'];
+			$type = $this->tplIncludes[$includeName]['type'];
+		} elseif (file_exists($includeName)) {
+			$src = $includeName;
+			$type = T_BYFILE;
+		} else {
+			return '';
+		}
+		if ($type == T_BYFILE)
+			return $this->_compilePHPBlock('include("' . $src . '");');
+		return (strpos($src, '<?') === 0 ? $src : $this->_compilePHPBlock($src));
 	}
 
 	/**
