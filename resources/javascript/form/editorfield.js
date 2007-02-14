@@ -178,7 +178,7 @@ EditorField.prototype.setupOptions = function() {
  */
 EditorField.prototype.setupDocument = function() {
 	var doc = this.document;
-	var html = "<html><head><title></title></head><body style='font-size:12px;font-family:arial,sans-serif;background-color:#ffffff'>" + this.fld.value + "</body></html>";
+	var html = "<html><head><title></title></head><body>" + this.fld.value + "</body></html>";
 	if (PHP2Go.browser.ie) {
 		doc.open('', 'replace');
 		doc.write(html);
