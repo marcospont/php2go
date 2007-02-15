@@ -352,17 +352,21 @@ class TemplateParser extends PHP2Go
 				$output .= $cached['output'];
 				$includes = $cached['includes'];
 				foreach ($cached['def'] as $block => $def) {
-					if ($block != TP_ROOTBLOCK && array_key_exists($block, $this->tplDef))
+					if ($block != $controlBlock && array_key_exists($block, $this->tplDef))
 						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
-					$this->tplDef[$block] = $def;
+					$this->tplDef[$block] = array_merge($this->tplDef[$block], $def[$block]);
 				}
 			} else {
 				// save and reinitialize current control variables
 				if ($this->includeDepth > 0) {
 					$blockStack = $this->blockStack;
 					$controlStack = $this->controlStack;
+					$tplDef = $this->tplDef;
 					$this->blockStack = array();
 					$this->controlStack = array();
+					$this->tplDef = array(
+						$controlBlock => $tplDef[$controlBlock]
+					);
 				}
 				// parse source
 				$compiled = $this->_compileTemplate($src, $controlBlock);
@@ -388,6 +392,12 @@ class TemplateParser extends PHP2Go
 				if ($this->includeDepth > 0) {
 					$this->blockStack = $blockStack;
 					$this->controlStack = $controlStack;
+					foreach ($this->tplDef as $block => $def) {
+						if ($block != $controlBlock && array_key_exists($block, $tplDef))
+							PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
+						$tplDef[$block] = array_merge($tplDef[$block], $this->tplDef[$block]);
+					}
+					$this->tplDef = $tplDef;
 				}
 			}
 		} else {
@@ -996,8 +1006,6 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileBlockStart($blockName, $parentBlock) {
 		$this->blockStack[] = $blockName;
-		if (array_key_exists($blockName, $this->tplDef))
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $blockName), E_USER_ERROR, __FILE__, __LINE__);
 		$this->tplDef[$blockName] = array(
 			'vars' => array(),
 			'parent' => $parentBlock
