@@ -667,12 +667,16 @@ class TemplateParser extends PHP2Go
 			// others: recursive call
 			else {
 				if ($tag[0][0] == '{') {
-					$outputBlocks[] = '{' . $this->_compileTemplate(substr($tag[0], 1), $controlBlock);
+					$compiled = $this->_compileTemplate(substr($tag[0], 1), $controlBlock);
+					$includes = array_merge($includes, $compiled['includes']);
+					$outputBlocks[] = '{' . $compiled['output'];
 				} else {
 					$pos = strpos($tag[0], $tag[1]);
 					$startCode = substr($tag[0], 0, $pos);
 					$endCode = substr($tag[0], $pos + strlen($tag[1]));
-					$outputBlocks[] = $startCode . $this->_compileTemplate($tag[1], $controlBlock) . $endCode;
+					$compiled = $this->_compileTemplate($tag[1], $controlBlock);
+					$includes = array_merge($includes, $compiled['includes']);
+					$outputBlocks[] = $startCode . $compiled['output'] . $endCode;
 				}
 			}
 		}
@@ -1015,6 +1019,7 @@ class TemplateParser extends PHP2Go
 	 * @access private
 	 */
 	function _compileInclude($includeName, $controlBlock) {
+		$includeName = trim($includeName);
 		if (array_key_exists($includeName, $this->tplIncludes)) {
 			$src = $this->tplIncludes[$includeName]['src'];
 			$type = $this->tplIncludes[$includeName]['type'];
