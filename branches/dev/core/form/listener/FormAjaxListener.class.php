@@ -222,7 +222,7 @@ class FormAjaxListener extends FormEventListener
 					break;
 				case 'container' :
 					$value = trim($value);
-					$buf .= "\t\tparams.{$name} = " . (preg_match("/{.*}/", $value) ? $value : "'{$value}'") . ";\n";
+					$buf .= "\t\tparams.{$name} = " . (preg_match("/{.*}/s", $value) ? $value : "'{$value}'") . ";\n";
 					break;
 				case 'onLoading' :
 				case 'onLoaded' :
