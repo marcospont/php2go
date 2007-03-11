@@ -688,7 +688,7 @@ class Auth extends PHP2Go
 		// check if session should be invalidated
 		$destroy = PHP2Go::getConfigVal('AUTH.DESTROY_ON_LOGOUT', FALSE);
 		if ($destroy === TRUE)
-			$this->User->destroy();
+			SessionManager::destroy();
 		// logout callback
 		if (isset($this->logoutCallback))
 			$this->logoutCallback->invoke($lastUser);
