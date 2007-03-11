@@ -115,7 +115,7 @@ class AuthDb extends Auth
 	 * This method should only be called when the connection ID
 	 * is not the default one (DATABASE.DEFAULT_CONNECTION)
 	 *
-	 * @param string $id
+	 * @param string $id Connection ID
 	 */
 	function setConnectionId($id) {
 		$this->connectionId = $id;
@@ -124,7 +124,7 @@ class AuthDb extends Auth
 	/**
 	 * Set the table name that must be used in the authentication query
 	 *
-	 * @param string $tableName
+	 * @param string $tableName Table name
 	 * @see setDbFields
 	 * @see setExtraClause
 	 */
@@ -142,7 +142,7 @@ class AuthDb extends Auth
 	 * $auth->setDbFields('name,address,phone,status,role');
 	 * </code>
 	 *
-	 * @param string $dbFields
+	 * @param string $dbFields DB fields
 	 * @see setTableName
 	 * @see setExtraClause
 	 */
@@ -167,7 +167,7 @@ class AuthDb extends Auth
 	 * $auth->setExtraClause('active = 1');
 	 * </code>
 	 *
-	 * @param string $extraClause
+	 * @param string $extraClause Extra clause
 	 * @see setTableName
 	 * @see setDbFields
 	 */
@@ -177,23 +177,42 @@ class AuthDb extends Auth
 
 	/**
 	 * Define a function or method that must be used to crypt the
-	 * user password before running the authentication query
+	 * user password before running the authentication query.
 	 *
-	 * The function could be a standard PHP function like md5 or crypt,
+	 * The function can be a standard PHP function like md5 or crypt,
 	 * a user-defined function or the name of a method of the authenticator.
+	 *
+	 * Setting $dbFunction to true, you could use a native or user-defined
+	 * database function as your crypt function, as shown in the third example.
+	 *
 	 * <code>
 	 * $auth->setCryptFunction('md5'); // standard PHP function
 	 * $auth->setCryptFunction('myCryptFunction'); // user-defined function or method
+	 * $auth->setCryptFunction('md5', true); // using database implementation of md5
 	 * </code>
 	 *
-	 * @param string $cryptFunction
+	 * @param string $cryptFunction Function or method name
+	 * @param bool $dbFunction Is this a database function?
 	 */
-	function setCryptFunction($cryptFunction) {
+	function setCryptFunction($cryptFunction, $dbFunction=false) {
 		$cryptFunction = trim($cryptFunction);
-		if ($cryptFunction != '' && function_exists($cryptFunction)) {
-			$this->cryptFunction = $cryptFunction;
-		} elseif (method_exists($this, $cryptFunction)) {
-			$this->cryptFunction = array($this, $cryptFunction);
+		if (!empty($cryptFunction)) {
+			if ($dbFunction) {
+				$this->cryptFunction = array(
+					'type' => 'db',
+					'func' => $cryptFunction
+				);
+			} elseif (function_exists($cryptFunction)) {
+				$this->cryptFunction = array(
+					'type' => 'php',
+					'func' => $cryptFunction
+				);
+			} elseif (method_exists($this, $cryptFunction)) {
+				$this->cryptFunction = array(
+					'type' => 'php',
+					'func' => array($this, $cryptFunction)
+				);
+			}
 		}
 	}
 
@@ -218,11 +237,15 @@ class AuthDb extends Auth
 				$Query->addFields($this->dbFields);
 		}
 		$Query->setClause($this->loginFieldName . " = " . $Db->quoteString($this->_login, get_magic_quotes_gpc()));
-		if (!empty($this->cryptFunction)) {
-			$password = call_user_func($this->cryptFunction, $this->_password);
-			$Query->addClause($this->passwordFieldName . " = " . $Db->quoteString($password, get_magic_quotes_gpc()));
+		if (is_array($this->cryptFunction)) {
+			if ($this->cryptFunction['type'] == 'db') {
+				$Query->addClause($this->passwordFieldName . " = " . $this->cryptFunction['func'] . "(" . $Db->quoteString($this->_password, get_magic_quotes_gpc()) . ")");
+			} else {
+				$password = call_user_func($this->cryptFunction['func'], $this->_password);
+				$Query->addClause($this->passwordFieldName . " = " . $Db->quoteString($password, get_magic_quotes_gpc()));
+			}
 		} else {
-			$Query->addClause($this->passwordFieldName . " = " . $Db->quoteString($this->_password, get_magic_quotes_gpc()));
+			$Db->addClause($this->passwordFieldName . " = " . $Db->quoteString($this->_password, get_magic_quotes_gpc()));
 		}
 		if (!empty($this->extraClause))
 			$Query->addClause($this->extraClause);
