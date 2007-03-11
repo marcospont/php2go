@@ -161,6 +161,8 @@ class SessionManager extends PHP2Go
 
 	/**
 	 * Destroys all session variables and kills the current active session
+	 *
+	 * @static
 	 */
 	function destroy() {
 		if (isset($_COOKIE[session_name()]))
