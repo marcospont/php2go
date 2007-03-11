@@ -89,9 +89,10 @@
 			parent::setPasswordFieldName('password');
 			/**
 			 * define crypt function that must be used to verify the user password.
-			 * if omitted, no crypt will be used (plain text comparison)
+			 * if omitted, no crypt will be used (plain text comparison).
+			 * the second parameter indicates we want to call a db function instead of a php function.
 			 */
-			parent::setCryptFunction('md5');
+			parent::setCryptFunction('md5', true);
 		}
 
 		function authenticate() {
