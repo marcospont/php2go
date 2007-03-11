@@ -840,13 +840,12 @@ class Report extends PagedDataSet
 		$this->group = (!is_array($groupBy) ? array($groupBy) : $groupBy);
 		if ($display == '')
 			$this->groupDisplay = (!is_array($groupBy) ? array($groupBy) : $groupBy);
-		elseif (is_scalar($display))
-			$this->groupDisplay = (!is_array($display) ? array($display) : $display);
 		else
-			$this->groupDisplay = (!is_array($groupBy) ? array($groupBy) : $groupBy);
-		foreach ($this->groupDisplay as $field)
+			$this->groupDisplay = (!is_array($display) ? array($display) : $display);
+		foreach ($this->groupDisplay as $field) {
 			if (in_array($field, $this->hidden))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_REPORT_HIDDEN_GROUP', $field), E_USER_ERROR, __FILE__, __LINE__);
+		}
 	}
 
 	/**
