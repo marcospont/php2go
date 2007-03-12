@@ -53,56 +53,56 @@
 	/**
 	 * Represents the frameworks's absolute URI
 	 */
-	define("PHP2GO_ABSOLUTE_PATH", $Conf->getConfig('ABSOLUTE_URI'));
+	define('PHP2GO_ABSOLUTE_PATH', $Conf->getConfig('ABSOLUTE_URI'));
 	$offset = getPhp2GoOffset();
 	/**
 	 * Represents the offset between the current dir and the framework's root
 	 */
-	define("PHP2GO_OFFSET_PATH", ($offset !== FALSE ? $offset : PHP2GO_ABSOLUTE_PATH));
+	define('PHP2GO_OFFSET_PATH', ($offset !== FALSE ? $offset : PHP2GO_ABSOLUTE_PATH));
 	/**
 	 * Framework's CSS path
 	 */
-	define("PHP2GO_CSS_PATH", PHP2GO_OFFSET_PATH . "resources/css/");
+	define('PHP2GO_CSS_PATH', PHP2GO_OFFSET_PATH . "resources/css/");
 	/**
 	 * Framework's icons path
 	 */
-	define("PHP2GO_ICON_PATH", PHP2GO_OFFSET_PATH . "resources/icon/");
+	define('PHP2GO_ICON_PATH', PHP2GO_OFFSET_PATH . "resources/icon/");
 	/**
 	 * Framework's Javascript libraries path
 	 */
-	define("PHP2GO_JAVASCRIPT_PATH", PHP2GO_OFFSET_PATH . "resources/jsrun/");
+	define('PHP2GO_JAVASCRIPT_PATH', PHP2GO_OFFSET_PATH . "resources/jsrun/");
 	/**
 	 * Framework's cache path
 	 */
-	define("PHP2GO_CACHE_PATH", PHP2GO_ROOT . "cache/");
+	define('PHP2GO_CACHE_PATH', PHP2GO_ROOT . "cache/");
 	/**
 	 * Framework's templates path
 	 */
-	define("PHP2GO_TEMPLATE_PATH", PHP2GO_ROOT . "resources/template/");
+	define('PHP2GO_TEMPLATE_PATH', PHP2GO_ROOT . "resources/template/");
 	/**
 	 * Framework's version
 	 */
-	define("PHP2GO_VERSION", "0.5.4");
+	define('PHP2GO_VERSION', '0.5.5');
 	/**
 	 * Date when latest framework's version was released
 	 */
-	define("PHP2GO_RELEASE_DATE", "25/11/2006");
+	define('PHP2GO_RELEASE_DATE', '12/03/2007');
 	/**
 	 * Special key representing framework's modules in import operations
 	 */
-	define("PHP2GO_INCLUDE_KEY", 'php2go');
+	define('PHP2GO_INCLUDE_KEY', 'php2go');
 	/**
 	 * Default directory separator
 	 */
-	define("PHP2GO_DIRECTORY_SEPARATOR", '/');
+	define('PHP2GO_DIRECTORY_SEPARATOR', '/');
 	/**
 	 * Path separator
 	 */
-	define("PHP2GO_PATH_SEPARATOR", (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? ';' : ':'));
+	define('PHP2GO_PATH_SEPARATOR', (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? ';' : ':'));
 	/**
 	 * Indicates if we're running PHP 5.0.0 or higher
 	 */
-	define("IS_PHP5", (floatval(PHP_VERSION) >= 5));
+	define('IS_PHP5', (floatval(PHP_VERSION) >= 5));
 	/**
 	 * Indicates a file name parameter
 	 */
@@ -130,12 +130,14 @@
 
 	/**
 	 * Set INI variables
-	 */
-	ini_set('magic_quotes_gpc', 'off');
-	ini_set('register_argc_argv', 'off');
+	 */	
+	ini_set('short_open_tag', 'on');
+	ini_set('asp_tags', 'off');
+	ini_set('arg_separator.output', "&amp;");
 	ini_set('register_globals', 'off');
-	ini_set('short_open_tag', 'off');
-	ini_set('variables_order', 'EPROSGC');
+	ini_set('register_argc_argv', 'on');	
+	ini_set('magic_quotes_gpc', 'off');
+	ini_set('magic_quotes_runtime', 'off');
 
 	/**
 	 * Mandatory classes
