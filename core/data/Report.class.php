@@ -89,7 +89,7 @@ define('REPORT_FIRSTPREVNEXTLAST', 3);
  * <?xml version="1.0" encoding="iso-8859-1"?>
  * <report title="My Report">
  *   <layout grid="T" sortable="T">
- *     <pagination style="REPORT_PAGING_PREVNEXT">
+ *     <pagination style="REPORT_PREVNEXT">
  *       <param name="useButtons" value="T"/>
  *     </pagination>
  *     <style altstyle="odd,even"/>
@@ -734,7 +734,7 @@ class Report extends PagedDataSet
 	 * # useSymbols : use symbols (<<, <, >, >>) instead of internationalized messages
 	 * # hideInvalid : hide invalid navigation actions
 	 *
-	 * @param int $style Paging style: {@link REPORT_PAGING_DEFAULT}, {@link REPORT_PAGING_FIRSTPREVNEXTLAST} or {@link REPORT_PAGING_PREVNEXT}
+	 * @param int $style Paging style: {@link REPORT_PAGING_DEFAULT}, {@link REPORT_FIRSTPREVNEXTLAST} or {@link REPORT_PREVNEXT}
 	 * @param array $params Set of paging parameters
 	 */
 	function setPagingStyle($style, $params = NULL) {
