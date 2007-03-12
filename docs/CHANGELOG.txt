@@ -1,0 +1,61 @@
+PHP2Go Web Development Framework - CHANGELOG
+=============================================
+
+	Version 0.5.5 - 12/03/2006
+	--------------------------------
+
+	* Documentation inside source files was rewritten in English and phpDoc format
+		* the documentation was extended to cover more explanations and examples, when applicable
+		* the new documentation package will use HTML:frames:default theme, with some small fixes and customizations
+	* [ticket:4] - php2go.xml.feed.Feed - fixed bugs with date nodes and CDATA sections
+	* php2go.data.DataSet, php2go.data.adapter.* - added close() method
+	* Init - fixed undefined variable error inside _initSession() method
+	* php2go.file.FileManager - changed to extend PHP2Go instead of FileSystem
+	* php2go.form.Form - renamed evaluateStatement() to resolveVariables()
+	* php2go.form.listener.FormAJAXListener - listeners bound to submit buttons should automatically set 'url', 'form' and 'method' params
+	* php2go.net.Pop3 - new method added: deleteMessage(), 4 methods renamed
+		* getMsgCount() => getMessagesCount()
+		* listMessages() => getAllMessages()
+		* clearMailBox() => deleteAllMessages()
+		* login() => authenticate()
+	* javascript/dom.js - changed addLoadListener() to call addListener() when document.body isn't available
+	* php2go.net.UserAgent - New detection rules: ie7, opera9, firefox2x, opera9+, winvista
+	* php2go.session.SessionObject - new method added: deleteProperty()
+	* php2go.session.SessionManager - removed delele() method; changed destroy() method to static
+	* php2go.base.Component - new method added: hasAttribute()
+	* php2go.template.widget.* - all classes were moved to php2go.gui package
+	* php2go.template.TemplateParser - assume "php2go.gui" when the path attribute of a widget is a class name
+	* javascript/dom.js - changed isVisible() to consider parent elements when evaluating visibility
+	* Added AbstractValidator class, which is now the parent class of all validators
+	* php2go.validation.* - changed all validators to extend the new AbstractValidator class
+	* php2go.form.Form - added support for "help" node in XML specification
+		* example: <help mode="mode" options="option=value&option2=value2"/>
+	* php2go.form.FormAJAXListener - wasn't rendering onException parameter properly
+	* ph2pgo.form.field.DataGrid, ph2pgo.form.field.EditSearchField, ph2pgo.form.field.EditSelectionField, ph2pgo.form.field.LookupSelectionField - changed to understand the "style" XML attribute
+	* php2go.form.FormRule, php2go.validation.RuleValidator - added support for CURRENCY datatype
+	* javascript/php2go.js - changed PHP2Go.compare to support CURRENCY datatype
+	* php2go.util.json.JSONEncoder - wasn't encoding empty array values and empty object properties correctly
+	* Added thai translation package, produced by Ross Stewart and Trirat Petchsingh
+	* javascript/widgets/calculator.js - wasn't copying the result properly when field's mask was CURRENCY or INTEGER
+	* php2go.form.FormEventListener - 3 new methods added: getOwner(), getOwnerForm() and onDataBind()
+	* php2go.form.FormButton - new method added: onDataBind()
+	* [ticket:5] - Added support for variables inside the following attributes:
+		* listener.file
+		* listener.params
+		* listener.url
+	* php2go.util.Properties - fatal error when processSections=true and the input file doesn't contain sections
+	* php2go.data.Report - 2 new methods added: getCurrentPageUrl() and getPageUrl()	
+	* [ticket:3] - php2go.template.TemplateParser - addded CONFIG tag
+		* this new tag is able to load configuration entries from files in the .ini format
+		* files can be fully or partially loaded (by section name)
+		* config variables can be used anywhere a variable is accepted
+		* example: 
+			* loading: <!-- config file="test.conf" -->
+			* reading: #section_name.variable_name#
+	* php2go.template.Template, php2go.template.TemplateParser - changed to handle cache independently for the main template and its includes
+		* parsing is now composed by 3 phases: pre-compilation, compilation and processing of include blocks
+		* even if the main template is loaded from cache, its include blocks will be processed separately (from cache or not)
+	* [ticket:6] - php2go.base.Document - apply entities conversion on all URL parameters
+	* [ticket:7] - php2go.data.Report - don't clear simple search filters when print mode is enabled
+	* php2go.data.Report - wrong handling of group display using multiple columns
+	* php2go.auth.AuthDb - Added an optional parameter $dbFunction (default=false) in the setCryptFunction method (thx to Flávio Fagundes/Brazil)
