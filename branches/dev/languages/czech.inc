@@ -2,7 +2,7 @@
 /**
  * PHP2Go Web Development Framework
  *
- * Copyright (c) 2002-2006 Marcos Pont
+ * Copyright (c) 2002-2007 Marcos Pont
  *
  * LICENSE:
  *
@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
  * @author Jiri Vasina <poutnik@users.sourceforge.net>
- * @copyright 2002-2006 Marcos Pont
+ * @copyright 2002-2007 Marcos Pont
  * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
  * @version $Id$
  */
