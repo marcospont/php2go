@@ -126,7 +126,7 @@ class Number extends PHP2Go
 	 */
 	function fromDecimalToCurrency($number, $currencySign=NULL, $decSep=NULL, $thousSep=NULL, $precision=NULL, $currencySignPos=NULL) {
 		$locale = localeconv();
-		$currencySign = (is_null($currencySign, TRUE) ? $locale['currency_symbol'] : (empty($currencySign) ? '' : $currencySign));
+		$currencySign = (is_null($currencySign) ? $locale['currency_symbol'] : (empty($currencySign) ? '' : $currencySign));
 		if (empty($decSep))
 			$decSep = $locale['mon_decimal_point'];
 		if (empty($thousSep))
