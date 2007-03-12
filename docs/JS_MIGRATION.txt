@@ -1,7 +1,7 @@
 PHP2Go Web Development Framework - JS MIGRATION
 ================================================
 
-	Version 0.5.4 - November 2006
+	Version 0.5.5 - March 2007
 	---------------------------------
 	http://www.php2go.com.br
 
