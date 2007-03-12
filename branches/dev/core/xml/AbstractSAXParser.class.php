@@ -181,6 +181,7 @@ class AbstractSAXParser extends PHP2Go
 	 * @param resource $parser XML parser
 	 * @param string $name Element name
 	 * @param array $attrs Element attributes
+	 * @abstract
 	 */
 	function startElement($parser, $name, $attrs) {
 	}
@@ -191,6 +192,7 @@ class AbstractSAXParser extends PHP2Go
 	 * @param resource $parser XML parser
 	 * @param string $name Element name
 	 * @param array $attrs Element attributes
+	 * @abstract
 	 */
 	function startElementNS($parser, $name, $attrs) {
 	}
@@ -200,6 +202,7 @@ class AbstractSAXParser extends PHP2Go
 	 *
 	 * @param resource $parser XML parser
 	 * @param string $name Element name
+	 * @abstract
 	 */
 	function endElement($parser, $name) {
 	}
@@ -209,6 +212,7 @@ class AbstractSAXParser extends PHP2Go
 	 *
 	 * @param resource $parser XML parser
 	 * @param string $data Character data
+	 * @abstract
 	 */
 	function characterData($parser, $data) {
 	}
@@ -219,6 +223,7 @@ class AbstractSAXParser extends PHP2Go
 	 * @param resource $parser XML parser
 	 * @param string $prefix NS prefix
 	 * @param string $uri NS URI
+	 * @abstract
 	 */
 	function startNamespace($parser, $prefix, $uri) {
 	}
@@ -228,6 +233,7 @@ class AbstractSAXParser extends PHP2Go
 	 *
 	 * @param resource $parser XML parser
 	 * @param string $prefix NS prefix
+	 * @abstract
 	 */
 	function endNamespace($parser, $prefix) {
 	}
@@ -240,6 +246,7 @@ class AbstractSAXParser extends PHP2Go
 	 * @param string $base Base for resolving the system identifier (system_id) of the notation declaration
 	 * @param string $systemId System identifier
 	 * @param string $publicId Public identifier
+	 * @abstract
 	 */
 	function notationDecl($parser, $notationName, $base, $systemId, $publicId) {
 	}
@@ -250,6 +257,7 @@ class AbstractSAXParser extends PHP2Go
 	 * @param resource $parser XML parser
 	 * @param string $target Processing instruction target
 	 * @param string $data Instruction data
+	 * @abstract
 	 */
 	function processingInstruction($parser, $target, $data) {
 	}
@@ -262,6 +270,7 @@ class AbstractSAXParser extends PHP2Go
 	 * @param string $base Base for resolving the system identifier
 	 * @param string $systemId System identifier
 	 * @param string $publicId Public identifier
+	 * @abstract
 	 */
 	function externalEntityRef($parser, $openEntityNames, $base, $systemId, $publicId) {
 	}
@@ -275,6 +284,7 @@ class AbstractSAXParser extends PHP2Go
 	 * @param string $systemId System identifier
 	 * @param string $publicId Public identifier
 	 * @param string $notationName Name of the entity's notation
+	 * @abstract
 	 */
 	function unparsedEntityDecl($parser, $entityName, $base, $systemId, $publicId, $notationName) {
 	}

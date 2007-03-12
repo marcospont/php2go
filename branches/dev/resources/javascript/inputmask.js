@@ -43,7 +43,7 @@ PHP2Go.include(PHP2Go.baseUrl + 'form.js');
  * handlers that interact with an instance of the
  * {@link Mask} class to validate and format the data
  * that is entered in the associated text input
- * @class InputMask
+ * @constructor
  * @param {Object} fld Field reference
  * @param {Object} mask Mask instance
  */
@@ -312,7 +312,7 @@ InputMask.prototype.update = function(e, isBlur) {
  * length and acceptable chars) and literals (members
  * of the mask with fixed contents and sometimes fixed
  * position)
- * @class Mask
+ * @constructor
  */
 Mask = function() {
 	/**

@@ -996,7 +996,7 @@ ComponentField.prototype.raiseEvent = function(name, args) {
  * @param {String} frm Form name
  * @param {String} name Group name (including [] chars)
  * @param {Object} opts Options
- * @class CheckboxController
+ * @constructor
  */
 CheckboxController = function(frm, name, opts) {
 	/**
