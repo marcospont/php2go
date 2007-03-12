@@ -89,9 +89,11 @@ class HttpResponse extends PHP2Go
 	 */
 	function addCookie($Cookie) {
 		if (TypeUtils::isInstanceOf($Cookie, 'HttpCookie')) {
-			setcookie($Cookie->getName(), $Cookie->getValue(),
-					$Cookie->getExpiryTime(), $Cookie->getPath(),
-					$Cookie->getDomain(), ($Cookie->isSecure() ? 1 : 0));
+			if ($Cookie->getDomain()) {
+				setcookie($Cookie->getName(), $Cookie->getValue(), $Cookie->getExpiryTime(), $Cookie->getPath(), $Cookie->getDomain(), ($Cookie->isSecure() ? 1 : 0));
+			} else {
+				setcookie($Cookie->getName(), $Cookie->getValue(), $Cookie->getExpiryTime(), $Cookie->getPath());
+			}
 		}
 	}
 
