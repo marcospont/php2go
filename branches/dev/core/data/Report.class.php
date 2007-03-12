@@ -1227,7 +1227,7 @@ class Report extends PagedDataSet
 	/**
 	 * Process layout settings coming from the XML specification
 	 *
-	 * @param XmlNoe &$Layout Layout node
+	 * @param XmlNode &$Layout Layout node
 	 * @access private
 	 */
 	function _buildLayout(&$Layout) {
