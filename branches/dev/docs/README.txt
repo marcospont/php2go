@@ -1,11 +1,11 @@
 PHP2Go Web Development Framework - README
 ==========================================
 
-	Version 0.5.4 - November 2006
-	---------------------------------
+	Version 0.5.5 - March 2007
+	--------------------------------
 	http://www.php2go.com.br
 
-		Copyright (C) 2002-2006 Marcos Pont <mpont@users.sourceforge.net>
+		Copyright (C) 2002-2007 Marcos Pont <mpont@users.sourceforge.net>
 
 		This library is free software; you can redistribute it and/or
 		modify it under the terms of the GNU Lesser General Public
@@ -49,14 +49,21 @@ PHP2Go Web Development Framework - README
 		documentation.
 
 		The PHP2Go Web Development Framework is fully compatible with PHP 5.
-
-		If you find any problems, bugs or inconsistences in the code or in the funcionality,
-		please let us know. Report your suggestions to <mpont@users.sourceforge.net> or
-		using the discussion forum at http://www.php2go.com.br/forum/.
-
+		
 	Download:
 		You can get the latest version of the framework and the documentation files at
 		the project website: http://www.php2go.com.br.
+		
+	Report bugs and request features:
+
+		If you find any problems, bugs or inconsistences in the code or in the funcionality,
+		please let us know. You have the following channels to communicate:
+			* PHP2Go Trac Server: submit tickets of bugs and feature requests - http://dev.php2go.com.br;
+			* PHP2Go Forum: ask, find and provided help regarding the framework - http://forum.php2go.com.br;
+			* Contact the developer: <mpont@users.sourceforge.net>.
+
+	Subversion public access:
+		You can browse the project's Subversion repository at http://dev.php2go.com.br/browse.
 
 	Credits:
 		The PHP2Go Web Development Framework was created and developed by Marcos Pont
@@ -69,6 +76,7 @@ PHP2Go Web Development Framework - README
 		Jiri Vasina (Czech Republic) - czech language package
 		Stefan Riedel - german language package
 		James Williams - french language package
+		Lenon Scortegagna, Valdir Stiebe Junior, Flávio Fagundes - code contributors, beta testers
 
 	Installation and setup:
 		See INSTALL.txt
@@ -81,7 +89,7 @@ PHP2Go Web Development Framework - README
 
 	Demo applications:
 		The PHP2Go website contains a set of demo applications using the most important features
-		of the framework. Visit http://www.php2go.com.br and choose "Online Demos" in the left menu.
+		of the framework. Visit http://www.php2go.com.br and choose "Online Demos" in the menu.
 
 	Hope you enjoy it!
 		Marcos Pont
