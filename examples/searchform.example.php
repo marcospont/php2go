@@ -29,6 +29,7 @@
 
 	require_once('config.example.php');
 	import('php2go.base.Document');
+	import('php2go.db.QueryBuilder');
 	import('php2go.form.SearchForm');
 
 	$db =& Db::getInstance();
