@@ -37,18 +37,18 @@
 	// in this example, we will use SF.net public X.509 certificate
 	$Cert = new OpenSSLCertificate('resources/example.cer');
 	println("Name: " . $Cert->getName());
-	println("Subject/Owner: " . $Cert->ownerDN->toString());
+	println("Subject/Owner: " . $Cert->ownerDN->__toString());
 	$Owner = $Cert->getOwnerDN();
 	println("Only the owner common name: " . $Owner->getCommonName());
 	println("Hash: " . $Cert->getHash());
 	println("Serial Number: " . $Cert->getSerialNumber());
 	println("Version: " . $Cert->getVersion());
-	println("Issuer: " . $Cert->issuerDN->toString());
+	println("Issuer: " . $Cert->issuerDN->__toString());
 	println("Issue Date (NotBefore): " . $Cert->getIssueDate("d/m/Y H:i:s"));
 	println("Expiry Date (NotAfter): " . $Cert->getExpiryDate("d/m/Y H:i:s"));
 	println("Is valid?: " . ($Cert->isValid() ? "yes" : "no"));
 	println("Purposes: " . dumpArray($Cert->getPurposes()));
-	println("String representation:<br>" . nl2br($Cert->toString()));
+	println("String representation:<br>" . nl2br($Cert->__toString()));
 
 
 ?>

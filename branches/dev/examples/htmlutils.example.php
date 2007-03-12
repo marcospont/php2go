@@ -71,7 +71,8 @@
 	 * IMPORTANT NOTE : The HtmlUtils::window method will not work in a script that doesn't have an instance of the Document class. In these cases,
 	 * you must include PHP2GO_JAVASCRIPT_PATH . 'php2go.js' to make it work
 	 */
-	$script = "<script language='JavaScript' type='text/javascript' src='" . PHP2GO_JAVASCRIPT_PATH . 'php2go.js' . "'></script>";
+	$conf =& Conf::getInstance();
+	$script = '<script language="JavaScript" type="text/javascript" src="' . PHP2GO_JAVASCRIPT_PATH . 'php2go.js?locale=' . $conf->getConfig('LANGUAGE_CODE') . '&charset=' . $conf->getConfig('CHARSET') . '"></script>';
 	$anchor = HtmlUtils::anchor('javascript:void(0)', 'Open a new window', 'Open a new window', '', array('onClick' => HtmlUtils::window('http://www.php2go.com.br', 32, 800, 600)));
 	println("<b>Popup window anchor:</b> $script$anchor<br>");
 

@@ -35,13 +35,13 @@
 	$Cookie = new HttpCookie();
 	if (HttpRequest::cookie('test') == NULL) {
 		if (HttpRequest::get('op') == 'set') {
-			$Cookie->set('test', 'mycookie', HttpRequest::serverName(), '/', 20);
+			$Cookie->set('test', 'mycookie', '', '/', 20);
 			HttpResponse::addCookie($Cookie);
 			$op = 'The cookie was added. Reload the page to verify.<br><br>';
 		}
 	} else {
 		if (HttpRequest::get('op') == 'unset') {
-			$Cookie->set('test', 'mycookie', HttpRequest::serverName(), '/', -20);
+			$Cookie->set('test', 'mycookie', '', '/', -20);
 			HttpResponse::addCookie($Cookie);
 			$op = 'The cookie was removed. Reload the page to verify.<br><br>';
 		}

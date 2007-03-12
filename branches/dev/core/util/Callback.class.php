@@ -243,6 +243,6 @@ class Callback extends PHP2Go
 			}
 		}
 		if (!$this->valid && $this->throwErrors)
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_CALLBACK', $this->toString()), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_CALLBACK', $this->__toString()), E_USER_ERROR, __FILE__, __LINE__);
 	}
 }
