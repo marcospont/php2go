@@ -2,7 +2,7 @@
 /**
  * PHP2Go Web Development Framework
  *
- * Copyright (c) 2002-2006 Marcos Pont
+ * Copyright (c) 2002-2007 Marcos Pont
  *
  * LICENSE:
  *
@@ -23,7 +23,7 @@
  *
  * @author James Williams <james.l.williams@gmail.com>
  * @author Christophe Foiret <christophe.foiret@valdoise.fr>
- * @copyright 2002-2006 Marcos Pont
+ * @copyright 2002-2007 Marcos Pont
  * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
  * @version $Id$
  */
