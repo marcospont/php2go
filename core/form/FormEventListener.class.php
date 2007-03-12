@@ -68,7 +68,6 @@ define('FORM_EVENT_AJAX', 'AJAX');
  *
  * @package form
  * @uses FormEventListener
- * @uses FormRule
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
@@ -210,7 +209,7 @@ class FormEventListener extends PHP2Go
 	}
 
 	/**
-	 * Get the rule's owner field
+	 * Get the listener's owner field
 	 *
 	 * @return FormField
 	 */

@@ -260,7 +260,7 @@ class UserAgent extends PHP2Go
 	 * </code>
 	 *
 	 * @param string $identifier Browser identifier
-	 * @return unknown
+	 * @return bool
 	 */
 	function matchBrowser($identifier) {
 		$identifier = strtolower($identifier);

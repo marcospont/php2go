@@ -46,6 +46,7 @@ import('php2go.template.TemplateParser');
  *
  * @package template
  * @uses CacheManager
+ * @uses TemplateConfigFile
  * @uses TemplateParser
  * @uses TypeUtils
  * @uses User
@@ -258,8 +259,6 @@ class Template extends Component
 	 * This method must be called only once.
 	 *
 	 * @uses TemplateParser::parse()
-	 * @uses TemplateParser::getCacheData()
-	 * @uses TemplateParser::loadCacheData()
 	 */
 	function parse() {
 		$this->Parser->parse($this);
@@ -842,6 +841,7 @@ class Template extends Component
 	 * Load a set of config variables
 	 *
 	 * @param array $props Properties from the CONFIG tag
+	 * @uses TemplateConfigFile::get()
 	 * @access private
 	 */
 	function _loadConfigVars($props) {
