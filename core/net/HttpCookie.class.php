@@ -72,7 +72,7 @@ class HttpCookie extends PHP2Go
 	 * @var string
 	 * @access private
 	 */
-	var $path;
+	var $path = '/';
 
 	/**
 	 * Expiry timestamp
@@ -88,7 +88,7 @@ class HttpCookie extends PHP2Go
 	 * @var bool
 	 * @access private
 	 */
-	var $secure;
+	var $secure = FALSE;
 
 	/**
 	 * Class constructor
@@ -112,8 +112,10 @@ class HttpCookie extends PHP2Go
 	function set($name, $value, $domain=NULL, $path='/', $expires=COOKIE_DEFAULT_EXPIRY_TIME, $secure=FALSE) {
 		$this->setName($name);
 		$this->setValue($value);
-		$this->setDomain($domain);
-		$this->setPath($path);
+		if ($domain)
+			$this->setDomain($domain);
+		if ($path)
+			$this->setPath($path);
 		$this->setExpiryTime($expires);
 		$this->secure = $secure;
 	}
@@ -165,7 +167,7 @@ class HttpCookie extends PHP2Go
 	 * @param string $name New name
 	 */
 	function setName($name) {
-		$this->name = trim($name);
+		$this->name = $name;
 	}
 
 	/**
@@ -211,7 +213,8 @@ class HttpCookie extends PHP2Go
 	 * @param string $domain New domain
 	 */
 	function setDomain($domain) {
-		$this->domain = (TypeUtils::isNull($domain) ? $_SERVER['SERVER_NAME'] : $domain);
+		if (!empty($domain))
+			$this->domain = $domain;
 	}
 
 	/**
@@ -240,7 +243,8 @@ class HttpCookie extends PHP2Go
 	 * @param string $path New path
 	 */
 	function setPath($path) {
-		$this->path = trim($path);
+		if (!empty($path))
+			$this->path = $path;
 	}
 
 	/**
