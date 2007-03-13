@@ -354,7 +354,7 @@ class TemplateParser extends PHP2Go
 				foreach ($cached['def'] as $block => $def) {
 					if ($block != $controlBlock && array_key_exists($block, $this->tplDef))
 						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
-					$this->tplDef[$block] = array_merge((array)$this->tplDef[$block], $def[$block]);
+					$this->tplDef[$block] = array_merge((array)$this->tplDef[$block], $def);
 				}
 			} else {
 				// save and reinitialize current control variables
