@@ -1,7 +1,7 @@
 PHP2Go Web Development Framework - CHANGELOG
 =============================================
 
-	Version 0.5.5 - 12/03/2006
+	Version 0.5.5 - 12/03/2007
 	--------------------------------
 
 	* Documentation inside source files was rewritten in English and phpDoc format
@@ -44,12 +44,12 @@ PHP2Go Web Development Framework - CHANGELOG
 		* listener.params
 		* listener.url
 	* php2go.util.Properties - fatal error when processSections=true and the input file doesn't contain sections
-	* php2go.data.Report - 2 new methods added: getCurrentPageUrl() and getPageUrl()	
+	* php2go.data.Report - 2 new methods added: getCurrentPageUrl() and getPageUrl()
 	* [ticket:3] - php2go.template.TemplateParser - addded CONFIG tag
 		* this new tag is able to load configuration entries from files in the .ini format
 		* files can be fully or partially loaded (by section name)
 		* config variables can be used anywhere a variable is accepted
-		* example: 
+		* example:
 			* loading: <!-- config file="test.conf" -->
 			* reading: #section_name.variable_name#
 	* php2go.template.Template, php2go.template.TemplateParser - changed to handle cache independently for the main template and its includes
