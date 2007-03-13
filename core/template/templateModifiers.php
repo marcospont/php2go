@@ -24,6 +24,7 @@
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @copyright 2002-2007 Marcos Pont
  * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @package template
  * @version $Id$
  */
 
@@ -31,8 +32,6 @@
  * The list below represents the variable modifiers bundled with the framework.
  * In order to add your custom modifiers, you can register them in the global
  * configuration settings or directly calling addModifier() on a Template instance.
- *
- * @package template
  */
 $P2G_MODIFIER = array();
 $P2G_MODIFIER['substring'] = 'substr';

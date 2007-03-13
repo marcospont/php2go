@@ -241,7 +241,7 @@ function println($str, $nl='<br>') {
 }
 
 /**
- * Dumps a variable, using <pre> tags
+ * Dumps a variable, using pre tags
  *
  * @uses var_dump()
  * @param mixed $var Variable value
@@ -283,7 +283,7 @@ function dumpArray($arr, $return=TRUE, $stringLimit=200, $deep=FALSE) {
  * Returns the human readable representation of a variable
  *
  * @param mixed $var Variable
- * @param bool $formatted Whether to use <pre> tags
+ * @param bool $formatted Whether to use pre tags
  * @return string
  */
 function exportVariable($var, $formatted=FALSE) {
