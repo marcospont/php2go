@@ -1,168 +1,164 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/HttpRequest.class.php,v 1.33 2006/11/25 12:00:11 mpont Exp $
-// $Date: 2006/11/25 12:00:11 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.net.UserAgent');
 import('php2go.session.SessionManager');
-import('php2go.text.StringUtils');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		HttpRequest
-// @desc		Esta classe contém funções utilitárias que permitem
-//				interagir com a requisição HTTP. Detecção de informações
-//				sobre o browser do cliente, variáveis de ambiente e de
-//				sistema e parâmetros da requisição são algumas das funcionalidades
-//				oferecidas
-// @package		php2go.net
-// @extends		PHP2Go
-// @uses		Environment
-// @uses		StringUtils
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.33 $
-//!-----------------------------------------------------------------
+/**
+ * Collection of methods to handle with the incoming HTTP request
+ *
+ * Collects information about request parameters, client browser, context
+ * variables, environment variables, system variables, ...
+ *
+ * @package net
+ * @uses Environment
+ * @uses Registry
+ * @uses SessionManager
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class HttpRequest extends PHP2Go
 {
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::&getInstance
-	// @desc		Retorna uma instância única da classe
-	// @access		public
-	// @return		HttpRequest object	Instância da classe
-	// @static
-	//!-----------------------------------------------------------------
-	function &getInstance() {
-		static $instance;
-		if (!isset($instance)) {
-			$instance = new HttpRequest;
-		}
-		return $instance;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::&request
-	// @desc		Retorna todo o conteúdo do superglobal $_REQUEST
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all request parameters
+	 *
+	 * Returns a reference to the superglobal $_REQUEST.
+	 *
+	 * @return array
+	 * @static
+	 */
 	function &request() {
 		$request =& $_REQUEST;
 		return $request;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::get
-	// @desc		Consulta o valor de um parâmetro GET
-	// @access		public
-	// @param		paramName string		"" Nome do parâmetro solicitado
-	// @return		mixed Valor do parâmetro ou NULL
-	// @note		Se o nome da chave for omitido ($paramName == ''), retorna o vetor $_GET por completo
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Read a GET parameter
+	 *
+	 * If $paramName is missing, the full superglobal
+	 * $_GET is returned.
+	 *
+	 * @uses HttpRequest::fetchVar()
+	 * @param string $paramName Parameter name
+	 * @return mixed
+	 * @static
+	 */
 	function get($paramName='') {
-		if (trim($paramName) != '') {
-			$req =& HttpRequest::getInstance();
-			return $req->_fetchVar(trim($paramName), 'GET');
-		} else
-			return TypeUtils::toArray($_GET);
+		$paramName = trim($paramName);
+		if ($paramName != '')
+			return HttpRequest::fetchVar($paramName, 'GET');
+		return (array)$_GET;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::post
-	// @desc		Consulta o valor de um parâmetro POST
-	// @access		public
-	// @param		paramName string		"" Nome do parâmetro solicitado
-	// @return		mixed Valor do parâmetro ou NULL
-	// @note		Se o nome da chave for omitido ($paramName == ''), retorna o vetor $_POST por completo
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Read a POST parameter
+	 *
+	 * If $paramName is missing, the full superglobal
+	 * $_POST is returned.
+	 *
+	 * @uses HttpRequest::fetchVar()
+	 * @param string $paramName Parameter name
+	 * @return mixed
+	 * @static
+	 */
 	function post($paramName='') {
-		if (trim($paramName) != '') {
-			$req =& HttpRequest::getInstance();
-			return $req->_fetchVar(trim($paramName), 'POST');
-		} else
-			return TypeUtils::toArray($_POST);
+		$paramName = trim($paramName);
+		if ($paramName != '')
+			return HttpRequest::fetchVar($paramName, 'POST');
+		return (array)$_POST;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::cookie
-	// @desc		Consulta o valor de um cookie
-	// @access		public
-	// @param		paramName string		"" Nome do parâmetro solicitado
-	// @return		mixed Valor do parâmetro ou NULL
-	// @note		Se o nome da chave for omitido, o método retorna o vetor $_COOKIE completo
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Read a cookie value
+	 *
+	 * If $paramName is missing, the full superglobal
+	 * $_COOKIE is returned.
+	 *
+	 * @uses HttpRequest::fetchVar()
+	 * @param string $paramName Cookie name
+	 * @return mixed
+	 * @static
+	 */
 	function cookie($paramName='') {
-		if (trim($paramName) != '') {
-			$req =& HttpRequest::getInstance();
-			return $req->_fetchVar(trim($paramName), 'COOKIE');
-		} else
-			return TypeUtils::toArray($_COOKIE);
+		$paramName = trim($paramName);
+		if ($paramName != '')
+			return HttpRequest::fetchVar($paramName, 'COOKIE');
+		return (array)$_COOKIE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::session
-	// @desc		Consulta o valor de uma variável de sessão
-	// @access		public
-	// @param		paramName string		"" Nome do parâmetro solicitado
-	// @return		mixed Valor do parâmetro ou NULL
-	// @note		Se o nome da chave for omitido, o método retorna o vetor $_SESSION completo
-	// @static
-	//!-----------------------------------------------------------------
-	function session($paramName='') {
-		if (trim($paramName) != '') {
-			$req =& HttpRequest::getInstance();
-			return $req->_fetchVar(trim($paramName), 'SESSION');
-		} else
-			return isset($_SESSION) ? TypeUtils::toArray($_SESSION) : FALSE;
+	/**
+	 * Read a session variable
+	 *
+	 * If $varName is missing, the full superglobal
+	 * $_SESSION is returned.
+	 *
+	 * @uses HttpRequest::fetchVar()
+	 * @param string $varName Variable name
+	 * @return mixed
+	 * @static
+	 */
+	function session($varName='') {
+		$varName = trim($varName);
+		if ($varName != '')
+			return HttpRequest::fetchVar($varName, 'SESSION');
+		return (array)$_SESSION;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::getVar
-	// @desc		Busca e retorna o valor de uma variável
-	// @access		public
-	// @param		variableName string		Nome da variável
-	// @param		where string				"all" Indica onde a variável deve ser buscada
-	// @param		searchOrder string		"" Ordem de busca nos dados da requisição
-	// @return		mixed Valor da variável ou NULL se não encontrada
-	// @note		O comportamento padrão do método é buscar pela variável em todos
-	//				os locais possíveis na requisição, de acordo com a ordem estabelecida
-	//				pelo parâmetro de inicialização 'variables_order'. Esta ordem pode ser
-	//				sobreposta através do parâmetro $searchOrder
-	// @note		Também pode ser realizada uma busca explícita em um dos repositórios:
-	//				'reg', 'object', 'get', 'post', 'cookie', 'session', 'env', 'server' e 'request'
-	// @note		O repositório req representa uma instância da classe Registry, que mantém o conteúdo
-	//				do vetor $GLOBALS em suas propriedades
-	// @note		O repositório obj representa os objetos de sessão (php2go.session.SessionObject)
-	//				criados. Modo de utilização: session_var:property_name
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a request parameter by name
+	 *
+	 * The $where argument can be used to specify what should
+	 * be the base where to seek for the parameter.
+	 *
+	 * If $where is missing, the parameter will be searched in
+	 * all possible sources: 'get', 'post', 'cookie', 'session',
+	 * 'env', 'object' and 'reg'.
+	 *
+	 * The 'object' source means the objects persisted in the
+	 * session scope. The 'reg' source means the singleton of
+	 * the {@link Registry} class, which is initialized with
+	 * the value of $GLOBALS.
+	 *
+	 * The $searchOrder argument can be used to define a search
+	 * order, when $where == 'all'.
+	 *
+	 * @uses HttpRequest::fetchVar()
+	 * @uses SessionManager::getObjectProperty()
+	 * @uses Registry::get()
+	 * @param string $variableName Parameter name
+	 * @param string $where Search source
+	 * @param string $searchOrder Search order, when $where == 'all'
+	 * @return mixed
+	 * @static
+	 */
 	function getVar($variableName, $where='all', $searchOrder='EGPCSOR') {
-		$req =& HttpRequest::getInstance();
 		$return = NULL;
 		if (strtoupper($where) == 'ALL') {
             for ($i=0; $i<strlen($searchOrder); ++$i) {
@@ -173,22 +169,22 @@ class HttpRequest extends PHP2Go
 							return $value;
 						break;
 					case 'G' :
-						$value = $req->_fetchVar($variableName, 'GET');
+						$value = HttpRequest::fetchVar($variableName, 'GET');
 						if (!TypeUtils::isNull($value, TRUE))
 							return $value;
 						break;
 					case 'P' :
-						$value = $req->_fetchVar($variableName, 'POST');
+						$value = HttpRequest::fetchVar($variableName, 'POST');
 						if (!TypeUtils::isNull($value, TRUE))
 							return $value;
 						break;
 					case 'C' :
-						$value = $req->_fetchVar($variableName, 'COOKIE');
+						$value = HttpRequest::fetchVar($variableName, 'COOKIE');
 						if (!TypeUtils::isNull($value, TRUE))
 							return $value;
 						break;
 					case 'S' :
-						$value = $req->_fetchVar($variableName, 'SESSION');
+						$value = HttpRequest::fetchVar($variableName, 'SESSION');
 						if (!TypeUtils::isNull($value, TRUE))
 							return $value;
 						break;
@@ -211,64 +207,93 @@ class HttpRequest extends PHP2Go
 			elseif ($where == 'OBJECT')
 				$return = SessionManager::getObjectProperty($variableName);
 			else
-				$return = $req->_fetchVar($variableName, $where);
+				$return = HttpRequest::fetchVar($variableName, $where);
 		}
 		return $return;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::getHeaders
-	// @desc		Retorna um vetor contendo todos os headers HTTP da requisição atual
-	// @access		public
-	// @return		array Vetor de headers da requisição HTTP
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Internal method used to fetch parameters
+	 * from one of the super globals: $_GET, $_POST,
+	 * $_COOKIE and $_SESSION
+	 *
+	 * The $variableName arguments accepts names of
+	 * entries of arrays with 2 or 3 dimensions:
+	 * <code>
+	 * $var = HttpRequest::fetchVar('array[key]', 'POST');
+	 * $var2 = HttpRequest::fetchVar('data_grid[2][name]', 'POST');
+	 * </code>
+	 *
+	 * @param string $variableName Parameter name
+	 * @param string $where Source
+	 * @return mixed Parameter value
+	 * @static
+	 */
+	function fetchVar($variableName, $where) {
+		$arrayContent = array();
+		eval("\$arrayContent =& \$_$where;");
+		$arrayContent = (array)$arrayContent;
+		if (preg_match("/([^\[]+)\[([^\]]+)\](\[([^\]]+)\])?/", $variableName, $matches)) {
+			if (isset($arrayContent[$matches[1]]) && is_array($arrayContent[$matches[1]])) {
+				$value = @$arrayContent[$matches[1]][$matches[2]];
+				if (isset($matches[3]) && is_array($value))
+					$value = @$value[$matches[4]];
+				return $value;
+			}
+		} elseif (array_key_exists($variableName, $arrayContent)) {
+			return $arrayContent[$variableName];
+		}
+		return NULL;
+	}
+
+	/**
+	 * Get request headers
+	 *
+	 * @return array
+	 * @static
+	 */
 	function getHeaders() {
 		return apache_request_headers();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::method
-	// @desc		Busca o método utilizado na requisição
-	// @access		public
-	// @return		string
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get request method
+	 *
+	 * @return string
+	 * @static
+	 */
 	function method() {
 		return Environment::get('REQUEST_METHOD');
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::isGet
-	// @desc		Verifica se o request method é GET
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if the method of the request is GET
+	 *
+	 * @return bool
+	 * @static
+	 */
 	function isGet() {
 		$method = Environment::get('REQUEST_METHOD');
 		return ($method == 'GET');
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::isPost
-	// @desc		Verifica se o request method é POST
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if the method of the request is POST
+	 *
+	 * @return bool
+	 * @static
+	 */
 	function isPost() {
 		$method = Environment::get('REQUEST_METHOD');
 		return ($method == 'POST');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::protocol
-	// @desc		Busca o protocolo utilizado na requisição
-	// @access		public
-	// @return		string Nome do protocolo da requisição: http ou https
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get request protocol
+	 *
+	 * @return string
+	 * @static
+	 */
 	function protocol() {
 		if (HttpRequest::isSecure())
 			return 'https';
@@ -276,25 +301,24 @@ class HttpRequest extends PHP2Go
 			return 'http';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::isSecure
-	// @desc		Verifica se o protocolo HTTP seguro está sendo utilizado nesta requisição
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the request uses HTTPS
+	 *
+	 * @return bool
+	 * @static
+	 */
 	function isSecure() {
 		return (strtolower(Environment::get('HTTPS')) == 'on' || Environment::has('SSL_PROTOCOL_VERSION'));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::serverHostName
-	// @desc		Retorna o nome do host da requisição atual, juntamente
-	//				com a porta utilizada na requisição
-	// @access		public
-	// @return		string Nome do host e número da porta (se ela for diferente da porta padrão do protocolo)
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the server's hostname
+	 *
+	 * Returns hostname and port (when different from default ports)
+	 *
+	 * @return string
+	 * @static
+	 */
 	function serverHostName() {
 		$port = Environment::has('SERVER_PORT') ? Environment::get('SERVER_PORT') : '80';
 		$protocol = HttpRequest::protocol();
@@ -305,37 +329,37 @@ class HttpRequest extends PHP2Go
 		return Environment::get('HTTP_HOST') . $port;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::serverName
-	// @desc		Retorna o nome do servidor
-	// @access		public
-	// @return		string Nome do servidor
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the server's name
+	 *
+	 * @return string
+	 * @static
+	 */
 	function serverName() {
 		return Environment::get('SERVER_NAME');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::scriptName
-	// @desc		Retorna o caminho completo no servidor do script atual
-	// @acess		public
-	// @return		string Caminho do script atual
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the full path of the current script
+	 *
+	 * @return string
+	 * @static
+	 */
 	function scriptName() {
 		return Environment::get('SCRIPT_NAME');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::scriptInfo
-	// @desc		Constrói um vetor com nome completo, caminho base e
-	//				nome de arquivo para o script atual
-	// @access		public
-	// @return		array Vetor associativo contendo três posições: path - caminho
-	//				completo; base - diretório base do script; file - arquivo
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get information about the running script
+	 *
+	 * Returns a hash array with the following keys:
+	 * # path : full path
+	 * # base : script's base directory
+	 * # file : script's filename
+	 *
+	 * @return array
+	 * @static
+	 */
 	function scriptInfo() {
 		$scriptName = HttpRequest::scriptName();
 		$scriptFile = basename($scriptName);
@@ -347,35 +371,35 @@ class HttpRequest extends PHP2Go
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::basePath
-	// @desc		Busca o caminho base atual, a partir da raiz do domínio
-	// @access		public
-	// @return		string Caminho base atual
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Return the base path of the current script
+	 *
+	 * @return string
+	 * @static
+	 */
 	function basePath() {
 		return Environment::get('PHP_SELF');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::queryString
-	// @desc		Retorna a string dos parâmetros da requisição
-	// @access		public
-	// @return		string Parâmetros da requisição
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the request's query string
+	 *
+	 * @return string
+	 * @static
+	 */
 	function queryString() {
 		return Environment::get('QUERY_STRING');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::url
-	// @desc		Retorna a URL da requisição (protocolo, servidor e caminho)
-	// @return		string URL da requisição
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the requested URL
+	 *
+	 * Returns protocol, port (when different from the default ports),
+	 * server name and script's base path.
+	 *
+	 * @return string
+	 * @static
+	 */
 	function url() {
 		$protocol = HttpRequest::protocol();
 		$port = Environment::get('SERVER_PORT');
@@ -386,15 +410,17 @@ class HttpRequest extends PHP2Go
 		return $base . HttpRequest::basePath();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::uri
-	// @desc		Retorna a URI (caminho e parâmetros) da requisição,
-	//				excluindo apenas o ID da sessão, se estiver presente
-	// @param		full bool	"TRUE" Retornar o caminho completo (incluindo protocolo, host e porta)
-	// @return		string Caminho completo da requisição
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the requested URI
+	 *
+	 * When $full is set to TRUE, returns protocol, port (when different
+	 * from the default ports), server name, script path and query string.
+	 * Otherwise, returns script path and query string only.
+	 *
+	 * @param bool $full Whether to return full information
+	 * @return string
+	 * @static
+	 */
 	function uri($full=TRUE) {
 		if ($full) {
 			$protocol = HttpRequest::protocol();
@@ -416,139 +442,50 @@ class HttpRequest extends PHP2Go
 		return $base . $requestUri;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::userAgent
-	// @desc		Busca informações sobre o browser agente
-	// @access		public
-	// @return		string Informações do browser agente
-	// @see			HttpRequest::getBrowserInfo
-	// @see			HttpRequest::getBrowserName
-	// @static
-	//!-----------------------------------------------------------------
-	function userAgent() {
-		return Environment::get('HTTP_USER_AGENT');
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::referer
-	// @desc		Retorna o endereço do referente da requisição atual
-	// @access		public
-	// @return		string Endereço do referente
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the request's referer URI
+	 *
+	 * @return string
+	 * @static
+	 */
 	function referer() {
 		return Environment::get('HTTP_REFERER');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::remoteAddress
-	// @desc		Busca o endereço IP do cliente
-	// @access		public
-	// @return		string Endereço IP do cliente
-	// @see			HttpRequest::remoteHost
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get client's user agent
+	 *
+	 * @return string
+	 * @static
+	 */
+	function userAgent() {
+		return Environment::get('HTTP_USER_AGENT');
+	}
+
+	/**
+	 * Get the client's IP address
+	 *
+	 * @return string
+	 * @static
+	 */
 	function remoteAddress() {
 		if (Environment::has('X_FORWARDED_FOR'))
 			return array_pop(explode(',', Environment::get('X_FORWARDED_FOR')));
 		return Environment::get('REMOTE_ADDR');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::remoteHost
-	// @desc		Busca o nome do host a partir do endereço remoto do usuário atual
-	// @access		public
-	// @return		string Nome do host
-	// @note		Mantendo o comportamento da função gethostbyaddr, quando o domínio
-	//				não pode ser resolvido é retornado o endereço IP
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the client's hostname
+	 *
+	 * When the client's hostname can't be resolved, the
+	 * IP address is returned.
+	 *
+	 * @uses gethostbyaddr()
+	 * @return string
+	 * @static
+	 */
 	function remoteHost() {
 		return @gethostbyaddr(HttpRequest::remoteAddress());
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::registerGlobals
-	// @desc		Move para o escopo global um conjunto de valores
-	// 				buscando-os nas variáveis fornecidas à requisição
-	// 				atráves de GET, POST e COOKIE
-	// @access		public
-	// @return		bool Retorna TRUE se todas as variáveis forem publicadas ou
-	// 				FALSE se alguma delas não for encontrada ou se a
-	// 				função for executada sem parâmetros
-	// @note 		A função não possui um número fixo de parâmetros.
-	// 				Deve ser executada com n (onde n > 0) parâmetros
-	// 				que representam n variáveis a serem publicadas
-	// 				no escopo global
-	// @static
-	//!-----------------------------------------------------------------
-	function registerGlobals() {
-		$quotes = TypeUtils::parseInteger(System::getIni('magic_quotes_gpc'));
-		if (!System::isGlobalsOn() || !$quotes) {
-			$vars = func_get_args();
-			if (sizeof($vars) == 0) return FALSE;
-			$check = TRUE;
-			foreach($vars as $key) {
-				if ($value = HttpRequest::getVar($key)) {
-					if (!$quotes)
-						$value = (!TypeUtils::isArray($value)) ? addslashes($value) : $value;
-					$GLOBALS[$key] = $value;
-					unset($value);
-				} else {
-					// valor não encontrado: retorno global da função passa a ser FALSE
-					$check = FALSE;
-				}
-			}
-			return $check;
-		}
-		return FALSE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::unsetGlobals
-	// @desc		Remove do escopo global todas as variáveis, exceto
-	//				as variáveis especiais pré-definidas pelo PHP
-	// @access		public
-	// @return		void
-	// @static
-	//!-----------------------------------------------------------------
-	function unsetGlobals() {
-		$protectedVars = array('_SERVER', '_POST', '_GET', '_COOKIE', '_ENV', '_REQUEST', 'GLOBALS');
-		foreach ($GLOBALS as $variable => $value) {
-			if (!in_array($variable, $protectedVars)) {
-				unset($GLOBALS[$variable]);
-			}
-		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	HttpRequest::_fetchVar
-	// @desc		Este método é executado a partir dos métodos get, post,
-	//				cookie, session e getVar, para buscar o valor de uma variável
-	//				em um dos vetores globais
-	// @access		private
-	// @param		variableName string		Nome da variável
-	// @param		where string			Nome do vetor
-	// @return		mixed Valor da variável ou NULL
-	// @note		Por ser um método privado, este é o único na classe que
-	//				não pode ser executado estaticamente
-	// @note		Este método também resolve os valores de variáveis do tipo array,
-	//				como por exemplo "myform[myfield]"
-	//!-----------------------------------------------------------------
-	function _fetchVar($variableName, $where) {
-		$arrayContent = array();
-		eval("\$arrayContent =& \$_$where;");
-		$arrayContent = (array)$arrayContent;
-		if (preg_match("/([^\[]+)\[([^\]]+)\](\[([^\]]+)\])?/", $variableName, $matches)) {
-			if (isset($arrayContent[$matches[1]]) && is_array($arrayContent[$matches[1]])) {
-				$value = @$arrayContent[$matches[1]][$matches[2]];
-				if (isset($matches[3]) && is_array($value))
-					$value = @$value[$matches[4]];
-				return $value;
-			}
-		} elseif (array_key_exists($variableName, $arrayContent)) {
-			return $arrayContent[$variableName];
-		}
-		return NULL;
 	}
 }
 ?>

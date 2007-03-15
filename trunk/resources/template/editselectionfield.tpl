@@ -1,5 +1,5 @@
 
-<fieldset id="{$id}" title="{$label}" style="border:none;padding:0;margin:0">
+<fieldset id="{$id}" title="{$label}" style="border:none;padding:0;margin:0"{$style}>
 <table id="{$id}_top" cellpadding="0" cellspacing="0" border="0"{$tableWidth}>
   <tr><td><label for="{$editId}"{$labelStyle}>{$editLabel}</label></td><td>&nbsp;</td></tr>
   <tr><td>{$edit}</td><td align="center" style="padding-left:5px">{$button0}</td></tr>

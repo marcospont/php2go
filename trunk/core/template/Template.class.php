@@ -1,117 +1,198 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/template/Template.class.php,v 1.47 2006/11/21 23:24:48 mpont Exp $
-// $Date: 2006/11/21 23:24:48 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.auth.User');
-import('php2go.cache.CacheManager');
 import('php2go.data.DataSet');
+import('php2go.gui.Widget');
 import('php2go.template.TemplateParser');
-import('php2go.template.widget.Widget');
-import('php2go.text.StringUtils');
-import('php2go.util.HtmlUtils');
-import('php2go.util.json.JSONEncoder');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		Template
-// @desc 		Esta classe é responsável por realizar operações sobre
-// 				um arquivo template de código HTML, onde podem ser
-// 				substituídas variáveis, replicados blocos de código,
-// 				incluídos outros scripts/templates, etc...
-// @package		php2go.template
-// @extends 	PHP2Go
-// @uses 		TemplateParser
-// @uses		StringUtils
-// @author 		Marcos Pont
-// @version		$Revision: 1.47 $
-//!-----------------------------------------------------------------
+/**
+ * Template processor class
+ *
+ * This class is the primary interface to deal with template files: text files
+ * that can be transformed by a template engine. The template engine provided
+ * by PHP2Go supports basic templating tools, like variables substitution and
+ * include support, and advanced tools, such as condition/iteration tags, support
+ * for function calls, capture areas, nested repetition blocks.
+ *
+ * To read more about the pattern understood by the template parser, please
+ * consult the examples included in the framework's distribution.
+ *
+ * @package template
+ * @uses CacheManager
+ * @uses TemplateConfigFile
+ * @uses TemplateParser
+ * @uses TypeUtils
+ * @uses User
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Template extends Component
 {
-	var $cacheOptions = array();	// @var cacheOptions array				"array()" Configurações de cache
-	var $currentBlock = NULL;		// @var currentBlock mixed				"NULL" Ponteiro para o bloco ativo no template
-	var $currentBlockName;			// @var currentBlockName string			Nome do bloco ativo no template
-	var $tplComponents = array();	// @var tplComponents array				"array()" Conjunto de componentes utilizados no template
-	var $tplContent = array();		// @var tplContent array				"array()" Estrutura interna de armazenamento de instâncias de blocos e variáveis atribuídas
-	var $tplGlobalVars = array();	// @var tplGlobalVars array				"array()" Vetor de variáveis globais do template
-	var $tplInternalVars = array();	// @var tplInternalVars array			"array()" Vetor de variáveis especiais ou internas à engine de template
-	var $tplLoop = array();			// @var tplLoop array					"array()" Vetor de controle runtime sobre loops
-	var $tplCapture = array();		// @var tplCapture array				"array()" Vetor que armazena as áreas de captura do template durante a compilação e execução
-	var $tplMTime;					// @var tplMTime int					Timestamp de modificação do template base
-	var $Parser = NULL;				// @var Parser TemplateParser object	Parser utilizado na interpretação do template
+	/**
+	 * Cache options
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $cacheOptions = array();
 
-	//!-----------------------------------------------------------------
-	// @function	Template::Template
-	// @desc 		Construtor da classe
-	// @access 		public
-	// @param 		tplFile string	Caminho do arquivo template no servidor ou código do template em formato string
-	// @param 		type int		"T_BYFILE" Tipo do template: arquivo (T_BYFILE) ou string (T_BYVAR)
-	//!-----------------------------------------------------------------
-	function Template($tplFile, $type=T_BYFILE) {
+	/**
+	 * Current block name (defaults to {@link TP_ROOTBLOCK})
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $currentBlockName;
+
+	/**
+	 * Points to the current dynamic block
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $currentBlock = NULL;
+
+	/**
+	 * Holds the next instance number for all dynamic blocks already instantiated
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $blockIndex = array();
+
+	/**
+	 * Config variables
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplConfigVars = array(0 => array());
+
+	/**
+	 * Global template variables
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplGlobalVars = array();
+
+	/**
+	 * Internal template variables
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplInternalVars = array();
+
+	/**
+	 * Capture control variables
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplCapture = array();
+
+	/**
+	 * Registered components
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplComponents = array();
+
+	/**
+	 * Control structure that holds template's dynamic
+	 * content: block instances and variables
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $tplContent = array();
+
+	/**
+	 * Modified time of the template's source
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $tplMTime;
+
+	/**
+	 * Parser instance
+	 *
+	 * @var object TemplateParser
+	 * @access private
+	 */
+	var $Parser = NULL;
+
+	/**
+	 * TemplateConfigFile instance
+	 *
+	 * @var object TemplateConfigFile
+	 * @access private
+	 */
+	var $ConfigLoader = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $source Template source (string or file name)
+	 * @param int $type Source type ({@link T_BYFILE} or {@link T_BYVAR})
+	 * @return Template
+	 */
+	function Template($source, $type=T_BYFILE) {
 		parent::Component();
-		$this->Parser = new TemplateParser($tplFile, $type);
+		$this->Parser = new TemplateParser($source, $type);
 		$this->tplGlobalVars = array(
 			'ldelim' => '{',
 			'rdelim' => '}'
 		);
-		$this->tplInternalVars['loop'] = array();
-		$this->tplInternalVars['user'] =& User::getInstance();
-		/* @var $Conf Conf */
 		$Conf =& Conf::getInstance();
 		$this->tplInternalVars['conf'] =& $Conf->getAll();
+		$this->tplInternalVars['loop'] = array();
+		$this->tplInternalVars['user'] =& User::getInstance();
 		$this->cacheOptions['enabled'] = FALSE;
 		$this->cacheOptions['group'] = 'php2goTemplate';
-		// configurações globais
 		$globalConf = $Conf->getConfig('TEMPLATES');
 		if (is_array($globalConf))
 			$this->_loadGlobalSettings($globalConf);
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::__destruct
-	// @desc		Destrutor da classe
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function __destruct() {
-		unset($this);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Template::setCacheProperties
-	// @desc		Configura a classe para utilizar cache do template já
-	//				interpretado. Define diretório de cache, tempo de expiração
-	//				(lifetime) ou habilita renovação da cache baseada no timestamp
-	//				de modificação do arquivo original
-	// @param		dir string		Diretório de cache
-	// @param		lifeTime int	"0" Tempo de vida da cache, em segundos
-	// @param		useMTime bool	"TRUE" Renovar a cache a partir de mudanças no arquivo original
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable cache and configure cache properties
+	 *
+	 * @param string $dir Cache base dir
+	 * @param int $lifeTime Cache lifetime in seconds
+	 * @param bool $useMTime Whether to control cache based on original source's modified time
+	 */
 	function setCacheProperties($dir, $lifeTime=NULL, $useMTime=TRUE) {
 		$this->cacheOptions['baseDir'] = $dir;
 		if ($lifeTime)
@@ -120,127 +201,141 @@ class Template extends Component
 		$this->cacheOptions['enabled'] = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::setTagDelimiter
-	// @desc		Define o padrão a ser utilizado nos templates para
-	//				delimitar início e fim de tags
-	// @note		O padrão da classe é TEMPLATE_DELIM_COMMENT (utiliza
-	//				marcas de início e fim de comentários html)
-	// @param		type int	Tipo (vide constantes da classe)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the tag delimiter type
+	 *
+	 * This template engine currently supports 2 types of tag delimiters:
+	 * # {@link TEMPLATE_DELIM_COMMENT}: tags are surrounded by HTML comments.
+	 * <code>
+	 * <!-- if $var eq 1 -->
+	 * <!-- loop var=$data item="item" -->
+	 * </code>
+	 * # {@link TEMPLATE_DELIM_BRACE}: tags are surrounded by curly braces
+	 * <code>
+	 * {if $var eq 1}
+	 * {loop var=$data item="item"}
+	 * </code>
+	 *
+	 * @param int $type Tag delimiter type
+	 */
 	function setTagDelimiter($type) {
-		if ($type == TEMPLATE_DELIM_COMMENT || $type == TEMPLATE_DELIM_BRACE)
-			$this->Parser->tagDelimType = $type;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Template::addModifier
-	// @desc		Registra um modificador de variável customizado
-	// @param		name string	Nome do modificador (como ele será chamado a partir do template)
-	// @param		spec mixed	Nome da função, array classe+método, ou array caminho+classe+método
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function addModifier($name, $spec) {
-		$this->Parser->tplModifiers[$name] = $spec;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Template::parse
-	// @desc 		Prepara o template para utilização e parseia todo o
-	// 				seu conteúdo buscando por variaveís, blocos e outras
-	// 				tags reservadas que permitem realizar operações sobre
-	// 				o conteúdo do template
-	// @note		Se a classe estiver configurada para utilizar cache, um template
-	//				já compilado é buscado no diretório de cache
-	// @note		Este método somente poderá ser executado somente uma vez. Na segunda
-	//				execução, uma exceção do tipo E_USER_ERROR será disparada
-	// @access 		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function parse() {
-		if ($this->cacheOptions['enabled']) {
-			$Cache = CacheManager::factory('file');
-			// cache id
-			if ($this->Parser->tplBase['type'] == T_BYFILE)
-				$cacheId = realpath($this->Parser->tplBase['src']);
-			else
-				$cacheId = dechex(crc32($this->Parser->tplBase['src']));
-			if ($this->cacheOptions['useMTime']) {
-				if (!isset($this->tplMTime) && $this->Parser->tplBase['type'] == T_BYFILE)
-					$this->tplMTime = FileSystem::lastModified($this->Parser->tplBase['src'], TRUE);
-				$Cache->Storage->setLastValidTime($this->tplMTime);
-			} elseif ($this->cacheOptions['lifeTime']) {
-				$Cache->Storage->setLifeTime($this->cacheOptions['lifeTime']);
+		if ($type == TEMPLATE_DELIM_COMMENT || $type == TEMPLATE_DELIM_BRACE) {
+			switch ($type) {
+				case TEMPLATE_DELIM_BRACE :
+					$this->Parser->tagDelimiters = array('{', '}');
+					break;
+				default :
+					$this->Parser->tagDelimiters = array('<!--', '-->');
+					break;
 			}
-			// diretório base
-			if ($this->cacheOptions['baseDir'])
-				$Cache->Storage->setBaseDir($this->cacheOptions['baseDir']);
-			// consulta cache
-			$data = $Cache->load($cacheId, $this->cacheOptions['group']);
-			if ($data && isset($data['parserVersion']) && $data['parserVersion'] == $this->Parser->parserVersion) {
-				$this->Parser->loadCacheData($data);
-			} else {
-				$this->Parser->parse();
-				$Cache->save($this->Parser->getCacheData(), $cacheId, $this->cacheOptions['group']);
-			}
-		} else {
-			$this->Parser->parse();
 		}
+	}
+
+	/**
+	 * Register a custom variable modifier
+	 *
+	 * Modifiers can be specified in 3 different ways:
+	 * # 'function_name' or array('function_name'): a procedural function from an already included file
+	 * # array('class', 'method'): a static method from an already included class
+	 * # array('path.to.the.class', 'class', 'method'): a static method from a class that should be imported (path is provided as the first array entry)
+	 *
+	 * This method can't be used to replace modifiers bundled with PHP2Go.
+	 *
+	 * @param string $name Modifier name
+	 * @param array $spec Modifier spec
+	 */
+	function addModifier($name, $spec) {
+		if (!isset($this->Parser->tplModifiers[$name]))
+			$this->Parser->tplModifiers[$name] = $spec;
+	}
+
+	/**
+	 * Triggers the compilation of the template
+	 *
+	 * This method must be called manually before the template
+	 * is populated with content (variables, blocks). If cache is enabled,
+	 * a previously compiled template will be loaded from the cache storage.
+	 *
+	 * This method must be called only once.
+	 *
+	 * @uses TemplateParser::parse()
+	 */
+	function parse() {
+		$this->Parser->parse($this);
 		$this->_initializeContent();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::resetTemplate
-	// @desc		Remove todas as variáveis e blocos criados no template, retornando
-	//				o template ao estado inicial após a compilação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Returns the template to the state immediately after the compilation
+	 *
+	 * All assigned variables are cleared and all
+	 * block instances are destroyed.
+	 */
 	function resetTemplate() {
-		if ($this->isPrepared()) {
-			$this->_initializeContent();
-			$keys = array_keys($this->Parser->blockIndex);
-			foreach ($keys as $block)
-				$this->Parser->blockIndex[$block] = 0;
-		}
+		if (!$this->Parser->prepared)
+			$this->Parser->parse();
+		$this->_initializeContent();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::isPrepared
-	// @desc 		Verifica se o template já foi compilado
-	// @access 		public
-	// @return 		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if the template was already compiled
+	 *
+	 * @return bool
+	 */
 	function isPrepared() {
 		return $this->Parser->prepared;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::isBlockDefined
-	// @desc		Verifica se um determinado bloco foi definido no template
-	// @note		A consulta pode ser realizada por um nome simples de bloco ou
-	//				por uma caminho na estrutura de blocos aninhados
-	// @access 		public
-	// @param 		block string		Nome do bloco a ser buscado
-	// @return		bool
-	// @see 		Template::isVariableDefined
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all declared blocks
+	 *
+	 * Returns FALSE when the template wasn't compiled yet.
+	 *
+	 * @return array
+	 */
+	function getDefinedBlocks() {
+		if ($this->Parser->prepared)
+			return array_keys($this->Parser->tplDef);
+		return FALSE;
+	}
+
+	/**
+	 * Checks if a given block name is defined in the template source
+	 *
+	 * The $block argument can be either a block name or a path
+	 * in the blocks tree. Examples:
+	 * <code>
+	 * /* tpl file {@*}
+	 * <!-- start block : row -->
+	 * <tr>
+	 * <!-- start block : column -->
+	 *   <td>{$data}</td>
+	 * <!-- end block : column -->
+	 * </tr>
+	 * <!-- end block : row -->
+	 * /* php file {@*}
+	 * $tpl = new Template('my_template.tpl');
+	 * $def = $tpl->isBlockDefined('row');
+	 * $def2 = $tpl->isBlockDefined('row.column');
+	 * </code>
+	 *
+	 * @param string $block Block name
+	 * @return bool
+	 */
 	function isBlockDefined($block) {
 		if ($this->Parser->prepared) {
 			$parts = explode('.', $block);
 			if (sizeof($parts) == 1) {
 				return (isset($this->Parser->tplDef[$block]));
 			} else {
-				$i = 1;
-				$ptr = $this->Parser->tplDef[$parts[0]];
-				while ($i < sizeof($parts)) {
-					if (!array_key_exists($parts[$i], $ptr['blocks']))
+				$i = sizeof($parts)-1;
+				$ptr = $parts[$i];
+				if (!isset($this->Parser->tplDef[$ptr]))
+					return FALSE;
+				while (--$i >= 0) {
+					if ($parts[$i] != $this->Parser->tplDef[$ptr]['parent'])
 						return FALSE;
-					$ptr = @$this->Parser->tplDef[$parts[$i]];
-					$i++;
+					$ptr = $this->Parser->tplDef[$ptr]['parent'];
 				}
 				return TRUE;
 			}
@@ -248,31 +343,56 @@ class Template extends Component
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::getDefinedBlocks
-	// @desc 		Retorna a lista de blocos definidos no template
-	// @note		Retorna NULL se o template não estiver preparado
-	// @return		array Lista de blocos definidos
-	// @access 		public
-	// @see 		Template::getDefinedVariables
-	//!-----------------------------------------------------------------
-	function getDefinedBlocks() {
-		if ($this->Parser->prepared)
-			return array_keys($this->Parser->tplDef);
-		return NULL;
+	/**
+	 * Get all variables defined in a given block
+	 *
+	 * If $blockName is missing, {@link TP_ROOTBLOCK} will be used.
+	 *
+	 * Returns FALSE when the template wasn't compiled yet.
+	 *
+	 * @param string $blockName Block name
+	 * @return array|bool
+	 */
+	function getDefinedVariables($blockName=NULL) {
+		if ($this->Parser->prepared) {
+			if (!empty($blockName)) {
+				if (!isset($this->Parser->tplDef[$blockName]))
+					return NULL;
+			} else {
+				$blockName = TP_ROOTBLOCK;
+			}
+			return $this->Parser->tplDef[$blockName]['vars'];
+		}
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::isVariableDefined
-	// @desc 		Verifica se uma variável está definida no template
-	// @note		O parâmetro $variable pode representar uma variável no bloco ativo
-	//				ou uma referência do tipo bloco.variavel
-	// @param 		variable string	Nome da variável a ser buscada
-	// @access 		public
-	// @return		bool
-	// @see 		Template::getValue
-	// @see 		Template::isBlockDefined
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if a given variable name is declared
+	 *
+	 * The $variable argument can be either a variable name
+	 * or a 'block.variable' expression. Examples:
+	 * <code>
+	 * /* tpl file {@*}
+	 * {$title}
+	 * <!-- start block : row -->
+	 * <tr>
+	 *   <td>{$line}</td>
+	 * <!-- start block : column -->
+	 *   <td>{$data}</td>
+	 * <!-- end block : column -->
+	 * </tr>
+	 * <!-- end block : row -->
+	 * /* php file {@*}
+	 * $tpl = new Template('my_template.tpl');
+	 * $tpl->parse();
+	 * $def = $tpl->isVariableDefined('title');
+	 * $def2 = $tpl->isVariableDefined('row.line');
+	 * $def3 = $tpl->isVariableDefined('column.data');
+	 * </code>
+	 *
+	 * @param string $variable Variable name or path
+	 * @return bool
+	 */
 	function isVariableDefined($variable) {
 		if ($this->Parser->prepared) {
 			if (sizeof($regs = explode('.', $variable)) == 2) {
@@ -290,39 +410,15 @@ class Template extends Component
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::getDefinedVariables
-	// @desc 		Busca as variáveis definidas para um determinado bloco
-	// @param 		blockName string	"NULL" Nome do bloco
-	// @return		array Vetor com os nomes de variáveis definidos
-	// @note		Se um nome de bloco não foi fornecido, o bloco raiz será utilizado
-	// @note		Retorna NULL se o template não estiver preparado
-	// @see 		Template::getDefinedBlocks
-	// @access 		public
-	//!-----------------------------------------------------------------
-	function getDefinedVariables($blockName=NULL) {
-		if ($this->Parser->prepared) {
-			if (!empty($blockName)) {
-				if (!isset($this->Parser->tplDef[$blockName]))
-					return NULL;
-			} else {
-				$blockName = TP_ROOTBLOCK;
-			}
-			return $this->Parser->tplDef[$blockName]['vars'];
-		}
-		return NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Template::getValue
-	// @desc 		Busca o valor atribuído a uma variável
-	// @note		O parâmetro de consulta pode ser o nome de uma variável simples
-	//				no bloco ativo ou uma referência do tipo bloco.variavel
-	// @param 		variable string	Nome da variável buscada
-	// @return		mixed Valor da variável se ela estiver definida ou FALSE em caso contrário
-	// @see 		Template::isVariableDefined
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the current value of a variable
+	 *
+	 * Just as {@link isVariableDefined}, this method accepts
+	 * a 'block.variable' expression in the $variable argument.
+	 *
+	 * @param string $variable Variable name or path
+	 * @return mixed
+	 */
 	function getValue($variable) {
         if (sizeof($regs = explode('.', $variable)) == 2) {
 			if (isset($this->Parser->tplDef[$regs[0]])) {
@@ -335,102 +431,112 @@ class Template extends Component
 		return @$block['vars'][$variable];
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::createBlock
-	// @desc		Cria uma instância do bloco $block
-	// @note		O bloco criado passa a ser o bloco ativo, o que significa que
-	//				as próximas atribuições de variáveis serão alocadas na instância criada
-	// @note		Um erro será gerado se o bloco não existir ou se o nome do bloco
-	//				for igual ao nome do bloco raiz (_ROOT), que é reservado
-	// @param 		block string	Nome do bloco a ser criado
-	// @see 		Template::setCurrentBlock
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the name of the active block
+	 *
+	 * @return string
+	 */
+	function getCurrentBlockName() {
+		return $this->currentBlockName;
+	}
+
+	/**
+	 * Creates a new instance of a dynamic block
+	 *
+	 * The dynamic block must be declared in the template source
+	 * using the following syntax:
+	 * <code>
+	 * <!-- start block : block_name -->
+	 * <!-- end block : block_name -->
+	 * </code>
+	 *
+	 * The recently created block is transformed into the active block,
+		 * so that all subsequent assign operations will be applied on it
+	 *
+	 * @param string $block Block name
+	 */
 	function createBlock($block) {
-		// bloco existente
+		// checks if block exists
 		if (!isset($this->Parser->tplDef[$block]))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_FIND_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
-		// bloco diferente do bloco raiz
+		// prevent blocks with the same name of the root block
 		if ($block == TP_ROOTBLOCK)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_REPLICATE_ROOT_BLOCK'), E_USER_ERROR, __FILE__, __LINE__);
-		// busca a instância do bloco pai
-		$parent =& $this->_getLastInstance($this->Parser->blockParent[$block]);
-		// primeira criação
+		// get the last instance of the parent block
+		$parent =& $this->_getLastInstance($this->Parser->tplDef[$block]['parent']);
+		// already instantiated or not
 		if (!isset($parent['blocks'][$block])) {
-			$this->Parser->blockIndex[$block]++;
-			$index = "{$block}:{$this->Parser->blockIndex[$block]}";
+			$this->blockIndex[$block]++;
+			$index = "{$block}:{$this->blockIndex[$block]}";
 			$parent['blocks'][$block] = $index;
 			$this->tplContent[$index] = array();
 		} else {
 			$index = $parent['blocks'][$block];
 		}
-		// cria a nova instância
+		// creates and initializes the new instance
 		$nextInstance = sizeof($this->tplContent[$index]);
 		$this->tplContent[$index][$nextInstance] = array(
 			'vars' => array(),
 			'blocks' => array()
 		);
+		// set as current block
 		$this->currentBlockName = $block;
 		$this->currentBlock =& $this->tplContent[$index][$nextInstance];
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::getCurrentBlockName
-	// @desc		Retorna o nome do bloco ativo no template
-	// @return		string Nome do bloco
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getCurrentBlockName() {
-		return $this->currentBlockName;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Template::setCurrentBlock
-	// @desc 		Move o ponteiro do bloco ativo para o bloco indicado pelo nome $block
-	// @note		Um erro será gerado se o bloco solicitado não estiver definido
-	// @param 		block string	Nome do bloco
-	// @see 		Template::createBlock
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Changes the internal pointer to a given block name
+	 *
+	 * Example:
+	 * <code>
+	 * /* tpl file {@*}
+	 * {$out}
+	 * <!-- start block : internal -->
+	 * {$var}
+	 * <!-- end block : internal -->
+	 * /* php file {@*}
+	 * $tpl = new Template('my_template.php');
+	 * $tpl->parse();
+	 * $tpl->createBlock('internal');
+	 * $tpl->assign('var', 'blah');
+	 * $tpl->setCurrentBlock(TP_ROOTBLOCK);
+	 * $tpl->assign('out', 'Hello World!');
+	 * </code>
+	 *
+	 * @param string $block Block name
+	 */
 	function setCurrentBlock($block) {
-		if (!isset($this->Parser->tplDef[$block]) || ($block != TP_ROOTBLOCK && $this->Parser->blockIndex[$block] == 0))
+		if (!isset($this->Parser->tplDef[$block]) || ($block != TP_ROOTBLOCK && $this->blockIndex[$block] == 0))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_FIND_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
 		$this->currentBlockName = $block;
 		$this->currentBlock =& $this->_getLastInstance($block);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::createAndAssign
-	// @desc		Atalho para criação de uma instância de bloco e atribuição de variáveis à instância criada
-	// @param		blockName string	Nome do bloco a ser criado
-	// @param		variable mixed		Nome da variável ou vetor de substituições
-	// @param		value mixed			"" Valor para a variável, se for simples
-	// @note		A semântica dos parâmetros $variable e $value é a mesma do método Template::assign
-	// @see			Template::assign
-	// @see			Template::globalAssign
-	// @see			Template::includeAssign
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Creates a new instance of a given block and
+	 * assigns a variable or a set of variables
+	 *
+	 * @param string $blockName Block name
+	 * @param string|array $variable Variable name or hashmap of variables and values
+	 * @param mixed $value Variable value
+	 */
 	function createAndAssign($blockName, $variable, $value='') {
 		$this->createBlock($blockName);
 		$this->assign($variable, $value);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::assign
-	// @desc 		Atribui valor a uma variável de um bloco do template
-	// @note		Aceita um array associativo no parâmetro $variable para atribuir múltiplas variáveis
-	// @note 		A variável, além de poder ser representada por um array associativo,
-	//				pode referenciar-se a uma variável do bloco ativo ou usando referência
-	//				explícita para um bloco utilizando a sintaxe bloco.variavel
-	// @param 		variable mixed		Variável ou variáveis para substituição
-	// @param 		value mixed			"" Valor que deverá ser associado à variável
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Assigns a variable
+	 *
+	 * The $variable argument can be a hashmap of variables and values,
+	 * a simple variable name (and so, must be present in the current
+	 * active block) or a 'block.variable' expression, which allows to
+	 * assign variables on the most recent instance of a different block
+	 * (not the current one).
+	 *
+	 * @param string|array $variable Variable name or path or hashmap or variables and values
+	 * @param mixed $value Variable value
+	 */
 	function assign($variable, $value='') {
 		if (is_array($variable)) {
 			foreach ($variable as $name => $value)
@@ -440,16 +546,15 @@ class Template extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::assignByRef
-	// @desc		Atribui um valor por referência a uma determinada
-	//				variável do bloco ativo no template ou ao bloco
-	//				informado na sintaxe bloco.variavel
-	// @param		variable string		Nome da variável ou bloco+variável
-	// @param		&value mixed		Referência para o valor da variável
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Assigns a variable by reference
+	 *
+	 * The $variable argument can be a variable name
+	 * or a 'block.variable' expression.
+	 *
+	 * @param string $variable Variable name
+	 * @param mixed &$value Variable reference
+	 */
 	function assignByRef($variable, &$value) {
 		if (sizeof($parts = explode('.', $variable)) == 2) {
 			if (isset($this->Parser->tplDef[$parts[0]])) {
@@ -466,15 +571,16 @@ class Template extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::globalAssign
-	// @desc		Adiciona uma variável global no template
-	// @note		Aceita um array associativo no parâmetro $variable para incluir múltiplas variáveis
-	// @param 		variable string		Nome da variável global ou vetor de variáveis globais com seus valores
-	// @param 		value string		"" Valor para a variável global
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Assigns a global template variable
+	 *
+	 * Global template variables are available in all scopes. This means
+	 * that, no matter which is the current block, you'll be able to
+	 * use it.
+	 *
+	 * @param string|array $variable Variable name or hashmap of variables and values
+	 * @param mixed $value Variable value
+	 */
 	function globalAssign($variable, $value='') {
 		if (is_array($variable)) {
 			foreach ($variable as $name => $value)
@@ -484,33 +590,44 @@ class Template extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::includeAssign
-	// @desc		Define o valor de um bloco de inclusão definido no template
-	// @note		As inclusões de scripts devem ser executadas antes da execução do método Template::parse()
-	// @note		Ao utilizar o método includeAssign para atribuir valor a uma inclusão de
-	//				script (diretiva INCLUDESCRIPT), e desejar utilizar o tipo T_BYVAR, inclua
-	//				os caracteres &lt;? e ?&gt; no início e no final da string
-	// @param		blockName string	Nome do bloco de inclusão
-	// @param		value string		Caminho completo para o arquivo de inclusão (T_BYFILE) ou conteúdo string (T_BYVAR)
-	// @param		type int			"T_BYFILE" Tipo de inclusão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Assigns an include block
+	 *
+	 * The assignment of include blocks must be done before the
+	 * {@link parse()} method is called.
+	 *
+	 * Example:
+	 * <code>
+	 * /* tpl file {@*}
+	 * <!-- include block : include1 -->
+	 * <!-- include block : include2 -->
+	 * /* php file {@*}
+	 * $tpl = new Template('templates/my_template.tpl');
+	 * $tpl->includeAssign('include1', 'templates/my_include1.tpl', T_BYFILE);
+	 * $tpl->includeAssign('include2', 'templates/my_include2.tpl', T_BYFILE);
+	 * $tpl->parse();
+	 * </code>
+	 *
+	 * @param string $blockName Include block name
+	 * @param string $value Include block contents (file path or variable)
+	 * @param int $type Content type({@link T_BYFILE} or {@link T_BYVAR})
+	 */
 	function includeAssign($blockName, $value, $type=T_BYFILE) {
 		if (!empty($value) && ($type == T_BYFILE || $type == T_BYVAR)) {
 			if ($type == T_BYFILE && !is_readable($value))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $value), E_USER_ERROR, __FILE__, __LINE__);
-			$this->Parser->tplIncludes[$blockName] = array($value, $type);
+			$this->Parser->tplIncludes[$blockName] = array(
+				'src' => $value,
+				'type' => $type
+			);
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::onPreRender
-	// @desc		Etapa de pré-renderização do template
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the template to be rendered
+	 *
+	 * Automatically called inside {@link getContent} and {@link display}.
+	 */
 	function onPreRender() {
 		if (!$this->preRendered) {
 			parent::onPreRender();
@@ -523,14 +640,11 @@ class Template extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::getContent
-	// @desc		Monta e retorna o conteúdo HTML do template
-	// @note		Não é possível imprimir o conteúdo de um template cujo nome de arquivo é vazio ou cujo conteúdo é vazio
-	// @return		string Código HTML resultante
-	// @see 		Template::display
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns the template's output code
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		$this->onPreRender();
 		//highlight_string($this->Parser->tplBase['compiled']);
@@ -539,26 +653,20 @@ class Template extends Component
 		return ob_get_clean();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::display
-	// @desc		Monta a envia para a saída padrão o conteúdo HTML do template
-	// @note		Não é possível imprimir o conteúdo de um template cujo nome de arquivo é vazio ou cujo conteúdo é vazio
-	// @see 		Template::getContent
-	// @access 		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and displays the template's output code
+	 */
 	function display() {
 		$this->onPreRender();
 		//highlight_string($this->Parser->tplBase['compiled']);
 		eval('?>' . $this->Parser->tplBase['compiled']);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_initializeContent
-	// @desc		Inicializa a estrutura de conteúdo do template
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Initializes the internal control variables
+	 *
+	 * @access private
+	 */
 	function _initializeContent() {
 		$this->tplContent = array(
 			TP_ROOTBLOCK . ':0' => array(
@@ -570,16 +678,17 @@ class Template extends Component
 		);
 		$this->currentBlockName = TP_ROOTBLOCK;
 		$this->currentBlock =& $this->tplContent[TP_ROOTBLOCK . ':0'][0];
+		foreach (array_keys($this->Parser->tplDef) as $blockName)
+			$this->blockIndex[$blockName] = 0;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_assign
-	// @desc		Método interno de atribuição de valores a variáveis
-	// @param		variable string		Referência para a variável
-	// @param		value mixed			Valor de atribuição
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Internal method used to assign variables
+	 *
+	 * @param string $variable Variable name
+	 * @param mixed $value Variable value
+	 * @access private
+	 */
 	function _assign($variable, $value) {
 		if (sizeof($parts = explode('.', $variable)) == 2) {
 			if (isset($this->Parser->tplDef[$parts[0]])) {
@@ -596,81 +705,58 @@ class Template extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_globalAssign
-	// @desc		Método interno de registro de variáveis globais
-	// @param		variable string		Nome da variável
-	// @param		value mixed			Valor
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Internal method used to assign global variables
+	 *
+	 * @param string $variable Variable name
+	 * @param mixed $value Variable value
+	 * @access private
+	 */
 	function _globalAssign($variable, $value) {
 		if (TypeUtils::isInstanceOf($value, 'Component'))
 			$this->tplComponents["global:{$variable}"] =& $value;
 		$this->tplGlobalVars[$variable] = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::&_getLastInstance
-	// @desc		Para um determinado nome de bloco, busca a última instância criada,
-	//				considerando o índice ativo do bloco
-	// @param		blockName string	Nome do bloco
-	// @return		array Referência para a instância mais recente
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Given a block name, returns its last instance
+	 *
+	 * @param string $blockName
+	 * @access private
+	 * @return array
+	 */
 	function &_getLastInstance($blockName) {
-		$index = "$blockName:{$this->Parser->blockIndex[$blockName]}";
+		$index = "$blockName:{$this->blockIndex[$blockName]}";
 		$lastInstanceKey = sizeof($this->tplContent[$index]) - 1;
 		$lastInstance =& $this->tplContent[$index][$lastInstanceKey];
 		return $lastInstance;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_getFullPath
-	// @desc		Monta um caminho único para uma variável em um bloco,
-	//				levando em consideração o índice de utilização e o
-	//				número da instância atual do bloco
-	// @note		Exemplo: _ROOT:0:0:var, loop_cell:1:3:col_wid
-	// @param		block string	Nome do bloco
-	// @param		variable string	Nome da variável
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds a full path of a variable, considering block index,
+	 * block name, block instance and variable name
+	 *
+	 * @param string $block Block name
+	 * @param string $variable Variable name
+	 * @access private
+	 * @return string
+	 */
 	function _getFullPath($block, $variable) {
-		$index = "$block:{$this->Parser->blockIndex[$block]}";
+		$index = "$block:{$this->blockIndex[$block]}";
 		$lastInstanceKey = sizeof($this->tplContent[$index]) - 1;
 		return "{$index}:{$lastInstanceKey}:{$variable}";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_prepareBlock
-	// @desc		Este método é chamado a partir do código compilado do template
-	//				a fim de inserir em uma instância de bloco dinâmico as variáveis
-	//				globais, a fim de que as mesmas estejam disponíveis
-	// @param		&block array	Instância de bloco dinâmico de repetição
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _prepareBlock(&$block) {
-		foreach ($this->tplGlobalVars as $name => $value) {
-			if (!array_key_exists($name, $block['vars']))
-				$block['vars'][$name] = $value;
-		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Template::_pushStack
-	// @desc		Utilizado a partir do código compilado do template para
-	//				armazenar em uma pilha a última instância processada de
-	//				um bloco, a fim de iniciar a iteração para outro bloco
-	// @param		&stack array		Pilha de execução
-	// @param		blockName string	Nome do último bloco ativo
-	// @param		&block array		Instâncias do último bloco
-	// @param		instance int		Índice da instância atual
-	// @param		instanceCount int	Total de instâncias
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Used at runtime to push a dynamic block onto the block stack
+	 *
+	 * @param array &$stack Block stack
+	 * @param string $blockName Block name
+	 * @param array &$block Block data
+	 * @param int $instance Current block instance
+	 * @param int $instanceCount Total instances
+	 * @access private
+	 */
 	function _pushStack(&$stack, $blockName, &$block, $instance, $instanceCount) {
 		$newItem = array();
 		$newItem[0] = $blockName;
@@ -680,18 +766,16 @@ class Template extends Component
 		$stack[sizeof($stack)] =& $newItem;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::&_popStack
-	// @desc		Retorna da pilha da execução o último bloco processado,
-	//				voltando as variáveis de controle ao estado anterior à
-	//				última iteração
-	// @param		&stack array		Pilha de execução
-	// @param		&blockName string	Retorna o nome do bloco
-	// @param		&instance int		Retorna o índice da última instância processada
-	// @param		&instanceCount int	Retorna o total de instâncias
-	// @return		array Conjunto de instâncias de bloco
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Used at runtime to pop a dynamic block from the block stack
+	 *
+	 * @param array &$stack Block stack
+	 * @param string &$blockName Block name
+	 * @param int &$instance Current instance
+	 * @param int &$instanceCount Total instances
+	 * @return array Block data
+	 * @access private
+	 */
 	function &_popStack(&$stack, &$blockName, &$instance, &$instanceCount) {
 		$lastItem =& $stack[sizeof($stack)-1];
 		$blockName = $lastItem[0];
@@ -701,16 +785,18 @@ class Template extends Component
 		return $lastItem[1];
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_getLoopItem
-	// @desc		Busca o próximo item para um determinado loop
-	// @param		&loop mixed		Conjunto de dados do loop
-	// @param		returnKey bool	"FALSE" Se TRUE, retorna chave e
-	//								valor do item atual. Do contrário,
-	//								retorna somente o item atual
-	// @access		private
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the next item of a given loop
+	 *
+	 * The loop can be an array, a hashmap, a DataSet instance
+	 * or an ADORecordSet instance. For each type, there's a
+	 * different way to fetch and return the next record.
+	 *
+	 * @param array|object &$loop Loop
+	 * @param bool $returnKey Whether to return an array containing key and value or just the value
+	 * @access private
+	 * @return mixed
+	 */
 	function _getLoopItem(&$loop, $returnKey=FALSE) {
 		if (is_array($loop)) {
 			if ($returnKey) {
@@ -732,13 +818,13 @@ class Template extends Component
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_getLoopTotal
-	// @desc		Método que busca o total de itens de um loop
-	// @param		loop mixed		Conjunto de dados do loop
-	// @return		int	Total de itens do loop
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Calculate the total iterations of a given loop
+	 *
+	 * @param array|object $loop
+	 * @access private
+	 * @return int
+	 */
 	function _getLoopTotal($loop) {
 		if (is_array($loop)) {
 			return sizeof($loop);
@@ -751,25 +837,56 @@ class Template extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Template::_loadGlobalSettings
-	// @desc		Aplica as configurações globais para templates
-	// @param		settings array	Configurações globais
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Load a set of config variables
+	 *
+	 * @param array $props Properties from the CONFIG tag
+	 * @uses TemplateConfigFile::get()
+	 * @access private
+	 */
+	function _loadConfigVars($props) {
+		if (!isset($this->ConfigLoader)) {
+			import('php2go.template.TemplateConfigFile');
+			$this->ConfigLoader = new TemplateConfigFile($this, array(
+				'caseSensitive' => @$props['caseSensitive'],
+				'booleanize' => @$props['booleanize']
+			));
+		}
+		$scope = @$props['scope'];
+		switch ($scope) {
+			case 'parent' :
+				$this->tplConfigVars[1] = array_merge($this->tplConfigVars[1], $this->ConfigLoader->get($props['file'], @$props['section']));
+				break;
+			case 'global' :
+				for ($i=0,$s=sizeof($this->tplConfigVars); $i<$s; $i++)
+					$this->tplConfigVars[$i] = array_merge($this->tplConfigVars[$i], $this->ConfigLoader->get($props['file'], @$props['section']));
+				break;
+			default :
+				$this->tplConfigVars[0] = array_merge($this->tplConfigVars[0], $this->ConfigLoader->get($props['file'], @$props['section']));
+				break;
+		}
+	}
+
+	/**
+	 * Loads global configuration settings
+	 *
+	 * @param array $settings Settings
+	 * @access private
+	 */
 	function _loadGlobalSettings($settings) {
 		if (is_array($settings['CACHE'])) {
-			// propriedades de cache
+			// cache properties
 			if (isset($settings['CACHE']['DIR']))
 				$this->setCacheProperties($settings['CACHE']['DIR'], @$settings['CACHE']['LIFETIME'], @$settings['CACHE']['USEMTIME']);
-			// não aplicar delimitador de tags para templates internos ao framework
+			// don't change tag delimiter of internal templates
 			$path = realpath($this->Parser->tplBase['src']);
 			if (!$path || strpos(str_replace("\\", "/", $path), PHP2GO_ROOT) === 0)
 				$this->setTagDelimiter(@$settings['TAG_DELIMITER_TYPE']);
-			// modificadores custom
-			foreach ((array)$settings['MODIFIERS'] as $name => $spec)
-				$this->Parser->tplModifiers[$name] = $spec;
+			// custom modifiers
+			foreach ((array)$settings['MODIFIERS'] as $name => $spec) {
+				if (!isset($this->Parser->tplModifiers[$name]))
+					$this->Parser->tplModifiers[$name] = $spec;
+			}
 		}
 	}
 }

@@ -1,28 +1,30 @@
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/resources/javascript/widgets/calculator.js,v 1.6 2006/11/19 17:58:20 mpont Exp $
-// $Date: 2006/11/19 17:58:20 $
-// $Revision: 1.6 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 /**
  * @fileoverview
@@ -479,14 +481,20 @@ Calculator.prototype.result = function() {
 		if (t.inputMask) {
 			var p = 0, m = t.inputMask.mask;
 			if (v != "") {
-				// currency format
+				// currency mask
 				if (m == CurrencyMask) {
-					v = Math.truncate(parseFloat(v), 2).toString();
-					if (v.indexOf('.') == -1)
-						v += "00";
-					v = v.replace(/[^\-0-9]+/, "");
+					v = Math.truncate(parseFloat(v), 2).toString().replace(".", ",");
+					if (v.indexOf(',') == -1)
+						v += ",00";
+					if (v.indexOf(',') == (v.length-2))
+						v += "0";
+					v = v.replace(/[^\-0-9,]+/, "");
 				}
-				// float integer part validation
+				// integer mask
+				else if (m == IntegerMask) {
+					v = Math.round(parseFloat(v)).toString();
+				}
+				// float mask with integer part validation
 				else if (m.intSize) {
 					p = v.indexOf('.');
 					(p == -1) && (p = v.length);

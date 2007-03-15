@@ -1,65 +1,114 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/MailPart.class.php,v 1.10 2006/03/15 04:43:24 mpont Exp $
-// $Date: 2006/03/15 04:43:24 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileManager');
 import('php2go.text.StringUtils');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		MailPart
-// @desc		Implementa uma parte de uma mensagem MIME (conteúdo de
-//				texto, conteúdo HTML, arquivo anexo, imagem embebida),
-//				gerando seu cabeçalho e seu conteúdo para que seja
-//				possível inclui-la no corpo da mensagem a ser enviada
-// @package		php2go.net
-// @uses		FileManager
-// @uses		StringUtils
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.10 $
-//!-----------------------------------------------------------------
+/**
+ * Implementation of a MIME message part
+ *
+ * @package net
+ * @uses StringUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class MailPart extends PHP2Go
 {
-    var $boundaryId;				// @var id string					Código que identifica a parte na mensagem (usado nos boundaries)
-	var $contentId;					// @var contentId string			Código que identifica uma parte embebida no corpo da mensagem (imagem, som, ...)
-    var $charset;					// @var charset string				Charset do conteúdo
-	var $contentType;				// @var contentType string			Tipo MIME do conteúdo
-    var $contentEncoding;			// @var contentEncoding string		Tipo de codificação do conteúdo
-    var $contentDisposition;		// @var contentDisposition string	Disposição do conteúdo no corpo da mensagem (attachment, inline)
-	var $fileName;					// @var fileName string				Nome do arquivo envolvido
-	var $content;					// @var content string				Conteúdo ASCII ou binário da parte
-    var $lineEnd;					// @var lineEnd string				Final de linha a ser utilizado
+	/**
+	 * Boundary ID
+	 *
+	 * @var string
+	 */
+	var $boundaryId;
 
-    //!-----------------------------------------------------------------
-	// @function	MailPart::MailPart
-	// @desc		Construtor da classe, a partir de um código único de
-	//				parte na mensagem
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Content ID
+	 *
+	 * @var string
+	 */
+	var $contentId;
+
+	/**
+	 * Charset
+	 *
+	 * @var string
+	 */
+    var $charset;
+
+    /**
+     * Content type
+     *
+     * @var string
+     */
+	var $contentType;
+
+	/**
+	 * Content encoding
+	 *
+	 * @var string
+	 */
+    var $contentEncoding;
+
+    /**
+     * Content disposition
+     *
+     * @var string
+     */
+    var $contentDisposition;
+
+    /**
+     * File name
+     *
+     * @var string
+     */
+	var $fileName;
+
+	/**
+	 * Content
+	 *
+	 * @var string
+	 */
+	var $content;
+
+	/**
+	 * Line end chars to be used when building the part
+	 *
+	 * @var string
+	 */
+    var $lineEnd;
+
+    /**
+     * Class constructor
+     *
+     * Set default values for some properties of the class.
+     *
+     * @return MailPart
+     */
 	function MailPart() {
 		parent::PHP2Go();
         $this->boundaryId;
@@ -70,200 +119,162 @@ class MailPart extends PHP2Go
 		$this->lineEnd = "\n";
     }
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getBoundaryId
-	// @desc		Retorna o código da parte na mensagem
-	// @access		public
-	// @return		string Código da parte
-	//!-----------------------------------------------------------------
+	/**
+	 * Get part's boundary ID
+	 *
+	 * @return string
+	 */
 	function getBoundaryId() {
 		return $this->boundaryId;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getContentId
-	// @desc		Retorna o código da parte em relação ao corpo da mensagem
-	// @access		public
-	// @return		string Código da parte na mensagem
-	//!-----------------------------------------------------------------
-	function getContentId() {
-		return $this->contentId;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getCharset
-	// @desc		Busca o conjunto de caracteres utilizado no conteúdo da parte
-	// @access		public
-	// @return		string Charset da parte
-	//!-----------------------------------------------------------------
-	function getCharset() {
-		return $this->charset;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getContentType
-	// @desc		Retorna o tipo MIME deste elemento
-	// @access		public
-	// @return		string Tipo MIME da parte
-	//!-----------------------------------------------------------------
-	function getContentType() {
-		return $this->contentType;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getEncoding
-	// @desc		Busca o tipo de codificação utilizado
-	// @access		public
-	// @return		string Tipo de codificação
-	//!-----------------------------------------------------------------
-	function getEncoding() {
-		return $this->contentEncoding;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getDisposition
-	// @desc		Busca a disposição do conteúdo
-	// @access		public
-	// @return		string Tipo de disposição do conteúdo da parte
-	//!-----------------------------------------------------------------
-	function getDisposition() {
-		return isset($this->contentDisposition) ? $this->contentDisposition : NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getFileName
-	// @desc		Busca o nome do arquivo envolvido
-	// @access		public
-	// @return		string Nome do arquivo
-	//!-----------------------------------------------------------------
-	function getFileName() {
-		return isset($this->fileName) ? $this->fileName : NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getContent
-	// @desc		Retorna o conteúdo da parte
-	// @access		public
-	// @return		string Conteúdo ASCII ou binário associado a esta parte
-	//!-----------------------------------------------------------------
-	function getContent() {
-		return isset($this->content) ? $this->content : NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::getLineEnd
-	// @desc		Busca o(s) caractere(s) de final de linha utilizado(s) na geração dos cabeçalhos
-	// @access		public
-	// @return		string Caractere(s) de final de linha utilizados
-	//!-----------------------------------------------------------------
-	function getLineEnd() {
-		return $this->lineEnd;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setBoundaryId
-	// @desc		Seta o código de boundary relacionado a esta parte
-	// @access		public
-	// @param		bid string	Código boundary
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set part's boundary ID
+	 *
+	 * @param string $bid Boundary ID
+	 */
 	function setBoundaryId($bid) {
 		$this->boundaryId = $bid;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setContentId
-	// @desc		Atribui um id de conteúdo à parte
-	// @access		public
-	// @param		cid string	Id de conteúdo
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get part's content ID
+	 *
+	 * @return string
+	 */
+	function getContentId() {
+		return $this->contentId;
+	}
+
+	/**
+	 * Set part's content ID
+	 *
+	 * @param string $cid Content ID
+	 */
 	function setContentId($cid) {
 		$this->contentId = $cid;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setCharset
-	// @desc		Atribui um valor ao charset deste elemento
-	// @access		public
-	// @param		charset string	Valor para o charset
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get part's charset
+	 *
+	 * @return string
+	 */
+	function getCharset() {
+		return $this->charset;
+	}
+
+	/**
+	 * Set part's charset
+	 *
+	 * @param string $charset Charset
+	 */
 	function setCharset($charset) {
 		$this->charset = $charset;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setContentType
-	// @desc		Define o tipo MIME deste elemento
-	// @access		public
-	// @param		contentType string	Tipo MIME a ser utilizado
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get part's content type
+	 *
+	 * @return string
+	 */
+	function getContentType() {
+		return $this->contentType;
+	}
+
+	/**
+	 * Set part's content type
+	 *
+	 * @param string $contentType Content type
+	 */
 	function setContentType($contentType) {
 		$this->contentType = $contentType;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setEncoding
-	// @desc		Atribui um valor para o tipo de codificação do conteúdo da parte
-	// @access		public
-	// @param		encoding string	Novo método de codificação
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get part's content encoding
+	 *
+	 * @return string
+	 */
+	function getEncoding() {
+		return $this->contentEncoding;
+	}
+
+	/**
+	 * Set part's content encoding
+	 *
+	 * @param string $encoding Content encoding
+	 */
 	function setEncoding($encoding) {
 		$this->contentEncoding = $encoding;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setDisposition
-	// @desc		Seta a disposição do conteúdo
-	// @access		public
-	// @param		disposition string	Valor para o tipo de disposição
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get part's content disposition
+	 *
+	 * @return string
+	 */
+	function getDisposition() {
+		return isset($this->contentDisposition) ? $this->contentDisposition : NULL;
+	}
+
+	/**
+	 * Set part's content disposition
+	 *
+	 * @param string $disposition Content disposition
+	 */
 	function setDisposition($disposition) {
 		$this->contentDisposition = $disposition;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setFileName
-	// @desc		Seta o nome do arquivo associado à parte
-	// @access		public
-	// @param		fileName string	Caminho completo e nome do arquivo
-	// @return		void
-	// @note		Após atribuir a variável $fileName à propriedade fileName
-	//				da classe, o método tentará abrir o arquivo para buscar
-	//				seu conteúdo no servidor
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the name of the file associated with the part
+	 *
+	 * @return string
+	 */
+	function getFileName() {
+		return isset($this->fileName) ? $this->fileName : NULL;
+	}
+
+	/**
+	 * Loads part contents from the given $fileName
+	 *
+	 * @param string $fileName File name
+	 */
 	function setFileName($fileName) {
-		$this->fileName = basename($fileName);
-		$_FileManager = new FileManager();
-		if ($_FileManager->open($fileName, FILE_MANAGER_READ_BINARY)) {
-			$this->content = $_FileManager->readFile();
-			$_FileManager->close();
+		$contents = @file_get_contents($fileName);
+		if ($contents !== FALSE) {
+			$this->fileName = basename($fileName);
+			$this->content = $contents;
+		} else {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setContent
-	// @desc		Seta o conteúdo do elemento
-	// @access		public
-	// @param		content string	Valor para o conteúdo da parte
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get part's content
+	 *
+	 * @return string
+	 */
+	function getContent() {
+		return isset($this->content) ? $this->content : NULL;
+	}
+
+	/**
+	 * Set part's content
+	 *
+	 * @param string $content
+	 */
 	function setContent($content) {
 		$this->content = $content;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::encodeContent
-	// @desc		Solicita a codificação do conteúdo armazenado na classe
-	//				utilizando o padrão de codificação escolhido (padrão da classe
-	//				é 8bit)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Encode the part's content, using the encoding set in
+	 * the {@link contentEncoding} property
+	 *
+	 * @uses StringUtils::encode()
+	 */
 	function encodeContent() {
 		if ($this->contentEncoding == 'quoted-printable')
 			$this->_encodeQuotedPrintable();
@@ -271,24 +282,11 @@ class MailPart extends PHP2Go
 			$this->content = StringUtils::encode($this->content, $this->contentEncoding);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::setLineEnd
-	// @desc		Atribui um valor para a string de final de linha utilizada pela classe
-	// @access		public
-	// @param		lineEnd string	Caractere(s) de final de linha
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setLineEnd($lineEnd) {
-		$this->lineEnd = $lineEnd;
-	}
-
-    //!-----------------------------------------------------------------
-	// @function	MailPart::buildSource
-	// @desc		Constrói os cabeçalhos e os retorna montados juntamente
-	//				com o conteúdo da parte
-	// @access		public
-	// @return		string	Código da parte MIME
-	//!-----------------------------------------------------------------
+    /**
+     * Builds and returns the source code of the part
+     *
+     * @return string
+     */
 	function buildSource() {
 		if (!isset($this->boundaryId))
 			return '';
@@ -312,24 +310,20 @@ class MailPart extends PHP2Go
 		return $source;
     }
 
-	//!-----------------------------------------------------------------
-	// @function	MailPart::_encodeQuotedPrintable
-	// @desc		Codifica o conteúdo da parte para o modo de codificação QP (quoted-printable)
-	// @access		private
-	// @return		string String codificada
-	// @author		Brent R. Matzelle <bmatzelle@yahoo.com>
-	//!-----------------------------------------------------------------
+	/**
+	 * Encode part's content using quoted-printable mode
+	 *
+	 * @author Brent R. Matzelle <bmatzelle@yahoo.com>
+	 * @access private
+	 */
 	function _encodeQuotedPrintable() {
 		$this->content = str_replace("\r\n", "\n", $this->content);
 		$this->content = str_replace("\r", "\n", $this->content);
 		$this->content = str_replace("\n", $this->lineEnd, $this->content);
 		if (!StringUtils::endsWith($this->content, $this->lineEnd))
 			$this->content .= $this->lineEnd;
-		// substitui caracteres ASCII altos e caracteres de controle
         $this->content = preg_replace('/([\000-\010\013\014\016-\037\075\177-\377])/e', "'='.sprintf('%02X', ord('\\1'))", $this->content);
-		// substitui espaços e tabulações quando for o último caractere de uma linha
         $this->content = preg_replace("/([\011\040])" . $this->lineEnd . "/e", "'='.sprintf('%02X', ord('\\1')).'" . $this->lineEnd . "'", $this->content);
-		// tamanho máximo de linha: 76 depois do final (74 + espaço + '=')
         $this->content = StringUtils::wrap($this->content, 74);
 	}
 }

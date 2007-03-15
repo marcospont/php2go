@@ -1,83 +1,84 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/validation/Validator.class.php,v 1.18 2006/05/07 15:35:44 mpont Exp $
-// $Date: 2006/05/07 15:35:44 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		Validator
-// @desc		A classe Validator funciona como um interface única
-//				para todas as classes de validação implementadas no
-//				framework. O método validate instancia e executa a validação
-//				implementada utilizando o módulo definido pelo usuário
-// @package		php2go.validation
-// @uses		TypeUtils
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.18 $
-// @note		Exemplo de uso:<br>
-// 				<pre>
-//
-//				/* Valor simples e chamada estática da validação */
-//				$value = 'foo@bar.com';
-//				if (Validator::validate('php2go.validation.EmailValidator', $value)) {
-//				&nbsp;&nbsp;&nbsp;print 'valid e-mail!';
-//				} else {
-//				&nbsp;&nbsp;&nbsp;print 'bad e-mail syntax!';
-//				}
-//
-//				/* Múltiplos valores com criação de instância */
-//				$values[0] = 1.24;
-//				$values[1] = 2.01;
-//				$Validator =& Validator::getInstance();
-//				if ($Validator->validateMultiple('php2go.validation.MaxValidation', $values, array('max'=>2), $wrongValues)) {
-//				&nbsp;&nbsp;&nbsp;print 'max exceeded! => wrong values : ' . var_dump($wrongValues);
-//				} else {
-//				&nbsp;&nbsp;&nbsp;print 'values ok';
-//				}
-//
-//				</pre>
-//!-----------------------------------------------------------------
+import('php2go.validation.AbstractValidator');
+
+/**
+ * Interface to all framework's validators
+ *
+ * The Validator class contains static methods to test a value or
+ * a list of values against a validator, based just on the validator
+ * class path, the validator arguments and the value(s) to be validated.
+ *
+ * Examples:
+ * <code>
+ * /* simple value {@*}
+ * $value = 'foo@bar.com';
+ * if (Validator::validate('php2go.validation.EmailValidator', $value)) {
+ *   print 'valid e-mail!';
+ * } else {
+ *   print 'bad e-mail syntax!';
+ * }
+ *
+ * /* multiple values {@*}
+ * $values = array(1.24, 2.01);
+ * $wrongValues = array();
+ * if (Validator::validateMultiple(
+ *     'php2go.validation.MaxValidation', $values,
+ *     array('max'=>2), $wrongValues)
+ * ) {
+ *   print 'values ok';
+ * } else {
+ * 	 print 'max exceeded! => wrong values: ' . var_dump($wrongValues);
+ * }
+ * </code>
+ *
+ * @package validation
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Validator extends PHP2Go
 {
-	var $errorStack = array();	// @var errorStack array	Vetor de erros das validações executadas
+	/**
+	 * Error stack
+	 *
+	 * @var array
+	 */
+	var $errorStack = array();
 
-	//!-----------------------------------------------------------------
-	// @function	Validator::Validator
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
-	function Validator() {
-		parent::PHP2Go();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Validator::&getInstance
-	// @desc		Retorna uma instância única da classe Validator
-	// @access		public
-	// @return		Validator object
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of the Validator class
+	 *
+	 * @return Validator
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
@@ -85,41 +86,42 @@ class Validator extends PHP2Go
 		return $instance;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Validator::validate
-	// @desc		Executa validação em um valor utilizando um validador
-	//				a partir de seu caminho na árvore de módulos
-	// @param		path string			Caminho do módulo de validação utilizado
-	// @param		&value mixed		Valor a ser validado
-	// @param		params array		"NULL" Vetor de parâmetros necessários à validação
-	// @param		userMessage string	"NULL" Mensagem customizada para o validador
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Validates a value against a given validator
+	 *
+	 * The $path argument must contain the path to the validator
+	 * class, using "dot path" notation.
+	 *
+	 * @param string $path Validator class path
+	 * @param mixed &$value Value to be validated
+	 * @param array $params Validator arguments
+	 * @param string $userMessage User defined error message
+	 * @return bool
+	 * @static
+	 */
 	function validate($path, &$value, $params=NULL, $userMessage=NULL) {
 		$validatorClass = basename(str_replace('.', '/', $path));
-		// importa o módulo
+		// imports the validator
 		if (!import($path))
 			return FALSE;
-		// verifica a existência do objeto $validator
+		// verify if the class exists
 		if (!class_exists($validatorClass)) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_INSTANTIATE_VALIDATOR', $validatorClass), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 		$Validator = new $validatorClass($params);
-		// verifica a existência do método $validator::execute()
+		// verify if the execute method exists
 		if (!method_exists($Validator, 'execute')) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_VALIDATOR', array($validatorClass, $validatorClass)), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
-		// executa a validação
-		$result = TypeUtils::toBoolean($Validator->execute($value));
+		// run the validation
+		$result = (bool)$Validator->execute($value);
 		if ($result === FALSE) {
-			// mensagem customizada
-			if (!TypeUtils::isNull($userMessage)) {
+			// custom message
+			if (!$userMessage !== NULL) {
 				Validator::addError($userMessage);
-			// método getError do validador
+			// getError method
 			} elseif (method_exists($Validator, 'getError')) {
 				$errMsg = $Validator->getError();
 				if (!empty($errMsg))
@@ -129,29 +131,26 @@ class Validator extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Validator::validateField
-	// @desc		Método que executa todos os tipos de validações em um determinado
-	//				campo de formulário
-	// @param		&Field FormField object		Campo a ser validado
-	// @param		path string					Caminho do validador
-	// @param		params array				"NULL" Parâmetros para o validador
-	// @param		userMessage string			"NULL" Mensagem de erro do usuário, sobrescrevendo a mensagem padrão
-	// @note		As validações que falharem irão armazenar as mensagens de erro na
-	//				classe Validator. Elas podem ser recuperadas através do método
-	//				estático Validator::getErrors
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Used by the forms API to perform validations on form fields
+	 *
+	 * The FormField instance is passed by reference, along with the
+	 * validator path and arguments. Some validators might change
+	 * the value of the field.
+	 *
+	 * @param FormField &$Field Form field
+	 * @param string $path Validator path
+	 * @param array $params Validator arguments
+	 * @param string $userMessage Customized error message
+	 * @return bool
+	 * @static
+	 */
 	function validateField(&$Field, $path, $params=NULL, $userMessage=NULL) {
-		// valida o campo fornecido
 		if (TypeUtils::isInstanceOf($Field, 'FormField')) {
-			// validação de regra
+			// rule validation
 			if ($path == 'php2go.validation.RuleValidator') {
 				$name = $Field->getName();
 				return Validator::validate($path, $name, $params, $userMessage);
-			// validação de valor do campo
 			} else {
 				$value = $Field->getValue();
 				$params['fieldLabel'] = $Field->getLabel();
@@ -170,36 +169,39 @@ class Validator extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Validator::validateMultiple
-	// @desc		Valida um vetor de valores utilizando um determinado validador
-	// @param		path string		Caminho do módulo de validação utilizado
-	// @param		value array		Vetor de valores a serem validados
-	// @param		params array		"NULL" Vetor de parâmetros para o validador
-	// @param		wrongValues array	Vetor de valores que não satisfazem a validação
-	// @return		bool Retorna FALSE se pelo menos um dos valores não satisfizer a validação
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Runs a validation on multiple values
+	 *
+	 * The failed values are collected and returned through the
+	 * 4th parameter, $wrongValues, that sould be passed by reference.
+	 *
+	 * Returns TRUE only when the validation returned TRUE for all values.
+	 *
+	 * @param string $path Validator path
+	 * @param array $value Values to be validated
+	 * @param array $params Validator arguments
+	 * @param array $wrongValues Used to return the wrong values
+	 * @return bool
+	 * @static
+	 */
 	function validateMultiple($path, $value, $params=NULL, &$wrongValues) {
 		$wrongValues = array();
 		$validatorClass = basename(str_replace('.', '/', $path));
-		$value = TypeUtils::toArray($value);
-		// importa o módulo
+		$value = (array)$value;
+		// imports the validator
 		if (!import($path))
 			return FALSE;
-		// verifica a existência da classe
+		// verifies if the validator class exists
 		if (!class_exists($validatorClass)) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_INSTANTIATE_VALIDATOR', $validatorClass), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
-		// verifica a existência do método $validator::execute()
+		// verifies if the execute method exists
 		$Validator = new $validatorClass($params);
 		if (!method_exists($Validator, 'execute')) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_VALIDATOR', array($validatorClass, $validatorClass)), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
-		// valida todos os elementos do vetor
 		$result = TRUE;
 		$hasErrorGetter = method_exists($Validator, 'getError');
 		foreach ($value as $k=>$v) {
@@ -216,41 +218,33 @@ class Validator extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Validator::addError
-	// @desc		Adiciona um erro de validação
-	// @param		msg string	Mensagem do erro
-	// @access		public
-	// @return		void
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Registers a validator error
+	 *
+	 * @param string $msg Error message
+	 * @static
+	 */
 	function addError($msg) {
 		$Validator =& Validator::getInstance();
 		$Validator->errorStack[] = $msg;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Validator::getErrors
-	// @desc		Busca o vetor de erros de validação armazenado na classe
-	// @access		public
-	// @return		array Vetor de erros
-	// @note		Para que os erros de validação possam ser armazenados e
-	//				consultados, o validador deve implementar um método chamado
-	//				getError()
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Gets the collected error messages
+	 *
+	 * @return array
+	 * @static
+	 */
 	function getErrors() {
 		$Validator =& Validator::getInstance();
 		return $Validator->errorStack;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Validator::clearErrors
-	// @desc		Remove os erros armazenados
-	// @access		public
-	// @return		void
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Clears all validation errors
+	 *
+	 * @static
+	 */
 	function clearErrors() {
 		$Validator =& Validator::getInstance();
 		$Validator->errorStack = array();

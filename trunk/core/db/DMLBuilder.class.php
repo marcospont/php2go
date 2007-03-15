@@ -1,80 +1,178 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/db/DMLBuilder.class.php,v 1.8 2006/05/07 15:21:50 mpont Exp $
-// $Date: 2006/05/07 15:21:50 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const DML_BUILDER_INSERT "1"
-// Modo de execução para montagem de instruções DML INSERT
+/**
+ * Insert DML command
+ */
 define('DML_BUILDER_INSERT', 1);
-// @const DML_BUILDER_UPDATE "2"
-// Modo de execução para montagem de instruções DML UPDATE
+/**
+ * Update DML command
+ */
 define('DML_BUILDER_UPDATE', 2);
-// @const DML_BUILDER_INSERTSQL "INSERT INTO %s (%s) VALUES (%s)"
-// Base para montagem de uma instrução INSERT
+/**
+ * Base SQL code to build insert statements
+ */
 define('DML_BUILDER_INSERTSQL', "INSERT INTO %s (%s) VALUES (%s)");
-// @const DML_BUILDER_UPDATESQL "UPDATE %s SET %s WHERE %s"
-// Base para montagem de uma instrução UPDATE
+/**
+ * Base SQL code to build update statements
+ */
 define('DML_BUILDER_UPDATESQL', "UPDATE %s SET %s WHERE %s");
-// @const OCI_EMPTY_CLOB "EMPTY_CLOB()"
-// Valor especial para colunas Oracle CLOB
+/**
+ * Special value to initialize oracle CLOB columns
+ */
 define('OCI_EMPTY_CLOB', 'EMPTY_CLOB()');
-// @const OCI_EMPTY_BLOB "EMPTY_BLOB()"
-// Valor especial para colunas Oracle BLOB
+/**
+ * Special value to initialize oracle BLOB columns
+ */
 define('OCI_EMPTY_BLOB', 'EMPTY_BLOB()');
 
-//!-----------------------------------------------------------------
-// @class		DMLBuilder
-// @desc		Constrói instruções DML INSERT e UPDATE, a partir do
-//				nome da tabela e de um conjunto de valores. Permite
-//				montagem de comandos com e sem variáveis de amarração,
-//				com tratamento de valores vazios e conversão de valores
-//				para os formatos corretos de acordo com o banco de dados
-// @package		php2go.db
-// @extends		PHP2Go
-// @version		$Revision: 1.8 $
-// @author		Marcos Pont
-//!-----------------------------------------------------------------
+/**
+ * Builds DML commands
+ *
+ * Based on the table name and a hash array of fields and
+ * values, this class is able to build INSERT and UPDATE
+ * commands.
+ *
+ * It supports bind variables, handling of empty values and
+ * conversion of values to the formats, according with the
+ * column native types.
+ *
+ * Example:
+ * <code>
+ * $db =& Db::getInstance();
+ * $dml = new DMLBuilder($db);
+ * $dml->prepare(
+ *   DML_BUILDER_UPDATE, 'person',
+ *   array('name'=>$newName),
+ *   'id_person=?', array($idPerson)
+ * );
+ * $result = @$dml->execute();
+ * </code>
+ *
+ * @package db
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class DMLBuilder extends PHP2Go
 {
-	var $ignoreEmptyValues = FALSE;		// @var ignoreEmptyValues bool	"FALSE" Incluir ou não no comando SQL valores vazios ou nulos
-	var $forceUpdate = FALSE;			// @var forceUpdate bool		"FALSE" Forçar a execução de um UPDATE mesmo que o valor da coluna não tenha sido alterado
-	var $useBind = FALSE;				// @var useBind bool			"FALSE" Utilizar variáveis de amarração (bind)
-	var $_mode;							// @var _mode int				Modo ativo
-	var $_table;						// @var _table string			Tabela ativa
-	var $_values = array();				// @var _values array			"array()" Valores para a instrução
-	var $_clause;						// @var _clause string			Cláusula de condição, para instruções UPDATE
-	var $_clauseBindVars = array();		// @var _clauseBindVars array	"array()" Variáveis de amarração para a cláusula da instrução UPDATE
-	var $_bindVars = array();			// @var _bindVars array			"array()" Conjunto de variáveis de amarração calculadas para uma determinada instrução
-	var $_updateVars = array();			// @var _updateVars array		"array()" Armazena a lista de valores alterados em uma instrução UPDATE, contendo valor novo e valor velho
-	var $_Db = NULL;					// @var _Db Db object			"NULL" Armazena a conexão ao banco de dados
+	/**
+	 * Whether to ignore empty values when building insert/update statements
+	 *
+	 * @var bool
+	 */
+	var $ignoreEmptyValues = FALSE;
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::DMLBuilder
-	// @desc		Construtor da classe
-	// @param		&Db Db object	Conexão com o banco de dados
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Force an update command even when database row is unchanged
+	 *
+	 * @var bool
+	 */
+	var $forceUpdate = FALSE;
+
+	/**
+	 * Use bind variables
+	 *
+	 * @var bool
+	 */
+	var $useBind = FALSE;
+
+	/**
+	 * Active mode
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $_mode;
+
+	/**
+	 * Active table name
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $_table;
+
+	/**
+	 * Active field values
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $_values = array();
+
+	/**
+	 * Active condition clause
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $_clause;
+
+	/**
+	 * Bind variables used in the condition clause
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $_clauseBindVars = array();
+
+	/**
+	 * Bind variables used in the fields
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $_bindVars = array();
+
+	/**
+	 * Holds a hash array containing all changed values in an UPDATE command
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $_updateVars = array();
+
+	/**
+	 * Holds an instance of the database connection class
+	 *
+	 * @var object Db
+	 * @access private
+	 */
+	var $_Db = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param Db &$Db Database connection
+	 * @return DMLBuilder
+	 */
 	function DMLBuilder(&$Db) {
 		parent::PHP2Go();
 		if (!TypeUtils::isInstanceOf($Db, 'Db'))
@@ -82,18 +180,24 @@ class DMLBuilder extends PHP2Go
 		$this->_Db =& $Db;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::prepare
-	// @desc		Prepara uma nova instrução
-	// @param		mode int				Modo (DML_BUILDER_INSERT ou DML_BUILDER_UPDATE)
-	// @param		table string			Nome da tabela
-	// @param		values array			Conjunto de valores
-	// @param		clause string			"NULL" Cláusula de condição
-	// @param		clauseBindVars array	"array()" Variáveis bind da cláusula de condição
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function prepare($mode=DML_BUILDER_INSERT, $table, $values, $clause=NULL, $clauseBindVars=array()) {
+	/**
+	 * Prepare a DML command
+	 *
+	 * Examples:
+	 * <code>
+	 * /* Preparing an INSERT command {@*}
+	 * $dml->prepare(DML_BUILDER_INSERT, 'table_name', $arrayOfFields);
+	 * /* Preparing an UPDATE command {@*}
+	 * $dml->prepare(DML_BUILDER_UPDATE, 'table_name', $arrayOfFields, 'pk_field = '.$pkValue);
+	 * </code>
+	 *
+	 * @param int $mode Mode ({@link DML_BUILDER_INSERT} or {@link DML_BUILDER_UPDATE})
+	 * @param string $table Table name
+	 * @param array $values Field values
+	 * @param string $clause Condition clause
+	 * @param array $clauseBindVars Bind variables to be used in the condition clause
+	 */
+	function prepare($mode, $table, $values, $clause=NULL, $clauseBindVars=array()) {
 		if ($mode != DML_BUILDER_INSERT && $mode != DML_BUILDER_UPDATE)
 			$mode = DML_BUILDER_INSERT;
 		$this->_mode = $mode;
@@ -110,12 +214,13 @@ class DMLBuilder extends PHP2Go
 		$this->_updateVars = array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::getSql
-	// @desc		Monta e retorna o código SQL da instrução
-	// @return		mixed Código SQL da instrução ou FALSE em caso de erros
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Build and return the SQL code of the active statement
+	 *
+	 * Should be called after {@link prepare}.
+	 *
+	 * @return string
+	 */
 	function getSql() {
 		if ($this->_mode == DML_BUILDER_INSERT) {
 			if (!empty($this->_table) && !empty($this->_values)) {
@@ -129,52 +234,57 @@ class DMLBuilder extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::getBindVars
-	// @desc		Retorna o conjunto de variáveis de amarração calculadas
-	//				para a instrução INSERT ou UPDATE
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Build and prepare the active statement
+	 *
+	 * Should be called after {@link prepare}.
+	 *
+	 * @uses getSql()
+	 * @uses Db::prepare()
+	 * @return array
+	 */
+	function getPreparedStatement() {
+		$sql = $this->getSql();
+		if (!empty($sql))
+			return $this->_Db->prepare($sql);
+		return NULL;
+	}
+
+	/**
+	 * Get all bind variables of the active statement
+	 *
+	 * Should be called after {@link execute}.
+	 *
+	 * @return array
+	 */
 	function getBindVars() {
 		return array_merge($this->_bindVars, $this->_clauseBindVars);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::getPreparedStatement
-	// @desc		Monta o código SQL da instrução e prepara para execução
-	//				utilizando a conexão ao banco de dados
-	// @return		mixed Statement preparado ou NULL em caso de erros
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getPreparedStatement() {
-		$sql = $this->getSql();
-		if (!empty($sql))
-			return $this->_Db->prepare($this->getSql());
-		return NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::getUpdateVars
-	// @desc		Retorna o conjunto de colunas cujos valores foram alterados
-	//				em relação aos atuais, em uma instrução UPDATE. Cada posição
-	//				do array retornado contém outro array com duas chaves: old,
-	//				contendo o valor antigo da coluna, e new, contendo o novo valor
-	// @note		Quando o modo ativo na classe for DML_BUILDER_INSERT, este método
-	//				retornará um array vazio
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Return a hash array of changed fields
+	 *
+	 * This information is captured when an UPDATE statement is
+	 * prepared and executed inside this class. The list of
+	 * updated fields can be useful to track  changes on
+	 * database records.
+	 *
+	 * Should be called after {@link execute}.
+	 *
+	 * @return array
+	 */
 	function getUpdateVars() {
 		return $this->_updateVars;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::execute
-	// @desc		Monta o código SQL da instrução, prepara e executa no banco de dados
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Build, prepare and run the the DML command
+	 *
+	 * @uses getSql()
+	 * @uses Db::prepare()
+	 * @uses Db::execute()
+	 * @return bool
+	 */
 	function execute() {
 		$sql = $this->getSql();
 		if (!empty($sql)) {
@@ -187,12 +297,12 @@ class DMLBuilder extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::_insertSql
-	// @desc		Método interno responsável pela construção de instruções INSERT
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Internal method used to build INSERT statements
+	 *
+	 * @return string
+	 * @access private
+	 */
 	function _insertSql() {
 		$sqlFields = '';
 		$sqlValues = '';
@@ -205,7 +315,7 @@ class DMLBuilder extends PHP2Go
 			if (array_key_exists($colUpper, $values)) {
 				$colQuote = (strpos($colUpper, ' ') !== FALSE ? $this->_Db->AdoDb->nameQuote . $colUpper . $this->_Db->AdoDb->nameQuote : $colUpper);
 				$colType = $rs->MetaType($dbCol->type);
-				// valores vazios
+				// empty values
 				if ($this->_isEmpty($values[$colUpper])) {
 					if ($this->ignoreEmptyValues) {
 						continue;
@@ -213,9 +323,9 @@ class DMLBuilder extends PHP2Go
 						$values[$colUpper] = NULL;
 					}
 				}
-				// uso de variáveis bind
+				// bind variables enabled
 				if ($this->useBind) {
-					// tratamento especial para funções EMPTY_BLOB() e EMPTY_CLOB() no oracle
+					// special handling of empty CLOB/BLOB values for oracle
 					if ($isOci) {
 						if (($dbCol->type == 'CLOB' && $values[$colUpper] == OCI_EMPTY_CLOB) || ($dbCol->type == 'BLOB' && $values[$colUpper] == OCI_EMPTY_BLOB)) {
 							$sqlValues .= $values[$colUpper] . ', ';
@@ -244,12 +354,12 @@ class DMLBuilder extends PHP2Go
 		return '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::_updateSql
-	// @desc		Método interno responsável pela construção de instruções UPDATE
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Internal method used to build UPDATE statements
+	 *
+	 * @return string
+	 * @access private
+	 */
 	function _updateSql() {
 		$setValues = '';
 		$oldMode = $this->_Db->setFetchMode(ADODB_FETCH_ASSOC);
@@ -261,13 +371,13 @@ class DMLBuilder extends PHP2Go
 			$dbCol = $rs->FetchField($i);
 			$colUpper = strtoupper($dbCol->name);
 			if (array_key_exists($colUpper, $values)) {
-				// formata o nome do campo, se necessário, e busca o metatype
+				// format the field name, if necessary, and get the metatype
 				$colQuote = (strpos($colUpper, ' ') !== FALSE ? $this->_Db->AdoDb->nameQuote . $colUpper . $this->_Db->AdoDb->nameQuote : $colUpper);
 				$colType = $rs->MetaType($dbCol->type);
 				if ($colType == 'null')
 					$colType = 'C';
-				// busca do valor atual da coluna
-				// os testes por nome são necessários porque os bancos têm diferentes padrões nos nomes das colunas nos record sets
+				// get the current field value
+				// name tests are necessary because database drivers have different case patterns for record set fields
 				if (isset($rs->fields[$colUpper]))
 					$curVal = $rs->fields[$colUpper];
 				elseif (isset($rs->fields[$dbCol->name]))
@@ -276,9 +386,9 @@ class DMLBuilder extends PHP2Go
 					$curVal = $rs->fields[strtolower($colUpper)];
 				else
 					$curVal = '';
-				// definição do novo valor, para comparação
+				// define new value for comparison
 				if ($this->forceUpdate || strcmp($curVal, $values[$colUpper])) {
-					// valores vazios
+					// empty values
 					if ($this->_isEmpty($values[$colUpper])) {
 						if (empty($curVal) && $this->ignoreEmptyValues) {
 							continue;
@@ -286,15 +396,15 @@ class DMLBuilder extends PHP2Go
 							$values[$colUpper] = NULL;
 						}
 					}
-					// registra a coluna na lista de valores alterados
+					// add the field in the update fields list
 					$this->_updateVars[$dbCol->name] = array(
 						'old' => $curVal,
 						'new' => ($values[$colUpper] === NULL ? 'null' : (string)$values[$colUpper])
 					);
-					// uso de variáveis bind
+					// bind variables enabled
 					if ($this->useBind) {
 						if ($isOci) {
-							// tratamento especial para funções EMPTY_BLOB() e EMPTY_CLOB() no oracle
+							// special handling of empty BLOB/CLOB columns on oracle
 							if (($dbCol->type == 'CLOB' && $values[$colUpper] == OCI_EMPTY_CLOB) || ($dbCol->type == 'BLOB' && $values[$colUpper] == OCI_EMPTY_BLOB)) {
 								$setValues .= $colQuote . ' = ' . $values[$colUpper] . ', ';
 							} else {
@@ -321,13 +431,13 @@ class DMLBuilder extends PHP2Go
 		return '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::&_getRecordSet
-	// @desc		Constrói um recordset do mesmo tipo da conexão ao banco de dados
-	//				a fim de extrair meta dados das colunas da tabela
-	// @return		ADORecordSet object
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Build a fake record set using the same driver used
+	 * by the active connection
+	 *
+	 * @return ADORecordSet
+	 * @access private
+	 */
 	function &_getRecordSet() {
 		static $rsObj;
 		if (!isset($rsObj)) {
@@ -338,14 +448,16 @@ class DMLBuilder extends PHP2Go
 		return $rsObj;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::_getColumnsList
-	// @desc		Monta a lista de colunas da tabela. Mantém a última tabela
-	//				e a última lista de colunas em cache, para aumento de performance
-	//				na execução de múltiplas instruções
-	// @access		private
-	// @return		array Lista de colunas da tabela alvo
-	//!-----------------------------------------------------------------
+	/**
+	 * Retrieve the column list of the active table
+	 *
+	 * This method uses internal static variables to cache
+	 * information about tables already visited.
+	 *
+	 * @uses Db::getColumns()
+	 * @return array
+	 * @access private
+	 */
 	function _getColumnsList() {
 		static $cacheTable;
 		static $cacheColumns;
@@ -360,16 +472,18 @@ class DMLBuilder extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::_getColumnSql
-	// @desc		Monta o código SQL de inserção ou atualização de uma coluna
-	// @param		value string		Valor para a coluna
-	// @param		metaType string		Meta type
-	// @param		type string			Tipo original (dependente do banco de dados)
-	// @param		nameQuote string	Nome do campo (somente utilizando em instruções UPDATE
-	// @access		private
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds SQL for a column, to be used on an INSERT or UPDATE statement
+	 *
+	 * @uses Db::quoteString()
+	 * @uses Db::date()
+	 * @param string $value Column value
+	 * @param string $metaType Column meta type
+	 * @param string $type Column type
+	 * @param string $nameQuote Quoted column name
+	 * @return string
+	 * @access private
+	 */
 	function _getColumnSql($value, $metaType, $type, $nameQuote) {
 		if ($this->_Db->AdoDb->dataProvider == 'postgres' && $metaType == 'L')
 			$metaType = 'C';
@@ -378,14 +492,14 @@ class DMLBuilder extends PHP2Go
 				$sqlValue = $this->_Db->quoteString($value) . ', ';
 				break;
 			case 'X' :
-				// tratamento especial para CLOB no oracle, com o valor EMPTY_CLOB()
+				// special handling of empty CLOB values on oracle
 				if ($this->_Db->AdoDb->dataProvider == 'oci8' && $type == 'CLOB')
 					$sqlValue = ($value == OCI_EMPTY_CLOB ? $value : $this->_Db->quoteString($value)) . ', ';
 				else
 					$sqlValue = $this->_Db->quoteString($value) . ', ';
 				break;
 			case 'B' :
-				// tratamento especial para CLOB no oracle, com o valor EMPTY_BLOB()
+				// special handling of empty BLOB values on oracle
 				if ($this->_Db->AdoDb->dataProvider == 'oci8' && $type == 'BLOB')
 					$sqlValue = ($value == OCI_EMPTY_BLOB ? $value : $this->_Db->quoteString($value)) . ', ';
 				else
@@ -412,14 +526,14 @@ class DMLBuilder extends PHP2Go
 			return "{$nameQuote} = {$sqlValue}";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DMLBuilder::_isEmpty
-	// @desc		Verifica se um determinado valor incluído no conjunto de
-	//				valores da instrução é vazio: vazio, NULL ou 'null'
-	// @param		value mixed		Valor a ser testado
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Verify if a given value is empty: an empty string
+	 * a NULL value or a 'null' string
+	 *
+	 * @param mixed $value Input value
+	 * @return bool
+	 * @access private
+	 */
 	function _isEmpty($value) {
 		return (is_null($value) || (empty($value) && strlen($value) == 0) || $value === 'null');
 	}

@@ -1,345 +1,355 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/security/Crypt.class.php,v 1.13 2006/04/05 23:43:21 mpont Exp $
-// $Date: 2006/04/05 23:43:21 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.file.FileManager');
-import('php2go.text.StringUtils');
-//------------------------------------------------------------------
-
-// @const CRYPT_DEFAULT_CIPHER		"MCRYPT_3DES"
-// O 3DES é o algoritmo padrão utilizado na classe
+/**
+ * TripleDES is the default cipher algorithm
+ */
 define('CRYPT_DEFAULT_CIPHER', MCRYPT_3DES);
 
-// @const CRYPT_DEFAULT_MODE		"MCRYPT_MODE_CFB"
-// O CFB, ou Cipher Feedback, é o modo padrão de ciframento de bloco utilizado
+/**
+ * CFB (Cipher Feedback) is the default cipher mode
+ */
 define('CRYPT_DEFAULT_MODE', MCRYPT_MODE_CFB);
 
-//!-----------------------------------------------------------------
-// @class		Crypt
-// @desc		A classe Crypt é uma abstração sobre as funções da biblioteca
-//				mcrypt, que é uma das extensões disponíveis na instalação do PHP.
-//				Possui métodos que tornam fácil a tarefa de encriptar ou desencriptar
-//				dados, utilizando qualquer dos algoritmos disponíveis.
-// @package		php2go.security
-// @uses		FileManager
-// @uses		StringUtils
-// @uses		System
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.13 $
-// @note		Exemplo de uso:
-//				<pre>
-//
-//				$c = new Crypt();
-//				$c->setCipher(MCRYPT_BLOWFISH);
-//				$c->setCipherMode(MCRYPT_MODE_CBC);
-//				$c->setKey('this is the encrypt key');
-//				$encrypted = $c->engineEncrypt('this is secret data that must be encrypted');
-//				$decrypted = $c->engineDecrypt($encrypted);
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * Encrypts and decrypts data using the mcrypt extension
+ *
+ * The Crypt class is an abstraction layer over the functions provided
+ * by the mcrypt extension, which supports a wide variety of algorithms
+ * to encrypt/decrypt data, such as DES, TripleDES, Blowfish, and much
+ * more.
+ *
+ * Example:
+ * <code>
+ * $crypt = new Crypt();
+ * $crypt->setCipher(MCRYPT_BLOWFISH);
+ * $crypt->setCipherMode(MCRYPT_MODE_CBC);
+ * $crypt->setKey('this is the key');
+ * $encrypted = $crypt->engineEncrypt('secret data');
+ * $decrypted = $crypt->engineDecrypt($encrypted);
+ * </code>
+ *
+ * @package security
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Crypt extends PHP2Go
 {
-	var $cipher;		// @var cipher string			Armazena o algoritmo utilizado para encriptar/desencriptar dados
-	var $cipherMode;	// @var cipherMode string		Armazena o modo de criptografia utilizado
-	var $key;			// @var key string				Armazena a chave de criptografia
-	var $cResource;		// @var cResource resource		Resource que representa o módulo de criptografia ativo, para o algoritmo e o modo escolhidos
-	var $iVector;		// @var iVector string			Vetor de inicialização criado para o módulo aberto
+	/**
+	 * Current cipher algorithm
+	 *
+	 * @var string
+	 */
+	var $cipher = CRYPT_DEFAULT_CIPHER;
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::Crypt
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Current cipher mode
+	 *
+	 * @var string
+	 */
+	var $cipherMode = CRYPT_DEFAULT_MODE;
+
+	/**
+	 * Cipher key
+	 *
+	 * @var string
+	 */
+	var $key;
+
+	/**
+	 * Internal handle, provided my {@link mcrypt_generic_init()}
+	 *
+	 * @access private
+	 * @var resource
+	 */
+	var $handle;
+
+	/**
+	 * Initialization vector
+	 *
+	 * @access private
+	 * @var string
+	 */
+	var $iv;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return Crypt
+	 */
 	function Crypt() {
 		parent::PHP2Go();
 		if (!System::loadExtension('mcrypt'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_UNSUPPORTED_EXTENSION', 'mcrypt'), E_USER_ERROR, __FILE__, __LINE__);
-		$this->cipher = CRYPT_DEFAULT_CIPHER;
-		$this->cipherMode = CRYPT_DEFAULT_MODE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::getCipher
-	// @desc		Busca o algoritmo ativo na configuração da classe
-	// @access		public
-	// @return		string Nome do algoritmo
-	//!-----------------------------------------------------------------
-	function getCipher() {
-		return $this->cipher;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Crypt::getCipherList
-	// @desc		Busca a lista de algoritmos disponíveis na biblioteca carregada no PHP
-	// @access		public
-	// @return		array Vetor contendo os nomes dos algoritmos
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all available cipher algorithms
+	 *
+	 * @return array
+	 */
 	function getCipherList() {
 		return mcrypt_list_algorithms();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::getCipherMode
-	// @desc		Busca o modo de criptografia ativo
-	// @access		public
-	// @return		string Nome do modo (cfb, efb, ofb, etc...)
-	//!-----------------------------------------------------------------
-	function getCipherMode() {
-		return $this->cipherMode;
+	/**
+	 * Get current cipher
+	 *
+	 * @return string
+	 */
+	function getCipher() {
+		return $this->cipher;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::getModeList
-	// @desc		Busca a lista de modos de criptografia de bloco disponíveis
-	// @access		public
-	// @return		array Vetor contendo os nomes dos modos
-	//!-----------------------------------------------------------------
-	function getModeList() {
-		return mcrypt_list_modes();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Crypt::getKey
-	// @desc		Busca o valor da chave atualmente setada na classe
-	// @access		public
-	// @return		mixed Chave de criptografia utilizada ou NULL se ainda não foi fornecida uma chave à classe
-	//!-----------------------------------------------------------------
-	function getKey() {
-		if (!isset($this->key))
-			return NULL;
-		else
-			return $this->key;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Crypt::setCipher
-	// @desc		Altera o algoritmo a ser utilizado
-	// @access		public
-	// @param		cipher string		Nome do algoritmo
-	// @return		bool Retorna FALSE se o algoritmo não for válido para a lista de disponíveis
-	//!-----------------------------------------------------------------
+	/**
+	 * Set cipher algorithm
+	 *
+	 * @param string $cipher New cipher
+	 * @return bool
+	 */
 	function setCipher($cipher) {
 		if (in_array($cipher, $this->getCipherList()) && $cipher != $this->cipher) {
 			$this->cipher = $cipher;
 			if (isset($this->key))
 				$this->clearKey();
 			return TRUE;
-		} else
-			return FALSE;
+		}
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::setCipherMode
-	// @desc		Configura o modo de criptografia a ser utilizado
-	// @access		public
-	// @param		cipherMode string	Nome do modo
-	// @return		bool Retorna FALSE se o modo não for válido
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all available cipher modes
+	 *
+	 * @return array
+	 */
+	function getModeList() {
+		return mcrypt_list_modes();
+	}
+
+	/**
+	 * Get current cipher mode
+	 *
+	 * @return string
+	 */
+	function getCipherMode() {
+		return $this->cipherMode;
+	}
+
+	/**
+	 * Set cipher mode
+	 *
+	 * @param string $cipherMode New cipher mode
+	 * @return bool
+	 */
 	function setCipherMode($cipherMode) {
 		if (in_array($cipherMode, $this->getModeList()) && $cipherMode != $this->cipherMode) {
 			$this->cipherMode = $cipherMode;
 			return TRUE;
-		} else
-			return FALSE;
+		}
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::setKey
-	// @desc		Configura a chave de criptografia a ser utilizada
-	// @access		public
-	// @param		key string	Chave de criptografia
-	// @return		void
-	// @note		A chave de criptografia utilizada para encriptar uma string ou o
-	//				conteúdo de um arquivo deve ser a mesma utilizada para desencriptá-lo
-	//!-----------------------------------------------------------------
+	/**
+	 * Get cipher key
+	 *
+	 * @return string
+	 */
+	function getKey() {
+		if (!isset($this->key))
+			return NULL;
+		return $this->key;
+	}
+
+
+	/**
+	 * Set cipher key
+	 *
+	 * @param string $key
+	 */
 	function setKey($key) {
 		if (!empty($key)) {
 			$keySize = @mcrypt_get_key_size($this->cipher, $this->cipherMode);
 			if (strlen($key) < $keySize)
 				$this->key = md5($key);
 			elseif (strlen($key) > $keySize)
-				$this->key = StringUtils::left($key, $keySize);
+				$this->key = substr($key, 0, $keySize);
 			$this->key = $key;
 		}
 
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::clearKey
-	// @desc		Limpa o valor atualmente armazenado na classe para a chave de criptografia
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Unset the cipher key
+	 */
 	function clearKey() {
 		unset($this->key);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::engineEncrypt
-	// @desc		Método genérico para encriptar dados, baseado no algoritmo,
-	//				no modo e na chave setados nas propriedades da classe
-	// @access		public
-	// @param		data string		Dados a serem encriptados
-	// @param		saveTo string		"" Nome do arquivo no qual o resultado deve ser salvo
-	// @return		mixed Em caso de erros, retorna FALSE. Se for solicitada a gravação
-	//				do resultado em um arquivo, retorna TRUE se a operação for realizada com
-	//				sucesso. Se não for fornecido um arquivo, retorna o conteúdo
-	//				encriptado
-	//!-----------------------------------------------------------------
+	/**
+	 * Encrypt the passed $data, using current configurations
+	 * for cipher, cipher mode and cipher key
+	 *
+	 * @uses _initialize()
+	 * @param string $data Data to encrypt
+	 * @param string $saveTo Optional file where encrypted data must be saved
+	 * @return string|bool Encrypted data or FALSE in case of errors
+	 */
 	function engineEncrypt($data, $saveTo='') {
 		if ($this->_initialize()) {
-			mcrypt_generic_init($this->cResource, $this->key, $this->iVector);
-			$encryptedData = mcrypt_generic($this->cResource, $data);
-			mcrypt_generic_deinit($this->cResource);
-			mcrypt_module_close($this->cResource);
+			mcrypt_generic_init($this->handle, $this->key, $this->iv);
+			$encryptedData = mcrypt_generic($this->handle, $data);
+			mcrypt_generic_deinit($this->handle);
+			mcrypt_module_close($this->handle);
 			if (trim($saveTo) != '') {
-				$Mgr =& new FileManager();
-				$Mgr->open($saveTo, FILE_MANAGER_WRITE_BINARY);
-				$Mgr->write(base64_encode($this->iVector . $encryptedData));
-				$Mgr->close();
-				return TRUE;
-			}
-			return base64_encode($this->iVector . $encryptedData);
-		} else
-			return FALSE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Crypt::engineEncryptFile
-	// @desc		Método para encriptar o conteúdo de um arquivo, exportando
-	//				o resultado da operação para um outro arquivo
-	// @access		public
-	// @param		inFileName string		Caminho completo do arquivo de entrada, que contém os dados a serem encriptados
-	// @param		outFileName string	Caminho completo do arquivo de saída
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function engineEncryptFile($inFileName, $outFileName) {
-		$Mgr = new FileManager();
-		if ($Mgr->open($inFileName, FILE_MANAGER_READ_BINARY)) {
-			$fileContents = $Mgr->readFile();
-			$Mgr->close();
-			if ($Mgr->open($outFileName, FILE_MANAGER_WRITE_BINARY)) {
-				if ($encryptedData = $this->engineEncrypt($fileContents)) {
-					$Mgr->write($encryptedData);
-					$Mgr->close();
-					return TRUE;
-				} else {
-					$Mgr->close();
+				$fp = @fopen($saveTo, 'wb');
+				if ($fp === FALSE) {
+					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_WRITE_FILE', $saveTo), E_USER_ERROR, __FILE__, __LINE__);
 					return FALSE;
+				} else {
+					$result = base64_encode($this->iv . $encryptedData);
+					fputs($fp, $result);
+					fclose($fp);
+					return $result;
 				}
 			}
+			return base64_encode($this->iv . $encryptedData);
 		}
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::engineDecrypt
-	// @desc		Método genérico para a decodificação de dados encriptados
-	//				em outra oportunidade pelo método engineEncrypt
-	// @access		public
-	// @param		data string		Dados codificados
-	// @param		saveTo string		"" Arquivo onde a saída da operação deve ser gravada
-	// @return		mixed Retorna FALSE em caso de erros. Se for fornecido um arquivo para a gravação
-	//				da saída da operação, retorna TRUE. Em caso contrário, retorna o valor
-	//				desencriptado do parâmetro $data
-	// @note		Ao desencriptar dados, devem ser utilizados o mesmo algoritmo, mesmo modo
-	//				e mesma chave de criptografia
-	//!-----------------------------------------------------------------
+	/**
+	 * Encrypts the contents of a file, saving the results in another file
+	 *
+	 * @param string $inFileName Input file name
+	 * @param string $outFileName Output file name
+	 * @return bool
+	 */
+	function engineEncryptFile($inFileName, $outFileName) {
+		$in = @file_get_contents($inFileName);
+		if ($in === FALSE) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $inFileName), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		$out = @fopen($outFileName, 'wb');
+		if ($out === FALSE) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CAT_WRITE_FILE', $outFileName), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		if ($encrypted = $this->engineEncrypt($in)) {
+			fputs($out, $encrypted);
+			fclose($out);
+			return TRUE;
+		}
+		fclose($out);
+		return FALSE;
+	}
+
+	/**
+	 * Decrypts the passed $data, using current configurations
+	 * for cipher, cipher mode and cipher key
+	 *
+	 * @uses _initialize()
+	 * @param string $data Data to decrypt
+	 * @param string $saveTo Optional file where decrypted data must be saved
+	 * @return string|bool Decrypted data or FALSE in case of errors
+	 */
 	function engineDecrypt($data, $saveTo='') {
 		if ($this->_initialize()) {
 			$data = base64_decode($data);
-			$iVectorSize = mcrypt_enc_get_iv_size($this->cResource);
-			$iVector = substr($data, 0, $iVectorSize);
-			$data = substr($data, $iVectorSize);
-			mcrypt_generic_init($this->cResource, $this->key, $iVector);
-			$decryptedData = mdecrypt_generic($this->cResource, $data);
-			mcrypt_generic_deinit($this->cResource);
-			mcrypt_module_close($this->cResource);
+			$ivSize = mcrypt_enc_get_iv_size($this->handle);
+			$iv = substr($data, 0, $ivSize);
+			$data = substr($data, $ivSize);
+			mcrypt_generic_init($this->handle, $this->key, $iv);
+			$decrypted = mdecrypt_generic($this->handle, $data);
+			mcrypt_generic_deinit($this->handle);
+			mcrypt_module_close($this->handle);
 			if (trim($saveTo) != '') {
-				$Mgr =& new FileManager();
-				$Mgr->open($saveTo, FILE_MANAGER_WRITE_BINARY);
-				$Mgr->write($decryptedData);
-				$Mgr->close();
-				return TRUE;
-			}
-			return $decryptedData;
-		} else
-			return FALSE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Crypt::engineDecryptFile
-	// @desc		Permite desencriptar o conteúdo de um arquivo, redirecionando
-	//				a saída da operação para um outro arquivo
-	// @access		public
-	// @param		inFileName string		Caminho completo do arquivo que contém os dados encriptados
-	// @param		outFileName string	Caminho completo do arquivo de saída
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function engineDecryptFile($inFileName, $outFileName) {
-		$Mgr = new FileManager();
-		if ($Mgr->open($inFileName, FILE_MANAGER_READ_BINARY)) {
-			$fileContents = $Mgr->readFile();
-			$Mgr->close();
-			if ($Mgr->open($outFileName, FILE_MANAGER_WRITE_BINARY)) {
-				if ($decryptedData = $this->engineDecrypt($fileContents)) {
-					$Mgr->write($decryptedData);
-					$Mgr->close();
-					return TRUE;
-				} else {
-					$Mgr->close();
+				$fp = @fopen($saveTo, 'wb');
+				if ($fp === FALSE) {
+					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_WRITE_FILE', $saveTo), E_USER_ERROR, __FILE__, __LINE__);
 					return FALSE;
+				} else {
+					fputs($fp, $decrypted);
+					fclose($fp);
+					return $decrypted;
 				}
 			}
+			return $decrypted;
 		}
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Crypt::_initialize
-	// @desc		Inicializa o módulo de criptografia para o algoritmo
-	//				e o modo escolhidos
-	// @access		private
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Decrypts the contents of a file, saving the results in another file
+	 *
+	 * @param string $inFileName Input file name
+	 * @param string $outFileName Output file name
+	 * @return bool
+	 */
+	function engineDecryptFile($inFileName, $outFileName) {
+		$in = @file_get_contents($inFileName);
+		if ($in === FALSE) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $inFileName), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		$out = @fopen($outFileName, 'wb');
+		if ($out === FALSE) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_WRITE_FILE', $outFileName), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		if ($decrypted = $this->engineDecrypt($in)) {
+			fputs($out, $decrypted);
+			fclose($out);
+			return TRUE;
+		}
+		fclose($out);
+		return FALSE;
+	}
+
+	/**
+	 * Initializes the cipher module before encrypting or decrypting data
+	 *
+	 * @access private
+	 * @return bool
+	 */
 	function _initialize() {
 		if (!isset($this->key)) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CRYPT_MISSING_KEY'), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
-		if (!$this->cResource = @mcrypt_module_open($this->cipher, '', $this->cipherMode, '')) {
+		if (!$this->handle = @mcrypt_module_open($this->cipher, '', $this->cipherMode, '')) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CRYPT_OPEN_MODULE', array($this->cipher, $this->cipherMode)), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
-		if (!$this->iVector = @mcrypt_create_iv(mcrypt_enc_get_iv_size($this->cResource), MCRYPT_RAND))
+		if (!$this->iv = @mcrypt_create_iv(mcrypt_enc_get_iv_size($this->handle), MCRYPT_RAND))
 			return FALSE;
-		else
-			return TRUE;
+		return TRUE;
 	}
 }
 ?>

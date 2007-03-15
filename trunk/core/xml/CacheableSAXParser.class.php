@@ -1,148 +1,149 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/xml/CacheableSAXParser.class.php,v 1.7 2006/08/23 02:47:44 mpont Exp $
-// $Date: 2006/08/23 02:47:44 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.cache.CacheManager');
 import('php2go.xml.AbstractSAXParser');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		CacheableSAXParser
-// @desc		Esta classe extende as funcionalidades da classe AbstractSAXParser
-//				a fim de incluir um mecanismo automático de cache para o conteúdo
-//				XML interpretado. Os métodos abstratos loadCacheData e getCacheData
-//				devem ser implementados por uma classe extendida
-// @note		O ID de cache do conteúdo XML é baseado em um hash do nome do arquivo 
-//				(se for utilizado um nome de arquivo) ou do conteúdo do arquivo
-// @package		php2go.xml
-// @extends		AbstractSAXParser
-// @uses		CacheManager
-// @version		$Revision: 1.7 $
-// @author		Marcos Pont
-//!-----------------------------------------------------------------
+/**
+ * Extends base SAX parser by adding cache control
+ *
+ * Using CacheableSAXParser, you can define your event handlers and parse the
+ * XML string normally. Besides, the content parsed from the XML string can be
+ * cached, so that parsing won't execute again until the original XML source
+ * is newer than the cached values.
+ *
+ * @package xml
+ * @uses CacheManager
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class CacheableSAXParser extends AbstractSAXParser
 {
-	var $cacheOptions = array();	// @var cacheOptions array			"array()" Conjunto de opções de cache
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::CacheableSAXParser
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Cache options
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $cacheOptions = array();
+
+	/**
+	 * Class constructor
+	 *
+	 * @return CacheableSAXParser
+	 */
 	function CacheableSAXParser() {
 		parent::AbstractSAXParser();
 		$this->cacheOptions['group'] = 'php2goSAXParser';
 		$this->cacheOptions['lifeTime'] = NULL;
 		$this->cacheOptions['useMTime'] = TRUE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::setCacheDir
-	// @desc		Define o diretório base para persistência dos arquivos
-	//				de cache gerados pela classe
-	// @param		dir string		Diretório base para cache
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------	
+
+	/**
+	 * Set cache directory
+	 *
+	 * @param string $dir Directory path
+	 */
 	function setCacheDir($dir) {
 		$this->cacheOptions['baseDir'] = $dir;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::setCacheGroup
-	// @desc		Define o grupo de cache a ser utilizado
-	// @param		group string	Grupo para os arquivos de cache criados
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------	
+
+	/**
+	 * Set cache group
+	 *
+	 * @param string $group Group ID
+	 */
 	function setCacheGroup($group) {
-		$this->cacheOptions['group'] = $group;		
+		$this->cacheOptions['group'] = $group;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::setCacheLifeTime
-	// @desc		Define o tempo de expiração da cache
-	// @param		lifeTime int	Tempo de expiração, em segundos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------	
+
+	/**
+	 * Set lifetime for the cached data
+	 *
+	 * @param int $lifeTime Lifetime, in seconds
+	 */
 	function setCacheLifeTime($lifeTime) {
 		$this->cacheOptions['lifeTime'] = $lifeTime;
 		$this->cacheOptions['useMTime'] = FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::setUseFileMTime
-	// @desc		Indica se a verificação de expiração da cache deve levar em conta
-	//				a data de modificação do arquivo XML original que é fornecido
-	//				para o método parse()
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------	
+
+	/**
+	 * Enable/disable cache control based on the original XML source's timestamp
+	 *
+	 * @param bool $setting Flag value
+	 */
 	function setUseFileMTime($setting) {
 		$this->cacheOptions['useMTime'] = (bool)$setting;
 		if ($this->cacheOptions['useMTime'])
 			$this->cacheOptions['lifeTime'] = NULL;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::loadCacheData
-	// @desc		Método abstrato que recebe os dados recuperados da cache.
-	//				Deve ser implementado pelas classes filhas
-	// @param		data string		Dados recuperados da cache
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Must be implemented by child classes
+	 *
+	 * This method should be used to restore to the
+	 * object data read from the cache storage layer.
+	 *
+	 * @param mixed $data Data loaded from cache
+	 * @abstract
+	 */
 	function loadCacheData($data) {
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::getCacheData
-	// @desc		Método abstrato que deve retornar os dados que devem
-	//				ser serializados na cache
-	// @note		Este método somente é executado se a interpretação do 
-	//				conteúdo XML for realizada com sucesso
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Must be implemented by child classes
+	 *
+	 * Should be used to return all information read
+	 * from XML that should be cached.
+	 *
+	 * This method is executed only when the XML string
+	 * was parsed successfully.
+	 *
+	 * @return array
+	 * @abstract
+	 */
 	function getCacheData() {
 		return array();
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	CacheableSAXParser::parse
-	// @desc		Consulta na base de cache pela existência de uma cópia
-	//				serializada dos dados. Se a cache não for encontrada,
-	//				interpreta o conteúdo XML
-	// @param		xmlContent string	Caminho de arquivo XML ou string XML
-	// @param		srcType int			"T_BYFILE" T_BYFILE: arquivo, T_BYVAR: string
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Overrides parent class implementation by adding cache control
+	 *
+	 * Ask cache manager if it contains a cached copy of the XML
+	 * source. If cache is valid and not stale, data is restored
+	 * from the cache layer. Otherwise, XML is parsed and saved
+	 * in the cache for further use.
+	 *
+	 * @param string $xmlContent XML contents or file path
+	 * @param int $srcType Source type ({@link T_BYFILE} or {@link T_BYVAR})
+	 * @return bool
+	 */
 	function parse($xmlContent, $srcType=T_BYFILE) {
 		$Cache = CacheManager::factory('file');
 		if ($this->cacheOptions['baseDir'])
@@ -166,7 +167,7 @@ class CacheableSAXParser extends AbstractSAXParser
 			if ($result)
 				$Cache->save($this->getCacheData(), $cacheId, $this->cacheOptions['group']);
 			return $result;
-		}		
-	}	
+		}
+	}
 }
 ?>

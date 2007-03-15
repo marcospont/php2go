@@ -1,66 +1,92 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/xml/XmlNode.class.php,v 1.17 2006/10/29 17:26:22 mpont Exp $
-// $Date: 2006/10/29 17:26:22 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
 import('php2go.base.AbstractNode');
-//!-----------------------------------------------------------------
 
-// @const	XML_NODE_DEFAULT_NAME		"node"
-// Nome padrão para nodos inseridos através de uma consulta SQL
-define('XML_NODE_DEFAULT_NAME',			'node');
+/**
+ * Default node name
+ */
+define('XML_NODE_DEFAULT_NAME',	'node');
 
-//!-----------------------------------------------------------------
-// @class		XmlNode
-// @desc		Classe que cria e manipula um nodo de uma árvore XML,
-//				extendendo os métodos implementados na classe superior,
-//				AbstractNode
-// @package		php2go.xml
-// @extends 	AbstractNode
-// @uses		Db
-// @uses		TypeUtils
-// @author 		Marcos Pont
-// @version		$Revision: 1.17 $
-//!-----------------------------------------------------------------
+/**
+ * Implementation of a XML node
+ *
+ * This class is used by XmlParser and XmlRender classes to represent a node
+ * in a XML tree. When parsing and creating XML trees, nodes will be instances
+ * of XmlNode class.
+ *
+ * @package xml
+ * @uses Db
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class XmlNode extends AbstractNode
 {
-	var $prefix;			// @var prefix string						Prefixo de namespace do nome do nodo
-	var $localName;			// @var localName string					Parte local do nome do nodo, quando existe um prefixo de namespace
-	var $value; 			// @var value mixed							Valor CDATA do nodo XML
-	var $ownerDocument;		// @var ownerDocument XmlDocument object	Documento onde o nodo está inserido
+	/**
+	 * Namespace prefix
+	 *
+	 * @var string
+	 */
+	var $prefix;
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::XmlNode
-	// @desc		Construtor do objeto XmlNode
-	// @access		public
-	// @param		nodeTag string		Tag do nodo
-	// @param		nodeAttrs array		Vetor de atributos do nodo
-	// @param 		nodeChildren array	"NULL" Vetor de filhos do nodo
-	// @param 		nodeValue mixed		"NULL" Valor CDATA do nodo XML
-	//!-----------------------------------------------------------------
-	function XmlNode($nodeTag, $nodeAttrs, $nodeChildren = NULL, $nodeValue = NULL) {
+	/**
+	 * Local name
+	 *
+	 * @var string
+	 */
+	var $localName;
+
+	/**
+	 * CDATA section
+	 *
+	 * @var string
+	 */
+	var $value;
+
+	/**
+	 * Owner document
+	 *
+	 * @var XmlDocument
+	 */
+	var $ownerDocument;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $nodeTag Tag name
+	 * @param array $nodeAttrs Attributes
+	 * @param array $nodeChildren Child nodes
+	 * @param string $nodeValue CDATA section
+	 * @return XmlNode
+	 */
+	function XmlNode($nodeTag, $nodeAttrs, $nodeChildren=NULL, $nodeValue=NULL) {
 		parent::AbstractNode($nodeTag, $nodeAttrs, $nodeChildren);
 		if (ereg('[a-zA-Z]+\:[a-zA-Z]+', $nodeTag))
 			list($this->prefix, $this->localName) = explode(':', $nodeTag);
@@ -68,83 +94,78 @@ class XmlNode extends AbstractNode
 		$this->ownerDocument = NULL;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::getTag
-	// @desc		Busca a tag do nodo XML
-	// @access		public
-	// @return		string Tag do nodo XML
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the node's tag name
+	 *
+	 * @return string
+	 */
 	function getTag() {
 		return parent::getName();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::setTag
-	// @desc		Altera o valor do nome da tag do nodo atual
-	// @access		public
-	// @param		newTag string		Novo nome para a tag
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Changes the node's tag name
+	 *
+	 * The $newTag parameter can be a simple tag name or a prefix:name pair:
+	 * <code>
+	 * $node->setTag('tag');
+	 * $node->setTag('ns1:tag');
+	 * </code>
+	 *
+	 * @param string $newTag New tag name
+	 */
 	function setTag($newTag) {
 		parent::setName($newTag);
 		if (ereg("[a-zA-Z]+\:[a-zA-Z]+", $newTag))
 			list($this->prefix, $this->localName) = explode(':', $newTag);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::getPrefix
-	// @desc		Busca o prefixo de namespace do nodo
-	// @access		public
-	// @return		string Prefixo de namespace
-	//!-----------------------------------------------------------------
+	/**
+	 * Gets the namespace prefix of the node
+	 *
+	 * @return string
+	 */
 	function getPrefix() {
 		return $this->prefix;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::setPrefix
-	// @desc		Define um valor para o prefixo de namespace do nodo
-	// @access		public
-	// @param		newPrefix string	Valor para o prefixo
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Sets the namespace prefix of the node
+	 *
+	 * @param string $newPrefix New prefix
+	 */
 	function setPrefix($newPrefix) {
 		$this->prefix = $newPrefix;
 		parent::setName($this->prefix . ':' . $this->localName);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::getLocalName
-	// @desc		Busca a parte local do nome do nodo
-	// @access		public
-	// @return		string Nome local
-	//!-----------------------------------------------------------------
+	/**
+	 * Gets the local part of the node name
+	 *
+	 * @return string
+	 */
 	function getLocalName() {
 		return $this->localName;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::getElementsByTagName
-	// @desc		Retorna os elementos (incluindo ele mesmo) cujo
-	//				nome seja igual a $tagName
-	// @param		tagName string	Nome da tag
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Returns the elements (including the node itself) whose name is $tagName
+	 *
+	 * @param string $tagName Tag name
+	 * @return array
+	 */
 	function &getElementsByTagName($tagName) {
 		$elements = array();
 		$this->getNamedItem($tagName, $elements);
 		return $elements;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::getNamedItem
-	// @desc		Monta um vetor contendo os elementos identificados pelo nome $name
-	// @param		name string		Nome da tag
-	// @param		&elements array	Array de elementos encontrados
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an array containing the elements identified by $name
+	 *
+	 * @param string $name Tag name
+	 * @param array &$elements Used to return the found elements
+	 */
 	function getNamedItem($name, &$elements) {
 		if (!is_array($elements))
 			$elements = array();
@@ -155,16 +176,11 @@ class XmlNode extends AbstractNode
 				$this->children[$i]->getNamedItem($name, $elements);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::getChildrenTagsArray
-	// @desc 		Retorna os filhos do nodo listados em um
-	// 				vetor associativo indexado pelas TAGS
-	// @access 		public
-	// @return		array Vetor associativo no formato Children1Tag=>Children1Object,
-	// 				Children2Tag=>Children2Object, ...
-	// @note		Quando o nodo XML possui filhos cujas tags se repetem,
-	//				estes retornarão na forma de um vetor
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an array of child nodes grouped by tag name
+	 *
+	 * @return array
+	 */
 	function getChildrenTagsArray() {
 		if (!$this->children) {
 			return FALSE;
@@ -186,81 +202,71 @@ class XmlNode extends AbstractNode
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::hasData
-	// @desc		Verifica se o nodo XML possui um valor de texto ou CDATA
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Verifies if the node has a CDATA section
+	 *
+	 * @return bool
+	 */
 	function hasData() {
-		return isset($this->value) && !TypeUtils::isNull($this->value);
+		return (isset($this->value) && $this->value != NULL);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::getData
-	// @desc		Retorna o valor do nodo (texto ou CDATA)
-	// @access		public
-	// @return		mixed Valor do nodo
-	//!-----------------------------------------------------------------
+	/**
+	 * Gets the CDATA section of the node
+	 *
+	 * @return string
+	 */
 	function getData() {
 		return $this->value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::setData
-	// @desc		Atribui um valor à propriedade CDATA do nodo XML
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Defines the CDATA section of the node
+	 *
+	 * @param string $value CDATA contents
+	 */
 	function setData($value) {
 		$this->value = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::&getOwnerDocument
-	// @desc		Retorna o documento XML onde o nodo está inserido
-	// @access		public
-	// @return		XmlDocument object
-	//!-----------------------------------------------------------------
+	/**
+	 * Gets the owner document of the node
+	 *
+	 * @return XmlDocument
+	 */
 	function &getOwnerDocument() {
 		return $this->ownerDocument;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::setOwnerDocument
-	// @desc		Define o documento XML do nodo atual
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Sets the owner document of the node
+	 *
+	 * @param XmlDocument &$Document XML document
+	 */
 	function setOwnerDocument(&$Document) {
 		if (TypeUtils::isInstanceOf($Document, 'XmlDocument'))
 			$this->ownerDocument =& $Document;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::&addChild
-	// @desc		Sobrescreve o método AbstractNode::addChild para setar
-	//				a propriedade ownerDocument do objeto XmlNode
-	// @access		public
-	// @param		childNode XmlNode object	Nodo a ser inserido
-	// @return		XmlNode object Nodo inserido
-	// @see			AbstractNode::addChild
-	//!-----------------------------------------------------------------
+	/**
+	 * Overrides parent class implementation to set the owner document of the node
+	 *
+	 * @param XmlNode $childNode New child node
+	 * @return XmlNode
+	 */
 	function &addChild($childNode) {
 		$Child =& parent::addChild($childNode);
 		$Child->setOwnerDocument($this->ownerDocument);
 		return $Child;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::addFromQuery
-	// @desc		Adiciona nodos filhos ao nodo atual a partir de uma consulta SQL
-	// @access		public
-	// @param		queryString string	Código da consulta SQL
-	// @param		tagName string		"XML_NODE_DEFAULT_NAME" Nome da tag a ser criada para cada linha de resultado
-	// @param		connectionId string	"NULL" ID da conexão a banco de dados a ser utilizada
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add child nodes based on a SQL query
+	 *
+	 * @param string $queryString SQL query
+	 * @param string $tagName Tag name to represent each database row
+	 * @param string $connectionId Connection ID to be used
+	 */
 	function addFromQuery($queryString, $tagName=XML_NODE_DEFAULT_NAME, $connectionId=NULL) {
 		$Db =& Db::getInstance($connectionId);
 		$oldMode = $Db->setFetchMode(ADODB_FETCH_ASSOC);
@@ -274,14 +280,12 @@ class XmlNode extends AbstractNode
 		$Db->setFetchMode($oldMode);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::sortChildrenBy
-	// @desc		Ordena os filhos do nodo baseado em um determinado atributo
-	// @access		public
-	// @param		attributeName string	Nome do atributo de ordenação
-	// @return		bool
-	// @note		Se o atributo não existir em algum dos filhos, a função irá abortar
-	//!-----------------------------------------------------------------
+	/**
+	 * Sort this node's children by a given attribute
+	 *
+	 * @param string $attributeName Attribute name
+	 * @return bool
+	 */
 	function sortChildrenBy($attributeName) {
 		$orderArray = array();
 		$attributeArray = array();
@@ -303,34 +307,31 @@ class XmlNode extends AbstractNode
 		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::&createClone
-	// @desc		Cria um clone no nodo XML
-	// @access		public
-	// @return		XmlNode object
-	//!-----------------------------------------------------------------
+	/**
+	 * Creates a clone of the node
+	 *
+	 * @return XmlNode
+	 */
 	function &createClone() {
 		$Clone = new XmlNode($this->name, $this->attrs, NULL, $this->value);
 		return $Clone;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::render
-	// @desc		A partir dos dados contidos na classe, constrói a representação XML do nodo
-	// @access		public
-	// @param		lineEnd string	"" Caractere de fim de linha para o conteúdo
-	// @param		depth int		"0" Nível do nodo na árvore XML
-	// @param		indent string	"" String a ser utilizada para indentação
-	// @return		string Conteúdo XML do nodo
-	// @note		Se o nodo atual possuir filhos, a função render será chamada recursivamente
-	//				para os mesmos, incrementando uma unidade na indentação
-	//!-----------------------------------------------------------------
+	/**
+	 * Generates the string representation of the node
+	 *
+	 * A recursive call is made for each child node.
+	 *
+	 * @param string $lineEnd Line end chars
+	 * @param int $depth Current depth
+	 * @param string $indent Indentation chars
+	 * @return string
+	 */
 	function render($lineEnd='', $depth=0, $indent='') {
 		$cdata = FALSE;
 		$content  = str_repeat($indent, $depth) . '<' . $this->getTag() . $this->_renderAttributeString();
 		if ($this->hasChildren() || $this->hasData()) {
 			$content .= '>';
-			// gera a seção CDATA do nodo
 			if ($this->hasData()) {
 				if (strlen($this->value) != strlen(htmlspecialchars($this->value)) && !preg_match("/^<!\[CDATA.*/", $this->value)) {
 					$cdata = TRUE;
@@ -341,7 +342,6 @@ class XmlNode extends AbstractNode
 			}
 			if ($this->hasChildren() && !$cdata)
 				$content .= $lineEnd;
-			// executa a recursão para os filhos do nodo
 			for ($i=0; $i<$this->getChildrenCount(); $i++) {
 				$content .= $this->children[$i]->render($lineEnd, $depth+1, $indent);
 			}
@@ -352,12 +352,12 @@ class XmlNode extends AbstractNode
 		return $content;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::_renderAttributeString
-	// @desc		Constrói a representação XML dos atributos do nodo
-	// @access		private
-	// @return		string Conteúdo dos atributos no formato atributo="valor"
-	//!-----------------------------------------------------------------
+	/**
+	 * Renders the attributes of the node
+	 *
+	 * @access private
+	 * @return string
+	 */
 	function _renderAttributeString() {
 		$buffer = '';
 		foreach((array)$this->attrs as $attr => $value)
@@ -365,14 +365,13 @@ class XmlNode extends AbstractNode
 		return $buffer;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	XmlNode::_prepareValue
-	// @desc		Prepara o valor de um atributo para exibição, retirando
-	//				caracteres especiais e barras (slashes)
-	// @access		private
-	// @param		value string	Valor de um atributo do nodo
-	// @return		string Valor corrigido para montagem do arquivo XML
-	//!-----------------------------------------------------------------
+	/**
+	 * Escapes special chars on a given value
+	 *
+	 * @param string $value Input value
+	 * @access private
+	 * @return string
+	 */
 	function _prepareValue($value) {
 		return str_replace(array('<','>','&'), array('&lt;', '&gt;', '&amp;'), stripslashes($value));
 	}

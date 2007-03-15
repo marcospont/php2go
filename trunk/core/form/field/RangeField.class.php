@@ -1,72 +1,90 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/RangeField.class.php,v 1.23 2006/11/19 18:02:38 mpont Exp $
-// $Date: 2006/11/19 18:02:38 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.form.field.EditField');
-//------------------------------------------------------------------
+import('php2go.form.field.FormField');
 
-//!-----------------------------------------------------------------
-// @class		RangeField
-// @desc		Classe responsável pela construção de um par de campos,
-//				formando um intervalo de valores. Os campos podem ser
-//				do tipo texto (EDITFIELD), caixas de seleção (COMBOFIELD e
-//				LOOKUPFIELD) e seleções de data (DATEPICKERFIELD). Também
-//				é possível configurar o texto que deverá envolver o código
-//				dos campos (Entre %s e %s, por exemplo) e os atributos
-//				da regra de comparação que é aplicada sobre os 2 campos
-// @package		php2go.form.field
-// @uses		EditField
-// @uses		TypeUtils
-// @extends		FormField
-// @author		Marcos Pont
-// @version		$Revision: 1.23 $
-//!-----------------------------------------------------------------
+/**
+ * Builds a pair of inputs representing a range of values
+ *
+ * The range can be composed by a pair of the following form
+ * components: {@link EditField}, {@link ComboField},
+ * {@link LookupField} or {@link DatePickerField}.
+ *
+ * It's also able to configure a caption to involve the
+ * pair of inputs (for instance, "Between %s and %s"), and
+ * to perform automatically comparison validation on the
+ * submitted values.
+ *
+ * @package form
+ * @subpackage field
+ * @uses ComboField
+ * @uses DatePickerField
+ * @uses EditField
+ * @uses LookupField
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class RangeField extends FormField
 {
-	var $_StartField = NULL;	// @var _StartField FormField object	"NULL" Objeto FormField que representa o campo inicial do intervalo
-	var $_EndField = NULL;		// @var _EndField FormField object		"NULL" Objeto FormField que representa o campo final do intervalo
+	/**
+	 * Start range member
+	 *
+	 * @var object FormField
+	 * @access private
+	 */
+	var $_StartField = NULL;
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::RangeField
-	// @desc		Construtor da classe
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @access		public
-	//!-----------------------------------------------------------------
-	function RangeField(&$Form) {
-		parent::FormField($Form);
+	/**
+	 * End range member
+	 *
+	 * @var object FormField
+	 * @access private
+	 */
+	var $_EndField = NULL;
+
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return RangeField
+	 */
+	function RangeField(&$Form, $child=FALSE) {
+		parent::FormField($Form, $child);
 		$this->composite = TRUE;
 		$this->searchDefaults['OPERATOR'] = 'BETWEEN';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::display
-	// @desc		Gera o código HTML do componente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		if (TypeUtils::isInstanceOf($this->_StartField, 'DatePickerField')) {
@@ -85,24 +103,21 @@ class RangeField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::getFocusId
-	// @desc		Retorna o nome do campo inicial do intervalo,
-	//				que deverá receber foco quando o label do campo for clicado
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the "start" field as the control to be activated
+	 * when the component's label is clicked
+	 *
+	 * @return string
+	 */
 	function getFocusId() {
 		return $this->_StartField->getId();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::getDisplayValue
-	// @desc		Monta uma representação compreensível
-	//				do valor do campo
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an human-readable representation of the component's value
+	 *
+	 * @return string
+	 */
 	function getDisplayValue() {
 		if (is_array($this->value)) {
 			$values = array_values($this->value);
@@ -114,12 +129,11 @@ class RangeField extends FormField
 		return NULL;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::&getStartField
-	// @desc		Retorna uma referência para o campo inicial do intervalo
-	// @return		FormField object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the range's start field
+	 *
+	 * @return FormField
+	 */
 	function &getStartField() {
 		$result = NULL;
 		if (TypeUtils::isInstanceOf($this->_StartField, 'FormField'))
@@ -127,12 +141,11 @@ class RangeField extends FormField
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::&getEndField
-	// @desc		Retorna uma referência para o campo final do intervalo
-	// @return		FormField object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the range's end field
+	 *
+	 * @return FormField
+	 */
 	function &getEndField() {
 		$result = NULL;
 		if (TypeUtils::isInstanceOf($this->_EndField, 'FormField'))
@@ -140,14 +153,13 @@ class RangeField extends FormField
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::getSearchData
-	// @desc		Sobrescreve a implementação da classe superior para que as
-	//				máscaras definidas nos campos filhos sejam utilizadas como
-	//				DATATYPE de pesquisa
-	// @return		array Dados específicos de busca para este campo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Overrides parent class implementation to define search
+	 * datatype based on the MASK attribute read from the RangeField
+	 * itself or from one of the range members
+	 *
+	 * @return array
+	 */
 	function getSearchData() {
 		$searchData = parent::getSearchData();
 		$mask = $this->attributes['MASK'];
@@ -172,13 +184,14 @@ class RangeField extends FormField
 		return $searchData;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::setMask
-	// @desc		Define a máscara de digitação e validação do campo
-	// @param		mask string		Nome da máscara
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set a mask to the range members
+	 *
+	 * This is only applicable when the range members are
+	 * instances of the {@link EditField} form component.
+	 *
+	 * @param string $mask Mask name
+	 */
 	function setMask($mask) {
 		$matches = array();
 		$mask = trim(strtoupper($mask));
@@ -190,32 +203,24 @@ class RangeField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::setSurroundText
-	// @desc		Permite definir o texto que circunda os dois campos do intervalo. Um exemplo
-	//				deste texto em português poderia ser: "Entre %s e %s". Os dois pontos de
-	//				substituição são obrigatórios
-	// @param		text string		Texto a ser utilizado
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the text that should involve the range inputs
+	 *
+	 * @param string $text Surround text
+	 */
 	function setSurroundText($text) {
 		if (!empty($text))
 			$this->attributes['SURROUNDTEXT'] = resolveI18nEntry($text);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		// construção dos 2 campos do intervalo
 		$fieldMap = array(
 			'EDITFIELD' => 'php2go.form.field.EditField',
 			'COMBOFIELD' => 'php2go.form.field.ComboField',
@@ -260,13 +265,13 @@ class RangeField extends FormField
 		} else {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_RANGEFIELD_CHILDREN', $this->name), E_USER_ERROR, __FILE__, __LINE__);
 		}
-		// somente leitura
+		// read-only mode
 		$this->attributes['READONLY'] = resolveBooleanChoice(@$attrs['READONLY']);
-		// máscara para os elementos do intervalo
+		// range mask
 		$this->setMask(@$attrs['MASK']);
-		// texto envolvendo os 2 campos EDITFIELD
+		// surround text
 		$this->setSurroundText(@$attrs['SURROUNDTEXT']);
-		// inclusão da regra de validação
+		// comparison validation
 		$type = resolveBooleanChoice(@$attrs['RULEEQUAL']);
 		if (isset($attrs['RULEMESSAGE']))
 			$attrs['RULEMESSAGE'] = resolveI18nEntry($attrs['RULEMESSAGE']);
@@ -279,20 +284,16 @@ class RangeField extends FormField
 		));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	RangeField::onPreRender
-	// @desc		Executa configurações necessárias antes da construção
-	//				do código HTML final do campo
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		if (is_array($this->value) && isset($this->value[$this->attributes['STARTNAME']]) && isset($this->value[$this->attributes['ENDNAME']])) {
 			$this->_StartField->setValue($this->value[$this->attributes['STARTNAME']]);
 			$this->_EndField->setValue($this->value[$this->attributes['ENDNAME']]);
 		}
-		// propagação dos atributos DISABLED e READONLY
+		// read-only and disabled attributes are propagated
 		if ($this->disabled) {
 			$this->_StartField->setDisabled();
 			$this->_EndField->setDisabled();
@@ -309,10 +310,9 @@ class RangeField extends FormField
 			$this->_StartField->setMultiple(FALSE);
 			$this->_EndField->setMultiple(FALSE);
 		}
-		// se não foi definido um estilo, utiliza estilo de rótulos do formulário
 		if (!isset($this->attributes['STYLE']))
 			$this->attributes['STYLE'] = $this->_Form->getLabelStyle();
-		// repassa o accesskey para o campo inicial do intervalo
+		// propagate the access key to the start range member
 		if ($this->accessKey)
 			$this->_StartField->setAccessKey($this->accessKey);
 		$this->_StartField->onPreRender();

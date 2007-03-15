@@ -1,12 +1,35 @@
 <?php
-
-	// $Header: /www/cvsroot/php2go/examples/searchform.example.php,v 1.6 2006/08/23 03:00:37 mpont Exp $
-	// $Revision: 1.6 $
-	// $Date: 2006/08/23 03:00:37 $
-	// vim: set expandtab tabstop=4 shiftwidth=4:
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 	require_once('config.example.php');
 	import('php2go.base.Document');
+	import('php2go.db.QueryBuilder');
 	import('php2go.form.SearchForm');
 
 	$db =& Db::getInstance();

@@ -1,65 +1,62 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/EditField.class.php,v 1.43 2006/10/29 17:54:39 mpont Exp $
-// $Date: 2006/10/29 17:54:39 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.EditableField');
 import('php2go.datetime.Date');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		EditField
-// @desc		Classe responsável por construir um INPUT HTML do
-//				tipo TEXT, para simples edição de texto
-// @package		php2go.form.field
-// @uses		Date
-// @uses		HtmlUtils
-// @extends		EditableField
-// @author		Marcos Pont
-// @version		$Revision: 1.43 $
-//!-----------------------------------------------------------------
+/**
+ * Builds text inputs
+ *
+ * @package form
+ * @subpackage field
+ * @uses Date
+ * @uses HtmlUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class EditField extends EditableField
 {
-	//!-----------------------------------------------------------------
-	// @function	EditField::EditField
-	// @desc		Construtor da classe EditField, inicializa os atributos do campo
-	// @access		public
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @param		child bool			"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return EditField
+	 */
 	function EditField(&$Form, $child=FALSE) {
 		parent::EditableField($Form, $child);
 		$this->htmlType = 'TEXT';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::display
-	// @desc		Gera o código HTML do campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		print sprintf("<input type=\"text\" id=\"%s\" name=\"%s\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s%s>%s%s",
@@ -70,29 +67,26 @@ class EditField extends EditableField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::setAlign
-	// @desc		Seta o alinhamento do texto digitado no campo
-	// @param		align string	Alinhamento (left, right, center)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set text align
+	 *
+	 * @param string $align LEFT, CENTER or RIGHT
+	 */
 	function setAlign($align) {
+		$align = strtolower($align);
 		if (!empty($align))
 			$this->attributes['ALIGN'] = " style=\"text-align:" . trim($align) . "\"";
 		else
 			$this->attributes['ALIGN'] = "";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::setCapitalize
-	// @desc		Habilita ou desabilita a transformação do valor do campo, no momento
-	//				da submissão, para possuir o primeiro caractere de cada palavra em
-	//				maiúscula e o resto em letras minúsculas (capitalização)
-	// @access		public
-	// @param		setting bool	"TRUE" Valor para o atributo
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable capitalization of the component's value
+	 *
+	 * This transformation is executed upon submission.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setCapitalize($setting=TRUE) {
 		if (TypeUtils::isTrue($setting))
 			$this->attributes['CAPITALIZE'] = "T";
@@ -100,15 +94,14 @@ class EditField extends EditableField
 			$this->attributes['CAPITALIZE'] = "F";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::setAutoTrim
-	// @desc		Habilita ou desabilita a remoção automática dos caracteres
-	//				brancos no início e no fim do valor informado no campo no
-	//				momento da submissão do formulário
-	// @access		public
-	// @param		setting bool	"TRUE" Valor para o atributo
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Enable/disable removal of trailing whitespaces on the component's value
+	 *
+	 * This transformation is executed upon submission.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setAutoTrim($setting=TRUE) {
 		if (TypeUtils::isTrue($setting))
 			$this->attributes['AUTOTRIM'] = "T";
@@ -116,13 +109,12 @@ class EditField extends EditableField
 			$this->attributes['AUTOTRIM'] = "F";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::isValid
-	// @desc		Sobrecarrega o método EditableField::isValid a fim de executar
-	//				as conversões de valor necessárias no momento da validação do campo
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Override parent class implementation to apply value transformations
+	 *
+	 * @uses StringUtils::capitalize()
+	 * @return bool
+	 */
 	function isValid() {
 		if ($this->attributes['CAPITALIZE'] == "T")
 			$this->value = StringUtils::capitalize($this->value);
@@ -131,15 +123,12 @@ class EditField extends EditableField
 		return parent::isValid();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
 		// calculator
@@ -152,16 +141,15 @@ class EditField extends EditableField
 		$this->setAutoTrim(resolveBooleanChoice(@$attrs['AUTOTRIM']));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::onDataBind
-	// @desc		Sobrecarrega o método onDataBind da classe FormField para interpretar
-	//				expressões de data do tipo TODAY+1D, TODAY-2M, etc.. no valor do campo
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @uses Date::parseFieldExpression()
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
-		// expressões de data
+		// date expressions
 		$regs = array();
 		if (preg_match('/^DATE/', $this->mask) && !empty($this->value) && !Date::isEuroDate($this->value, $regs) && !Date::isUsDate($this->value, $regs))
 			parent::setValue(Date::parseFieldExpression($this->value));
@@ -169,22 +157,18 @@ class EditField extends EditableField
 			$this->value = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	EditField::onPreRender
-	// @desc		Constrói o código JavaScript relacionado com os atributos
-	//				CAPITALIZE e AUTOTRIM (transformação de valor antes da submissão)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
-		// adiciona código para transformações de valor
+		// add value transformation scripts
 		if ($this->attributes['CAPITALIZE'] == 'T')
 			$this->_Form->beforeValidateCode .= sprintf("\t\tfrm.elements['%s'].value = frm.elements['%s'].value.capitalize();\n", $this->name, $this->name);
 		if ($this->attributes['AUTOTRIM'] == 'T')
 			$this->_Form->beforeValidateCode .= sprintf("\t\tfrm.elements['%s'].value = frm.elements['%s'].value.trim();\n", $this->name, $this->name);
 		$btnDisabled = ($this->attributes['READONLY'] != '' || $this->attributes['DISABLED'] != '' || $this->_Form->readonly ? " DISABLED" : "");
-		// botão de exibição do calendário (date picker)
+		// date picker button (for DATE mask)
 		if (preg_match('/^DATE/', $this->mask)) {
 			$this->_Form->Document->importStyle(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar-system.css");
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar_stripped.js");
@@ -204,7 +188,7 @@ class EditField extends EditableField
 		} else {
 			$this->attributes['CALENDAR'] = '';
 		}
-		// botão de exibição da calculadora
+		// calculator button (FLOAT, INTEGER and CURRENCY masks and CALCULATOR=T)
 		if ($this->attributes['CALCULATOR'] && ($this->mask == 'INTEGER' || $this->mask == 'FLOAT' || $this->mask == 'CURRENCY' || $this->mask == '')) {
 			$this->_Form->Document->addStyle(PHP2GO_CSS_PATH . 'calculator.css');
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'widgets/calculator.js');

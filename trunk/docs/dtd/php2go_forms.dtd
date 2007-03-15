@@ -1,7 +1,5 @@
 <!-- This file is the document type specification for the PHP2Go forms API. -->
-<!-- $Header: /www/cvsroot/php2go/docs/dtd/php2go_forms.dtd,v 1.38 2006/11/19 18:43:37 mpont Exp $ -->
-<!-- $Revision: 1.38 $ -->
-<!-- $Date: 2006/11/19 18:43:37 $ -->
+<!-- $Id$ -->
 <!ENTITY % boolean "( T | F )">
 <!ENTITY % color "CDATA">
 <!ENTITY % identifier "NMTOKEN">
@@ -11,7 +9,7 @@
 <!ENTITY % weekdays "( 0 | 1 | 2 | 3 | 4 | 5 | 6 )">
 <!ENTITY % align "( LEFT | CENTER | RIGHT )">
 <!ENTITY % mask "( DIGIT | INTEGER | FLOAT | CURRENCY | CPFCNPJ | DATE | TIME | URL | EMAIL | WORD | ZIP )">
-<!ENTITY % type.method "( GET | POST )">
+<!ENTITY % method "( GET | POST )">
 <!ENTITY % type.btn "( SUBMIT | RESET | BUTTON | CLEAR | BACK )">
 <!ENTITY % type.list "( JS | JSRS | AJAX )">
 <!ENTITY % type.rul "( REGEX | EQ | NEQ | GT | LT | GOET | LOET | REQIF | REQIFEQ | REQIFNEQ | REQIFGT | REQIFLT | REQIFGOET | REQIFLOET )">
@@ -94,9 +92,9 @@
 <!ENTITY % rul.list.srch.opto "option* | listener* | rule* | search?">
 <!ENTITY % rul.list.srch.ds "datasource, ( listener* | rule* | search? )">
 <!ENTITY % rul.list.srch.dso "datasource?, ( listener* | rule* | search? )">
-<!ELEMENT form ( style? | errors? | section+ | variable* )>
+<!ELEMENT form ( style? | errors? | help? | section+ | variable* )>
 <!ATTLIST form
-	method %type.method; #IMPLIED
+	method %method; #IMPLIED
 	action %text; #IMPLIED
 	target %identifier; #IMPLIED
 	backurl %text; #IMPLIED
@@ -111,11 +109,11 @@
 	fieldset %text; #IMPLIED
 	sectiontitle %text; #IMPLIED
 	width %number; #IMPLIED
-	align %type.align; #IMPLIED
+	align %align; #IMPLIED
 	tablepadding %number; #IMPLIED
 	tablespacing %number; #IMPLIED
 	labelwidth %number; #IMPLIED
-	labelalign %type.align; #IMPLIED
+	labelalign %align; #IMPLIED
 >
 <!ELEMENT errors EMPTY>
 <!ATTLIST errors
@@ -126,6 +124,11 @@
 	clientmode %identifier; #IMPLIED
 	clientcontainer %identifier; #IMPLIED
 	tplplaceholder %identifier; #IMPLIED
+>
+<!ELEMENT help EMPTY>
+<!ATTLIST help
+	mode %identifier; #IMPLIED
+	options %text; #IMPLIED
 >
 <!ELEMENT section ( %fld.cond; )*>
 <!ATTLIST section
@@ -261,18 +264,18 @@
 	readonly %boolean; "F"
 	resizemode ( HORIZONTAL | VERTICAL | BOTH | NONE ) "NONE"
 >
-<!ELEMENT editsearchfield ( datasource, datafilter+ )>
+<!ELEMENT editsearchfield ( datasource, datafilter+, lookupfield )>
 <!ATTLIST editsearchfield
 	%coreattrs;
 	%lengthattrs;
 	autodispatch %boolean; "F"
+	autotrim %boolean; "F"
 	btnimg %text; #IMPLIED
 	btnvalue %text; #IMPLIED
 	debug %boolean; "F"
 	url %text; #IMPLIED
-	%editattrs;
 >
-<!ELEMENT editselectionfield ( editfield, lookupfield )>
+<!ELEMENT editselectionfield ( editfield, lookupfield, listener+ )>
 <!ATTLIST editselectionfield
 	%baseattrs;
 	insfield %identifier; #IMPLIED
@@ -312,7 +315,7 @@
 	%comboattrs;
 	default %text; #IMPLIED
 >
-<!ELEMENT lookupselectionfield ( lookupfield, lookupfield )>
+<!ELEMENT lookupselectionfield ( lookupfield, lookupfield, listener+ )>
 <!ATTLIST lookupselectionfield
 	%coreattrs;
 	insfield %identifier; #IMPLIED
@@ -386,6 +389,7 @@
 	%regattrs;
 	%htmlattrs;
 	type %type.btn; #REQUIRED
+	value %text; #IMPLIED
 	alt %text; #IMPLIED
 	disabled %boolean; "F"
 	img %text; #IMPLIED
@@ -426,7 +430,7 @@
 >
 <!ELEMENT datafilter EMPTY>
 <!ATTLIST datafilter
-	id %identifier; #IMPLIED
+	id %identifier; #REQUIRED
 	label %text; #REQUIRED
 	expression %text; #REQUIRED
 	mask %mask; #IMPLIED

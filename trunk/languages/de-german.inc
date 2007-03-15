@@ -1,31 +1,31 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	                                    |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	                                    |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// Translated and maintained by: Stefan Riedel <stefanrhro@web.de>
-//
-// $Header: /www/cvsroot/php2go/languages/de-german.inc,v 1.25 2006/11/19 18:00:06 mpont Exp $
-// $Revision: 1.25 $
-// $Date: 2006/11/19 18:00:06 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Stefan Riedel <stefanrhro@web.de>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 $P2G_LANGUAGE['ERR_OLD_PHP_VERSION'] = "PHP2Go kann mit den aktuellen Servereinstellungen nicht arbeiten!<BR>Ihre PHP- Version ist <I>%s</I>. Wir empfehlen jedoch mindestens <I>%s</I>.<BR>Installieren Sie PHP ab ein größer oder gleich Version um mit PHP2GO normal arbeiten zu können!";
 $P2G_LANGUAGE['ERR_UNSUPPORTED_EXTENSION'] = "Die Erweiterung <I>%s</I> wird von der aktuellen PHP Version leider nicht unterstützt.";
@@ -98,6 +98,7 @@ $P2G_LANGUAGE['ERR_CANT_FIND_BLOCK_REUSE'] = "Es war nicht möglich den Block %s 
 $P2G_LANGUAGE['ERR_CANT_PUT_ON_PREPARED_TEMPLATE'] = "Das Element %s wurde schon mit der Methode DocumentElement::parse() konfiguriert. Es ist nicht empfehlenswert Elemente nach Element mit put() hinzuzufügen.";
 $P2G_LANGUAGE['ERR_TEMPLATE_NOT_PREPARED'] = "Das Template %s wurde nicht vorbereitet. Benutzen Sie die Methode %s::parse(); bevor Sie mit dem Objekt weitere Operationen durchführen.";
 $P2G_LANGUAGE['ERR_TEMPLATE_ALREADY_PREPARED'] = "Dieses Template wurde bereits bearbeitet. Du musst vorher die Funktion parse() aufrufen.";
+$P2G_LANGUAGE['ERR_TPLPARSE_DEFINED_BLOCK'] = "Der Block %s ist leider schon definiert!";
 $P2G_LANGUAGE['ERR_TPLPARSE_UNBALANCED_BLOCKDEF'] = "Die Definition des Blockes <i>%s</i> ist nicht korrekt!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INCOMPLETE_BLOCKDEF'] = "Die Zuordnung des Blockes <I>%s</I> im Tag %s ist nicht komplett!";
 $P2G_LANGUAGE['ERR_TPLPARSE_BLOCKINSIDELOOP'] = "Es ist nicht möglich dynamische Blöcke in Schleifen zu definieren!";
@@ -224,7 +225,6 @@ $P2G_LANGUAGE['ERR_CANT_OPEN_SOCKET'] = "Es war nicht möglich den Socket mit dem
 $P2G_LANGUAGE['ERR_SOCKET_NOT_CONNECTED'] = "Die Socketverbindung ist nicht aktiv!";
 $P2G_LANGUAGE['ERR_SOCKET_EOF'] = "Ende der Datei erreicht, die Operation konnte nicht beendet werden!";
 $P2G_LANGUAGE['ERR_SOCKET_TIMEOUT'] = "Der Socket- Timeout ist erreicht. Die Operation konnte nicht beendet werden!";
-$P2G_LANGUAGE['ERR_MAIL_MESSAGE_NOT_BUILT'] = "Die Nachricht wurde nicht korrekt gebildet und konnte nicht gesendet werden!<BR>Benutzen Sie die build() Methode.";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "Es gibt keine Empfänger für die Nachricht!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "Der Nachrichteninhalt konnte nicht signiert werden.<BR>%s";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Fehler bei der Verbindung zum SMTP- Server %s!<BR>[Error %d] - %s";
@@ -260,6 +260,8 @@ $P2G_LANGUAGE['ERR_JSON_INVALID_PROPVALUE'] = "JSON Entschlüsselungsfehler: %s  
 $P2G_LANGUAGE['ERR_JSON_MISSING_COMMA'] = "JSON Entschlüsselungsfehler: es fehlt ein Komman an der Position %d";
 $P2G_LANGUAGE['ERR_JSON_ESCAPE_SEQUENCE'] = "JSON Entschlüsselungsfehler: falsche Escape Sequenz an der Position %d";
 $P2G_LANGUAGE['ERR_JSON_UNTERMINATED_STRING'] = "JSON Entschlüsselungsfehler: nicht beendeter String an der Position %d";
+$P2G_LANGUAGE['ERR_JSON_CYCLE'] = "Der JSON Encoder hat eine Wiederholung in der Instanz der KLasse %s gefunden!";
+$P2G_LANGUAGE['ERR_JSON_ENCODE'] = "Es ist ein Fehler aufgetreten bei der Konvertierung des Typs %s zu einem JSON string!";
 $P2G_LANGUAGE['DEFAULT_BTN_VALUE'] = "Abschicken";
 $P2G_LANGUAGE['CALENDAR_LINK_TITLE'] = "Öffne den Kalender";
 $P2G_LANGUAGE['CALCULATOR_LINK_TITLE'] = "Öffne den Taschenrechner";

@@ -1,104 +1,128 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/DataGrid.class.php,v 1.29 2006/10/29 17:38:19 mpont Exp $
-// $Date: 2006/10/29 17:38:19 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.DbField');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		DataGrid
-// @desc		A classe DataGrid permite que um conjunto de grid de campos seja gerado
-//				em um formulário contendo os dados presentes no resultado de uma consulta ao banco de dados.
-//				Desta forma, é possível criar um mecanismo de edição simultânea de vários registros de uma
-//				tabela, por exemplo. A especificação XML de um DataGrid deve conter uma fonte de dados, ou
-//				<i>DATASOURCE</i>, e um conjunto de campos, ou <i>FIELDSET</i>
-// @package		php2go.form.field
-// @extends		DbField
-// @uses		Template
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.29 $
-//!-----------------------------------------------------------------
+/**
+ * Builds a grid of fields based on database records
+ *
+ * Based on the data source and on a set of fields defined in the
+ * XML specification, this class builds a grid of fields. The grid
+ * fieldset supports a subset of the available form components.
+ *
+ * @package form
+ * @subpackage field
+ * @uses Template
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class DataGrid extends DbField
 {
-	var $fieldNames = array();		// @var fieldNames array			"array()" Conjunto de nomes dos campos do fieldset
-	var $fieldSet = array();		// @var fieldSet array				"array()" Conjunto de campos do grid
-	var $cellSizes = array();		// @var cellSizes array				"array()" Conjunto de tamanhos para as colunas do grid
-	var $Template = NULL;			// @var Template Template object	"NULL" Template utilizado para construir o grid
+	/**
+	 * Grid field names
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $fieldNames = array();
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::DataGrid
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		&Form Form object		Formulário onde o campo será inserido
-	//!-----------------------------------------------------------------
-	function DataGrid(&$Form) {
-		parent::DbField($Form);
+	/**
+	 * Grid fields
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $fieldSet = array();
+
+	/**
+	 * Grid cell sizes
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $cellSizes = array();
+
+	/**
+	 * Used to render the grid's HTML ouput
+	 *
+	 * @var object Template
+	 * @access private
+	 */
+	var $Template = NULL;
+
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return DataGrid
+	 */
+	function DataGrid(&$Form, $child=FALSE) {
+		parent::DbField($Form, $child);
 		$this->composite = TRUE;
 		$this->searchable = FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::__destruct
-	// @desc		Destrutor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's destructor
+	 */
 	function __destruct() {
+		parent::__destruct();
 		unset($this->fieldset);
 		unset($this->Template);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::display
-	// @desc		Exibe o código gerado para o grid
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Displays the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		$this->Template->display();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::setShowHeader
-	// @desc		Define se os cabeçalhos das colunas da tabela devem ser exibidos
-	// @param		setting bool	Valor para o flag
-	// @note		O padrão deste atributo é TRUE (os cabeçalhos são exibidos)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable visibility of grid headers
+	 *
+	 * By default, grid headers are visible.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setShowHeader($setting) {
 		$this->attributes['SHOWHEADER'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::setHeaders
-	// @desc		Define labels para os cabeçalhos das colunas do grid
-	// @param		headers string	Headers
-	//!-----------------------------------------------------------------
+	/**
+	 * Define labels to the grid headers
+	 *
+	 * @param string $headers Comma-separated header labels
+	 */
 	function setHeaders($headers) {
 		if ($headers) {
 			$headers = (!is_array($headers) ? explode(',', resolveI18nEntry(trim($headers))) : $headers);
@@ -106,14 +130,11 @@ class DataGrid extends DbField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::setHeaderStyle
-	// @desc		Define o estilo CSS para as células do cabeçalho da tabela
-	// @param		headerStyle string	Estilo para o cabeçalho
-	// @note		O valor padrão para esta propriedade é o estilo definido para os rótulos do formulário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set grid headers CSS class
+	 *
+	 * @param string $headerStyle CSS class
+	 */
 	function setHeaderStyle($headerStyle) {
 		if ($headerStyle)
 			$this->attributes['HEADERSTYLE'] = " class=\"$headerStyle\"";
@@ -121,14 +142,11 @@ class DataGrid extends DbField
 			$this->attributes['HEADERSTYLE'] = $this->_Form->getLabelStyle();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::setCellStyle
-	// @desc		Seta o estilo CSS das células do conteúdo da tabela
-	// @param		cellStyle string	Estilo para o conteúdo
-	// @note		O valor padrão para esta propriedade é o estilo definido para os rótulos do formulário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set grid cells CSS class
+	 *
+	 * @param string $cellStyle CSS class
+	 */
 	function setCellStyle($cellStyle) {
 		if ($cellStyle)
 			$this->attributes['CELLSTYLE'] = " class=\"$cellStyle\"";
@@ -136,13 +154,11 @@ class DataGrid extends DbField
 			$this->attributes['CELLSTYLE'] = $this->_Form->getLabelStyle();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::setTableWidth
-	// @desc		Define o tamanho da tabela que contém o grid de campos
-	// @param		tableWidth int		Tamanho para a tabela
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set width of the grid table
+	 *
+	 * @param int $tableWidth Table width in pixels
+	 */
 	function setTableWidth($tableWidth) {
 		if ($tableWidth)
 			$this->attributes['TABLEWIDTH'] = " width=\"{$tableWidth}\"";
@@ -150,15 +166,13 @@ class DataGrid extends DbField
 			$this->attributes['TABLEWIDTH'] = "";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::setCellSizes
-	// @desc		Define um vetor de tamanhos para as células do grid
-	// @param		sizes array			Vetor de tamanhos contendo N+1 valores inteiros
-	//									para os tamanhos das colunas da tabela, onde N é
-	//									o número de campos definidos no FIELDSET
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set cell sizes
+	 *
+	 * The $sizes argument must be an array of integers whose sum is 100.
+	 *
+	 * @param array $sizes Cell sizes
+	 */
 	function setCellSizes($sizes) {
 		if (sizeof($sizes) != (sizeof($this->fieldSet) + 1) || array_sum($sizes) != 100) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_DATAGRID_INVALID_CELLSIZES', $this->name), E_USER_ERROR, __FILE__, __LINE__);
@@ -168,22 +182,19 @@ class DataGrid extends DbField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		// datasource e fieldset obrigatórios
+		// datasource and fieldset are mandatory
 		if (isset($children['DATASOURCE']) && isset($children['FIELDSET']) &&
 			TypeUtils::isInstanceOf($children['FIELDSET'], 'XmlNode') &&
 			$children['FIELDSET']->hasChildren()) {
-			// instancia e adiciona os campos no fieldset
+			// create fieldset members
 			$globalDisabled = resolveBooleanChoice(@$attrs['DISABLED']);
 			for ($i=0, $s=$children['FIELDSET']->getChildrenCount(); $i<$s; $i++) {
 				$Child =& $children['FIELDSET']->getChild($i);
@@ -206,27 +217,27 @@ class DataGrid extends DbField
 				import("php2go.form.field.{$fieldClassName}");
 				$Field = new $fieldClassName($this->_Form, TRUE);
 				$Field->onLoadNode($Child->getAttributes(), $Child->getChildrenTagsArray());
-				// campos recebem o atributo disabled do grid
+				// disabled flag propagates to the fieldset members
 				if ($globalDisabled)
 					$Field->setDisabled(TRUE);
-				// registra o campo e o nome do campos
+				// store field and field name
 				$this->fieldSet[] = $Field;
 				$this->fieldNames[] = $Field->getName();
 			}
-			// exibir ou não cabeçalhos no grid
+			// are headers visible?
 			if (isset($attrs['SHOWHEADER']))
 				$this->setShowHeader(resolveBooleanChoice($attrs['SHOWHEADER']));
 			else
 				$this->setShowHeader(TRUE);
-			// cabeçalhos das colunas
+			// headers
 			$this->setHeaders(@$attrs['HEADERS']);
-			// estilo do cabeçalho do grid
+			// headers CSS class
 			$this->setHeaderStyle(@$attrs['HEADERSTYLE']);
-			// estilo da célula
+			// cells CSS class
 			$this->setCellStyle(@$attrs['CELLSTYLE']);
-			// largura da tabela
+			// table width
 			$this->setTableWidth(@$attrs['TABLEWIDTH']);
-			// tamanhos das células
+			// cell sizes
 			if (isset($attrs['CELLSIZES']))
 				$this->setCellSizes(explode(',', $attrs['CELLSIZES']));
 		} else {
@@ -234,14 +245,11 @@ class DataGrid extends DbField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::onDataBind
-	// @desc		Executa a consulta associada ao grid, validando
-	//				o número de colunas retornadas contra o número de campos
-	//				definidos
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
 		parent::processDbQuery(ADODB_FETCH_NUM);
@@ -249,21 +257,20 @@ class DataGrid extends DbField
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_DATAGRID_INVALID_FIELDCOUNT', $this->name), E_USER_ERROR, __FILE__, __LINE__);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataGrid::onPreRender
-	// @desc		Constrói o template de conteúdo do grid
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		$this->Template = new Template(PHP2GO_TEMPLATE_PATH . 'datagrid.tpl');
 		$this->Template->parse();
 		$this->Template->globalAssign('id', $this->id);
+		$this->Template->assign('style', $this->attributes['USERSTYLE']);
 		$this->Template->assign('width', $this->attributes['TABLEWIDTH']);
 		if ($this->attributes['SHOWHEADER']) {
 			$headers = TypeUtils::toArray(@$this->attributes['HEADERS']);
 			$this->Template->createBlock('loop_line');
+			$this->Template->assign('row_id', 'header');
 			for ($i=1,$s=$this->_Rs->fieldCount(); $i<$s; $i++) {
 				$Field =& $this->_Rs->fetchField($i);
 				$this->Template->createAndAssign('loop_header_cell', array(
@@ -277,7 +284,7 @@ class DataGrid extends DbField
 		while ($dataRow = $this->_Rs->fetchRow()) {
 			$submittedRow = ($isPosted ? @$this->value[$dataRow[0]] : NULL);
 			$this->Template->createBlock('loop_line');
-			$this->Template->assign('row_id', $dataRow[0]);
+			$this->Template->assign('row_id', 'row_' . $dataRow[0]);
 			$this->Template->createAndAssign('loop_cell', array(
 				'align' => 'left',
 				'style' => $this->attributes['CELLSTYLE'],
@@ -290,16 +297,16 @@ class DataGrid extends DbField
 				$Field->setId("{$this->name}_{$dataRow[0]}_{$this->fieldNames[$i]}");
 				$Field->setName("{$this->name}[{$dataRow[0]}][{$this->fieldNames[$i]}]");
 				if ($isPosted) {
-					// correção especial para checkboxes
+					// special fix for checkbox inputs
 					if ($Field->getFieldTag() == 'CHECKFIELD') {
 						eval("\$submittedRow['{$this->fieldNames[$i]}'] = \$_{$this->_Form->formMethod}['V_{$this->name}'][{$dataRow[0]}]['{$this->fieldNames[$i]}'];");
 						$Field->setValue($submittedRow[$this->fieldNames[$i]]);
 					}
-					// aplica o valor submetido se ele existir, mesmo vazio
+					// apply submitted value even when empty
 					elseif (isset($submittedRow[$this->fieldNames[$i]])) {
 						$Field->setValue($submittedRow[$this->fieldNames[$i]]);
 					}
-					// aplica o valor original da coluna
+					// apply original value from the database
 					else {
 						$Field->setValue($dataRow[$i+2]);
 					}
