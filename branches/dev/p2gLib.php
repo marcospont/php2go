@@ -266,9 +266,13 @@ function dumpArray($arr, $return=TRUE, $stringLimit=200, $deep=FALSE) {
 	foreach ($arr as $k => $v) {
 		if (is_string($v)) {
 			$r[] = $k . "=>'" . (strlen($v) > $stringLimit ? substr($v, 0, $stringLimit) . "...(" . strlen($v) . ")" : $v) . "'";
-		} elseif ($deep && (is_array($v) || is_object($v))) {
+		} elseif (is_array($v) || is_object($v)) {
 			(is_object($v)) && ($v = get_object_vars($v));
-			$r[] = $k . '=>' . dumpArray($v, TRUE, $stringLimit, TRUE);
+			$r[] = $k . '=>' . ($deep ? dumpArray($v, TRUE, $stringLimit, TRUE) : $v);
+		} elseif (is_bool($v)) {
+			$r[] = $k . '=>' . ($v ? 'TRUE' : 'FALSE');
+		} elseif ($v === NULL) {
+			$r[] = $k . '=>NULL';
 		} else {
 			$r[] = $k . '=>' . $v;
 		}
