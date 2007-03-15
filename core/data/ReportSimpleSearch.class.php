@@ -1,150 +1,189 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/data/ReportSimpleSearch.class.php,v 1.19 2006/10/11 22:48:36 mpont Exp $
-// $Date: 2006/10/11 22:48:36 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import("php2go.util.AbstractList");
 import("php2go.net.HttpRequest");
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		ReportSimpleSearch
-// @desc		Implementa uma lista de filtros aplicáveis a um relatório
-//				ou consulta ao banco de dados. Constrói a expressão que
-//				deve ser adicionada a uma consulta a partir dos filtros
-//				submetidos por uma busca
-// @package		php2go.data
-// @extends		AbstractList
-// @author		Marcos Pont
-// @version		$Revision: 1.19 $
-//!-----------------------------------------------------------------
+/**
+ * Report simple search processor
+ *
+ * This class parses the search filters from the request and builds
+ * the condition clause that must be appended to the report's original
+ * condition clause (from the XML specification).
+ *
+ * It also handles masked search filters: before building the condition
+ * clause, callback functions can be executed to transform values of
+ * specific masks (like, for instance, DATE).
+ *
+ * @package data
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class ReportSimpleSearch extends AbstractList
 {
-	var $fields = '';			// @var fields string			"" Lista de campos de pesquisa submetidos
-	var $operators = '';		// @var operators string		"" Lista de operadores de pesquisa submetidos
-	var $values = '';			// @var values string			"" Lista de valores de pesquisa
-	var $mainOperator = '';		// @var mainOperator string		"" Operador principal da expressão de pesquisa
-	var $urlString = '';		// @var urlString string		"" Dados da última busca realizada no formato url encode
-	var $masksRegExp;			// @var masksRegExp string		Expressão regular para validar máscaras de valor de pesquisa
-	var $maskFunctions;			// @var maskFunctions array		Funções de usuário para valores que pertencem a determinadas máscaras
-	var $searchSent;			// @var searchSent bool			Indica se uma busca foi submetida
+	/**
+	 * Search fields parsed from the request
+	 *
+	 * @var string
+	 */
+	var $fields = '';
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::ReportSimpleSearch
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Search operators parsed from the request
+	 *
+	 * @var string
+	 */
+	var $operators = '';
+
+	/**
+	 * Search values (terms) parsed from the request
+	 *
+	 * @var string
+	 */
+	var $values = '';
+
+	/**
+	 * Search main operator parsed from the request
+	 *
+	 * @var string
+	 */
+	var $mainOperator = '';
+
+	/**
+	 * Indicates a search was submitted and its arguments were found in the request
+	 *
+	 * @var bool
+	 */
+	var $searchSent;
+
+	/**
+	 * Holds a query string containing all search fields
+	 *
+	 * This is used to build links to navigate to other pages or
+	 * sort report, in order to keep track of all search arguments
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $urlString = '';
+
+	/**
+	 * Regexp used to validate the mask of data filters
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $masksRegExp;
+
+	/**
+	 * Mask transformation functions
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $maskFunctions;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return ReportSimpleSearch
+	 */
 	function ReportSimpleSearch() {
 		parent::AbstractList();
 		$this->maskFunctions = array();
 		$this->searchSent = FALSE;
+		$this->_checkRequest();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::getFields
-	// @desc		Busca o(s) campo(s) de pesquisa submetido(s)
-	// @acess		public
-	// @return		string Campo(s) de pesquisa
-	// @see			ReportSimpleSearch::getOperators
-	// @see			ReportSimpleSearch::getValues
-	// @see			ReportSimpleSearch::getMainOperator
-	//!-----------------------------------------------------------------
+	/**
+	 * Get search fields
+	 *
+	 * @return string
+	 */
 	function getFields() {
 		return $this->fields;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::getOperators
-	// @desc		Busca o(s) operador(es) de pesquisa submetido(s)
-	// @access		public
-	// @return		string Operado(es) de pesquisa
-	// @see			ReportSimpleSearch::getFields
-	// @see			ReportSimpleSearch::getValues
-	// @see			ReportSimpleSearch::getMainOperator
-	//!-----------------------------------------------------------------
+	/**
+	 * Get search operators
+	 *
+	 * @return string
+	 */
 	function getOperators() {
 		return $this->operators;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::getValues
-	// @desc		Busca o(s) valor(es) de pesquisa submetido(s)
-	// @access		public
-	// @return		string Valor(es) de pesquisa
-	// @see			ReportSimpleSearch::getFields
-	// @see			ReportSimpleSearch::getOperators
-	// @see			ReportSimpleSearch::getMainOperator
-	//!-----------------------------------------------------------------
+	/**
+	 * Get search values (terms)
+	 *
+	 * @return string
+	 */
 	function getValues() {
 		return $this->values;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::getMainOperator
-	// @desc		Busca o operador principal da expressão de busca
-	// @access		public
-	// @return		string Operador principal (AND ou OR)
-	// @see			ReportSimpleSearch::getFields
-	// @see			ReportSimpleSearch::getOperators
-	// @see			ReportSimpleSearch::getValues
-	//!-----------------------------------------------------------------
+	/**
+	 * Get search main operator
+	 *
+	 * @return string
+	 */
 	function getMainOperator() {
 		return $this->mainOperator;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::getUrlString
-	// @desc		Retorna os dados da última pesquisa no formato url encode
-	// @access		public
-	// @return		string Dados da última pesquisa
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all parsed search arguments in the form of a query string
+	 *
+	 * @return string
+	 */
 	function getUrlString() {
 		return $this->urlString;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::getSearchClause
-	// @desc		Verifica se uma expressão de busca foi submetida na
-	//				requisição atual e constrói a partir dela a expressão
-	//				correspondente em SQL para filtragem dos dados
-	// @access		public
-	// @return		string Cláusula para a consulta SQL, que será vazia caso não
-	//				não exista expressão de busca submetida na requisição
-	//!-----------------------------------------------------------------
+	/**
+	 * Get an SQL condition clause based on the parsed search arguments
+	 *
+	 * If there are no search arguments in the request, an empty string is returned.
+	 *
+	 * @return string
+	 */
 	function getSearchClause() {
-		// verifica se uma expressão de busca foi postada
-		$this->_checkRequest();
+		// parse search arguments from the request
 		if (!$this->searchSent)
 			return '';
-		// busca campos, operadores e valores de busca
+		// split fields list, operators list and values list
 		$fieldList = explode('|', $this->fields);
 		$operatorList = explode('|', $this->operators);
 		$valueList = explode('|', $this->values);
-		// verifica se os dados estão completos
+		// check if arguments are complete
 		if (sizeof($fieldList) == sizeof($operatorList) && sizeof($operatorList) == sizeof($valueList)) {
-			// constrói a expressão de busca a partir dos filtros submetidos
+			// build condition clause
 			$clause = '';
 			for ($i = 0; $i < sizeof($fieldList); $i++) {
 				$clause .= '(' . $fieldList[$i];
@@ -163,7 +202,6 @@ class ReportSimpleSearch extends AbstractList
 						$clause .= " NOT LIKE '%" . $valueList[$i] . "%')";
 						break;
 					default :
-						// inclusão da cláusula depende do tipo de valor informado
 						if ($index = $this->_containsField($fieldList[$i])) {
 							$filter = $this->get($index);
 							if ($filter['mask'] == 'integer' || $filter['mask'] == 'float') {
@@ -184,38 +222,11 @@ class ReportSimpleSearch extends AbstractList
 		return '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::addMaskFunction
-	// @desc		Associa uma função de usuário a uma determinada máscara
-	// @access		public
-	// @param		mask string		Nome da máscara
-	// @param		callback mixed	Nome de função, classe::método ou vetor objeto+método
-	// @return		bool
-	// @note		Ao associar uma função ou um método à mascara 'date', por exemplo,
-	//				os valores cuja máscara for 'date' serão processados pela função
-	//				ou método ao serem submetidos
-	//!-----------------------------------------------------------------
-	function addMaskFunction($mask, $callback) {
-		$mask = strtoupper($mask);
-		if ($mask == 'STRING' || preg_match(PHP2GO_MASK_PATTERN, $mask)) {
-			$maskName = strtoupper($mask);
-			$this->maskFunctions[$maskName] =& new Callback($callback);
-			return TRUE;
-		}
-		return FALSE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::addFilter
-	// @desc		Adiciona uma nova opção de filtro
-	// @param		filterData array		Dados do filtro
-	// @access		public
-	// @return		void
-	// @note		O vetor $filterData deve conter os campos LABEL (rótulo
-	//				do filtro), FIELD (nome do filtro) e MASK (máscara do filtro).
-	//				Adicionalmente, o campo INDEX associa o filtro com uma determinada
-	//				coluna de uma consulta ou relatório
-	//!-----------------------------------------------------------------
+	/**
+	 * Register a new data filter
+	 *
+	 * @param array $filterData Filter data
+	 */
 	function addFilter($filterData) {
 		if (!isset($filterData['LABEL']) || !isset($filterData['FIELD']) || !isset($filterData['MASK']))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_REPORT_SEARCH_PARS_MALFORMED'), E_USER_ERROR, __FILE__, __LINE__);
@@ -231,20 +242,31 @@ class ReportSimpleSearch extends AbstractList
 		parent::add($newFilter);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::_checkRequest
-	// @desc		Verifica se a requisição atual contém valores de pesquisa
-	//				submetidos via GET ou POST
-	// @access		private
-	// @return		void
-	// @note		Os nomes dos campos são search_fields, search_operators,
-	//				search_values e search_main_op
-	// @note		Se os quatro valores forem preenchidos, a propriedade
-	//				searchSent será modificada para TRUE
-	//!-----------------------------------------------------------------
+	/**
+	 * Register a callback function to transform data filters of a given mask
+	 *
+	 * @param string $mask Mask
+	 * @param string $callback Function name, class/method or object/method
+	 * @return bool
+	 */
+	function addMaskFunction($mask, $callback) {
+		$mask = strtoupper($mask);
+		if ($mask == 'STRING' || preg_match(PHP2GO_MASK_PATTERN, $mask)) {
+			$maskName = strtoupper($mask);
+			$this->maskFunctions[$maskName] =& new Callback($callback);
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Parses search arguments from the request
+	 *
+	 * @access private
+	 */
 	function _checkRequest() {
 		$this->urlString = "";
-		// Campos de busca
+		// search fields
 		$pFields = HttpRequest::post('search_fields');
 		$gFields = HttpRequest::get('search_fields');
 		if ($pFields !== NULL) {
@@ -255,7 +277,7 @@ class ReportSimpleSearch extends AbstractList
 			$this->fields = str_replace("\\'", "'", $gFields);
 			$this->urlString .= "&search_fields=" . urlencode(str_replace("\\'", "'", $gFields));
 		}
-		// Operadores de busca
+		// search operators
 		$pOperators = HttpRequest::post('search_operators');
 		$gOperators = HttpRequest::get('search_operators');
 		if ($pOperators !== NULL) {
@@ -266,7 +288,7 @@ class ReportSimpleSearch extends AbstractList
 			$this->operators = $gOperators;
 			$this->urlString .= "&search_operators=" . urlencode($gOperators);
 		}
-		// Valores de busca
+		// search values (terms)
 		$pValues = HttpRequest::post('search_values');
 		$gValues = HttpRequest::get('search_values');
 		if ($pValues !== NULL) {
@@ -277,7 +299,7 @@ class ReportSimpleSearch extends AbstractList
 			$this->values = $gValues;
 			$this->urlString .= "&search_values=" . urlencode($gValues);
 		}
-		// Operador principal
+		// search main operator
 		$pMain = HttpRequest::post('search_main_op');
 		$gMain = HttpRequest::get('search_main_op');
 		if ($pMain !== NULL) {
@@ -291,21 +313,21 @@ class ReportSimpleSearch extends AbstractList
 		$this->searchSent = (!empty($this->fields) && !empty($this->operators) && trim($this->values) != '' && !empty($this->mainOperator));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::_checkMask
-	// @desc		Verifica se existe função de usuário a ser executada
-	//				para a máscara de um campo de pesquisa
-	// @access		private
-	// @param		field string	Nome do campo
-	// @param		value mixed	Valor do campo
-	// @return		mixed Valor processado pela função, se ela existir, ou o mesmo valor em caso contrário
-	//!-----------------------------------------------------------------
+	/**
+	 * Process the value of a search term
+	 *
+	 * Execute the callback function associated with the filter mask, if any
+	 *
+	 * @param string $field Search field name
+	 * @param string $value Search term
+	 * @return string
+	 */
 	function _checkMask($field, $value) {
 		$index = $this->_containsField($field);
-		if (!TypeUtils::isFalse($index)) {
+		if ($index !== FALSE) {
 			$filter = $this->get($index);
 			if (isset($this->maskFunctions[$filter['mask']])) {
-				$fn = $this->maskFunctions[$filter['mask']];
+				$fn =& $this->maskFunctions[$filter['mask']];
 				return $fn->invoke($value);
 			} else
 				return $value;
@@ -313,13 +335,12 @@ class ReportSimpleSearch extends AbstractList
 			return $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	ReportSimpleSearch::_containsField
-	// @desc		Verifica se a lista de filtros contém um determinado campo
-	// @access		private
-	// @param		field string	Nome do campo
-	// @return		int Índice do campo ou FALSE se ele não existir
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a filter exists
+	 *
+	 * @param string $field Field name
+	 * @return bool
+	 */
 	function _containsField($field) {
 		$Iterator = parent::iterator();
 		while ($filter = $Iterator->next()) {

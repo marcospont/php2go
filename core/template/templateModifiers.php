@@ -1,41 +1,39 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/template/templateModifiers.php,v 1.11 2006/11/02 19:16:52 mpont Exp $
-// $Date: 2006/11/02 19:16:52 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @package template
+ * @version $Id$
+ */
 
 /**
- * Lista de modificadores utilizados para transformação de variáveis de substituição em templates
- *
- * As funções são definidas da seguinte maneira:
- *  - string simples: função procedural
- *  - array com 1 posição: função procedural
- *  - array com 2 posições: chamada de método estático cuja classe já foi importada
- *  - array com 3 posições: chamada de método estático contendo o caminho da classe na primeira posição
- * Formatos fora desses padrões irão gerar um erro de interpretação do template
- *
- * $Revision: 1.11 $
+ * The list below represents the variable modifiers bundled with the framework.
+ * In order to add your custom modifiers, you can register them in the global
+ * configuration settings or directly calling addModifier() on a Template instance.
  */
+$P2G_MODIFIER = array();
 $P2G_MODIFIER['substring'] = 'substr';
 $P2G_MODIFIER['upper'] = 'strtoupper';
 $P2G_MODIFIER['lower'] = 'strtolower';

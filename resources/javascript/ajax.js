@@ -1,28 +1,30 @@
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/resources/javascript/ajax.js,v 1.11 2006/11/25 11:53:40 mpont Exp $
-// $Date: 2006/11/25 11:53:40 $
-// $Revision: 1.11 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 /**
  * @fileoverview
@@ -54,7 +56,7 @@ if (window.ActiveXObject && !window.XMLHttpRequest) {
 /**
  * Base class of this AJAX library. Holds the connection object,
  * which can be an ActiveX object or an XMLHttpRequest instance
- * @class Ajax
+ * @constructor
  */
 Ajax = function() {
 	/**
@@ -149,7 +151,7 @@ Ajax.prototype.raise = function(name, args) {
  * customizable, once you're able to configure HTTP headers, parameters,
  * content type and body. Besides, the class is able to respond to different
  * response types: JSON, XML, Javascript or HTML
- * @class AjaxRequest
+ * @constructor
  * @extends Ajax
  * @param {String} url Request URL (with or without a query string)
  * @param {Object} args Arguments
@@ -474,18 +476,54 @@ AjaxRequest.prototype.release = function() {
  * It's created inside {@link AjaxRequest} and is populated
  * according with the information returned by the server when
  * the request is complete
- * @class AjaxResponse
+ * @constructor
  * @param {String} transId Transaction ID
  */
 AjaxResponse = function(transId) {
+	/**
+	 * Transaction ID
+	 * @type String
+	 */
 	this.transId = transId;
+	/**
+	 * Response status
+	 * @type Number
+	 */
 	this.status = null;
+	/**
+	 * Text response status
+	 * @type String
+	 */
 	this.statusText = null;
+	/**
+	 * Response headers
+	 * @type Object
+	 */
 	this.headers = {};
+	/**
+	 * Response text
+	 * @type String
+	 */
 	this.responseText = null;
+	/**
+	 * Response XML
+	 * @type Object
+	 */
 	this.responseXML = null;
+	/**
+	 * Response JSON object
+	 * @type Object
+	 */
 	this.json = null;
+	/**
+	 * XML root, when responseXML is available
+	 * @type Object
+	 */
 	this.xmlRoot = null;
+	/**
+	 * Indicates a successful response
+	 * @type Boolean
+	 */
 	this.success = false;
 };
 
@@ -496,7 +534,7 @@ AjaxResponse = function(transId) {
  * settings can be provided through the args parameter: noScripts
  * (avoid &lt;script&gt; tags inside the response) and insert
  * (indicates response's insert position in the target container)
- * @class AjaxUpdater
+ * @constructor
  * @extends AjaxRequest
  * @param {String} url Request URL
  * @param {Object} args Settings

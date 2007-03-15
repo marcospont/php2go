@@ -1,204 +1,177 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/text/StringUtils.class.php,v 1.26 2006/11/02 19:16:01 mpont Exp $
-// $Date: 2006/11/02 19:16:01 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.util.Number');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		StringUtils
-// @desc		Classe que contém funções utilitárias para manipulação
-//				de strings. As funções extendem a funcionalidade já oferecida
-//				pelo PHP (agrupando e tornando mais prática a utilização)
-//				e incluem novas ferramentas não implementadas
-// @package		php2go.text
-// @extends		PHP2Go
-// @uses		Number
-// @author		Marcos Pont
-// @version		$Revision: 1.26 $
-// @static
-//!-----------------------------------------------------------------
+/**
+ * Collection of utility methods to handle with strings
+ *
+ * Basically, this collection of static methods wraps the
+ * functions provided by PHP's standard string functions,
+ * and adds some new funcionalities.
+ *
+ * @package text
+ * @uses Number
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class StringUtils extends PHP2Go
 {
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::allTrim
-	// @desc		Retira caracteres brancos à esquerda, à direita e
-	// 				todos os espaços em branco duplos
-	// @param		str string		String a ser formatada
-	// @return 		string Valor do string formatado sem espaços inúteis
-	// @see 		StringUtils::stripBlank
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes whitespace chars from left, right and inside a string
+	 *
+	 * @param string $str Input string
+	 * @return string
+	 * @static
+	 */
 	function allTrim($str) {
 		return StringUtils::stripBlank(trim($str));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::stripBlank
-	// @desc 		Transforma caracteres brancos ocupando 2 ou mais posições
-	// 				em um caractere de espaço simples (ord 32)
-	// @param 		str string		String a ser formatada
-	// @param		replace string	" " String de substituição
-	// @return 		string Novo valor da string
-	// @see 		StringUtils::allTrim
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Replaces 2 or more whitespace chars in a string
+	 *
+	 * @param string $str Input string
+	 * @param string $replace Replacement string
+	 * @return string
+	 * @static
+	 */
 	function stripBlank($str, $replace=' ') {
 		return ereg_replace("[[:blank:]]{1,}", $replace, $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::left
-	// @desc 		Retorna a quantidade indicada de caracteres de
-	// 				uma string fornecida a partir da esquerda
-	// @param 		str string		String a ser utilizada
-	// @param 		chars int		"0" Número de caracteres solicitados
-	// @return 		string Quantidade solicitada ou toda a string se o parâmetro
-	// 				chars fornecido for igual a ""
-	// @see 		StringUtils::right
-	// @see 		StringUtils::mid
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
-	function left($str, $chars = 0) {
-		if (!TypeUtils::isInteger($chars)) {
+	/**
+	 * Get $n chars from the left side of a string
+	 *
+	 * @param string $str Input string
+	 * @param int $n Number of chars
+	 * @return string
+	 * @static
+	 */
+	function left($str, $n=0) {
+		if (!TypeUtils::isInteger($n))
 			return $str;
-		} else if ($chars == 0) {
+		if ($n == 0)
 			return '';
-		} else {
-			return substr($str, 0, $chars);
-		}
+		return substr($str, 0, $n);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::right
-	// @desc 		Retorna a quantidade indicada de caracteres de
-	// 				uma string fornecida a partir da direita
-	// @param 		str string		String a ser utilizada
-	// @param 		chars int		"0" Número de caracteres solicitados
-	// @return 		string Quantidade solicitada ou toda a string se o parâmetro
-	// 				chars fornecido for igual a ""
-	// @see 		StringUtils::left
-	// @see 		StringUtils::mid
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
-	function right($str, $chars=0) {
-		if (!TypeUtils::isInteger($chars)) {
+	/**
+	 * Get $n chars from the right side of a string
+	 *
+	 * @param string $str Input string
+	 * @param int $n Number of chars
+	 * @return string
+	 * @static
+	 */
+	function right($str, $n=0) {
+		if (!TypeUtils::isInteger($n))
 			return $str;
-		} else if ($chars == 0) {
+		if ($n == 0)
 			return '';
-		} else {
-			return substr($str, strlen($str) - $chars, strlen($str)-1);
-		}
+		return substr($str, strlen($str) - $n, strlen($str)-1);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::mid
-	// @desc 		Retorna uma porção interna de uma string indicada
-	// 				pelo delimitador de início `startAt` e pelo número
-	// 				de caracteres `chars`
-	// @param 		str string		String original
-	// @param 		startAt int		"1" Posição inicial
-	// @param 		chars int		"0" Quantidade de caracteres solicitados
-	// @return 		string Novo valor da string
-	// @see 		StringUtils::left
-	// @see 		StringUtils::right
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Reads a portion of a string, start at $startAt
+	 *
+	 * The start index is 1-based. Example:
+	 * <code>
+	 * $sb = new String Buffer('hello world');
+	 * /* prints "hello" {@*}
+	 * print $sb->mid(1, 5);
+	 * </code>
+	 *
+	 * @param string $str Input string
+	 * @param int $startAt Start index
+	 * @param int $chars Substring length
+	 * @return string
+	 * @static
+	 */
 	function mid($str, $startAt=1, $chars=0) {
-		if (!TypeUtils::isInteger($chars)) {
+		if (!TypeUtils::isInteger($chars))
 			return $str;
-		} else if ($str == '' || $chars == 0) {
+		if ($str == '' || $chars == 0)
 			return '';
-		} else if (($startAt + $chars) > strlen($str)) {
+		if (($startAt + $chars) > strlen($str))
 			return $str;
-		} else {
-			if ($startAt == 0) $startAt = 1;
-			return substr($str, $startAt-1, $chars);
-		}
+		if ($startAt == 0) $startAt = 1;
+		return substr($str, $startAt-1, $chars);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::charAt
-	// @desc		Retorna o caractere na posição $index do string $str
-	// @param		str string	String a ser consultado
-	// @param		index int	Índice do caractere buscado
-	// @return		string Valor do caractere ou vazio para índices inválidos
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Reads a char from a string
+	 *
+	 * @param string $str Input string
+	 * @param int $index Char index
+	 * @return string
+	 * @static
+	 */
 	function charAt($str, $index) {
-		if (!TypeUtils::isInteger($index)) {
+		if (!TypeUtils::isInteger($index))
 			return '';
-		} else if ($str == '' || $index < 0 || $index >= strlen($str)) {
+		if ($str == '' || $index < 0 || $index >= strlen($str))
 			return '';
-		} else {
-			$strTranslated = strval($str);
-			return $strTranslated{$index};
-		}
+		$strTranslated = strval($str);
+		return $strTranslated[$index];
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::match
-	// @desc 		Busca por um valor dentro de um texto, levando
-	// 				em consideração o caso (maiúsculas/minúsculas)
-	// @param		str string			String base para a busca
-	// @param 		sValue string		Valor a ser buscado
-	// @param 		caseSensitive bool	"TRUE" Indica se a busca considera ou não letras maiúsculas/minúsculas
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
-	function match($str, $sValue, $caseSensitive=TRUE) {
-		if (!$caseSensitive) $sValue = strtolower($sValue);
-		if (strlen($sValue) == 0) {
+	/**
+	 * Checks if a value is present in a given string
+	 *
+	 * @param string $str Input string
+	 * @param string $search Search value
+	 * @param bool $caseSensitive Whether to do case sensitive search
+	 * @return bool
+	 * @static
+	 */
+	function match($str, $search, $caseSensitive=TRUE) {
+		if (!$caseSensitive) $search = strtolower($search);
+		if (strlen($search) == 0) {
 			return FALSE;
 		} else {
-			$pos = strpos($str, $sValue);
+			$pos = strpos($str, $search);
 			return ($pos !== FALSE);
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::startsWith
-	// @desc 		Verifica se o início de uma string corresponde
-	// 				ao valor do parâmetro 'slice'
-	// @param 		str string			String a ser testada
-	// @param 		slice string		Porção de string
-	// @param 		caseSensitive bool	"TRUE" Indica se a busca considera ou não letras maiúsculas/minúsculas
-	// @param 		ignSpaces bool		"TRUE" Retirar espaços em branco à esquerda para realizar a busca
-	// @see 		StringUtils::endsWith
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if a given string starts with a given value
+	 *
+	 * @param string $str Input string
+	 * @param string $slice Comparison value
+	 * @param bool $caseSensitive Case sensitive?
+	 * @param bool $ignSpaces Ignore initial whitespace chars
+	 * @return bool
+	 * @static
+	 */
 	function startsWith($str, $slice, $caseSensitive=TRUE, $ignSpaces=TRUE) {
 		if (!$caseSensitive) {
 			$strUsed = ($ignSpaces) ? ltrim(strtolower($str)) : strtolower($str);
@@ -210,19 +183,16 @@ class StringUtils extends PHP2Go
 		return (StringUtils::left($strUsed, strlen($sliceUsed)) == $sliceUsed);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::endsWith
-	// @desc 		Verifica se o final de uma string corresponde
-	// 				ao valor do parâmetro 'slice'
-	// @param 		str string			String a ser testada
-	// @param 		slice string		Porção de string
-	// @param 		caseSensitive bool	"TRUE" Indica se a busca considera ou não letras maiúsculas/minúsculas
-	// @param 		ignSpaces bool		"TRUE" Retirar espaços em branco à direita para realizar a busca
-	// @see 		StringUtils::startsWith
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if a given string ends with a given value
+	 *
+	 * @param string $str Input string
+	 * @param string $slice Comparison value
+	 * @param bool $caseSensitive Case sensitive?
+	 * @param bool $ignSpaces Ignore initial whitespace chars
+	 * @return bool
+	 * @static
+	 */
 	function endsWith($str, $slice, $caseSensitive=TRUE, $ignSpaces=TRUE) {
 		if (!$caseSensitive) {
 			$strUsed = ($ignSpaces) ? rtrim(strtolower($str)) : strtolower($str);
@@ -234,130 +204,122 @@ class StringUtils extends PHP2Go
 		return (StringUtils::right($strUsed, strlen($sliceUsed)) == $sliceUsed);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::isAllUpper
-	// @desc 		Verifica se uma string é composta apenas por letras maiúsculas
-	// @param 		str string		String a ser verificada
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if a string is composed only by uppercase chars
+	 *
+	 * @param string $str Input string
+	 * @return bool
+	 * @static
+	 */
 	function isAllUpper($str) {
 		return (preg_match("/[a-z]/", $str) !== FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::isAllLower
-	// @desc 		Verifica se uma string é composta apenas por letras minúsculas
-	// @param 		str string		String a ser verificada
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if a string is composed only by lowercase chars
+	 *
+	 * @param string $str Input string
+	 * @return bool
+	 * @static
+	 */
 	function isAllLower($str) {
 		return (preg_match("/[A-Z]/", $str) !== FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::isEmpty
-	// @desc		Retorna TRUE se a string $value passada por parâmetro for vazia
-	// @param		value string	String a ser testada
-	// @access		public
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
-	function isEmpty($value) {
-		$value = strval($value);
-		return (empty($value) && strlen($value) == 0);
+	/**
+	 * Safely checks if a string is empty
+	 *
+	 * A string will be considered empty when its length
+	 * is 0 and a call to the {@link empty()} function
+	 * returns TRUE.
+	 *
+	 * @param string $str Input string
+	 * @return bool
+	 * @static
+	 */
+	function isEmpty($str) {
+		$str = strval($str);
+		return (empty($str) && strlen($str) == 0);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::ifEmpty
-	// @desc		Substitui a string por um valor de substituição caso ela seja vazia
-	// @param		value string		Valor original
-	// @param		replacement string	Valor de substituição
-	// @access		public
-	// @return		string
-	// @static
-	//!-----------------------------------------------------------------
-	function ifEmpty($value, $replacement) {
-		return (empty($value) ? $replacement : $value);
+	/**
+	 * Returns a fallback value when a given string is empty
+	 *
+	 * @param string $str Input string
+	 * @param string $replacement Fallback string
+	 * @return string
+	 * @static
+	 */
+	function ifEmpty($str, $replacement) {
+		return (StringUtils::isEmpty($str) ? $replacement : $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::concat
-	// @desc		Concatena um valor no final da string
-	// @param		str string		String original
-	// @param		concat string	Valor a ser concatenado
-	// @return		string Novo valor da string
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Appends a value in the end of a string
+	 *
+	 * @param string $str Input string
+	 * @param string $concat Concat string
+	 * @return string
+	 * @static
+	 */
 	function concat($str, $concat) {
 		return $str . $concat;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::surround
-	// @desc		Insere prefixo e sufixo em uma determinada string
-	// @param		str string		String original
-	// @param		prefix string	Prefixo
-	// @param		suffix string	Sufixo
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Surrounds a string with a prefix and a suffix
+	 *
+	 * @param string $str Input string
+	 * @param string $prefix Prefix
+	 * @param string $suffix Suffix
+	 * @return string
+	 * @static
+	 */
 	function surround($str, $prefix, $suffix) {
 		return $prefix . $str . $suffix;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::insert
-	// @desc 		Insere um valor na posição indicada de uma string
-	// @param 		str string		String original
-	// @param 		insValue string	"" Valor a ser inserido
-	// @param 		insPos int		"0" Posição para inserir a string
-	// @return 		string Novo valor da string
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Inserts a value in a given position of a string
+	 *
+	 * @param string $str Input string
+	 * @param string $insValue Insert value
+	 * @param int $insPos Insert position
+	 * @return string
+	 * @static
+	 */
 	function insert($str, $insValue = '', $insPos = 0) {
-		if (($insValue == '') || ($insPos < 0) || ($insPos > strlen($str))) {
+		if (($insValue == '') || ($insPos < 0) || ($insPos > strlen($str)))
 			return $str;
-		} else if ($insPos == 0) {
+		if ($insPos == 0)
 			return $insValue . $str;
-		} else if ($insPos == strlen($str)) {
+		if ($insPos == strlen($str))
 			return $str . $insValue;
-		} else {
-			return StringUtils::left($str, $insPos) . $insValue . StringUtils::right($str, $insPos, strlen($str) - $insPos);
-		}
+		return StringUtils::left($str, $insPos) . $insValue . StringUtils::right($str, $insPos, strlen($str) - $insPos);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::replace
-	// @desc		Wrapper para a função str_replace, utilizado como
-	//				modifier de variáveis de template
-	// @param		str string	String original
-	// @param		from string	Valor buscado
-	// @param		to string	Valor a substituir
-	// @access		public
-	// @return		string
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Replaces all occurrences of $from by $to in a given string
+	 *
+	 * @param string $str Input string
+	 * @param string $from Search
+	 * @param string $to Replace
+	 * @return string
+	 * @static
+	 */
 	function replace($str, $from, $to) {
 		return str_replace($from, $to, $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::regexReplace
-	// @desc		Wrapper para a função preg_replace, utilizado como
-	//				modifier de variáveis de template
-	// @param		str string			String original
-	// @param		pattern string		Pattern no padrão PCRE
-	// @param		replacement string	Valor de substituição
-	// @access		public
-	// @return		string
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Performs a regular expression search and replace on a string
+	 *
+	 * @param string $str Input string
+	 * @param string $pattern PCRE pattern
+	 * @param string $replacement Replacement
+	 * @return string
+	 * @static
+	 */
 	function regexReplace($str, $pattern, $replacement) {
 		if (empty($pattern))
 			return $str;
@@ -367,46 +329,51 @@ class StringUtils extends PHP2Go
 		return preg_replace($pattern, $replacement, $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::explode
-	// @desc		Cria um array a partir da quebra da string $str
-	//				em pedaços separados por $sep
-	// @access		public
-	// @return		array
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Splits the string using $sep as separator
+	 *
+	 * @param string $str Input string
+	 * @param string $sep Separator
+	 * @return array Resultant array
+	 * @static
+	 */
 	function explode($str, $sep) {
 		$arr = explode($sep, $str);
 		return $arr;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::implode
-	// @desc		Cria uma string a partir da união dos elementos de um array
-	// @param		values array	Array de valores
-	// @param		glue string		String utilizada para unir os valores
-	// @return		string
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Implodes an array, returning the result as a string
+	 *
+	 * @param array $values Input array
+	 * @param string $glue Glue
+	 * @return string
+	 * @static
+	 */
 	function implode($values, $glue) {
 		return implode($glue, (array)$values);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::encode
-	// @desc		Codifica uma string de acordo com um padrão
-	// @param		str string			String a ser codificada
-	// @param		encodeType string	Tipo de codificação
-	// @param		params array		"NULL" Vetor de parâmetros ou argumentos para a codificação
-	// @return		string String codificada
-	// @note		Parâmetros disponíveis por tipo de codificação:
-	//				- 7bit: {nl}
-	//				- 8bit: {nl}
-	//				- quoted-printable: {charset}
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Encodes a given string
+	 *
+	 * The supported encoding types (and their parameters) are
+	 * base64 (none), utf8 (none), 7bit (nl), 8bit (nl) and
+	 * quoted-printable (charset).
+	 *
+	 * Examples:
+	 * <code>
+	 * StringUtils::encode('encode me', 'base64');
+	 * StringUtils::encode('encode me', '7bit');
+	 * StringUtils::encode('quoted printable', 'quoted-printable', array('charset' => 'utf-8'));
+	 * </code>
+	 *
+	 * @param string $str Input string
+	 * @param string $encodeType Encode type
+	 * @param array $params Encoding params
+	 * @return string
+	 * @static
+	 */
 	function encode($str, $encodeType, $params=NULL) {
 		switch(strtolower($encodeType)) {
 			case 'base64' :
@@ -439,15 +406,16 @@ class StringUtils extends PHP2Go
 		return $encoded;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::decode
-	// @desc		Decodifica uma string, utilizando um padrão
-	// @param		str string			String a ser decodificada
-	// @param		encodeType string	Tipo de codificação atual da string
-	// @return		string Valor decodificado
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Decodes a given string
+	 *
+	 * Supported encoding types: base64, utf8 and quoted-printable.
+	 *
+	 * @param string $str Input string
+	 * @param string $encodeType Encoding type
+	 * @return string
+	 * @static
+	 */
 	function decode($str, $encodeType) {
 		switch(strtolower($encodeType)) {
 			case 'base64' :
@@ -466,15 +434,24 @@ class StringUtils extends PHP2Go
 		return $decoded;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::map
-	// @desc		Recebe 1+(2*n) parâmetros. Para cada dupla A e B, a partir do segundo
-	//				parâmetro, compara A com o primeiro parâmetro. Se forem iguais
-	//				o retorno da função será B. Se nenhuma dupla possuir valor igual
-	//				ao primeiro parâmetro, o mesmo é retornado
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * This method has the functionality of an if-then-else statement
+	 *
+	 * Given the function arguments, the method analyzes them in pairs,
+	 * starting from the second (the first is the input string). For
+	 * each pair A and B, if A is equal to the original string, B is
+	 * returned. If none of the pairs matches, the last argument can
+	 * be used as an "else".
+	 *
+	 * Examples:
+	 * <code>
+	 * $result = StringUtils::map($value, 1, 'yes', 0, 'no', 'unknown');
+	 * $result = StringUtils::map($bool, true, 'true', false, 'false');
+	 * </code>
+	 *
+	 * @return mixed
+	 * @static
+	 */
 	function map() {
 		$argc = func_num_args();
 		$argv = func_get_args();
@@ -492,19 +469,24 @@ class StringUtils extends PHP2Go
 		return $base;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::filter
-	// @desc 		Filtra uma string retirando o tipo de caractere
-	// 				indicado no parâmetro 'filterType'
-	// @param 		str string			String a ser filtrada
-	// @param 		filterType string	"alphanum" Tipo de caractere a ser filtrado
-	// @return 		string String sem todas as ocorrências do tipo de caractere solicitado
-	// @note 		O tipo de filtro aceita os valores alpha (alfanuméricos),
-	// 				alphalower (alfanuméricos minúsculos), alphaupper (alfanuméricos maiúsculos),
-	// 				num (números), alphanum (alfanuméricos e números) e htmlentities (elementos html)
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Applies a given filter on a string
+	 *
+	 * Filter types:
+	 * # alpha: removes all alpha chars
+	 * # alphalower : removes all lowercase alpha chars
+	 * # alphaupper : removes all uppercase alpha chars
+	 * # num : removes all numbers
+	 * # alphanum : removes all alphanumeric chars
+	 * # htmlentities : removes all html entities
+	 * # blank : removes all whitespace chars
+	 *
+	 * @param string $str Input string
+	 * @param string $filterType Filter type
+	 * @param string $replaceStr Replacement string
+	 * @return string
+	 * @static
+	 */
 	function filter($str, $filterType='alphanum', $replaceStr='') {
 		$replaceStr = strval($replaceStr);
 		switch ($filterType) {
@@ -527,23 +509,24 @@ class StringUtils extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::escape
-	// @desc 		Aplica conversões em um texto de acordo com um
-	// 				dos padrões de conversão definidos
-	// @param 		str string				Texto a ser processado
-	// @param 		conversionType string		"html" Tipo de conversão para o texto
-	// @note 		O tipo de conversão aceita os valores:
-	// 				html (conversão de caracteres especiais HTML),
-	// 				htmlall (conversão de todos os caracteres para HTML),
-	// 				url (codificação de url) ou
-	// 				quotes (adiciona barras às haspas simples que não possuem barra)
-	// @return 		strign Texto convertido segundo o padrão solicitado
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
-	function escape($str, $conversionType='html') {
-		switch ($conversionType) {
+	/**
+	 * Escapes a string according to a given pattern
+	 *
+	 * Patterns:
+	 * # html: escapes HTML special chars
+	 * # htmlall: escapes HTML entities
+	 * # url: escapes URL special chars (using {@link rawurlencode()})
+	 * # quotes: escapes quotes
+	 * # javascript: escapes JS code
+	 * # mail: replaces '@' by 'at' and '.' by 'dot'
+	 *
+	 * @param string $str Input string
+	 * @param string $escapeType
+	 * @return string
+	 * @static
+	 */
+	function escape($str, $escapeType='html') {
+		switch ($escapeType) {
 			case 'html':
 				return htmlspecialchars($str, ENT_QUOTES);
 			case 'htmlall' :
@@ -554,13 +537,13 @@ class StringUtils extends PHP2Go
 				return preg_replace("%(?<!\\\\)'%", "\\'", $str);
 			case 'javascript' :
 				$expressions = array(
-					"/(<scr)(ipt)/i" => "$1\"+\"$2", // quebrar tags "<script"
+					"/(<scr)(ipt)/i" => "$1\"+\"$2", // break "<script" tags
 					'/\\\\/' => '\\\\', // backslashes
 					'/\'/' => "\'", // single quotes
 					'/"/' => '\\"', // double quotes
-					"/\r/"=>'\\r', // caractere CR
-					"/\n/"=>'\\n', // caractere LF
-					"/\t/" => "\\t" // tabulações
+					"/\r/"=>'\\r', // CR char
+					"/\n/"=>'\\n', // LF char
+					"/\t/" => "\\t" // tab char
 				);
 				$str = str_replace("\\", "\\\\", $str);
 				$str = preg_replace(array_keys($expressions), array_values($expressions), $str);
@@ -572,26 +555,24 @@ class StringUtils extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::camelize
-	// @desc		Converte uma string para o formato "camel case"
-	// @param		str string	String a ser convertida
-	// @access		public
-	// @return		string
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Converts a string to camel case format
+	 *
+	 * @param string $str Input string
+	 * @return string
+	 * @static
+	 */
 	function camelize($str) {
 		return preg_replace("/[_|\s]([a-z0-9])/e", "strtoupper('\\1')", strtolower($str));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::capitalize
-	// @desc		Capitaliza todas as palavras contidas em uma string
-	// @param		str string		String base
-	// @return		string String com todas as palavras capitalizadas
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Capitalizes all words of a given string
+	 *
+	 * @param string $str Input string
+	 * @return string
+	 * @static
+	 */
 	function capitalize($str) {
 		if (!empty($str)) {
 			$w = preg_split("/\s+/", $str);
@@ -607,67 +588,71 @@ class StringUtils extends PHP2Go
 		return $str;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::normalize
-	// @desc 		Normaliza uma string substituindo caracteres ASCII
-	// 				localizados nas posições 192-223 e 224-225 para seus
-	// 				correspondentes caracteres 'normais' ->  áéíÁÈÒÖ para aeiAEOO
-	// @param 		str string		String base para a substituição
-	// @return 		string Valor da string normalizado
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Normalizes a given string
+	 *
+	 * Replaces all chars from positions 192-223 and 224-225 of the
+	 * ASCII table by their 'normal' versions: áéíÁÈÒÖ by aeiAEOO.
+	 *
+	 * @param string $str Input string
+	 * @return string
+	 * @static
+	 */
 	function normalize($str) {
 		$ts = array("/[À-Å]/", "/Æ/", "/Ç/", "/[È-Ë]/", "/[Ì-Ï]/", "/Ð/", "/Ñ/", "/[Ò-ÖØ]/", "/×/", "/[Ù-Ü]/", "/Ý/", "/ß/", "/[à-å]/", "/æ/", "/ç/", "/[è-ë]/", "/[ì-ï]/", "/ð/", "/ñ/", "/[ò-öø]/", "/÷/", "/[ù-ü]/", "/[ý-ÿ]/");
 		$tn = array("A", "AE", "C", "E", "I", "D", "N", "O", "X", "U", "Y", "ss", "a", "ae", "c", "e", "i", "d", "n", "o", "x", "u", "y");
 		return preg_replace($ts, $tn, $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::cutBefore
-	// @desc		Retira de uma string os caracteres antes de um determinado token
-	// @param		string string	String original
-	// @param		token string	Token para pesquisa
-	// @return		string Valor processado
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Remove all chars in a string before a given token is found
+	 *
+	 * <code>
+	 * /* prints "order by name" {@*}
+	 * print StringUtils::cutBefore("select * from table order by name", "order by");
+	 * </code>
+	 *
+	 * @param string $string Input string
+	 * @param string $token Token
+	 * @param bool $caseSensitive Case sensitive?
+	 * @return string
+	 * @static
+	 */
 	function cutBefore($string, $token, $caseSensitive=TRUE) {
-		if (StringUtils::match($caseSensitive ? $string : strtolower($string), $token, $caseSensitive)) {
+		if (StringUtils::match($caseSensitive ? $string : strtolower($string), $token, $caseSensitive))
 			return stristr($string, $token);
-		}
 		return $string;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::cutLastOcurrence
-	// @desc		Remove a porção de string a partir da última ocorrência
-	//				do parâmetro $cutOff em $string
-	// @param		string string		String original
-	// @param		cutOff string		Token para busca e remoção
-	// @param		caseSensitive bool	"TRUE" Sensível ou não ao caso
-	// @return		string Valor processado
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes all chars after the last ocurrence of $cutOff in $string
+	 *
+	 * <code>
+	 * /* prints "select * from table" {@*}
+	 * print StringUtils::cutLastOcurrence("select * from table where active = 1", "where");
+	 * </code>
+	 *
+	 * @param string $string Input string
+	 * @param string $cutOff Token
+	 * @param bool $caseSensitive Case sensitive?
+	 * @return string
+	 * @static
+	 */
 	function cutLastOcurrence($string, $cutOff, $caseSensitive=TRUE) {
 		if (!StringUtils::match($caseSensitive ? $string : strtolower($string), $cutOff, $caseSensitive))
 			return $string;
-		else
-			return strrev(substr(stristr(strrev($string), strrev($cutOff)),strlen($cutOff)));
+		return strrev(substr(stristr(strrev($string), strrev($cutOff)),strlen($cutOff)));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::indent
-	// @desc 		Cria indentação em um texto utilizando o caractere
-	// 				$iChar repetido $nChars vezes
-	// @param 		str string		Texto a ser indentado
-	// @param		nChars int		Tamanho da indentação
-	// @param		iChar string	" " Caractere(s) para a indentação
-	// @return		string String indentada
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Indents a given text using $iChar as indent char
+	 *
+	 * @param string $str Input string
+	 * @param int $nChars Number of times to repeat the indent char
+	 * @param string $iChar Indent char
+	 * @return string
+	 * @static
+	 */
 	function indent($str, $nChars, $iChar=' ') {
 		if (!TypeUtils::isInteger($nChars) || $nChars < 1) {
 			$nChars = 1;
@@ -675,18 +660,19 @@ class StringUtils extends PHP2Go
 		return preg_replace('!^!m', str_repeat($iChar, $nChars), $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::truncate
-	// @desc		Trunca um texto para o tamanho indicado por $length,
-	// 				sufixando o resultado com o valor indicado em $truncSufix
-	// @param 		str string			Texto a ser truncado
-	// @param 		length int			Tamanho desejado do resultado
-	// @param 		truncSufix string	"..." Sufixo para o resultado
-	// @param 		forceBreak bool		"TRUE" Forçar quebra em palavras longas
-	// @return		string String truncada ou a original se não exceder o tamanho
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Truncate a given string to $length
+	 *
+	 * If the length of the original string is lower than $length,
+	 * the original string is returned.
+	 *
+	 * @param string $str Input string
+	 * @param int $length New length
+	 * @param int $truncSufix Suffix to be appended in the end of the truncated string
+	 * @param bool $forceBreak Force break of long words
+	 * @return string
+	 * @static
+	 */
 	function truncate($str, $length, $truncSufix='...', $forceBreak=TRUE) {
 		if (!TypeUtils::isInteger($length) || $length < 1) {
 			return '';
@@ -702,18 +688,16 @@ class StringUtils extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::insertChar
-	// @desc 		Insere o caractere $char entre cada dupla de caracteres
-	// 				encontrados no texto $str
-	// @param 		str string		Texto original
-	// @param 		char string		" " Caracter ou caracteres para inserção
-	// @param 		stripEmpty bool	"TRUE" Ignorar caracteres vazios
-	// @return		string String processada
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
-	function insertChar($str, $char = ' ', $stripEmpty = TRUE) {
+	/**
+	 * Insert a char between every pair of chars of a string
+	 *
+	 * @param string $str Input string
+	 * @param string $char Char to be inserted
+	 * @param bool $stripEmpty Strip whitespace chars
+	 * @return string
+	 * @static
+	 */
+	function insertChar($str, $char=' ', $stripEmpty = TRUE) {
 		if ($stripEmpty) {
 			$strChars = preg_split('//', $str, -1, PREG_SPLIT_NO_EMPTY);
 		} else {
@@ -722,23 +706,19 @@ class StringUtils extends PHP2Go
 		return implode($char, $strChars);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::wrapLine
-	// @desc		Reformata uma string ajustando-a para ter um número fixo
-	//				de colunas, utilizando a quebra de linha 'breakString'
-	//				fornecida
-	// @param		str string	Texto original
-	// @param		num int		Posição de quebra de linha
-	// @param		breakString string	"\n" String ou caractere para quebra de linha
-	// @return		string Texto formatado
-	// @see 		StringUtils::wrap
-	// @see 		StringUtils::addLineNumbers
-	// @note		Ao contrário do método wrap, este método se
-	//				aplica a uma só linha (é suposto que não existem quebras
-	//				na variável $str fornecida)
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds line wraps on a given string
+	 *
+	 * The number of chars per line is defined by the $num
+	 * parameter. The $breakString parameter defines the
+	 * character(s) to be used to represent a line break.
+	 *
+	 * @param string $str Input string
+	 * @param int $num Chars per line
+	 * @param string $breakString Line break string
+	 * @return string
+	 * @static
+	 */
 	function wrapLine($str, $num, $breakString="\n") {
 		$line = '';
 		$processed = '';
@@ -757,21 +737,18 @@ class StringUtils extends PHP2Go
 		return $processed;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::wrap
-	// @desc 		Quebra em múltiplas linhas um texto com 'num'
-	// 				caracteres por linha (ou quebras de linha já
-	// 				existentes) utilizando a quebra de linha 'breakString'
-	// 				fornecida
-	// @param 		str string			Texto original
-	// @param 		num int				Posição de quebra de linha
-	// @param 		breakString string	"\n" String ou caractere para quebra de linha
-	// @return 		string Texto formatado com as novas quebras de linha
-	// @see 		StringUtils::wrapLine
-	// @see 		StringUtils::addLineNumbers
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds or adjusts line breaks on a string, using $num chars per line
+	 *
+	 * The $breakString parameter defines the character(s) to be
+	 * used to represent a line break.
+	 *
+	 * @param string $str Input string
+	 * @param int $num Chars per line
+	 * @param string $breakString Line break string
+	 * @return string
+	 * @static
+	 */
 	function wrap($str, $num, $breakString="\n") {
 		$str = ereg_replace("([^\r\n])\r\n([^\r\n])", "\\1 \\2", $str);
 		$str = ereg_replace("[\r\n]*\r\n[\r\n]*", "\r\n\r\n", $str);
@@ -786,41 +763,35 @@ class StringUtils extends PHP2Go
 		return $processed;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::addLineNumbers
-	// @desc 		Adiciona numeração às linhas de um texto
-	// @param 		&str string				Texto original
-	// @param 		start int				"1" Numeração inicial, padrão é 1
-	// @param 		indent int				"3" Identação mínima da numeração, padrão é 3
-	// @param 		afterNumberChar string	":" Caractere a ser utilizado após a numeração, padrão é ':'
-	// @return 		string Texto com numeração de linhas
-	// @see 		StringUtils::wrap
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
-	function addLineNumbers(&$str, $start = 1, $indent = 3, $afterNumberChar = ':', $glue='\n') {
-		// divide a string em linhas de um array
+	/**
+	 * Adds line numbers on a given text
+	 *
+	 * @param string $str Input text
+	 * @param int $start Start numeration
+	 * @param int $indent Start indentation
+	 * @param string $afterNumberChar Suffix for the line numbers
+	 * @param string $glue Line glue
+	 * @return string
+	 * @static
+	 */
+	function addLineNumbers(&$str, $start = 1, $indent = 3, $afterNumberChar = ':', $glue="\n") {
 		$line = explode("\n", $str);
 		$size = sizeof($line);
-		// calcula a largura máxima da numeração de acordo com o número de linhas
 		$width = strlen((string)($start + $size -1));
 		$indent = max($width, $indent);
-		// gera a numeração de linhas da string
-		for ($i = 0; $i < $size; $i++) {
+		for ($i = 0; $i < $size; $i++)
 			$line[$i] = str_pad((string)($i + $start), $indent, ' ', STR_PAD_LEFT) . $afterNumberChar . ' ' . trim($line[$i]);
-		}
 		return implode($glue, $line);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::countChars
-	// @desc 		Realiza contagem de caracteres em um texto
-	// @param 		str string			Texto a ser processado
-	// @param 		includeSpaces bool	"FALSE" Incluir espaços, quebras de linha e tabulações na contagem
-	// @access		public
-	// @return 		int
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Counts characters of a given string
+	 *
+	 * @param string $str Input string
+	 * @param bool $includeSpaces Consider whitespace chars when couting
+	 * @return int
+	 * @static
+	 */
 	function countChars($str, $includeSpaces = FALSE) {
 		if ($includeSpaces) {
 			return strlen($str);
@@ -830,54 +801,49 @@ class StringUtils extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	StringUtils::countWords
-	// @desc 		Realiza contagem de palavras em um texto
-	// @param 		str string	Texto a ser processado
-	// @access		public
-	// @return 		int
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Counts the number of words of a given text
+	 *
+	 * @param string $str Input text
+	 * @return int
+	 * @static
+	 */
 	function countWords($str) {
 		return str_word_count($str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::countSentences
-	// @desc		Conta o número de frases em um texto
-	// @param		str string	Texto a ser processado
-	// @access		public
-	// @return		int
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Counts the number of sentences of a given text
+	 *
+	 * @param string $str Input text
+	 * @return int
+	 * @static
+	 */
 	function countSentences($str) {
 		$matches = array();
 		return preg_match_all('/[^\s]\.(?!\w)/', $str, $matches);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::countParagraphs
-	// @desc		Conta o número de parágrafos em um texto
-	// @param		str string	Texto a ser processado
-	// @access		public
-	// @return		int
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Counts the number of paragraphs of a given text
+	 *
+	 * @param string $str Input text
+	 * @return int
+	 * @static
+	 */
 	function countParagraphs($str) {
 		return count(preg_split('/[\r\n]+/', $str));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	StringUtils::randomString
-	// @desc		Gera uma string randômica de tamanho $size, incluindo
-	//				letras minúsculas, maiúsculas (opcional) e dígitos (opcional)
-	// @param		size int	Tamanho desejado para a string
-	// @param		upper bool	"TRUE" Incluir letras maiúsculas A-Z
-	// @param		digit bool	"TRUE" Incluir dígitos
-	// @return		string Texto randômico com tamanho e parametrização definidos
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Generates a random string
+	 *
+	 * @param int $size Desired string length
+	 * @param bool $upper Whether to use uppercase chars
+	 * @param bool $digit Whether to use digits
+	 * @return string Generated random string
+	 * @static
+	 */
 	function randomString($size, $upper=TRUE, $digit=TRUE) {
 		$pSize = max(1, $size);
 		$start = $digit ? 48 : 65;

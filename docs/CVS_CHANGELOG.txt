@@ -1,11 +1,11 @@
 PHP2Go Web Development Framework - CHANGELOG
 =============================================
 
-	Last Project Version - 0.5.4
+	CVS Changelog - until 0.5.4
 	--------------------------------
 	http://www.php2go.com.br
 
-	Copyright (C) 2002-2006 Marcos Pont <mpont@users.sourceforge.net>
+	Copyright (C) 2002-2007 Marcos Pont <mpont@users.sourceforge.net>
 
 	2006-11-25 - mpont
 		* PHP2Go 0.5.4 released!

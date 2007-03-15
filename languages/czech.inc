@@ -1,31 +1,31 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// Translated and maintained by: Jiri Vasina <poutnik@users.sourceforge.net>
-//
-// $Header: /www/cvsroot/php2go/languages/czech.inc,v 1.38 2006/11/02 19:18:56 mpont Exp $
-// $Revision: 1.38 $
-// $Date: 2006/11/02 19:18:56 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Jiri Vasina <poutnik@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 $P2G_LANGUAGE['ERR_OLD_PHP_VERSION'] = "PHP2Go nem&#367;&#382;e fungovat se sou&#269;asn&#253;m nastavením serveru.<BR>Va&#353;e verze PHP je: <I>%s</I>. Minimální pot&#345;ebná verze je <I>%s</I>.<BR>Nainstalujte tuto nebo nov&#283;j&#353;í verzi PHP pro b&#283;&#382;nou práci.";
 $P2G_LANGUAGE['ERR_UNSUPPORTED_EXTENSION'] = "Roz&#353;í&#345;ení <I>%s</I> není podporováno sou&#269;asnou instalací PHP.";
@@ -98,6 +98,7 @@ $P2G_LANGUAGE['ERR_CANT_FIND_BLOCK_REUSE'] = "Nebylo mo&#382;né najít blok %s pr
 $P2G_LANGUAGE['ERR_CANT_PUT_ON_PREPARED_TEMPLATE'] = "Element %s byl ji&#382; konfigurován pomocí metody DocumentElement::parse(). Není mo&#382;né p&#345;idávat elementy metodou put().";
 $P2G_LANGUAGE['ERR_TEMPLATE_NOT_PREPARED'] = "P&#345;edloha %s nebyla p&#345;ipravena. Spus&#357;te metodu %s::parse(); p&#345;ed spou&#353;t&#283;ním operací na tomto objektu.";
 $P2G_LANGUAGE['ERR_TEMPLATE_ALREADY_PREPARED'] = "Tato p&#345;edloha ji&#382; byla zpracována. Funkci parse() je mo&#382;né volat pouze jednou.";
+$P2G_LANGUAGE['ERR_TPLPARSE_DEFINED_BLOCK'] = "The block %s was already defined!";
 $P2G_LANGUAGE['ERR_TPLPARSE_UNBALANCED_BLOCKDEF'] = "Definice bloku <I>%s</I> není uzav&#345;ená!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INCOMPLETE_BLOCKDEF'] = "Specifikace bloku <I>%s</I> není kompletní v rámci tagu %s!";
 $P2G_LANGUAGE['ERR_TPLPARSE_BLOCKINSIDELOOP'] = "Není mo&#382;né definovat dynamické bloky uvnit&#345; cykl&#367;!";
@@ -224,7 +225,6 @@ $P2G_LANGUAGE['ERR_CANT_OPEN_SOCKET'] = "Nebylo mo&#382;né otev&#345;it socket z
 $P2G_LANGUAGE['ERR_SOCKET_NOT_CONNECTED'] = "Spojení za pou&#382;ití socketu není aktivní!";
 $P2G_LANGUAGE['ERR_SOCKET_EOF'] = "Dosa&#382;en konec souboru, operace nemohla b&#253;t dokon&#269;ena!";
 $P2G_LANGUAGE['ERR_SOCKET_TIMEOUT'] = "Vypr&#353;el &#269;as socketu. Operace nem&#367;&#382;e b&#253;t dokon&#269;ena!";
-$P2G_LANGUAGE['ERR_MAIL_MESSAGE_NOT_BUILT'] = "Zpráva nebyla správn&#283; vytvo&#345;ena a nem&#367;&#382;e b&#253;t odeslána!<BR>Spus&#357;te metodu build().";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "Nejsou zadáni &#382;ádní adresáti pro zprávu!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "Nebylo mo&#382;né podepsat obsah zprávy.<BR>%s";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Chyba p&#345;i spojování se serverem SMTP %s!<BR>[Chyby %d] - %s";
@@ -260,6 +260,8 @@ $P2G_LANGUAGE['ERR_JSON_INVALID_PROPVALUE'] = "Chyba dekodování JSON: %s není pl
 $P2G_LANGUAGE['ERR_JSON_MISSING_COMMA'] = "Chyba dekodování JSON: chyb&#283;jící &#269;árka na pozici %d";
 $P2G_LANGUAGE['ERR_JSON_ESCAPE_SEQUENCE'] = "Chyba dekodování JSON: neplatná kontrolní sekvence na pozici %d";
 $P2G_LANGUAGE['ERR_JSON_UNTERMINATED_STRING'] = "Chyba dekodování JSON: neukon&#269;ený &#345;et&#283;zec na pozici %d";
+$P2G_LANGUAGE['ERR_JSON_CYCLE'] = "The JSON encoder found a cycle in an instance of the class %s!";
+$P2G_LANGUAGE['ERR_JSON_ENCODE'] = "An error was found while converting type %s to a JSON string!";
 $P2G_LANGUAGE['DEFAULT_BTN_VALUE'] = "Poslat";
 $P2G_LANGUAGE['CALENDAR_LINK_TITLE'] = "Otev&#345;ít kalendá&#345;";
 $P2G_LANGUAGE['CALCULATOR_LINK_TITLE'] = "Otev&#345;ít kalkula&#269;ku";

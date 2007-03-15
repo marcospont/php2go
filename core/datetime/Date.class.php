@@ -1,61 +1,72 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/datetime/Date.class.php,v 1.30 2006/09/28 02:58:54 mpont Exp $
-// $Date: 2006/09/28 02:58:54 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const DATE_FORMAT_LOCAL "1"
-// Corresponde ao formato de data armazenado na configuração (d/m/Y ou Y/m/d)
+/**
+ * Date format defined in the global configuration settings
+ */
 define('DATE_FORMAT_LOCAL', 1);
-// @const DATE_FORMAT_RFC822 "2"
-// Corresponde ao formato de data definido no RFC 822
+/**
+ * Date format according to RFC822
+ */
 define('DATE_FORMAT_RFC822', 2);
-// @const DATE_FORMAT_ISO8601 "3"
-// Corresponde ao formato de data ISO8601
+/**
+ * Date format according to ISO8601
+ */
 define('DATE_FORMAT_ISO8601', 3);
-// @const DATE_FORMAT_CUSTOM "4"
-// Formato de data customizado
+/**
+ * Custom date format
+ */
 define('DATE_FORMAT_CUSTOM', 4);
 
-//!-----------------------------------------------------------------
-// @class		Date
-// @desc		Classe para manipulação e realização de cálculos com datas
-// @package		php2go.datetime
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.30 $
-// @static
-//!-----------------------------------------------------------------
+/**
+ * Collection of static methods to handle with dates
+ * 
+ * This class contains a collection of methods to perform transformations
+ * and calculations on dates. Most of the methods expect a date written
+ * in one of the following formats:
+ * # EURO : d/m/Y
+ * # US : Y/m/d
+ * # SQL : Y-m-d
+ * 
+ * @package datetime
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Date extends PHP2Go
 {
-	//!-----------------------------------------------------------------
-	// @function	Date::isValid
-	// @desc		Verifica se uma determinada data é válida
-	// @access		public
-	// @param		date string	Data a ser validada
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given date is a valid date
+	 *
+	 * @param string $date Date
+	 * @return bool
+	 * @static
+	 */
 	function isValid($date) {
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {
@@ -72,27 +83,28 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::isValidTZ
-	// @desc		Verifica se um valor de time zone é válido
-	// @access		public
-	// @param		tz string	Valor de time zone
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the given parameter is a valid timezone
+	 *
+	 * @param string $tz Timezone
+	 * @return bool
+	 * @static
+	 */
 	function isValidTZ($tz) {
 		return preg_match("/^(((\+|\-)[0-9]{2}\:[0-9]{2})|(UT|GMT|EST|EDT|CST|CDT|MST|MDT|PST|PDT)|([A-IK-Y]{1}))$/", $tz);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::isEuroDate
-	// @desc		Verifica se uma data está no formato europeu dd[/-.]mm[/-.]YYYY[ HH:mm:ss]
-	// @param		date string	Data a ser verificada
-	// @param		&regs array	Vetor para onde retornam os valores destacados de dia, mês e ano
-	// @access		public		
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given date is in the <b>EURO</b> format
+	 * 
+	 * The parsed date parts (day, month, year, hour, minute, second)
+	 * can be returned through the second argument, passed by reference.
+	 *
+	 * @param string $date Date
+	 * @param array &$regs Used to return the parsed date parts
+	 * @return bool
+	 * @static
+	 */
 	function isEuroDate($date, &$regs) {
 		$date = trim($date);
 		if (ereg("^([0-9]{1,2})(/|\-|\.)([0-9]{1,2})(/|\-|\.)([0-9]{4})([[:space:]]([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$", $date, $matches)) {
@@ -106,15 +118,17 @@ class Date extends PHP2Go
 		return FALSE;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::isUsDate
-	// @desc		Verifica se uma data está no formato americano YYYY[/-.]mm[/-.]dd[ HH:mm:ss]
-	// @param		date string	Data a ser verificada
-	// @param		&regs array	Vetor para onde retornam os valores destacados de dia, mês e ano
-	// @access		public		
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------	
+	/**
+	 * Check if a given date is in the <b>US</b> format
+	 * 
+	 * The parsed date parts (day, month, year, hour, minute, second)
+	 * can be returned through the second argument, passed by reference.
+	 *
+	 * @param string $date Date
+	 * @param array &$regs Used to return the parsed date parts
+	 * @return bool
+	 * @static
+	 */
 	function isUsDate($date, &$regs) {
 		$date = trim($date);
 		if (ereg("^([0-9]{4})(/|\-|\.)([0-9]{1,2})(/|\-|\.)([0-9]{1,2})([[:space:]]([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$", $date, $matches)) {
@@ -128,15 +142,17 @@ class Date extends PHP2Go
 		return FALSE;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::isSqlDate
-	// @desc		Verifica se uma data está no formato SQL YYYY-mm-dd
-	// @param		date string	Data a ser verificada
-	// @param		&regs array	Vetor para onde retornam os valores destacados de dia, mês e ano
-	// @access		public		
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given date is in the <b>SQL</b> format
+	 * 
+	 * The parsed date parts (day, month, year, hour, minute, second)
+	 * can be returned through the second argument, passed by reference.
+	 *
+	 * @param string $date Date
+	 * @param array &$regs Used to return the parsed date parts
+	 * @return bool
+	 * @static
+	 */
 	function isSqlDate($date, &$regs) {
 		$date = trim($date);
 		if (ereg("^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})([[:space:]]([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$", $date, $matches)) {
@@ -150,59 +166,52 @@ class Date extends PHP2Go
 		return FALSE;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::isFuture
-	// @desc		Verifica se uma data é posterior à data atual
-	// @access		public	
-	// @param		date string	Data a ser verificada
-	// @return		bool
-	// @see			Date::pastDate
-	// @see			Date::futureDate
-	// @see			Date::isPast
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given date is in the future
+	 *
+	 * @param string $date Date
+	 * @return bool
+	 * @static
+	 */
 	function isFuture($date) {
 		$daysFrom = Date::dateToDays($date);
 		$daysTo = Date::dateToDays();
 		return ($daysFrom > $daysTo);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::isPast
-	// @desc		Verifica se uma data é anterior à data atual
-	// @access		public	
-	// @param		date string	Data a ser verificada
-	// @return		bool
-	// @see			Date::pastDate
-	// @see			Date::futureDate
-	// @see			Date::isFuture
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given date is in the past
+	 *
+	 * @param string $date Date
+	 * @return bool
+	 * @static
+	 */
 	function isPast($date) {
 		$daysFrom = Date::dateToDays($date);
 		$daysTo = Date::dateToDays();
 		return ($daysTo > $daysFrom);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::tomorrow
-	// @desc		Calcula o dia seguinte em relação à data atual
-	// @access		public
-	// @return		string	Data calculada
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get tomorrow's date
+	 *
+	 * @return string
+	 * @static
+	 */
 	function tomorrow() {
 		return Date::nextDay();
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::nextDay
-	// @desc		Calcula a data imediatamente posterior a uma determinada data
-	// @access		public
-	// @param		date string	"NULL" Data base
-	// @return		string	Dia seguinte calculado
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the next date after a given date
+	 *
+	 * If $date is missing, today's date will be used.
+	 * The output date will be in the same format of the input date.
+	 * 
+	 * @param string $date Date
+	 * @return string Next date
+	 * @static
+	 */
 	function nextDay($date=NULL) {
 		if (TypeUtils::isNull($date)) {
 			$date = Date::localDate();
@@ -210,22 +219,19 @@ class Date extends PHP2Go
 		return Date::futureDate($date, 1);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::futureDate
-	// @desc		Calcula uma data no futuro, a partir de um número de dias, meses e anos
-	// @access		public	
-	// @param		date string	Data original
-	// @param		days int	"0" Número de dias no futuro
-	// @param		monts int	"0" Número de meses no futuro
-	// @param		years int	"0" Número de anos no futuro
-	// @return		string Data calculada no formato original
-	// @see 		Date::pastDate
-	// @see			Date::isFuture
-	// @see			Date::isPast
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Build a future date
+	 * 
+	 * The output date will be in the same format of the input date.
+	 *
+	 * @param string $date Date
+	 * @param int $days Number of days to add
+	 * @param int $months Number of months to add
+	 * @param int $years Number of years to add
+	 * @return string Result date
+	 * @static
+	 */
 	function futureDate($date, $days = 0, $months = 0, $years = 0) {
-		// Captura o formato e os elementos da data base
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {
 			list(, $day, $month, $year) = $regs;
@@ -239,16 +245,13 @@ class Date extends PHP2Go
 		} else {			
 			return NULL;
 		}
-		// Calcula o número de dias da data original
 		$daysFrom = Date::dateToDays($date);
 		$daysInc = 0;
-		// Adiciona os anos
 		$years = TypeUtils::parseInteger($years);
 		for ($i = 1; $i <= $years; $i++) {
 			$year++;
 			$daysInc += (Date::isLeapYear($year)) ? 366 : 365;
 		}
-		// Adiciona os meses de acordo com o número de dias em cada um
 		$months = TypeUtils::parseInteger($months);
 		for ($i = 1; $i <= $months; $i++) {
 			$mTemp = $i % 12 - 1;
@@ -261,31 +264,30 @@ class Date extends PHP2Go
 			}
 			$daysInc += Date::daysInMonth($mTemp, $year + $yTemp);
 		}
-		// Adiciona os dias
 		$daysInc += TypeUtils::parseInteger($days);
-		// Retorna a data calculada no formato original
 		return Date::daysToDate($daysFrom + $daysInc, $dateFormat);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::yesterday
-	// @desc		Calcula o dia anterior em relação à data atual
-	// @access		public
-	// @return		string	Data calculada
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get yesterday's date
+	 *
+	 * @return string
+	 * @static
+	 */
 	function yesterday() {
 		return Date::prevDay();
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::prevDay
-	// @desc		Calcula a data imediatamente anterior a uma determinada data
-	// @access		public
-	// @param		date string	"NULL" Data base
-	// @return		string	Dia anterior calculado
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the previous date of a given date
+	 * 
+	 * If $date is missing, today's date will be used.
+	 * The output date will be in the same format of the input date.
+	 *
+	 * @param string $date Date
+	 * @return string Previous date
+	 * @static
+	 */
 	function prevDay($date=NULL) {
 		if (TypeUtils::isNull($date)) {
 			$date = Date::localDate();
@@ -293,22 +295,19 @@ class Date extends PHP2Go
 		return Date::pastDate($date, 1);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::pastDate
-	// @desc		Calcula uma data no passado, a partir de um número de dias, meses e anos
-	// @param		date string	Data original
-	// @param		days int	"0" Número de dias no passado
-	// @param		monts int	"0" Número de meses no passado
-	// @param		years int	"0" Número de anos no passado
-	// @return		string Data calculada no formato original
-	// @access		public		
-	// @see			Date::futureDate
-	// @see			Date::isFuture
-	// @see			Date::isPast
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Calculate a date in the past
+	 *
+	 * The output date will be in the same format of the input date.
+	 * 
+	 * @param string $date Date
+	 * @param int $days Number of days to subtract
+	 * @param int $months Number of months to subtract
+	 * @param int $years Number of years to subtract
+	 * @return date Past date
+	 * @static
+	 */
 	function pastDate($date, $days=0, $months=0, $years=0) {
-		// Captura o formato e os elementos da data base
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {
 			list(, $day, $month, $year) = $regs;
@@ -322,16 +321,13 @@ class Date extends PHP2Go
 		} else {
 			return NULL;
 		}
-		// Calcula o número de dias da data original
 		$daysFrom = Date::dateToDays($date);
 		$daysDec = 0;
-		// Adiciona os anos
 		for ($i = 1; $i <= $years; $i++) {
 			$s = (Date::isLeapYear($year)) ? 366 : 365;
 			$daysDec += (Date::isLeapYear($year)) ? 366 : 365;
 			$year--;			
 		}		
-		// Adiciona os meses de acordo com os dias de cada mês
 		for ($i = 1; $i <= $months; $i++) {
 			$mTemp = $i % 12;
 			$yTemp = TypeUtils::parseInteger($i / 12);
@@ -343,38 +339,46 @@ class Date extends PHP2Go
 			}
 			$daysDec += Date::daysInMonth($mTemp, $year - $yTemp);
 		}
-		// Adiciona os dias
 		$daysDec += $days;
-		// Retorna a data calculada no formato original
 		return Date::daysToDate($daysFrom - $daysDec, $dateFormat);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::getDiff
-	// @desc		Calcula a diferença em dias entre duas datas
-	// @param		dateM string	Data 1
-	// @param		dateS string	Data 2
-	// @param		unsigned bool	"TRUE" Retorna um resultado sempre positivo (offset em dias) ou com sinal (diferença simples)
-	// @return 		int Diferença em dias
-	// @access		public		
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Calculate the difference in days between 2 dates
+	 * 
+	 * <code>
+	 * /* this will return 6935 {@*}
+	 * $diff = Date::getDiff('03/05/1980', '29/04/1999');
+	 * /* this will return 365 {@*}
+	 * $diff = Date::getDiff('01/01/2006', '01/01/2005');
+	 * /* this will return -365, because we want it to return a signed int {@*}
+	 * $diff = Date::getDiff('01/01/2006', '01/01/2005', FALSE);
+	 * </code>
+	 *
+	 * @param string $dateM First date
+	 * @param string $dateS Second date
+	 * @param bool $unsigned Whether to return an unsigned value
+	 * @return int Diff, in days
+	 * @static
+	 */
 	function getDiff($dateM, $dateS, $unsigned=TRUE) {
-		// Calcula o número de dias da diferença
 		$daysS = Date::dateToDays($dateS);
 		$daysM = Date::dateToDays($dateM);
 		return ($unsigned? abs($daysS - $daysM) : ($daysS - $daysM));
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::getTZDiff
-	// @desc		Calcula o número de segundos correspondente ao diferencial
-	//				de um fuso horário, ou time zone
-	// @param		tz string	Time zone
-	// @return		int Número de segundos correspondente
-	// @access		public	
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the difference in seconds of a timezone, from GMT
+	 * 
+	 * Examples:
+	 * # GMT : returns 0
+	 * # +0300 : returns 10800
+	 * # -0300 : returns -10800
+	 *
+	 * @param string $tz Timezone string
+	 * @return int
+	 * @static
+	 */
 	function getTZDiff($tz) {
 		$tz = TypeUtils::parseString($tz);
 		if (Date::isValidTZ($tz)) {			
@@ -404,16 +408,17 @@ class Date extends PHP2Go
 		return 0;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::parseFieldExpression
-	// @desc		Interpreta expressões utilizadas na definição XML dos formulários
-	//				para aplicar nos campos e/ou nas regras de validação valores de data dinâmicos
-	// @param		expr string	Expressão informada no arquivo XML
-	// @return		string Data correspondente
-	// @note		As expressões aceitas devem ser construídas no formato TODAY (+|-) (999) (D|M|Y)
-	// @access		public	
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Parse date expressions used at the forms XML specification
+	 *
+	 * Examples:
+	 * # TODAY+10D (today plus 10 days)
+	 * # TODAY-18Y (today minus 18 years)
+	 * 
+	 * @param string $expr Date expression
+	 * @return string Result date
+	 * @static
+	 */
 	function parseFieldExpression($expr) {
 		$matches = array();
 		if (eregi("today((\+|\-)([0-9]+)(d|m|y))?", $expr, $matches)) {
@@ -431,18 +436,16 @@ class Date extends PHP2Go
 		return $expr;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::dayOfWeek
-	// @desc 		Retorna o dia da semana para uma data
-	// @param		date string	Data a ser processada
-	// @param		text bool	"TRUE" Se verdadeiro, retornará o nome do dia da semana
-	// @param		abbr bool	"FALSE" Se verdadeiro, retornará a inicial do dia da semana
-	// @return		mixed Nome ou número do dia da semana (baseado em zero)
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the day of week of a given date
+	 *
+	 * @param string $date Date
+	 * @param bool $text If TRUE, the day name is returned
+	 * @param bool $abbr If TRUE, the abbreviation of the day name is returned
+	 * @return int|string Day number/name
+	 * @static
+	 */
 	function dayOfWeek($date, $text=TRUE, $abbr=FALSE) {
-		// Captura os elementos da data base de acordo com o formato
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {
 			list(, $day, $month, $year) = $regs;
@@ -451,7 +454,6 @@ class Date extends PHP2Go
 		} else {
 			return NULL;
 		}
-		// Cálculo do dia da semana
 		if ($month > 2) {
 			$month -= 2;
 		} else {
@@ -460,7 +462,6 @@ class Date extends PHP2Go
 		}
 		$dow = (floor((13 * $month - 1) / 5) + $day + ($year % 100) + floor(($year % 100) / 4) + floor(($year / 100) / 4) - 2 * floor($year / 100) + 77);
 		$dow = (($dow - 7 * floor($dow / 7)));
-		// Exibição do resultado, de acordo com os parâmetros fornecidos
 		$LanguageBase =& LanguageBase::getInstance();
 		if ($abbr)
 			$daysOfWeek = $LanguageBase->getLanguageValue('DAYS_OF_WEEK_ABBR');
@@ -473,15 +474,14 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::daysInMonth
-	// @desc		Retorna o número de dias de um mês de acordo com o mês e o ano
-	// @param		month int	"NULL" Mês
-	// @param		year int	"NULL" Ano
-	// @return		int Número de dias do mês solicitado
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the number of days of a given month/year
+	 *
+	 * @param int $month Month
+	 * @param int $year Year
+	 * @return int Number of days
+	 * @static
+	 */
 	function daysInMonth($month=NULL, $year=NULL) {
 		if (TypeUtils::isNull($year)) 
 			$year = date("Y");
@@ -496,14 +496,13 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::isLeapYear
-	// @desc		Verifica se um determinado ano é bissexto
-	// @param		year int	"NULL" Ano para ser verificado
-	// @access		public		
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given year is leap
+	 *
+	 * @param int $year Year
+	 * @return bool
+	 * @static
+	 */
 	function isLeapYear($year=NULL) {
 		if (TypeUtils::isNull($year))
 			$year = date("Y");
@@ -512,16 +511,17 @@ class Date extends PHP2Go
 		return ((($year % 4) == 0 && ($year % 100) != 0) || ($year % 400) == 0);
 	}	
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::fromEuroToSqlDate
-	// @desc		Converte uma data no padrão europeu (dd/mm/YYYY)
-	// 				para o padrão SQL (YYYY-mm-dd)
-	// @param		date string	Data a ser convertida
-	// @param		preserveTime bool "FALSE" Preservar porção de hora, se ela existir na data fornecida
-	// @return		string Data convertida ou a original se o padrão de entrada estiver incorreto
-	// @access		public	
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Transform a date from <b>EURO</b> to <b>SQL</b> format
+	 * 
+	 * The transformation will only be performed if the input date
+	 * respects the input format (in this case, <b>EURO</b>).
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string New date
+	 * @static
+	 */
 	function fromEuroToSqlDate($date, $preserveTime=FALSE) {
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {
@@ -537,16 +537,17 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::fromEuroToUsDate
-	// @desc		Converte uma data no padrão europeu (dd/mm/YYYY)
-	// 				para o padrão americano (YYYY/mm/dd)
-	// @param		date string	Data a ser convertida
-	// @param		preserveTime bool "FALSE" Preservar porção de hora, se ela existir na data fornecida	
-	// @return		string Data convertida ou a original se o padrão de entrada estiver incorreto
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Transform a date from <b>EURO</b> to <b>US</b> format
+	 * 
+	 * The transformation will only be performed if the input date
+	 * respects the input format (in this case, <b>EURO</b>).
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string New date
+	 * @static
+	 */
 	function fromEuroToUsDate($date, $preserveTime=FALSE) {
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {			
@@ -562,15 +563,17 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::fromUsToSqlDate
-	// @desc		Converte uma data no padrão americano (YYYY/mm/dd)
-	// 				para o padrão SQL (YYYY-mm-dd)
-	// @param		date string	Data a ser convertida
-	// @return		string Data convertida ou a original se o padrão de entrada estiver incorreto
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Transform a date from <b>US</b> to <b>SQL</b> format
+	 * 
+	 * The transformation will only be performed if the input date
+	 * respects the input format (in this case, <b>US</b>).
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string New date
+	 * @static
+	 */
 	function fromUsToSqlDate($date) {
 		$regs = array();
 		if (Date::isUsDate($date, $regs)) {
@@ -580,16 +583,17 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::fromUsToEuroDate
-	// @desc		Converte uma data no padrão americano (YYYY/mm/dd)
-	// 				para o padrão europeu (dd/mm/YYYY)
-	// @param		date string	Data a ser convertida
-	// @param		preserveTime bool "FALSE" Preservar porção de hora, se ela existir na data fornecida	
-	// @return		string Data convertida ou a original se o padrão de entrada estiver incorreto
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Transform a date from <b>US</b> to <b>EURO</b> format
+	 * 
+	 * The transformation will only be performed if the input date
+	 * respects the input format (in this case, <b>US</b>).
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string New date
+	 * @static
+	 */
 	function fromUsToEuroDate($date, $preserveTime=FALSE) {
 		$regs = array();
 		if (Date::isUsDate($date, $regs)) {
@@ -605,16 +609,17 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::fromSqlToEuroDate
-	// @desc		Converte uma data no padrão SQL (YYYY-mm-dd)
-	// 				para o padrão europeu (dd/mm/YYYY)
-	// @param		date string	Data a ser convertida
-	// @param		preserveTime bool "FALSE" Preservar porção de hora, se ela existir na data fornecida	
-	// @return		string Data convertida ou a original se o padrão de entrada estiver incorreto
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Transform a date from <b>SQL</b> to <b>EURO</b> format
+	 * 
+	 * The transformation will only be performed if the input date
+	 * respects the input format (in this case, <b>SQL</b>).
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string New date
+	 * @static
+	 */
 	function fromSqlToEuroDate($date, $preserveTime=FALSE) {
 		$regs = array();
 		if (Date::isSqlDate($date, $regs)) {
@@ -630,15 +635,17 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::fromSqlToUsDate
-	// @desc		Converte uma data no padrão SQL (YYYY-mm-dd)
-	// 				para o padrão americano (YYYY/mm/dd)
-	// @param		date string	Data a ser convertida
-	// @return		string Data convertida ou a original se o padrão de entrada estiver incorreto
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Transform a date from <b>SQL</b> to <b>US</b> format
+	 * 
+	 * The transformation will only be performed if the input date
+	 * respects the input format (in this case, <b>SQL</b>).
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string New date
+	 * @static
+	 */
 	function fromSqlToUsDate($date) {
 		$regs = array();
 		if (Date::isSqlDate($date, $regs)) {
@@ -648,17 +655,17 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::fromUnixToDosDate
-	// @desc		Converte um timestamp Unix em uma data/hora no
-	// 				formato DOS com 4 bytes
-	// @param		unixTimestamp int	"0" Timestamp UNIX para a conversão
-	// @return		string Data e hora no formato DOS
-	// @access		public		
-	// @static	
-	//!-----------------------------------------------------------------
-	function fromUnixToDosDate($unixTimestamp=0) {
-		$timeData = ($unixTimestamp) ? getdate($unixTimestamp) : getdate();
+	/**
+	 * Convert a UNIX timestamp into a 4-byte DOS date
+	 * 
+	 * Current timestamp will be used if $ts is missing.
+	 *
+	 * @param int $ts Timestamp
+	 * @return int DOS date
+	 * @static
+	 */
+	function fromUnixToDosDate($ts=0) {
+		$timeData = ($ts) ? getdate($ts) : getdate();
 		if ($timeData['year'] < 1980) {
 			$timeData['year'] = 1980;
 			$timeData['mon'] = 1;
@@ -675,28 +682,27 @@ class Date extends PHP2Go
 			($timeData['seconds'] << 1));
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::dateToTime
-	// @desc		Converte uma data nos formatos EURO, US ou SQL em
-	//				um timestamp UNIX
-	// @param		date string	Data
-	// @access		public
-	// @return		int
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Convert a date into a UNIX timestamp
+	 *
+	 * @param string $date Input date
+	 * @return int Timestamp
+	 * @static
+	 */
 	function dateToTime($date) {
 		$date = Date::fromEuroToUsDate($date, TRUE);
 		return strtotime($date);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::dateToDays
-	// @desc		Converte uma data para o correspondente em número de dias
-	// @param		date string	"NULL" Data base para o cálculo
-	// @return		int	Data convertida em número de dias
-	// @access		public	
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Convert a date string into a day count
+	 * 
+	 * Current date will be used if $date is missing.
+	 *
+	 * @param string $date Input date
+	 * @return int Day count
+	 * @static
+	 */
 	function dateToDays($date=NULL) {		
 		if (TypeUtils::isNull($date))
 			$date = Date::localDate();
@@ -724,15 +730,14 @@ class Date extends PHP2Go
         return (floor((146097 * $century) / 4 ) + floor(( 1461 * $year) / 4 ) + floor(( 153 * $month + 2) / 5 ) + $day + 1721119);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::daysToDate
-	// @desc		Converte um número de dias em uma data
-	// @param		days int	Número de dias
-	// @param		dateType string	Tipo da data a ser retornada (EURO, US ou SQL)
-	// @return		string	Data correspondente
-	// @access		public	
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Convert a day count into a date string
+	 *
+	 * @param int $days Day count
+	 * @param string $dateType Date format (EURO, US or SQL)
+	 * @return string Date string
+	 * @static
+	 */
 	function daysToDate($days, $dateType) {
 		if (!TypeUtils::isInteger($days) || !in_array(strtolower($dateType), array('euro', 'us', 'sql'))) {
 			return NULL;
@@ -769,16 +774,15 @@ class Date extends PHP2Go
         }		
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::monthName
-	// @desc		Retorna o nome completo do mês, para um 
-	//				determinado valor de timestamp
-	// @param		ts int	"0" Timestamp de referência
-	// @note		Se este valor for omitido, o timestamp do servidor será utilizado em seu lugar
-	// @return		string Nome do mês para o timestamp fornecido
-	// @access		public	
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the month name of a given timestamp
+	 * 
+	 * Current timestamp will be used if $ts is missing.
+	 *
+	 * @param int $ts Timestamp
+	 * @return string Month name
+	 * @static
+	 */
 	function monthName($ts=0) {
 		$Lang =& LanguageBase::getInstance();
 		$date = ($ts <= 0 ? time() : intval($ts));
@@ -787,14 +791,16 @@ class Date extends PHP2Go
 		return $monthNames[$month-1];
 	}	
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::localDate
-	// @desc		Retorna a data local de acordo com o formato
-	// @access		public
-	// @param		ts int	"0" Timestamp opcional para geração da data local
-	// @return		string Data local, a partir do timestamp atual ou um determinado
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Transform a UNIX timestamp into a date string, using the
+	 * date format set in the global configuration settings
+	 * 
+	 * Current timestamp will be used if $ts is missing.
+	 *
+	 * @param int $ts Timestamp
+	 * @return string Date string
+	 * @static
+	 */
 	function localDate($ts=0) {
 		$Conf =& Conf::getInstance();
 		$dateFormat = $Conf->getConfig('LOCAL_DATE_FORMAT');
@@ -813,18 +819,28 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::formatDate
-	// @desc		Formata um valor de data a partir dos valores de dia, mês e ano
-	// @access		public
-	// @param		day int				Valor do dia na data
-	// @param		month int			Valor do mês na data
-	// @param		year int			Valor do ano na data, com 4 dígitos
-	// @param		fmtType int			"DATE_FORMAT_LOCAL" Tipo de formato de data (vide constantes da classe)
-	// @param		fmtString string	"" Descrição do formato (quando $fmtType==DATE_FORMAT_CUSTOM)
-	// @return		string Data formatada
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Build a date string from day, month and year values
+	 * 
+	 * Examples:
+	 * <code>
+	 * /* prints Sat, 01 Jan 2005 00:00:00 GMT {@*}
+	 * print Date::formatDate(1, 1, 2005, DATE_FORMAT_RFC822);
+	 * /* prints 2005-01-01T00:00:00+0000 {@*}
+	 * print Date::formatDate(1, 1, 2005, DATE_FORMAT_ISO8601);
+	 * /* prints 01/01/05 {@*}
+	 * print Date::formatDate(1, 1, 2005, DATE_FORMAT_CUSTOM, 'd/m/y');
+	 * </code>
+	 *
+	 * @param int $day Day
+	 * @param int $month Month
+	 * @param int $year Year (with 4 digits)
+	 * @param int $fmtType Date format
+	 * @param int $fmtStr Custom date format
+	 * @return string Formatted date
+	 * @see formatTime
+	 * @static
+	 */
 	function formatDate($day, $month, $year, $fmtType=DATE_FORMAT_LOCAL, $fmtStr='') {
 		$day = TypeUtils::parseString(str_repeat('0', (2 - strlen($day))) . $day);
 		$month = TypeUtils::parseString(str_repeat('0', (2 - strlen($month))) . $month);
@@ -833,15 +849,17 @@ class Date extends PHP2Go
 		return Date::formatTime($tsDate, $fmtType, $fmtStr);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::formatTime
-	// @desc		Formata um valor de unix timestamp
-	// @access		public
-	// @param		time int			Unix timestamp
-	// @param		fmtType int			"DATE_FORMAT_LOCAL" Tipo de formato de data (vide constantes da classse)
-	// @param		fmtString string	"" Descrição do formato (quando $fmtType==DATE_FORMAT_CUSTOM)
-	// @return		string Timestamp formatado
-	//!-----------------------------------------------------------------
+	/**
+	 * Build a date string from a UNIX timestamp
+	 * 
+	 * This method behaves like {@link formatDate}.
+	 *
+	 * @param int $time UNIX timestamp
+	 * @param string $fmtType Date format
+	 * @param string $fmtStr Custom date format
+	 * @return string Date string
+	 * @static
+	 */
 	function formatTime($time=NULL, $fmtType=DATE_FORMAT_LOCAL, $fmtStr='') {
 		if (empty($time))
 			$time = time();
@@ -872,20 +890,19 @@ class Date extends PHP2Go
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	Date::printDate
-	// @desc		Imprime a data atual do sistema formatada
-	// @param		city bool		"TRUE" Flag para exibir o nome do município
-	// @param		country bool	"TRUE" Flag para exibir o nome do país
-	// @param		dow bool		"TRUE" Flag para exibir o dia da semana
-	// @return		string Data formatada de acordo com as opções
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get current system date
+	 *
+	 * @param bool $city Prepend date with CITY configuration setting, if available
+	 * @param bool $country Prepend date with COUNTRY configuration setting, if available
+	 * @param bool $dow Prepend date with week day
+	 * @return string Date string
+	 * @static
+	 */
 	function printDate($city=TRUE, $country=TRUE, $dow=TRUE) {
 		$Conf =& Conf::getInstance();
 		$Lang =& LanguageBase::getInstance();
 		$date = "";
-		// Insere o nome da cidade local
 		if ($city) {
 			$cityName = $Conf->getConfig('CITY');
 			if (TypeUtils::isFalse($cityName)) {
@@ -894,7 +911,6 @@ class Date extends PHP2Go
 				$date .= $cityName;
 			}			
 		}
-		// Insere o nome do país local
 		if ($country) {
 			$countryName = $Conf->getConfig('COUNTRY');
 			if (TypeUtils::isFalse($countryName)) {
@@ -907,13 +923,11 @@ class Date extends PHP2Go
 		} else if (!empty($cityName)) {
 			$date .= ", ";
 		}
-		// Insere o dia da semana
 		if ($dow) {
 			$daysOfWeek = $Lang->getLanguageValue('DAYS_OF_WEEK');
 			$dayOfWeek = date('w');
 			$date .= $daysOfWeek[$dayOfWeek] . ", ";
 		}
-		// Insere a data atual
 		$date .= Date::localDate();
 		return $date;
 	}	

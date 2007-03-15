@@ -1,91 +1,128 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/file/FileManager.class.php,v 1.17 2006/10/26 04:27:28 mpont Exp $
-// $Date: 2006/10/26 04:27:28 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//-----------------------------------------
 import('php2go.file.FileSystem');
-//-----------------------------------------
 
-// @const FILE_MANAGER_READ "r"
-// Definição de modo de leitura normal
+/**
+ * Read mode
+ */
 define('FILE_MANAGER_READ', 'r');
-// @const FILE_MANAGER_READ_BINARY "rb"
-// Definição de modo de leitura binário
+/**
+ * Binary read mode
+ */
 define('FILE_MANAGER_READ_BINARY', 'rb');
-// @const FILE_MANAGER_WRITE "w"
-// Constante que define modo de escrita simples
+/**
+ * Write mode
+ */
 define('FILE_MANAGER_WRITE', 'w');
-// @const FILE_MANAGER_WRITE_BINARY	"wb"
-// Define o modo de escrita binário
+/**
+ * Binary write mode
+ */
 define('FILE_MANAGER_WRITE_BINARY',	'wb');
-// @const FILE_MANAGER_APPEND "a"
-// Definição para modo de concatenação
+/**
+ * Append mode
+ */
 define('FILE_MANAGER_APPEND', 'a');
-// @const FILE_MANAGER_APPEND_BINARY "ab"
-// Definição para o modo de concatenação binário
+/**
+ * Binary append mode
+ */
 define('FILE_MANAGER_APPEND_BINARY', 'ab');
-// @const FILE_MANAGER_DEFAULT_BLOCK "512"
-// Quantidade padrão de bytes a serem lidos de um arquivo a cada vez
+/**
+ * Default block size when reading files
+ */
 define('FILE_MANAGER_DEFAULT_BLOCK', 512);
 
-//!-----------------------------------------------------------------
-// @class		FileManager
-// @desc		Esta classe implementa as funções de manipulação de
-//				arquivos no servidor, como criação, leitura, escrita
-//				e concatenação
-// @package		php2go.file
-// @extends		FileSystem
-// @author		Marcos Pont
-// @version		$Revision: 1.17 $
-//!-----------------------------------------------------------------
-class FileManager extends FileSystem
+/**
+ * File reader and writer
+ *
+ * Performs operations on files: create, read, write, append,
+ * delete, change mode, change owner, get/set attributes.
+ *
+ * @package file
+ * @uses FileSystem
+ * @author Marcos Pont
+ * @version $Revision$
+ */
+class FileManager extends PHP2Go
 {
-	var $currentFile;			// @var currentFile resource	Variável que armazena o ponteiro do arquivo atualmente aberto
-	var $currentPath;			// @var currentPath string		Caminho do arquivo atualmente aberto
-	var $currentMode;			// @var currentMode int			Modo de abertura do arquivo ativo
-	var $currentAttrs;			// @var currentAttrs array		Vetor de atributos do arquivo aberto
-	var $throwErrors = TRUE;	// @var throwErrors bool		"TRUE" Indica se os erros capturados devem ser tratados
+	/**
+	 * Attributes of the current opened file
+	 *
+	 * @var array
+	 */
+	var $currentAttrs;
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::FileManager
-	// @desc		Cria o objeto FileManager de manipulação de arquivos
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Path to the current opened file
+	 *
+	 * @var string
+	 */
+	var $currentPath;
+
+	/**
+	 * Current file handle
+	 *
+	 * @var resource
+	 * @access private
+	 */
+	var $currentFile;
+
+	/**
+	 * Current open mode (read, write, append, ...)
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $currentMode;
+
+	/**
+	 * Whether to throw errors
+	 *
+	 * @var bool
+	 */
+	var $throwErrors = TRUE;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return FileManager
+	 */
 	function FileManager() {
-		parent::FileSystem();
+		parent::PHP2Go();
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::__destruct
-	// @desc		Destrutor do objeto. Fecha todos os ponteiros para
-	//				arquivo se estiverem abertos e libera todos os locks
-	//				de arquivo obtidos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 *
+	 * Closes all opened file handles and release all file locks.
+	 */
 	function __destruct() {
 		$this->closeAll();
 		$locks = FileManager::getLocks();
@@ -95,14 +132,12 @@ class FileManager extends FileSystem
 			}
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::&getPointers
-	// @desc		Busca os ponteiros de arquivo associados ao objeto
-	// @access		public
-	// @return		array Vetor contendo os ponteiros de arquivo atualmente abertos
-	// @note		Este método armazena os ponteiros para arquivo em uma variável estática
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get all file handles
+	 *
+	 * @return array
+	 */
 	function &getPointers() {
 		static $pointers;
 		if (!isset($pointers)) {
@@ -111,13 +146,11 @@ class FileManager extends FileSystem
 		return $pointers;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::&getLocks
-	// @desc		Busca os locks de arquivo associados ao objeto
-	// @access		public
-	// @return		array Vetor contendo os locks de arquivo concedidos
-	// @note		Este método armazena os locks em uma variável estática
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all file locks
+	 *
+	 * @return array
+	 */
 	function &getLocks() {
 		static $locks;
 		if (!isset($locks)) {
@@ -125,89 +158,96 @@ class FileManager extends FileSystem
 		}
 		return $locks;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::getCurrentPointer
-	// @desc		Busca o ponteiro de arquivo atualmente ativo
-	// @access		public
-	// @return		resource Ponteiro do arquivo atualmente aberto ou FALSE se
-	//				não houver arquivo(s) aberto(s)
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the current opened file handle
+	 *
+	 * Returns FALSE if there's no opened file.
+	 *
+	 * @return resource|bool
+	 */
 	function getCurrentPointer() {
 		return isset($this->currentFile) && is_resource($this->currentFile) ? $this->currentFile : FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::open
-	// @desc		Abre o arquivo indicado em $filePath com o modo $mode.
-	// 				Permite ativar lock de leitura ou exclusivo no arquivo
-	//				aberto
-	// @access		public
-	// @param		filePath string	Caminho do arquivo
-	// @param		mode string		"FILE_MANAGER_READ_BINARY" Modo de abertura do arquivo,
-	//									de acordo com a especificação da
-	//									função fopen() do PHP, padrão é leitura byte a byte
-	// @param		lockFile mixed	"FALSE" Se for fornecido, criará um lock no
-	//									arquivo aberto do tipo informado pelo
-	//									parâmetro: leitura (LOCK_SH) ou exclusivo (LOCK_EX)
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function open($filePath, $mode = FILE_MANAGER_READ_BINARY, $lockFile = FALSE) {
+	/**
+	 * Opens a file
+	 *
+	 * Examples:
+	 * <code>
+	 * $fm = new FileManager();
+	 * /* opens data.xml using read mode {@*}
+	 * $fm->open('data.xml', FILE_MANAGER_READ);
+	 * /* opens messages.log using binary read mode and requires a shared lock {@*}
+	 * $fm->open('messages.log', FILE_MANAGER_READ_BINARY, LOCK_SH);
+	 * /* opens servers.txt using write mode and requires an exclusive lock {@*}
+	 * $fm->open('servers.txt', FILE_MANAGER_WRITE, LOCK_EX);
+	 * </code>
+	 *
+	 * @uses FileSystem::getFileAttributes()
+	 * @param string $filePath File path
+	 * @param string $mode Open mode
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return bool
+	 */
+	function open($filePath, $mode=FILE_MANAGER_READ_BINARY, $lockType=FALSE) {
 		$attrs = FileSystem::getFileAttributes($filePath);
 		$dirAttrs = FileSystem::getFileAttributes(dirname($filePath));
-		// busca os pointers de arquivo
-		$pointers = &$this->getPointers();
+		$pointers =& $this->getPointers();
 		if (!isset($pointers[$filePath][$mode]) || !is_resource($pointers[$filePath][$mode])) {
-			// valida o modo de leitura
-			if ($this->_isRead($mode) && !preg_match('/^(http|https|ftp|php):\/\//i', $filePath) && !$attrs) {
-				if ($this->throwErrors) 
+			// validate read mode
+			if (preg_match('/^rb?$/', $mode) && !preg_match('/^(http|https|ftp|php):\/\//i', $filePath) && !$attrs) {
+				if ($this->throwErrors)
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
 				return FALSE;
 			}
-			// valida o modo de escrita ou concatenação
-			if ($this->_isWrite($mode) || $this->_isAppend($mode)) {
+			// validate write/append mode
+			if (preg_match('/^(w|a)b?$/', $mode)) {
 				if (!FileSystem::exists($filePath)) {
 					if (!$dirAttrs['isWriteable']) {
-						if ($this->throwErrors) 
+						if ($this->throwErrors)
 							PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_CREATE_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
 						return FALSE;
 					}
 				} else {
 					if (!$attrs['isWriteable']) {
-						if ($this->throwErrors) 
+						if ($this->throwErrors)
 							PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_WRITE_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
 						return FALSE;
 					}
 				}
 			}
-			// cria o ponteiro para o arquivo com o modo indicado
+			// create the file handle
 			$pointers[$filePath][$mode] = @fopen($filePath, $mode);
 			if ($pointers[$filePath][$mode] === FALSE) {
-				if ($this->throwErrors) 
+				if ($this->throwErrors)
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_OPEN_FILE', array($filePath, $mode)), E_USER_ERROR, __FILE__, __LINE__);
 				return FALSE;
 			}
 		}
-  		if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-   			$this->lock($pointers[$filePath][$mode], $lockFile);
+  		if ($lockType == LOCK_SH || $lockType == LOCK_EX) {
+   			$this->lock($pointers[$filePath][$mode], $lockType);
 		}
-  		$this->currentFile = &$pointers[$filePath][$mode];
+  		$this->currentFile =& $pointers[$filePath][$mode];
   		$this->currentPath = $filePath;
 		$this->currentMode = $mode;
-  		$this->currentAttrs = &$attrs;
+  		$this->currentAttrs =& $attrs;
   		return TRUE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::changeFile
-	// @desc		Alterna entre os arquivos abertos na classe
-	// @access		public
-	// @param		filePath string	Caminho do arquivo
-	// @param		mode string		Modo utilizado na abertura do arquivo
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Alternate between 2 opened files
+	 *
+	 * The $filePath argument must be the
+	 * same used to open the file.
+	 *
+	 * @param string $filePath File path
+	 * @param string $mode Mode used to open the file
+	 * @uses FileSystem::getFileAttributes()
+	 * @return bool
+	 */
 	function changeFile($filePath, $mode) {
-		$pointers = &$this->getPointers();
+		$pointers =& $this->getPointers();
 		if (!isset($pointers[$filePath][$mode]) || !is_resource($pointers[$filePath][$mode])) {
 			return FALSE;
 		} else {
@@ -216,15 +256,16 @@ class FileManager extends FileSystem
 			$this->currentMode = $mode;
 			$this->currentAttrs = FileSystem::getFileAttributes($filePath);
 			return TRUE;
-		}	
+		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::getCurrentPosition
-	// @desc		Retorna a posição atual do ponteiro de arquivo ativo
-	// @access		public
-	// @return		int Posição do ponteiro no stream do arquivo ou FALSE se não há ponteiro ativo na classe
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get position of the current file pointer
+	 *
+	 * Returns FALSE if there's no opened file.
+	 *
+	 * @return int|bool
+	 */
 	function getCurrentPosition() {
 		if (!is_resource($this->currentFile)) {
 			return FALSE;
@@ -233,204 +274,165 @@ class FileManager extends FileSystem
 			return ftell($fp);
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::getAttribute
-	// @desc		Retorna o valor de um atributo do arquivo
-	// @access		public
-	// @param		attributeName string	Nome do atributo consultado
-	// @return		mixed Valor do atributo ou FALSE em caso de erros
-	// @see			FileSystem::getFileAttributes
-	// @note		Os atributos possíveis são os mesmos retornados pelo
-	//				método getFileAttributes da classe FileSystem
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get an attribute of the opened file
+	 *
+	 * Returns FALSE when there's no opened file and
+	 * when the attribute name is invalid.
+	 *
+	 * @param string $attributeName Attribute name
+	 * @return mixed Attribute value
+	 */
 	function getAttribute($attributeName) {
-		if (!isset($this->currentFile) || !is_resource($this->currentFile))
-			return FALSE;
-		else
-			return isset($this->currentAttrs[$attributeName]) ? $this->currentAttrs[$attributeName] : FALSE;
+		if (is_resource($this->currentFile))
+			return (array_key_exists($attributeName, $this->currentAttrs) ? $this->currentAttrs[$attributeName] : FALSE);
+		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::getAttributes
-	// @desc		Retorna os atributos do arquivo atualmente ativo, se existir
-	// @access		public
-	// @return		mixed Vetor de atributos do arquivo ou FALSE em caso de erros
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get all attributes of the opened file
+	 *
+	 * Returns FALSE when there's no opened file.
+	 *
+	 * @return array|bool
+	 */
 	function getAttributes() {
-		if (!isset($this->currentFile) || !is_resource($this->currentFile))
-			return FALSE;
-		else
+		if (is_resource($this->currentFile))
 			return $this->currentAttrs;
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::read
-	// @desc		Lê uma quantidade de bytes do arquivo atual, permitindo
-	//				bloqueá-lo para leitura
-	// @access		public
-	// @param		size int		"FILE_MANAGER_DEFAULT_BLOCK" Número de bytes a serem lidos do arquivo
-	// @param		lockFile mixed	"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		string Conteúdo lido do arquivo ou FALSE em caso de erros
-	// @see			FileManager::readChar
-	// @see			FileManager::readLine
-	// @see			FileManager::readFile
-	//!-----------------------------------------------------------------
-	function read($size=FILE_MANAGER_DEFAULT_BLOCK, $lockFile=FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	/**
+	 * Reads a block from the current file
+	 *
+	 * Allows to request shared lock on the file before reading.
+	 * Returns FALSE when end of file is reached.
+	 *
+	 * @param int $size Block size
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return string|bool
+	 */
+	function read($size=FILE_MANAGER_DEFAULT_BLOCK, $lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX) {
+				$this->lock($fp, $lockType);
 			}
-			return feof($fp) ? FALSE : fread($fp, max(intval($size), 1));
+			return (feof($fp) ? FALSE : fread($fp, max(intval($size), 1)));
 		}
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::readChar
-	// @desc		Lê um byte do arquivo atual
-	// @access		public
-	// @param		lockFile mixed	"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		string
-	// @see			FileManager::read
-	// @see			FileManager::readLine
-	// @see			FileManager::readFile
-	//!-----------------------------------------------------------------
-	function readChar($lockFile = FALSE) {
-		return $this->read(1, $lockFile);
+	/**
+	 * Reads a char from the opened file
+	 *
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return string|bool
+	 */
+	function readChar($lockType=FALSE) {
+		return $this->read(1, $lockType);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::readLine
-	// @desc		Lê bytes do arquivo atual até encontrar uma quebra de linha,
-	//				representada pelo caractere \n, ou o final do arquivo
-	// @access		public
-	// @param		lockFile mixed	"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		string Linha lida do arquivo ou FALSE em caso de erros
-	// @see			FileManager::read
-	// @see			FileManager::readChar
-	// @see			FileManager::readFile
-	//!-----------------------------------------------------------------
-	function readLine($lockFile = FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	/**
+	 * Reads a line from the current file
+	 *
+	 * Read bytes from the file until a line break is found
+	 * or until end of file is reached.
+	 *
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return string|bool
+	 */
+	function readLine($lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}
-			return feof($fp) ? FALSE : fgets($fp);
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX)
+				$this->lock($fp, $lockType);
+			return (feof($fp) ? FALSE : fgets($fp));
 		}
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::readFile
-	// @desc		Lê todo o conteúdo do arquivo atual
-	// @access		public
-	// @param		lockFile mixed	"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		string Conteúdo lido do arquivo ou FALSE em caso de erros
-	// @see			FileManager::read
-	// @see			FileManager::readChar
-	// @see			FileManager::readLine
-	//!-----------------------------------------------------------------
-	function readFile($lockFile = FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
-			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}
-			$attrs = FileSystem::getFileAttributes($this->currentPath);
-			return $this->read($attrs['size'], $lockFile);
-		}
+	/**
+	 * Read all contents of the current file
+	 *
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return string|bool
+	 */
+	function readFile($lockType=FALSE) {
+		if (is_resource($this->currentFile))
+			return $this->read($this->currentAttrs['size'], $lockType);
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::readArray
-	// @desc		Lê todo o conteúdo de um arquivo e retorna em um vetor,
-	//				através da função file() do PHP
-	// @access		public
-	// @param		filePath string	Caminho do arquivo
-	// @return		array Vetor com os dados do arquivo ou FALSE em caso de erros
-	//!-----------------------------------------------------------------
+	/**
+	 * Get an array of the contents of a given file
+	 *
+	 * @param string $filePath File path
+	 * @return array|bool
+	 */
 	function readArray($filePath) {
-		if (!FileSystem::exists($filePath)) {
-			if ($this->throwErrors) 
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
-			return FALSE;
-		} else {
+		if (file_exists($filePath))
 			return file($filePath);
-		}
+		if ($this->throwErrors)
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $filePath), E_USER_ERROR, __FILE__, __LINE__);
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::write
-	// @desc		Escreve no arquivo atual o conteúdo de uma string indicando
-	//				o número de bytes. Permite gravação (cria o arquivo) ou
-	//				escrita (concatenação) a partir do parâmetro $mode
-	// @access		public
-	// @param		string string		Conteúdo a ser escrito no arquivo
-	// @param		size int			"0" Número de bytes de string a serem escritos. Zero significa a string inteira
-	// @param		lockFile mixed	"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		bool
-	// @see			FileManager::writeChar
-	// @see			FileManager::writeLine
-	//!-----------------------------------------------------------------
-	function write($string, $size = 0, $lockFile = FALSE) {
-		if (!is_scalar($string) || !is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	/**
+	 * Write a string in the current file
+	 *
+	 * @param string $string Input string
+	 * @param int $size Total bytes to write
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return bool
+	 */
+	function write($string, $size=0, $lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
+			$string = (string)$string;
 			$fp =& $this->currentFile;
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX)
+				$this->lock($fp, $lockType);
 			return (@fwrite($fp, $string, max($size, strlen($string))));
 		}
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::writeChar
-	// @desc		Escreve um caractere no arquivo atual
-	// @access		public
-	// @param		char string		Caractere a ser gravado no arquivo
-	// @param		lockFile mixed	"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		bool
-	// @see			FileManager::write
-	// @see			FileManager::writeLine
-	//!-----------------------------------------------------------------
-	function writeChar($char, $lockFile = FALSE) {
-		return $this->write($char, 1, $lockFile);
+	/**
+	 * Write a char in the current file
+	 *
+	 * @param string $char Char to write
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return bool
+	 */
+	function writeChar($char, $lockType=FALSE) {
+		$char = (string)$char;
+		if (strlen($char) > 0)
+			return $this->write($char[0], 1, $lockType);
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::writeLine
-	// @desc		Escreve uma linha de dados no arquivo atual
-	// @access		public
-	// @param		string string		Conteúdo a ser escrito no arquivo
-	// @param		endLine int			"\n" Caractere a ser utilizado para fim de linha, padrão é '\n'
-	// @param		lockFile mixed		"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		bool
-	// @see			FileManager::write
-	// @see			FileManager::writeChar
-	//!-----------------------------------------------------------------
-	function writeLine($string, $endLine = "\n", $lockFile = FALSE) {
+	/**
+	 * Write a line in the current file
+	 *
+	 * @param string $string Input string
+	 * @param string $endLine Line end delimiter
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return bool
+	 */
+	function writeLine($string, $endLine="\n", $lockType=FALSE) {
+		$string = (string)$string;
 		$string .= $endLine;
-		return $this->write($string, strlen($string), $lockFile);
+		return $this->write($string, strlen($string), $lockType);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::replaceInFiles
-	// @desc		Realiza substituição de valor no conteúdo 
-	//				de um conjunto de arquivos
-	// @access		public
-	// @param		search string		Valor de pesquisa
-	// @param		replace string		Valor de substituição
-	// @param		files array			Conjunto de arquivos de substituição
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Replace a search term in a given set of files
+	 *
+	 * @param string $search Value to search
+	 * @param string $replace Replacement string
+	 * @param array $files Files to search
+	 */
 	function replaceInFiles($search, $replace, $files) {
 		$files = (array)$files;
 		foreach ($files as $file) {
@@ -449,113 +451,99 @@ class FileManager extends FileSystem
 			}
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::seek
-	// @desc		Procura por uma posição no arquivo atual
-	// @access		public
-	// @param		offset int	Deslocamento
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function seek($offset) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
-			$fp =& $this->currentFile;
-			$result = @fseek($fp, $offset);
-			return ($result === 0) ? TRUE : FALSE;
-		}		
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::rewind
-	// @desc		Volta o ponteiro do arquivo atual para a posição inicial
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Rewind the current file's pointer to the start
+	 *
+	 * @return bool
+	 */
 	function rewind() {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
 			return @rewind($fp);
 		}
+		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::truncate
-	// @desc		Trunca o arquivo atual para um determinado tamanho
-	// @access		public
-	// @param		size int			Novo tamanho para o arquivo
-	// @param		lockFile mixed	"FALSE" Indica o tipo de bloqueio a ser aplicado no arquivo
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function truncate($size, $lockFile = FALSE) {
-		if (!is_resource($this->currentFile)) {
-			return FALSE;
-		} else {
+	/**
+	 * Seek a given position in the current file
+	 *
+	 * @param int $offset Offset
+	 * @return bool
+	 */
+	function seek($offset) {
+		if (is_resource($this->currentFile)) {
+			$fp =& $this->currentFile;
+			$result = @fseek($fp, $offset);
+			return ($result === 0 ? TRUE : FALSE);
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Truncate the current file to a given size
+	 *
+	 * @param int $size New size
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 * @return bool
+	 */
+	function truncate($size, $lockType=FALSE) {
+		if (is_resource($this->currentFile)) {
 			$fp =& $this->currentFile;
 			$truncSize = abs(intval($size));
-			if ($lockFile == LOCK_SH || $lockFile == LOCK_EX) {
-				$this->lock($fp, $lockFile);
-			}			
+			if ($lockType == LOCK_SH || $lockType == LOCK_EX)
+				$this->lock($fp, $lockType);
 			return @ftruncate($fp, $truncSize);
 		}
+		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::changeMode
-	// @desc		Muda o modo do arquivo ativo
-	// @access		public
-	// @param		newMode string	Novo modo para o arquivo
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Change the mode of the current file
+	 *
+	 * @param int $newMode New mode
+	 * @return bool
+	 */
 	function changeMode($newMode) {
-		if (!isset($this->currentPath))
-			return FALSE;
-		else
+		if (isset($this->currentPath))
 			return chmod($this->currentPath, $newMode);
+		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::touch
-	// @desc		Altera a data de modificação do arquivo ativo
-	// @access		public
-	// @param		time int		"NULL" Nova data de modificação para o arquivo
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Change the last modified time of the current file
+	 *
+	 * If $time is missing, current UNIX timestamp will be used.
+	 *
+	 * @uses FileSystem::touch()
+	 * @param int $time New modified time
+	 */
 	function touch($time=NULL) {
 		if (isset($this->currentPath)) {
 			($time == NULL) && ($time = time());
 			FileSystem::touch($this->currentPath, $time);
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::lock
-	// @desc		Cria um bloqueio no arquivo indicado pelo ponteiro
-	//				$filePointer, utilizando o modo $lockFile
-	// @access		public
-	// @param		&filePointer resource	Ponteiro de arquivo
-	// @param		lockFile int			Tipo de bloqueio de arquivo
-	// @return		void	
-	//!-----------------------------------------------------------------
-	function lock(&$filePointer, $lockFile) {
+
+	/**
+	 * Lock a given file
+	 *
+	 * @param resource &$filePointer File handle
+	 * @param int $lockType Lock type (LOCK_SH or LOCK_EX)
+	 */
+	function lock(&$filePointer, $lockType) {
 		$locks = FileManager::getLocks();
-		if (@flock($filePointer, $lockFile))
+		if (@flock($filePointer, $lockType))
 			$locks[] =& $filePointer;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::unlock
-	// @desc		Retira o bloqueio do arquivo indicado em $filePath,
-	//				aberto com o modo $mode. Busca por este arquivo nos
-	//				ponteiros de arquivos abertos armazenados na classe
-	// @access		public
-	// @param		filePath string		Caminho do arquivo a ser desbloqueado
-	// @param		mode string			Modo utilizado na abertura do arquivo
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Unlock a given file
+	 *
+	 * @param string $filePath File path
+	 * @param int $mode Mode used to open the file
+	 * @return bool
+	 */
 	function unlock($filePath, $mode) {
 		$locks =& $this->getLocks();
 		$pointers =& $this->getPointers();
@@ -567,21 +555,19 @@ class FileManager extends FileSystem
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FileManager::close
-	// @desc		Destrói o ponteiro de arquivo atual
-	// @access		public
-	// @return		bool Retorna FALSE caso não seja possível destruir o ponteiro ou
-	//				caso o arquivo não for encontrado na lista de arquivos abertos
-	//!-----------------------------------------------------------------
+	/**
+	 * Close the current opened file
+	 *
+	 * @return bool
+	 */
 	function close() {
 		if (!is_resource($this->currentFile)) {
 			return FALSE;
 		} else {
-			// remove do vetor de pointers
+			// remove from internal set of handles
 			$pointers =& $this->getPointers();
 			unset($pointers[$this->currentPath][$this->currentMode]);
-			// reseta o valor das propriedades do objeto
+			// reset class properties
 			$fp = $this->currentFile;
 			unset($this->currentFile);
 			unset($this->currentPath);
@@ -590,65 +576,21 @@ class FileManager extends FileSystem
 			return @fclose($fp);
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	FileManager::closeAll
-	// @desc		Libera todos os ponteiros de arquivo armazenados na classe
-	// @access		public
-	// @return		void
-	// @note		Este método é executado automaticamente na destruição deste
-	//				objeto. Logo, ponteiros para arquivo que são deixados abertos
-	//				no fim do script serão fechados
-	// @note		A primeira chamada deste método já irá liberar *todos* os ponteiros
-	//				de arquivo utilizados em todas as instâncias da classe FileManager criadas
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Close all opened files
+	 */
 	function closeAll() {
 		$pointers = &$this->getPointers();
-		if (!empty($pointers)) {			
+		if (!empty($pointers)) {
 			foreach($pointers as $path => $value) {
 				foreach($value as $mode => $pointer) {
 					if (is_resource($pointer) && get_resource_type($pointer) != 'Unknown')
-						@fclose($pointer);					
+						@fclose($pointer);
 				}
-			}			
-		}				
+			}
+		}
 		$pointers = array();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FileManager::_isRead
-	// @desc		Verifica se um modo de abertura de arquivo corresponde
-	//				a um modos de leitura do PHP
-	// @access		private
-	// @param		mode string	Modo a ser verificado
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function _isRead($mode) {
-		return (ereg(FILE_MANAGER_READ."b?\+?", $mode));
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FileManager::_isWrite
-	// @desc		Verifica se um modo de abertura de arquivo corresponde
-	//				a um modos de escrita da especificação do PHP
-	// @access		private
-	// @param		mode string	Modo a ser verificado
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function _isWrite($mode) {
-		return (ereg(FILE_MANAGER_WRITE."b?\+?", $mode));
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FileManager::_isAppend
-	// @desc		Verifica se um modo de abertura de arquivo é um dos
-	//				modos de concatenação especificados pelo PHP
-	// @access		private
-	// @param		mode string	Modo a ser verificado
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function _isAppend($mode) {
-		return (ereg(FILE_MANAGER_APPEND."b?\+?", $mode));
 	}
 }
 ?>

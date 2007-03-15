@@ -1,62 +1,115 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/listener/FormJSRSListener.class.php,v 1.2 2006/10/11 22:16:13 mpont Exp $
-// $Date: 2006/10/11 22:16:13 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		FormJSRSListener
-// @desc		Um listener JSRS é um tipo especial de tratador de evento para
-//				campos e botões de formulários, pois monta e executa uma chamada remota
-//				de um script PHP, utilizando a biblioteca JSRS (JavaScript Remote Scripting).
-//				Por isso, este listener deve ser configurado com parâmetros adicionais, como
-//				caminho remoto do script PHP, função remota a ser chamada, parâmetros da função
-//				remota, função JS para tratamento do retorno, flag de debug, ...
-// @extends		FormEventListener
-// @package		php2go.form.listener
-// @author		Marcos Pont
-// @version		$Revision: 1.2 $
-//!-----------------------------------------------------------------
+/**
+ * Builds JSRS-based form event listeners
+ *
+ * This class bounds an event of a form field with the jsrsExecute
+ * function, which performs a JSRS request to a remote page when
+ * the event is triggered.
+ *
+ * Example:
+ * <code>
+ * <combofield name="search_options" label="Search by">
+ *   <option value="1" caption="Code"/>
+ *   <option value="2" caption="Name"/>
+ * </combofield>
+ * <editfield name="search_term" label="empty"/>
+ * <button name="search" type="BUTTON">
+ *   <listener
+ *       type="JSRS" event="onClick" file="jsrs/search.php"
+ *       remote="getOptions" callback="parseOptions" debug="F"
+ *       params="Array($('search_options').value, $('search_term').value)"
+ *   />
+ * </button>
+ * </code>
+ *
+ * @package form
+ * @subpackage listener
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FormJSRSListener extends FormEventListener
 {
-	var $remoteFile;		// @var remoteFile string		Arquivo PHP remoto que contém a função a ser executada
-	var $remoteFunction;	// @var remoteFunction string	Nome da função remota a ser executada
-	var $callback;			// @var callback string			Função JavaScript que deve tratar o retorno da requisição remota
-	var $params;			// @var params string			String da parâmetros para a função remota, definida em Javascript
-	var $debug;				// @var debug bool				"FALSE" Habilita/desabilita debug das requisições
+	/**
+	 * JSRS request URL
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $remoteFile;
 
-	//!-----------------------------------------------------------------
-	// @function	FormJSRSListener::FormJSRSListener
-	// @desc		Construtor da classe
-	// @param		eventName string		Nome do evento Javascript
-	// @param		autoDispatchIf string	"" Expressão que define se o evento é disparado automaticamente ou não
-	// @param		remoteFile string		"" Arquivo remoto
-	// @param		remoteFunction string	"" Função remota
-	// @param		callback string			"" Função de tratamento do retorno
-	// @param		params string			"" Conjunto de parâmetros
-	// @param		debug bool				"FALSE" Debug do retorno da função remota
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * JSRS remote function
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $remoteFunction;
+
+	/**
+	 * JSRS client callback
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $callback;
+
+	/**
+	 * JSRS request arguments
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $params;
+
+	/**
+	 * Debug flag
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $debug;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $eventName Event name
+	 * @param string $autoDispatchIf Evaluates if listener should be dispatched automatically upon page load
+	 * @param string $remoteFile JSRS request URL
+	 * @param string $remoteFunction JSRS remote function
+	 * @param string $callback JSRS client callback
+	 * @param string $params JSRS request arguments
+	 * @param bool $debug Enable/disable debug mode
+	 * @return FormJSRSListener
+	 */
 	function FormJSRSListener($eventName, $autoDispatchIf='', $remoteFile='', $remoteFunction='', $callback='', $params='', $debug=FALSE) {
 		parent::FormEventListener(FORM_EVENT_JSRS, $eventName, '', $autoDispatchIf);
 		$this->remoteFile = (!empty($remoteFile) ? $remoteFile : HttpRequest::uri());
@@ -66,14 +119,15 @@ class FormJSRSListener extends FormEventListener
 		$this->debug = TypeUtils::toBoolean($debug);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormJSRSListener::getScriptCode
-	// @desc		Sobrecarrega o método da classe superior para
-	//				incluir no documento HTML o cliente JSRS
-	// @param		targetIndex int		"NULL" Índice de um grupo de opções
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Based on the provided arguments, builds a call to the
+	 * jsrsExecute function, which performs the JSRS remote call,
+	 * and calls the response callback as soon as the response
+	 * is available
+	 *
+	 * @param int $targetIndex Index, when bound to a group option invididually
+	 * @return string Function call
+	 */
 	function getScriptCode($targetIndex=NULL) {
 		$Form =& $this->_Owner->getOwnerForm();
 		$Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'jsrsclient.js');
@@ -86,22 +140,36 @@ class FormJSRSListener extends FormEventListener
 		return $this->action;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormJSRSListener::validate
-	// @desc		Valida as propriedades do tratador de eventos
-	// @access		protected
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Configure listener's dynamic properties
+	 *
+	 * @access protected
+	 */
+	function onDataBind() {
+		parent::onDataBind();
+		$Form =& $this->getOwnerForm();
+		// resolve variables and expressions on FILE and PARAMS attributes
+		if (preg_match("/~[^~]+~/", $this->remoteFile))
+			$this->remoteFile = $Form->resolveVariables($this->remoteFile);
+		if (preg_match("/~[^~]+~/", $this->params))
+			$this->params = $Form->resolveVariables($this->params);
+	}
+
+	/**
+	 * Validates the listener's properties
+	 *
+	 * @access protected
+	 * @return bool
+	 */
 	function validate() {
 		return (!empty($this->eventName) && !empty($this->remoteFile) && !empty($this->remoteFunction) && !empty($this->callback));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormJSRSListener::__toString
-	// @desc		Monta informações do listener, para exibição de mensagens de erro
-	// @access		protected
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds a string representation of the JSRS listener
+	 *
+	 * @return string
+	 */
 	function __toString() {
 		$info = $this->_Owner->getName();
 		if (isset($this->_ownerIndex))

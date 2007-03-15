@@ -1,134 +1,175 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/Pop3.class.php,v 1.15 2006/05/07 15:08:40 mpont Exp $
-// $Date: 2006/05/07 15:08:40 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.net.SocketClient');
-//------------------------------------------------------------------
 
-// @const POP3_OFF_STATE "0"
-// Define o estado inicial da classe, sem conexões ativas
+/**
+ * Initial state (not connected, inactive)
+ */
 define("POP3_OFF_STATE", 0);
-// @const POP3_AUTH_STATE "1"
-// Representa o AUTHENTICATION STATE do protocolo POP3
+/**
+ * POP3 authentication state
+ */
 define("POP3_AUTH_STATE", 1);
-// @const POP3_TRANS_STATE "2"
-// Representa o TRANSACTION STATE do protocolo POP3
+/**
+ * POP3 transaction state
+ */
 define("POP3_TRANS_STATE", 2);
-// @const POP3_UPDATE_STATE "3"
-// Representa o UPDATE STATE do protocolo POP3
+/**
+ * POP3 update state
+ */
 define("POP3_UPDATE_STATE", 3);
-// @const POP3_DEFAULT_PORT "110"
-// Porta padrão a ser utilizada em conexões pelo protocolo POP3
+/**
+ * Default POP3 port
+ */
 define("POP3_DEFAULT_PORT", 110);
-// @const POP3_DEFAULT_TIMEOUT "60"
-// Timeout padrão a ser utilizado, em segundos
+/**
+ * Default connection timeout
+ */
 define("POP3_DEFAULT_TIMEOUT", 60);
-// @const POP3_CRLF "\r\n"
-// Caractere(s) de final de linha padrão na classe
+/**
+ * Default line end character(s)
+ */
 define("POP3_CRLF", "\r\n");
 
-//!-----------------------------------------------------------------
-// @class		Pop3
-// @desc		Esta classe implementa a conexão com um servidor POP3,
-//				buscando informações e conteúdo de mensagens de correio.
-//				É compatível com o RFC 1939, implementando todos os seus
-//				comandos e a seqüência de estados
-// @package		php2go.net
-// @extends		SocketClient
-// @author		Marcos Pont
-// @version		$Revision: 1.15 $
-// @note		Exemplo de uso:
-//				<pre>
-//
-//				$pop = new Pop3();
-//				$pop->connect('localhost');
-//				$pop->login('foo', 'bar');
-//				$count = $pop->getMsgCount();
-//				for ($i=1; $i<=$count; $i++) {
-//					print $p->getHeaders($i);
-//					print $p->getBody($i);
-//				}
-//				print_r($p->listMessages());
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * POP3 client class
+ *
+ * Implementation of a POP3 client, which connects to a POP server
+ * and reads mail messages. The client was built according to the
+ * RFC1939, support all POP commands and state sequences.
+ *
+ * Example:
+ * <code>
+ * $pop = new Pop3();
+ * $pop->connect('my.pop.host');
+ * $pop->login('foo', 'bar');
+ * $count = $pop->getMessagesCount();
+ * for ($i=1; $i<$count; $i++) {
+ *   print $pop->getMessageHeaders($i);
+ *   print $pop->getMessageBody($i);
+ * }
+ * $pop->quit();
+ * </code>
+ *
+ * @package net
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Pop3 extends SocketClient
 {
-	var $debug = FALSE;				// @var debug bool			"FALSE" Indica se mensagens de debug devem ser geradas juntamente com a execução dos comandos	
-	var $state = POP3_OFF_STATE;	// @var state int			"POP3_OFF_STATE" Estado atual da conexão com o servidor POP (vide constantes da classe)
-	var $banner;					// @var banner string		Banner enviado como servidor em resposta à ativação da conexão
-	var $msgCount;					// @var msgCount int		Total de mensagens disponíveis no servidor POP
-	var $boxSize;					// @var boxSize int			Tamanho total da caixa de mensagens, em bytes
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::Pop3
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Connection state
+	 *
+	 * @var int
+	 */
+	var $state = POP3_OFF_STATE;
+
+	/**
+	 * Debug flag
+	 *
+	 * @var bool
+	 */
+	var $debug = FALSE;
+
+	/**
+	 * Banner sent by the POP server
+	 *
+	 * @var string
+	 */
+	var $banner;
+
+	/**
+	 * Total number of messages in the mailbox
+	 *
+	 * @var int
+	 */
+	var $msgCount;
+
+	/**
+	 * Total mailbox size, in bytes
+	 *
+	 * @var int
+	 */
+	var $boxSize;
+
+	/**
+	 * Holds messages already fetched in the current connection
+	 *
+	 * @var array
+	 */
+	var $_msgCache = array();
+
+	/**
+	 * Class constructor
+	 *
+	 * @return Pop3
+	 */
 	function Pop3() {
 		parent::SocketClient();
 		parent::setBufferSize(512);
 		parent::setLineEnd(POP3_CRLF);
-		$this->msgCount = NULL;		
+		$this->msgCount = NULL;
 		$this->boxSize = NULL;
 		parent::registerDestructor($this, '__destruct');
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::__destruct
-	// @desc		Destrutor da classe, encerra a última conexão se esta foi mantida aberta
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Class destructor
+	 *
+	 * Quits the POP connection if active.
+	 */
 	function __destruct() {
 		if ($this->state != POP3_OFF_STATE)
 			$this->quit();
 		unset($this);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::connect
-	// @desc		Conecta em um servidor POP
-	// @access		public
-	// @param		host string	Nome ou endereço do host
-	// @param		port int		"POP3_DEFAULT_PORT" Porta a ser utilizada na conexão
-	// @param		timeout int		"POP3_DEFAULT_TIMEOUT" Timeout para a conexão
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Connects to a given POP3 host
+	 *
+	 * @param string $host Host name or IP address
+	 * @param int $port Port
+	 * @param int $timeout Timeout
+	 * @return bool
+	 */
 	function connect($host, $port=POP3_DEFAULT_PORT, $timeout=POP3_DEFAULT_TIMEOUT) {
-		// fecha a conexão anterior, se existente
+		// close a previously opened connection
 		if ($this->state != POP3_OFF_STATE)
 			$this->quit();
-		// executa a função de conexão do socket
+		// create and connect the socket
 		if (!parent::connect($host, $port, NULL, $timeout)) {
 			$this->state = POP3_OFF_STATE;
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_POP3_CONNECTION', array_unshift(parent::getLastError(), $host)), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		} else {
-			// busca a resposta do servidor à solicitação de conexão	
+			// wait for server's response
 			if ($response = $this->_readResponse()) {
 				if ($this->debug)
 					print('POP3 DEBUG --- FROM SERVER : ' . $response . '<br>');
@@ -137,23 +178,21 @@ class Pop3 extends SocketClient
 				$this->state = POP3_AUTH_STATE;
 				return TRUE;
 			} else {
-				$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_CONNECTION', array($host, "---", $response));				
+				$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_CONNECTION', array($host, "---", $response));
 				return FALSE;
-			}			
+			}
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::login
-	// @desc		Busca realizar a autenticação no servidor POP3 utilizando
-	//				um nome de usuário e uma senha
-	// @access		public
-	// @param		userName string		Nome de usuário
-	// @param		password string		Senha de usuário
-	// @param		apop bool			"FALSE" Com o valor do TRUE, este parâmetro indica que o servidor implementa o comando APOP
-	// @return		bool
-	//!-----------------------------------------------------------------	
-	function login($userName, $password, $apop = FALSE) {
+
+	/**
+	 * Authenticates in the POP3 server
+	 *
+	 * @param string $userName Username
+	 * @param string $password Password
+	 * @param bool $apop Whether to use the APOP command
+	 * @return bool
+	 */
+	function authenticate($userName, $password, $apop = FALSE) {
 		if ($this->state == POP3_AUTH_STATE) {
 			if ($apop && $this->apop($userName, $password))
 				return TRUE;
@@ -163,161 +202,161 @@ class Pop3 extends SocketClient
 		$this->quit();
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::getServerBanner
-	// @desc		Busca o banner retornado pelo servidor no momento da 
-	//				autenticação
-	// @access		public
-	// @return		string Banner enviado pelo servidor POP
-	// @note		se o mesmo não implementa o comando APOP, este método 
-	//				deverá retornar uma string vazia
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the banner returned by the server upon connect
+	 *
+	 * @return string
+	 */
 	function getServerBanner() {
 		if (isset($this->banner))
 			return $this->banner;
 		else
 			return '';
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::getMsgCount
-	// @desc		Busca o total de mensagens disponíveis no servidor POP
-	// @access		public
-	// @return		int Total de mensagens, excluindo as marcadas para remoção
-	// @note		Este método retornará FALSE se o protocolo não estiver no
-	//				TRANSACTION STATE
-	//!-----------------------------------------------------------------
-	function getMsgCount() {
+
+	/**
+	 * Get messages count
+	 *
+	 * You should be connected to execute this method.
+	 *
+	 * @return int
+	 */
+	function getMessagesCount() {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		else {
 			if(!TypeUtils::isInteger($this->msgCount))
-				$this->stat();				
+				$this->stat();
 			return $this->msgCount;
-		}			
+		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::getMailboxSize
-	// @desc		Busca o tamanho total da caixa de mensagens no servidor
-	// @access		public
-	// @return		int Tamanho total da caixa de mensagens, em bytes
-	// @note		Este método retornará FALSE se o protocolo não estiver no
-	//				TRANSACTION STATE	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get mailbox size in bytes
+	 *
+	 * You should be connected to execute this method.
+	 *
+	 * @return int
+	 */
 	function getMailboxSize() {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		else {
 			if(!TypeUtils::isInteger($this->boxSize))
-				$this->stat();				
+				$this->stat();
 			return $this->boxSize;
-		}			
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::getMessage
-	// @desc		Busca o conteúdo de uma mensagem
-	// @access		public
-	// @param		msgId int		Código da mensagem
-	// @return		mixed Conteúdo da mensagem ou FALSE
-	//!-----------------------------------------------------------------	
-	function getMessage($msgId) {
-		return $this->retr($msgId);
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::getMessageHeaders
-	// @desc		Retorna o conteúdo dos cabeçalhos de uma mensagem
-	// @access		public
-	// @param		msgId int		Número da mensagem
-	// @param		parse bool	"FALSE" Se TRUE, retorna um vetor com os cabeçalhos parseados
-	// @return		mixed Conteúdo dos headers, na forma de uma string ou de um
-	//				vetor (parse = TRUE). Em caso de erros, retorna FALSE
-	//!-----------------------------------------------------------------
-	function getMessageHeaders($msgId, $parse = FALSE) {
-		if ($this->state != POP3_TRANS_STATE)
-			return FALSE;
-		if ($headers = $this->top($msgId))
-			if ($parse)
-				return $this->_parseHeaders($headers);
-			else
-				return $headers;
-		else
-			return FALSE;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::getMessageBody
-	// @desc		Método que busca o corpo de uma mensagem a partir de seu número
-	// @access		public
-	// @param		msgId int		Número da mensagem
-	// @return		mixed Corpo da mensagem ou FALSE em caso de erros
-	//!-----------------------------------------------------------------
-	function getMessageBody($msgId) {
-		if ($content = $this->getMessage($msgId)) {
-			if (StringUtils::match($content, "\r\n\r\n")) {
-				$pos = strpos($content, "\r\n\r\n");
-				return substr($content, $pos+4);
-			}
 		}
-		return NULL;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::listMessages
-	// @desc		Gera uma lista das mensagens disponíveis no servidor
-	//				contendo número, identificador único e tamanho
-	// @access		public
-	// @return		mixed Vetor contendo dados das mensagens ou FALSE em caso de erros
-	//!-----------------------------------------------------------------
-	function listMessages() {
+
+	/**
+	 * Get all available messages
+	 *
+	 * Returns a hash array where the keys are the
+	 * message IDs and the values are arrays containing
+	 * two keys: uniqueId and size.
+	 *
+	 * @return array
+	 */
+	function getAllMessages() {
 		$messageList = array();
 		$uidl = $this->uidl();
 		$list = $this->mList();
 		if ($uidl && $list) {
 			for($i=0; $i<sizeof($uidl); $i++) {
-				$messageList[] = array(
-					'number' => $uidl[$i][0],
-					'unique-id' => $uidl[$i][1],
+				$messageList[$uidl[$i][0]] = array(
+					'uniqueId' => $uidl[$i][1],
 					'size' => isset($list[$i]) ? $list[$i][1] : 0
 				);
 			}
 		}
 		return $messageList;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::clearMailBox
-	// @desc		Marca para deleção todas as mensagens armazenadas
-	// @access		public
-	// @return		int Número de mensagens deletadas
-	//!-----------------------------------------------------------------
-	function clearMailBox() {
+
+	/**
+	 * Get the contents of a given message
+	 *
+	 * You should be connected to execute this method.
+	 *
+	 * @param string $msgId Message ID
+	 * @return string
+	 */
+	function getMessage($msgId) {
+		if (isset($this->_msgCache[$msgId]))
+			return $this->_msgCache[$msgId];
+		return $this->retr($msgId);
+	}
+
+	/**
+	 * Get the headers of a given message
+	 *
+	 * You should be connected to execute this method.
+	 * Returns FALSE when the headers can't be read.
+	 *
+	 * @param string $msgId Message ID
+	 * @param bool $parse Whether to parse the raw headers and return them as a hash array
+	 * @return string|array|bool
+	 */
+	function getMessageHeaders($msgId, $parse=FALSE) {
+		if ($this->state != POP3_TRANS_STATE)
+			return FALSE;
+		if ($headers = $this->top($msgId, 0)) {
+			if ($parse)
+				return $this->_parseHeaders($headers);
+			return $headers;
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Get the body of a given message
+	 *
+	 * You should be connected to execute this method.
+	 * Returns FALSE when the message body can't be read.
+	 *
+	 * @param string $msgId Message ID
+	 * @return string|bool
+	 */
+	function getMessageBody($msgId) {
+		if ($content = $this->getMessage($msgId)) {
+			$pos = strpos($content, POP3_CRLF . POP3_CRLF);
+			if ($pos !== FALSE)
+				return substr($content, $pos+4);
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Deletes all messages of the mailbox
+	 *
+	 * @return int Number of deleted messages
+	 */
+	function deleteAllMessages() {
 		$deleted = 0;
 		if ($list = $this->mList())
 			foreach($list as $values)
 				$deleted += TypeUtils::parseInteger($this->dele($values[0]));
 		return $deleted;
 	}
-	
-	//------------------------------------------------------------------
-	//------------------------------------------------------------------
-	// COMANDOS SMTP - RFC 1939
-	//------------------------------------------------------------------
-	//------------------------------------------------------------------
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::user
-	// @desc		Envia o comando USER ao servidor POP3. Este comando envia
-	//				um nome de usuário para autenticação, que será verificado 
-	//				pelo servidor
-	// @access		public
-	// @param		userName string	Nome de usuário
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function user($userName) {	
+
+	/**
+	 * Delete a message from the mailbox
+	 *
+	 * @param string $msgId Message ID
+	 * @return bool
+	 */
+	function deleteMessage($msgId) {
+		return $this->dele($msgId);
+	}
+
+	/**
+	 * Sends the USER command
+	 *
+	 * @param string $userName Username
+	 * @access protected
+	 * @return bool
+	 */
+	function user($userName) {
 		if ($this->state != POP3_AUTH_STATE)
 			return FALSE;
 		$responseMessage = NULL;
@@ -327,50 +366,42 @@ class Pop3 extends SocketClient
 			return FALSE;
 		}
 		return TRUE;
-	}	
+	}
 
-	//!-----------------------------------------------------------------
-	// @function	Pop3::pass
-	// @desc		Envia o comando PASS ao servidor POP3. Este comando deverá
-	//				ser executado imediatamente após o comando USER, fornecendo
-	//				a senha que corresponde ao USERNAME anteriormente fornecido
-	// @access		public
-	// @param		pass string	Senha de usuário
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Sends the PASS command
+	 *
+	 * This command must be executed right after the USER command.
+	 *
+	 * @param string $password Password
+	 * @access protected
+	 * @return bool
+	 */
 	function pass($password) {
 		if ($this->state != POP3_AUTH_STATE)
-			return FALSE;	
-		// envia a senha requisitando autenticação
-		$responseMessage = NULL;		
+			return FALSE;
+		$responseMessage = NULL;
 		$data = sprintf("PASS %s%s", $password, POP3_CRLF);
 		if (!$this->_sendData($data, $responseMessage)) {
-			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_AUTHENTICATE');			
+			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_AUTHENTICATE');
 			return FALSE;
 		}
 		$this->state = POP3_TRANS_STATE;
 		return TRUE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::apop
-	// @desc		Envia o comando APOP ao servidor POP3, que permite realizar
-	//				a autenticação de um usuário sem que a senha seja enviada
-	//				em claro através da rede
-	// @access		public
-	// @param		userName string	Nome de usuário
-	// @param		password string	Senha de usuário
-	// @return		bool Retorna FALSE caso o servidor não tenha enviado um banner
-	//				no momento da conexão ou caso o comando APOP não for aceito.
-	//				Se a autenticação for realizada com sucesso, retorna TRUE
-	// @note		Para verificar se o servidor implementa o comando APOP, ative
-	//				o debug na classe (Pop3->debug = TRUE) ou execute o comando
-	//				Pop3::getServerBanner() após Pop3::connect(). Este método deverá
-	//				retornar uma string no formato process-ID.clock@hostname, 
-	//				gerada pelo servidor POP no momento da conexão e que será utilizada
-	//				posteriormente pelo comando APOP para realizar a autenticação de
-	//				usuários
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Sends the APOP command
+	 *
+	 * If the POP server doesn't accept the APOP command, or doesn't
+	 * have a banner, FALSE is returned. If the authentication returns
+	 * success, TRUE is returned.
+	 *
+	 * @param string $userName Username
+	 * @param string $password Password
+	 * @access protected
+	 * @return bool
+	 */
 	function apop($userName, $password) {
 		if ($this->state != POP3_AUTH_STATE)
 			return FALSE;
@@ -378,7 +409,7 @@ class Pop3 extends SocketClient
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_APOP');
 			return FALSE;
 		}
-		$responseMessage = NULL;		
+		$responseMessage = NULL;
 		$data = sprintf("APOP %s %s%s", $userName, md5($this->banner . $password), POP3_CRLF);
 		if (!$this->_sendData($data, $responseMessage)) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_AUTHENTICATE');
@@ -387,21 +418,22 @@ class Pop3 extends SocketClient
 		$this->state = POP3_TRANS_STATE;
 		return TRUE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::stat
-	// @desc		Envia o comando STAT ao servidor, buscando o total de
-	//				mensagens disponíveis (não incluindo as mensagems marcadas
-	//				para remoção) e o total em bytes da caixa de correio
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------	
+
+	/**
+	 * Sends the STAT command
+	 *
+	 * The STAT command collects information about the user's mailbox.
+	 * Thus, it populates the {@link msgCount} and {@link boxSize}
+	 * properties.
+	 *
+	 * @access protected
+	 * @return bool
+	 */
 	function stat() {
 		if ($this->state != POP3_TRANS_STATE)
-			return FALSE;		
-		// envia uma solicitação de status da caixa de mensagens
+			return FALSE;
 		$data = sprintf("STAT%s", POP3_CRLF);
-		$responseMessage = NULL;		
+		$responseMessage = NULL;
 		if (!$this->_sendData($data, $responseMessage)) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('STAT', $responseMessage));
 			return FALSE;
@@ -413,44 +445,46 @@ class Pop3 extends SocketClient
 			return TRUE;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::retr
-	// @desc		Envia o comando RETR ao servidor, que solicita o conteúdo
-	//				de uma mensagem a partir de seu código
-	// @access		public
-	// @param		msgId int		Número da mensagem
-	// @return		mixed Conteúdo da mensagem ou FALSE em caso de erros
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Sends the RETR command
+	 *
+	 * The RETR command retrieves the contents of a message given its ID.
+	 *
+	 * @param string $msgId Message ID
+	 * @return string Message contents
+	 * @access protected
+	 */
 	function retr($msgId) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		// solicita o conteúdo de uma mensagem através de seu ID
-		$responseMessage = NULL;		
+		$responseMessage = NULL;
 		$data = sprintf("RETR %s%s", $msgId, POP3_CRLF);
 		if (!$this->_sendData($data, $responseMessage)) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('STAT', $responseMessage));
-			return FALSE;			
+			return FALSE;
 		} else {
 			$msgData = $this->_readAll();
 			return $msgData;
-		}	
+		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::top
-	// @desc		Envia o comando TOP ao servidor, que solicita um determinado
-	//				número de linhas de uma mensagem
-	// @access		public
-	// @param		msgId int		Número da mensagem	
-	// @param		numLines int	"0" Número de linhas solicitadas
-	// @return		mixed Linhas solicitadas ou FALSE em caso de erros
-	//!-----------------------------------------------------------------
-	function top($msgId, $numLines = 0) {
+
+	/**
+	 * Sends the TOP command
+	 *
+	 * The TOP command requests the headers of the
+	 * message and the first N lines of the
+	 * message body.
+	 *
+	 * @param string $msgId Message ID
+	 * @param int $numLines Number of body lines
+	 * @return string Message headers and body
+	 * @access protected
+	 */
+	function top($msgId, $numLines=0) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		// solicita um determinado número de linhas de uma mensagem
-		$responseMessage = NULL;		
+		$responseMessage = NULL;
 		$data = sprintf("TOP %s %d%s", $msgId, TypeUtils::parseIntegerPositive($numLines), POP3_CRLF);
 		if (!$this->_sendData($data, $responseMessage)) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('TOP', $responseMessage));
@@ -458,60 +492,60 @@ class Pop3 extends SocketClient
 		}
 		return $this->_readAll();
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::dele
-	// @desc		Envia o comando DELE ao servidor POP, marcando para
-	//				deleção uma mensagem a partir de seu número
-	// @access		public
-	// @param		msgId int		Número da mensagem
-	// @return		bool
-	// @note		As mensagens marcadas com o comando DELE somente serão 
-	//				deletadas após a execução do comando QUIT
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Sends the DELE command
+	 *
+	 * Deletes a message given its ID. Delete messages
+	 * will only be purged after the connection is closed.
+	 *
+	 * @param string $msgId Message ID
+	 * @access protected
+	 * @return bool
+	 */
 	function dele($msgId) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		$responseMessage = NULL;			
+		$responseMessage = NULL;
 		$data = sprintf("DELE %s%s", $msgId, POP3_CRLF);
 		if (!$this->_sendData($data, $responseMessage)) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('DELE', $responseMessage));
 			return FALSE;
 		}
+		if (isset($this->_msgCache[$msgId]))
+			unset($this->_msgCache[$msgId]);
 		return TRUE;
-	}		
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::mList
-	// @desc		Envia o comando LIST ao servidor POP
-	// @access		public
-	// @param		msgId int		"NULL" Número da mensagem
-	// @return		array Vetor contendo número e tamanho da mensagem solicitada ou de todas as mensagens
-	// @note		Se um número de mensagem for fornecido, retorna um vetor contendo número e tamanho 
-	//				da mensagem. Do contrário, retorna um vetor contendo números e tamanhos de todas as mensagens
-	//!-----------------------------------------------------------------
-	function mList($msgId = NULL) {
+	}
+
+	/**
+	 * Sends a LIST command
+	 *
+	 * Collects ID and size of a specific message
+	 * ID or of all messages in the mailbox.
+	 *
+	 * @param string $msgId Optional message ID
+	 * @access protected
+	 * @return array
+	 */
+	function mList($msgId=NULL) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		$responseMessage = NULL;			
+		$responseMessage = NULL;
 		if (TypeUtils::isNull($msgId)) {
 			$data = sprintf("LIST%s", POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
-				// busca todas as linhas disponíveis
-				$lines = explode("\r\n", $this->_readAll());
+				$lines = explode(POP3_CRLF, $this->_readAll());
 				$return = array();
-				// monta um vetor com número e tamanho das mensagens
 				foreach($lines as $line) {
 					if (ereg("([0-9]+)[ ]([0-9]+)", $line, $matches)) {
 						$return[] = array($matches[1], $matches[2]);
 					}
 				}
-				return $return;			
+				return $return;
 			}
 		} else {
 			$data = sprintf("LIST %s%s", $msgId, POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
-				// monta um vetor com número e tamanho da mensagem
 				if (ereg("([0-9]+)[ ]([0-9]+)", $responseMessage, $matches))
 					return array($matches[1], $matches[2]);
 				else
@@ -519,61 +553,59 @@ class Pop3 extends SocketClient
 			}
 		}
 		$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('LIST', $responseMessage));
-		return FALSE;		
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::uidl
-	// @desc		Envia o comando UIDL ao servidor POP
-	// @access		public
-	// @param		msgId int		"NULL" Número da mensagem
-	// @return		array Vetor contendo número e identificador da mensagem solicitada ou de todas as mensagens
-	// @note		Se um número de mensagem for fornecido, retorna um vetor contendo número e identificador 
-	//				único. Do contrário, retorna um vetor contendo números e identificadores únicos de todas as mensagens
-	//!-----------------------------------------------------------------
-	function uidl($msgId = NULL) {
+		return FALSE;
+	}
+
+	/**
+	 * Sends the UIDL command
+	 *
+	 * Collects number and unique-ID of a given message
+	 * ID or of all messages in the mailbox.
+	 *
+	 * @param string $msgId Message ID
+	 * @access protected
+	 * @return array
+	 */
+	function uidl($msgId=NULL) {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		$responseMessage = NULL;			
+		$responseMessage = NULL;
 		if (TypeUtils::isNull($msgId)) {
 			$data = sprintf("UIDL%s", POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
-				// lê todas as linhas disponíveis, com os dados das mensagens
-				$lines = explode("\r\n", $this->_readAll());
+				$lines = explode(POP3_CRLF, $this->_readAll());
 				$return = array();
-				// monta um vetor com número e unique-id das mensagens
 				foreach($lines as $line) {
 					if (ereg("([0-9]+)[ ](.+)", $line, $matches)) {
 						$return[] = array($matches[1], $matches[2]);
 					}
 				}
-				return $return;			
+				return $return;
 			}
 		} else {
 			$data = sprintf("UIDL %s%s", $msgId, POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
-				// monta um vetor com número e unique-id da mensagem solicitada
 				if (ereg("([0-9]+)[ ](.+)", $responseMessage, $matches))
 					return array($matches[1], $matches[2]);
 				else
-					return FALSE;			
+					return FALSE;
 			}
 		}
 		$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('UIDL', $responseMessage));
-		return FALSE;		
+		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::rset
-	// @desc		Envia o comando RSET ao servidor POP, que reseta o status do servidor 
-	//				remoto: todas as marcas de deleção em mensagens são desfeitas e a conexão é fechada
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Sends an RSET command
+	 *
+	 * All delete marks are undone and the connection is closed.
+	 *
+	 * @return bool
+	 */
 	function rset() {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		$responseMessage = NULL;			
+		$responseMessage = NULL;
 		$data = sprintf("RSET%s", POP3_CRLF);
 		if (!$retVal = $this->_sendData($data, $responseMessage)) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('RSET', $responseMessage));
@@ -582,64 +614,60 @@ class Pop3 extends SocketClient
 		$this->quit();
 		return $retVal;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::noop
-	// @desc		Envia o comando NOOP ao servidor POP
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Sends a NOOP command
+	 *
+	 * @return mixed Return value
+	 */
 	function noop() {
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
-		$responseMessage = NULL;			
+		$responseMessage = NULL;
 		$data = sprintf("NOOP%s", POP3_CRLF);
 		if (!$retVal = $this->_sendData($data, $responseMessage))
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('NOOP', $responseMessage));
 		return $retVal;
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::quit
-	// @desc		Envia o comando QUIT ao servidor, fechando a conexão
-	// @access		public
-	// @return		bool
-	// @note		Se for executado no TRANSACTION STATE, altera o estado
-	//				do protocolo para UPDATE (remoção das mensagens solicitadas).
-	//				Em caso contrário, altera para o estado OFF (desconectado)
-	//!-----------------------------------------------------------------	
+	}
+
+	/**
+	 * Sends a QUIT command
+	 *
+	 * @return bool
+	 */
 	function quit() {
-		// altera o estado atual do protocolo
+		$this->_msgCache = array();
 		if ($this->state == POP3_TRANS_STATE)
 			$this->state = POP3_UPDATE_STATE;
 		else
 			$this->state = POP3_OFF_STATE;
-		// envia o comando QUIT
-		$responseMessage = NULL;		
+		$responseMessage = NULL;
 		$data = sprintf("QUIT%s", POP3_CRLF);
-		if (!$this->_sendData($data, $responseMessage)) {
+		if (!$this->_sendData($data, $responseMessage))
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('QUIT', $responseMessage));
-		}
 		parent::close();
 		return TRUE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::_sendData
-	// @desc		Envia um comando ou requisição ao servidor POP, buscando
-	//				a respectiva mensagem de resposta
-	// @access		private
-	// @param		data string				Conteúdo do comando ou requisição
-	// @param		&responseMessage string	Variável por onde retorna a mensagem de resposta
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Internal method used to send information through
+	 * the socket connection
+	 *
+	 * Searches for "+OK" in the start of the response message
+	 * to flag the command as successful.
+	 *
+	 * @param string $data Command data
+	 * @param string &$responseMessage Used to catch the response data
+	 * @access private
+	 * @return bool
+	 */
 	function _sendData($data, &$responseMessage) {
 		$this->resetError();
 		if (parent::write($data) && $responseMessage = $this->_readResponse()) {
 			if ($this->debug) {
 				print('POP3 DEBUG --- FROM CLIENT : ' . htmlspecialchars($data) . '<br>');
 				print('POP3 DEBUG --- FROM SERVER : ' . htmlspecialchars($responseMessage) . '<br>');
-			}		
+			}
 			if (ereg("^\+OK", $responseMessage)) {
 				$responseMessage = trim(substr($responseMessage, 3));
 				return TRUE;
@@ -650,60 +678,67 @@ class Pop3 extends SocketClient
 		} else {
 			return FALSE;
 		}
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::_readResponse
-	// @desc		Lê uma linha através do socket conectado ao servidor POP,
-	//				buscando uma mensagem de resposta a um comando ou requisição
-	// @access		private
-	// @return		string Linha lida do socket ou FALSE em caso de erros na conexão
-	//!-----------------------------------------------------------------
+	}
+
+	/**
+	 * Read a line from the POP3 connection
+	 *
+	 * Returns FALSE when EOF is reached or when the connection is inactive.
+	 *
+	 * @access private
+	 * @return string|FALSE
+	 */
 	function _readResponse() {
 		return parent::readLine();
 	}
-	
-    //!-----------------------------------------------------------------
-	// @function	Pop3::_readAll
-	// @desc		Lê várias linhas através do socket ativo, até encontrar
-	//				uma linha contendo apenas um período (fim do conteúdo)
-	// @access		private
-	// @return		string Conteúdo lido
-	//!-----------------------------------------------------------------
-	function _readAll() {		
+
+    /**
+     * Read lines from the POP3 connection until a line
+     * containing just one period char is found
+     *
+     * @access private
+     * @return string
+     */
+	function _readAll() {
         $data = '';
-		while (($line = parent::readLine()) != '.') {
-			if (StringUtils::left($line, 2) == '..')
+        $line = parent::readLine();
+        while ($line !== FALSE && trim($line) != '.') {
+			if (substr($line, 0, 2) == '..')
 				$line = substr($line, 1);
-			$data .= $line . POP3_CRLF;
+			$data .= trim($line) . POP3_CRLF;
+			$line = parent::readLine();
 		}
-		return StringUtils::left($data, -2);
-    }	
-	
-	//!-----------------------------------------------------------------
-	// @function	Pop3::_parseHeaders
-	// @desc		Monta um vetor associativo dos cabeçalhos de uma mensagem
-	// @access		private
-	// @param		headers string	Conteúdo dos headers de uma mensagem
-	// @return		array Vetor associativo de nomes => valores dos cabeçalhos
-	//!-----------------------------------------------------------------
-	function _parseHeaders($headers) {
-		$headers = preg_replace("/\r\n[ \t]+/", ' ', $headers);
-		$headerList = explode("\r\n", $headers);
+		return substr($data, 0, -2);
+    }
+
+	/**
+	 * Parse the headers of a message
+	 *
+	 * @param string $rawHeaders Raw message headers
+	 * @access private
+	 * @return array
+	 */
+	function _parseHeaders($rawHeaders) {
 		$headers = array();
-		foreach ($headerList as $key => $value) {
-			if (StringUtils::match($value, ':')) {
-				ereg("([^:]+):(.+)", $value, $matches);
-				$name = trim($matches[1]);
-				$value = trim($matches[2]);
-				// os headers repetidos serão retornados na forma de um array
-				if (isset($headers[$name]))
-					if (TypeUtils::isArray($headers[$name]))
-						$headers[$name][] = $value;
+		$matches = array();
+		$headerList = explode(POP3_CRLF, $rawHeaders);
+		foreach ($headerList as $headerItem) {
+			if (preg_match("/^([a-zA-Z_\-]+)\:(.*)/", $headerItem, $matches)) {
+				$headerName = trim($matches[1]);
+				$headerValue = trim($matches[2]);
+				if (isset($headers[$headerName])) {
+					if (is_array($headers[$headerName]))
+						$headers[$headerName][] = $headerValue;
 					else
-						$headers[$name] = array($headers[$name], $value);
+						$headers[$headerName] = array($headers[$headerName], $headerValue);
+				} else {
+					$headers[$headerName] = $headerValue;
+				}
+			} else {
+				if (is_array($headers[$headerName]))
+					$headers[$headerName][sizeof($headers[$headerName])-1] .= POP3_CRLF . trim($headerItem);
 				else
-					$headers[$name] = $value;
+					$headers[$headerName] .= POP3_CRLF . trim($headerItem);
 			}
 		}
 		return $headers;

@@ -1,126 +1,298 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/MailMessage.class.php,v 1.29 2006/10/11 22:05:02 mpont Exp $
-// $Date: 2006/10/11 22:05:02 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
+import('php2go.datetime.Date');
 import('php2go.net.HttpRequest');
 import('php2go.net.MailPart');
 import('php2go.net.MailTransport');
 import('php2go.net.MimeType');
 import('php2go.template.Template');
-//------------------------------------------------------------------
+import('php2go.text.StringUtils');
 
-// @const	MAIL_RECIPIENT_TO	"1"
-// Constante para permitir referência ao tipo de recipiente "To:"
+/**
+ * Recipient type "To"
+ */
 define('MAIL_RECIPIENT_TO', 1);
-// @const	MAIL_RECIPIENT_CC	"2"
-// Permite referência ao tipo de recipiente "Cc:"
+/**
+ * Recipient type "Cc"
+ */
 define('MAIL_RECIPIENT_CC', 2);
-// @const	MAIL_RECIPIENT_BCC	"3"
-// Referencia-se ao tipo de recipiente "Bcc:"
+/**
+ * Recipient type "Bcc"
+ */
 define('MAIL_RECIPIENT_BCC', 3);
-// @const	MAIL_RECIPIENT_REPLYTO	"4"
-// Referencia-se ao tipo de recipiente "Reply-to:"
+/**
+ * Recipient type "Reply-to"
+ */
 define('MAIL_RECIPIENT_REPLYTO', 4);
 
-//!-----------------------------------------------------------------
-// @class		MailMessage
-// @desc		Classe que permite construir uma mensagem de e-mail
-//				MIME, de acordo com a especificação RFC 822. Constrói
-//				cabeçalhos e corpo da mensagem, adiciona arquivos anexos
-//				e imagens embebidas em HTML.
-// @package		php2go.net
-// @extends		PHP2Go
-// @uses		Environment
-// @uses		HttpRequest
-// @uses		MailPart
-// @uses		MailTransport
-// @uses		MimeType
-// @uses		StringUtils
-// @uses		Template
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.29 $
-// @note		Exemplo de uso:
-//				<pre>
-//
-//				$Msg = new MailMessage();
-//				$Msg->setSubject("foo");
-//				$Msg->setFrom("john@foo.com", "John");
-//				$Msg->addTo("paul@bar.org", "Paul");
-//				$Msg->addCC("mary@baz.org", "Mary");
-//				$Msg->setHtmlBody("
-//					&lt;html&gt;&lt;body&gt;
-//						&lt;table&gt;&lt;tr&gt;&lt;td&gt;
-//							This is HTML mail!
-//						&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-//					&lt;/body&gt;&lt;/html&gt;");
-//				$Msg->build();
-//				$Transport =& $Msg->getTransport();
-//				$Transport->setType(MAIL_TRANSPORT_SMTP, array('server'=>'foo.org', 'port'=>25));
-//				$Transport->send();
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * Builds MIME mail messages, according to RFC822
+ *
+ * Example:
+ * <code>
+ * $msg = new MailMessage();
+ * $msg->setSubject('Hello there!');
+ * $msg->setFrom('john@foo.com', 'John');
+ * $msg->setConfirmReading();
+ * $msg->useMicrosoftHeaders(TRUE);
+ * $msg->addTo('paul@bar.org', 'Paul');
+ * $msg->addCc('mary@baz.org', 'Mary');
+ * $msg->addBcc('anna@xpto.com', 'Anna');
+ * $msg->setHtmlBody('
+ *   <html><body>
+ *     <table><tr><td>
+ *       This is HTML mail!
+ *     </td></tr></table>
+ *   </body></html>');
+ * $msg->build();
+ * $transp =& $msg->getTransport();
+ * $transp->setType(MAIL_TRANSPORT_SMTP, array('server'=>'foo.com', 'port'=>25));
+ * if ($transp->send()) {
+ *   print 'Message successfully sent!';
+ * } else {
+ *   print 'Error sending message: ' . $transp->getErrorMessage();
+ * }
+ * </code>
+ *
+ * @package net
+ * @uses Environment
+ * @uses HttpRequest
+ * @uses MailPart
+ * @uses MailTransport
+ * @uses MimeType
+ * @uses StringUtils
+ * @uses Template
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class MailMessage extends PHP2Go
 {
-	var $from;							// @var from string						Endereço do remetente
-	var $fromName;						// @var fromName string					Nome do remetente
-	var $subject = '';					// @var subject string					Assunto da mensagem
-	var $to = array();					// @var to array						"array()" Vetor de destinatários do tipo To
-	var $cc = array();					// @var cc array						"array()" Vetor de destinatários do tipo Cc
-	var $bcc = array();					// @var bcc array						"array()" Vetor de destinatários do tipo Bcc
-	var $replyto = array();				// @var replyto array					"array()" Vetor de endereços de reply
-	var $confirmReading;				// @var confirmReading string			Endereço para envio de confirmação de leitura
-	var $headers = array();				// @var headers array					"array()" Vetor de cabeçalhos
-	var $customHeaders = array();		// @var customHeaders array				"array()" Vetor de headers adicionados pelo usuário
-	var $msHeaders = FALSE;				// @var msHeaders bool					"FALSE" Indica se os cabeçalhos Microsoft devem ser incluídos na mensagem
-	var $textBody;						// @var textBody string					Corpo de texto da mensagem
-	var $htmlBody;						// @var htmlBody string					Corpo HTML da mensagem
-	var $wordWrap;						// @var wordWrap int					Tamanho da linha da mensagem
-	var $attachments = array();			// @var attachments array				"array()" Vetor de arquivos anexos da mensagem
-	var $embeddedFiles = array();		// @var embeddedFiles array				"array()" Vetor de arquivos embebidos no corpo da mensagem
-	var $hostName;						// @var hostName string					Nome do host local
-	var $mailType;						// @var mailType string					Tipo da mensagem
-	var $charset;						// @var charset string					Charset da mensagem
-	var $contentType;					// @var contentType string				Tipo do conteúdo da mensagem
-	var $contentEncoding;				// @var contentEncoding string			Tipo de codificação da mensagem
-	var $priority;						// @var priority int					Prioridade da mensagem
-	var $body;							// @var body string						Conteúdo do corpo da mensagem
-	var $lineEnd;						// @var lineEnd string					Caractere(s) de final de linha
-	var $xMailer;						// @var xMailer string					Nome do X-Mailer
-	var $uniqueId;						// @var uniqueId string					String randômica que representa o ID da mensagem
-	var $built;							// @var built bool						Indica que a mensagem já foi construída com o método MailMessage::build
+	/**
+	 * Message charset
+	 *
+	 * @var string
+	 */
+	var $charset;
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::MailMessage
-	// @desc		Construtor da classe. Executa o construtor da classe
-	//				pai e inicializa as propriedades da classe com seus
-	//				valores padrão
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Message content type
+	 *
+	 * @var string
+	 */
+	var $contentType;
+
+	/**
+	 * Message content encoding
+	 *
+	 * @var string
+	 */
+	var $contentEncoding;
+
+	/**
+	 * Message subject
+	 *
+	 * @var string
+	 */
+	var $subject = '';
+
+	/**
+	 * Sender's address
+	 *
+	 * @var string
+	 */
+	var $from;
+
+	/**
+	 * Sender's name
+	 *
+	 * @var string
+	 */
+	var $fromName;
+
+	/**
+	 * List of "To" recipients
+	 *
+	 * @var array
+	 */
+	var $to = array();
+
+	/**
+	 * List of "Cc" recipients
+	 *
+	 * @var array
+	 */
+	var $cc = array();
+
+	/**
+	 * List of "Bcc" recipients
+	 *
+	 * @var array
+	 */
+	var $bcc = array();
+
+	/**
+	 * List of "Reply-to" recipients
+	 *
+	 * @var array
+	 */
+	var $replyto = array();
+
+	/**
+	 * Return receipt address
+	 *
+	 * @var string
+	 */
+	var $confirmReading;
+
+	/**
+	 * Message headers
+	 *
+	 * @var array
+	 */
+	var $headers = array();
+
+	/**
+	 * Customized headers
+	 *
+	 * @var array
+	 */
+	var $customHeaders = array();
+
+	/**
+	 * Whether Microsoft headers should be sent
+	 *
+	 * @var bool
+	 */
+	var $msHeaders = FALSE;
+
+	/**
+	 * Message priority
+	 *
+	 * @var int
+	 */
+	var $priority;
+
+	/**
+	 * Message text body
+	 *
+	 * @var string
+	 */
+	var $textBody;
+
+	/**
+	 * Message HTML body
+	 *
+	 * @var string
+	 */
+	var $htmlBody;
+
+	/**
+	 * Line wrap
+	 *
+	 * @var int
+	 */
+	var $wordWrap;
+
+	/**
+	 * Message attachments
+	 *
+	 * @var array
+	 */
+	var $attachments = array();
+
+	/**
+	 * Message embedded files
+	 *
+	 * @var array
+	 */
+	var $embeddedFiles = array();
+
+	/**
+	 * Message host name
+	 *
+	 * @var string
+	 */
+	var $hostName;
+
+	/**
+	 * Detected mail type
+	 *
+	 * The mail type can assume one of the following values:
+	 * plan, related, mixed or alternative. This type depends
+	 * on the contents of the message (attachments, embedded
+	 * files, HTML body, ...).
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $mailType;
+
+	/**
+	 * Final message body, containing
+	 * all headers and parts
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $body;
+
+	/**
+	 * Line end characters
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $lineEnd;
+
+	/**
+	 * Message X-Mailer
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $xMailer;
+
+	/**
+	 * Indicates that the message has already been built
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $built;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return MailMessage
+	 */
 	function MailMessage() {
 		parent::PHP2Go();
 		$this->charset = PHP2Go::getConfigVal('CHARSET', FALSE);
@@ -142,88 +314,78 @@ class MailMessage extends PHP2Go
 		$this->built = FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getCharset
-	// @desc		Retorna o charset definido para a mensagem
-	// @return		string Charset da mensagem
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get message's charset
+	 *
+	 * @return string
+	 */
 	function getCharset() {
 		return $this->charset;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setCharset
-	// @desc		Configura o charset da mensagem
-	// @param		charset string	Valor para o charset
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set message's charset
+	 *
+	 * @param string $charset
+	 */
 	function setCharset($charset) {
 		$this->charset = $charset;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getContentType
-	// @desc		Retorna o tipo MIME da mensagem
-	// @return		string Tipo MIME da mensagem
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get message's content type
+	 *
+	 * Content type can't be overriden because it's determined,
+	 * according to the message parts.
+	 *
+	 * @return string
+	 */
 	function getContentType() {
 		return $this->contentType;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getEncoding
-	// @desc		Retorna o tipo de codificação da mensagem
-	// @return		string Tipo de codificação
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get message's content encoding
+	 *
+	 * @return string
+	 */
 	function getEncoding() {
 		return $this->contentEncoding;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setEncoding
-	// @desc		Atribui um tipo de codificação para o conteúdo da mensagem
-	// @param		encoding string	Tipo de codificação
-	// @note		O padrão da classe para o conteúdo de texto da mensagem
-	//				é 8bit. Este valor pode ser alterado para 7bit ou quoted-printable
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set message's content encoding
+	 *
+	 * @param string $encoding Encoding
+	 */
 	function setEncoding($encoding) {
 		$this->contentEncoding = $encoding;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getFrom
-	// @desc		Retorna o endereço do remetente da mensagem
-	// @return		string Endereço do remetente
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get sender's address
+	 *
+	 * @return string
+	 */
 	function getFrom() {
 		return $this->from;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getFromName
-	// @desc		Retorna o nome do remetente da mensagem
-	// @return		string Nome do remetente
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get sender's name
+	 *
+	 * @return string
+	 */
 	function getFromName() {
 		return $this->fromName;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setFrom
-	// @desc		Configura o endereço e o nome do remetente da mensagem
-	// @param		address string	Endereço do remetente
-	// @param		name string		"" Nome do remetente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set message sender
+	 *
+	 * @param string $address Sender's email
+	 * @param string $name Sender's name
+	 */
 	function setFrom($address, $name='') {
 		$this->from = $address;
 		if (!empty($name)) {
@@ -231,70 +393,34 @@ class MailMessage extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getSubject
-	// @desc		Retorna o assunto da mensagem
-	// @return		string Assunto da mensagem
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get message's subject
+	 *
+	 * @return string
+	 */
 	function getSubject() {
 		return $this->subject;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setSubject
-	// @desc		Seta o assunto da mensagem para um determinado valor
-	// @param		subject string	Assunto da mensagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set message's subject
+	 *
+	 * @param string $subject New subject
+	 */
 	function setSubject($subject) {
 		$this->subject = $subject;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getPriority
-	// @desc		Retorna a prioridade da mensagem
-	// @return		string Prioridade da mensagem
-	// @see			MailMessage::setPriority
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getPriority() {
-		return $this->priority;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getHostName
-	// @desc		Retorna o nome do host onde a mensagem é construída
-	// @return		string Nome do host local
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getHostName() {
-		return $this->hostName;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setHostName
-	// @desc		Define o nome ou endereço do host local
-	// @param		hostName string	Nome para o host local
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setHostName($hostName) {
-		$this->hostName = $hostName;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::getRecipients
-	// @desc		Busca os destinatários da mensagem de um determinado tipo
-	// @param		recipientType int		Tipo de recipiente
-	// @return		array Vetor contendo os destinatários ou FALSE caso o tipo seja inválido
-	// @note		O parâmetro $recipientType aceita os valores definidos
-	//				nas constantes da classe: MAIL_RECIPIENT_TO, MAIL_RECIPIENT_CC,
-	//				MAIL_RECIPIENT_BCC e MAIL_RECIPIENT_REPLYTO
-	// @see			MailMessage::hasRecipients
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the recipients of a given type
+	 *
+	 * Available recipient types: {@link MAIL_RECIPIENT_TO},
+	 * {@link MAIL_RECIPIENT_CC}, {@link MAIL_RECIPIENT_BCC}
+	 * and {@link MAIL_RECIPIENT_REPLYTO}.
+	 *
+	 * @param int $recipientType Recipient type
+	 * @return array|NULL
+	 */
 	function getRecipients($recipientType) {
 		switch($recipientType) {
 			case MAIL_RECIPIENT_TO :
@@ -310,14 +436,12 @@ class MailMessage extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::hasRecipients
-	// @desc		Verifica se a mensagem possui destinatários de um determinado tipo
-	// @param		recipientType int		Tipo de recipiente
-	// @see			MailMessage::getRecipients
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the message has recipients of a given type
+	 *
+	 * @param int $recipientType Recipient type
+	 * @return bool
+	 */
 	function hasRecipients($recipientType) {
 		switch($recipientType) {
 			case MAIL_RECIPIENT_TO :
@@ -333,64 +457,57 @@ class MailMessage extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addTo
-	// @desc		Adiciona um ou mais destinatários do tipo "To:"
-	// @param		address string	Endereço do destinatário
-	// @param		name string		"" Nome do destinatário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a "To" recipient
+	 *
+	 * @param string $address E-mail address
+	 * @param string $name Name
+	 */
 	function addTo($address, $name = '') {
 		$this->addRecipient(MAIL_RECIPIENT_TO, $address, $name);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addCC
-	// @desc		Adiciona um ou mais destinatários do tipo "Cc:"
-	// @param		address string	Endereço do destinatário
-	// @param		name string		"" Nome do destinatário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a "Cc" recipient
+	 *
+	 * @param string $address E-mail address
+	 * @param string $name Name
+	 */
 	function addCc($address, $name = '') {
 		$this->addRecipient(MAIL_RECIPIENT_CC, $address, $name);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addBCC
-	// @desc		Adiciona um ou mais destinatários do tipo "Bcc:"
-	// @param		address string	Endereço do destinatário
-	// @param		name string		"" Nome do destinatário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a "Bcc" recipient
+	 *
+	 * @param string $address E-mail address
+	 * @param string $name Name
+	 */
 	function addBcc($address, $name = '') {
 		$this->addRecipient(MAIL_RECIPIENT_BCC, $address, $name);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addReplyTo
-	// @desc		Adiciona um ou mais destinatários do tipo "Reply-to:"
-	// @param		address string	Endereço do destinatário de resposta
-	// @param		name string		"" Nome do destinatário de resposta
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a "Reply-to" recipient
+	 *
+	 * @param string $address E-mail address
+	 * @param string $name Name
+	 */
 	function addReplyTo($address, $name = '') {
 		$this->addRecipient(MAIL_RECIPIENT_REPLYTO, $address, $name);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addRecipient
-	// @desc		Método genérico para inclusão de um ou mais destinatários
-	//				a partir de seu tipo, endereços e nomes
-	// @param		recipientType int	Tipo de destinatário (vide constantes da classe)
-	// @param		address string	Endereço do destinatário
-	// @param		name string		"" Nome do destinatário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Generic method to add recipients
+	 *
+	 * Available recipient types: {@link MAIL_RECIPIENT_TO},
+	 * {@link MAIL_RECIPIENT_CC}, {@link MAIL_RECIPIENT_BCC}
+	 * and {@link MAIL_RECIPIENT_REPLYTO}.
+	 *
+	 * @param int $recipientType Type
+	 * @param string $address E-mail address
+	 * @param string $name Name
+	 */
 	function addRecipient($recipientType, $address, $name) {
 		switch ($recipientType) {
 			case MAIL_RECIPIENT_TO :
@@ -408,35 +525,30 @@ class MailMessage extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addRecipientList
-	// @desc		Inclui um vetor de destinatários de um determinado tipo
-	// @param		recipientType int	Tipo de destinatário (vide constantes da classe)
-	// @param		recipients array	Vetor de destinatários
-	// @note		Cada posição do vetor deve conter outro vetor com uma ou duas
-	//				posições, sendo que a primeira será interpretada como sendo o
-	//				endereço e a segunda (opcional) o nome
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a set of recipients of a given type
+	 *
+	 * Available recipient types: {@link MAIL_RECIPIENT_TO},
+	 * {@link MAIL_RECIPIENT_CC}, {@link MAIL_RECIPIENT_BCC}
+	 * and {@link MAIL_RECIPIENT_REPLYTO}.
+	 *
+	 * @param int $recipientType Recipient type
+	 * @param array $recipients Recipients
+	 */
 	function addRecipientList($recipientType, $recipients) {
-		if (!TypeUtils::isArray($recipients))
-			return FALSE;
-		foreach($recipients as $recipient) {
-			if (sizeof($recipient) < 1)
-				continue;
-			$this->addRecipient($recipientType, $recipient[0], (isset($recipient[1])) ? $recipient[1] : '');
+		if (is_array($recipients)) {
+			foreach($recipients as $recipient) {
+				$recipient = (array)$recipient;
+				$this->addRecipient($recipientType, $recipient[0], (isset($recipient[1])) ? $recipient[1] : '');
+			}
 		}
-		return TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::clearRecipients
-	// @desc		Limpa a lista de destinatários de um determinado tipo
-	// @param		recipientType int	Tipo de destinatário (vide constantes da classe)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Clears the recipients of a given type
+	 *
+	 * @param int $recipientType Recipient type
+	 */
 	function clearRecipients($recipientType) {
 		switch ($recipientType) {
 			case MAIL_RECIPIENT_TO :
@@ -454,12 +566,9 @@ class MailMessage extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::clearAllRecipients
-	// @desc		Limpa todas as listas de destinatários de mensagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Clears all recipients
+	 */
 	function clearAllRecipients() {
 		$this->to = array();
 		$this->cc = array();
@@ -467,29 +576,97 @@ class MailMessage extends PHP2Go
 		$this->replyto = array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::hasAttachments
-	// @desc		Verifica se a mensagem possui arquivos anexos
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the return receipt address
+	 *
+	 * If $confirmAddress is missing, the sender address will be used.
+	 *
+	 * @param string $confirmAddress E-mail address
+	 */
+	function setConfirmReading($confirmAddress='') {
+		if ($confirmAddress != '')
+			$this->confirmReading = $confirmAddress;
+		elseif (isset($this->from))
+			$this->confirmReading = $this->from;
+	}
+
+	/**
+	 * Remove one of the default message headers
+	 *
+	 * @param string $name Header name
+	 */
+	function removeHeader($name) {
+		if (isset($this->headers[trim($name)]))
+			unset($this->headers[trim($name)]);
+	}
+
+	/**
+	 * Add a custom header
+	 *
+	 * @param string $name Name
+	 * @param mixed $value Value
+	 */
+	function addCustomHeader($name, $value) {
+		$this->customHeaders[] = array($name, $value);
+	}
+
+	/**
+	 * Remove a custom header
+	 *
+	 * @param string $name Header name
+	 */
+	function removeCustomHeader($name) {
+		$keys = array_keys($this->customHeaders);
+		foreach ($keys as $hName) {
+			if (trim($hName) == trim($name)) {
+				unset($this->customHeaders[$hName]);
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Enable/disable Microsoft headers
+	 *
+	 * @param bool $setting Enable/disable
+	 */
+	function useMicrosoftHeaders($setting=TRUE) {
+		$this->msHeaders = TypeUtils::toBoolean($setting);
+	}
+
+	/**
+	 * Set message's priority
+	 *
+	 * Priority values: 1 (high), 3 (medium) and 5 (low).
+	 *
+	 * @param int $priority Priority
+	 */
+	function setPriority($priority) {
+		if ($priority == 1 || $priority == 3 || $priority == 5)
+			$this->priority = $priority;
+	}
+
+	/**
+	 * Check if the message has any attachments
+	 *
+	 * @return bool
+	 */
 	function hasAttachments() {
 		return sizeof($this->attachments) > 0;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addAttachment
-	// @desc		Adiciona um arquivo armazenado no servidor como anexo da mensagem atual
-	// @param		fileName string	Caminho completo e nome do arquivo
-	// @param		encoding string	"base64" Tipo de codificação a ser aplicada no arquivo
-	// @param		mimeType string	"" Tipo MIME do arquivo
-	// @note		Os tipos de codificações implementados são: 7bit, 8bit, base64 e
-	//				quoted-printable
-	// @note		Se não for fornecido um tipo MIME, a classe tentará buscar
-	//				a partir da extensão do arquivo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds an attachment
+	 *
+	 * Example:
+	 * <code>
+	 * $msg->addAttachment('files/terms_and_conditions.pdf');
+	 * </code>
+	 *
+	 * @param string $fileName File path
+	 * @param string $encoding Content encoding. Defaults to base64
+	 * @param string $mimeType MIME type. Auto detected from file extension if missing
+	 */
 	function addAttachment($fileName, $encoding='base64', $mimeType='') {
 		$Part = new MailPart();
 		$Part->setContentType(empty($mimeType) ? MimeType::getFromFileName($fileName) : $mimeType);
@@ -500,41 +677,39 @@ class MailMessage extends PHP2Go
 		$this->attachments[] =& $Part;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::clearAttachments
-	// @desc		Remove todos os arquivos anexos já incluídos na mensagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes all attachments
+	 */
 	function clearAttachments() {
 		$this->attachments = array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::hasEmbeddedFiles
-	// @desc		Verifica se a mensagem possui arquivos embebidos
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the message has any embedded files
+	 *
+	 * @return bool
+	 */
 	function hasEmbeddedFiles() {
 		return sizeof($this->embeddedFiles) > 0;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addEmbeddedFile
-	// @desc		Adiciona um arquivo como anexo da mensagem, indicando que o mesmo
-	//				está embebido no corpo da mensagem
-	// @param		fileName string	Caminho completo e nome do arquivo
-	// @param		cid string		ID do elemento referenciado no corpo da mensagem
-	// @param		encoding string	"base64" Tipo de codificação a ser aplicada no arquivo
-	// @param		mimeType string	"" Tipo MIME do arquivo
-	// @note		Os tipos de codificações implementados são: 7bit, 8bit, base64 e
-	//				quoted-printable
-	// @note		Se não for fornecido um tipo MIME, a classe tentará buscar
-	//				a partir da extensão do arquivo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds an embedded file
+	 *
+	 * An embedded file is a message part whose content is
+	 * embedded in the message's body. Example: images.
+	 *
+	 * Example:
+	 * <code>
+	 * $msg->setHtmlBody('<html><body><img src='cid:logo' border=0><br>Hello World!</body></html>');
+	 * $msg->addEmbeddedFile('images/logo.gif', 'logo');
+	 * </code>
+	 *
+	 * @param string $fileName File path
+	 * @param string $cid Content ID
+	 * @param string $encoding Content encoding. Defaults to base64
+	 * @param string $mimeType MIME type. Auto detected from file extension if missing
+	 */
 	function addEmbeddedFile($fileName, $cid, $encoding='base64', $mimeType='') {
 		$Part = new MailPart();
 		$Part->setContentType(empty($mimeType) ? MimeType::getFromFileName($fileName) : $mimeType);
@@ -546,135 +721,50 @@ class MailMessage extends PHP2Go
 		$this->embeddedFiles[] =& $Part;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::clearEmbeddedFiles
-	// @desc		Remove todos os arquivos embebidos já incluídos na mensagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes all embedded files
+	 */
 	function clearEmbeddedFiles() {
 		$this->embeddedFiles = array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::addCustomHeader
-	// @desc		Adiciona um cabeçalho adicional à mensagem
-	// @param		name string	Nome do cabeçalho
-	// @param		value string	Valor do cabeçalho
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function addCustomHeader($name, $value) {
-		$this->customHeaders[] = array($name, $value);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::removeCustomHeader
-	// @desc		Remove um cabeçalho adicional inserido
-	// @param		name string	Nome do cabeçalho
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function removeCustomHeader($name) {
-		$keys = array_keys($this->customHeaders);
-		foreach ($keys as $hName) {
-			if (trim($hName) == trim($name)) {
-				unset($this->customHeaders[$hName]);
-				break;
-			}
-		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::removeHeader
-	// @desc		Remove um dos cabeçalhos padrão da mensagem
-	// @param		name string	Nome do cabeçalho
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function removeHeader($name) {
-		if (isset($this->headers[trim($name)]))
-			unset($this->headers[trim($name)]);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::useMicrosoftHeaders
-	// @desc		Habilita ou desabilita a inclusão dos cabeçalhos Microsoft
-	// @param		setting bool	"TRUE" Flag para habilitar ou desabilitar os cabeçalhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function useMicrosoftHeaders($setting = TRUE) {
-		$this->msHeaders = TypeUtils::toBoolean($setting);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setPriority
-	// @desc		Seta a prioridade da mensagem
-	// @param		priority int	Prioridade da mensagem
-	// @note		Valores possíveis para prioridade: 1 = alta, 3 = normal, 5 = baixa
-	// @see			MailMessage::getPriority
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setPriority($priority) {
-		if ($priority == 1 || $priority == 3 || $priority == 5)
-			$this->priority = $priority;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setConfirmReading
-	// @desc		Configura a mensagem para solicitar confirmação de leitura para
-	//				um determinado endereço. Se o parâmetro $confirmAddress for deixado
-	//				em branco, o método irá utilizar o e-mail do remetente da mensagem
-	// @param		confirmAddress string		"" Endereço para confirmação
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setConfirmReading($confirmAddress='') {
-		if ($confirmAddress != '')
-			$this->confirmReading = $confirmAddress;
-		elseif (isset($this->from))
-			$this->confirmReading = $this->from;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setTextBody
-	// @desc		Seta o corpo de texto da mensagem
-	// @param		textBody string	Corpo de texto para a mensagem
-	// @note		Caso não seja fornecido um textBody para a mensagem
-	//				utilizando este método, será utilizada uma
-	//				versão somente texto a partir do HTML fornecido em
-	//				MailMessage::setHtmlBody
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the text body of the message
+	 *
+	 * When the message uses text and HTML parts, in most e-mail
+	 * clients, the HTML part will take precedence. However,
+	 * text/plain parts are useful when messages are being sent
+	 * to recipients without visual clients or in scenarios
+	 * where bandwidth should be saved.
+	 *
+	 * When {@link setHtmlBody} is called and the message doesn't
+	 * have a text body, the text body is populated with the HTML
+	 * body without tags and unnecessary spaces.
+	 *
+	 * @param string $textBody Text body
+	 */
 	function setTextBody($textBody) {
 		$this->textBody = $textBody;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setHtmlBody
-	// @desc		Seta o corpo de texto HTML da mensagem
-	// @param		htmlBody string	Corpo HTML para a mensagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the HTML body of the message
+	 *
+	 * @param string $htmlBody HTML body
+	 */
 	function setHtmlBody($htmlBody) {
 		$this->htmlBody = $htmlBody;
 		$this->contentType = 'text/html';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setHtmlTemplate
-	// @desc		Seta o corpo HTML da mensagem a partir de um template, incluindo
-	//				as variáveis que devem ser substituídas no mesmo
-	// @param		templateFile string		Caminho completo do template a ser utilizado
-	// @param		templateVars array		"array()" Variáveis de substituição para o template
-	// @param		templateIncludes array	"array()" Vetor de inclusões para o arquivo template
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the HTML body of the message based
+	 * on an HTML template
+	 *
+	 * @param string $templateFile Template file
+	 * @param array $templateVars Template variables
+	 * @param array $templateIncludes Template includes
+	 */
 	function setHtmlTemplate($templateFile, $templateVars=array(), $templateIncludes=array()) {
 		$Template = new Template($templateFile);
 		if (TypeUtils::isHashArray($templateIncludes) && !empty($templateIncludes)) {
@@ -689,44 +779,31 @@ class MailMessage extends PHP2Go
 		$this->setHtmlBody($Template->getContent());
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::setWordWrap
-	// @desc		Seta o número de caracteres para quebra de linha automática
-	//				no corpo da mensagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the word wrap for the message's body
+	 *
+	 * @param int $wrap Word wrap
+	 */
 	function setWordWrap($wrap) {
 		if ($wrap >= 1)
 			$this->wordWrap = $wrap;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::&getTransport
-	// @desc		Instancia um objeto MailTransport responsável pelo envio da mensagem
-	// @return		MailTransport object
-	// @note		Mesmo que sejam executadas várias chamadas deste método,
-	//				será utilizada sempre a mesma instância do objeto de transporte
-	// @access		public
-	//!-----------------------------------------------------------------
-	function &getTransport() {
-		static $Transport;
-		if (!isset($Transport))
-			$Transport = new MailTransport($this);
-		else
-			$Transport->setMessage($this);
-		return $Transport;
+	/**
+	 * Set message's hostname
+	 *
+	 * The hostname defaults to the SERVER_NAME server variable, when available.
+	 * Otherwise, 'localhost.localdomain' is used.
+	 *
+	 * @param string $hostName
+	 */
+	function setHostName($hostName) {
+		$this->hostName = $hostName;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::reset
-	// @desc		Reseta todas as informações referentes à mensagem: recipientes, cabeçalhos,
-	//				corpo da mensagem, anexos e embedded files. Utilizando este método,
-	//				uma mesma instância pode ser utilizada para enviar mensagens diferentes
-	//				para destinos diferentes
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Reset all message's properties
+	 */
 	function reset() {
 		$this->body = '';
 		$this->textBody = '';
@@ -739,12 +816,9 @@ class MailMessage extends PHP2Go
 		$this->built = FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::build
-	// @desc		Monta os cabeçalhos e o corpo da mensagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the message to be sent
+	 */
 	function build() {
 		$this->_defineMessageType();
 		$this->_buildHeaders();
@@ -752,28 +826,27 @@ class MailMessage extends PHP2Go
 		$this->built = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::formatAddress
-	// @desc		Formata um endereço contido nos destinatários da mensagem
-	// @param		address array		Vetor contendo endereço e nome do destinatário
-	// @return		string String com endereço e nome formatados para inclusão em um dos cabeçalhos
-	// @access		public	
-	//!-----------------------------------------------------------------
-	function formatAddress($address) {
-		if (!isset($address[1]) || empty($address[1]))
-			$formatted = $address[0];
+	/**
+	 * Create an instance of the MailTransport class,
+	 * to be used to send the message
+	 *
+	 * @return MailTransport
+	 */
+	function &getTransport() {
+		static $Transport;
+		if (!isset($Transport))
+			$Transport = new MailTransport($this);
 		else
-			$formatted = sprintf('%s %s', $this->_encodeHeader($address[1], 'phrase'), '<' . $address[0] . '>');
-        return $formatted;
+			$Transport->setMessage($this);
+		return $Transport;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_defineMessageType
-	// @desc		Define o tipo da mensagem de acordo com a utilização
-	//				de HTML, arquivos anexos e imagens embebidas
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the message type based on the use of HTML,
+	 * attachments and embedded files
+	 *
+	 * @access private
+	 */
 	function _defineMessageType() {
 		if (!$this->hasAttachments() && !$this->hasEmbeddedFiles() && empty($this->htmlBody)) {
 			$this->mailType = 'plain';
@@ -804,51 +877,36 @@ class MailMessage extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_buildHeaders
-	// @desc		Constrói os headers da mensagem, contendo destinatários,
-	//				assunto e outros parâmetros de configuração
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Build message headers
+	 *
+	 * @uses Date::formatTime()
+	 * @access private
+	 */
 	function _buildHeaders() {
-		// cabeçalho Received
 		$this->_buildReceived();
-		// cabeçalho Date
-		$this->_addHeader('Date', $this->_getDate() . $this->lineEnd);
-		// cabeçalho Message-ID
-		$this->_addHeader('Message-ID', '<' . $this->uniqueId . '@' . $this->getHostName() . '>' . $this->lineEnd);
-		// cabeçalho From
-		$this->_addHeader('From', $this->formatAddress(array(trim($this->from), trim($this->fromName))) . $this->lineEnd);
-		// cabeçalho To
+		$this->_addHeader('Date', Date::formatTime(time(), DATE_FORMAT_RFC822) . $this->lineEnd);
+		$uniqueId = md5(uniqid(time()));
+		$this->_addHeader('Message-ID', '<' . $uniqueId . '@' . $this->hostName . '>' . $this->lineEnd);
+		$this->_addHeader('From', $this->_formatAddress(array(trim($this->from), trim($this->fromName))) . $this->lineEnd);
 		if ($this->hasRecipients(MAIL_RECIPIENT_TO))
 			$this->_addHeader('To', $this->_buildAddressList(MAIL_RECIPIENT_TO));
 		elseif (!$this->hasRecipients(MAIL_RECIPIENT_CC))
 			$this->_addHeader('To', 'undisclosed-recipients:;' . $this->lineEnd);
-		// cabeçalho Cc
 		if ($this->hasRecipients(MAIL_RECIPIENT_CC))
 			$this->_addHeader('Cc', $this->_buildAddressList(MAIL_RECIPIENT_CC));
-		// cabeçalho Reply-to
 		if ($this->hasRecipients(MAIL_RECIPIENT_REPLYTO))
 			$this->_addHeader('Reply-to', $this->_buildAddressList(MAIL_RECIPIENT_REPLYTO));
-		// cabeçalho Subject
 		$this->_addHeader('Subject', $this->_encodeHeader(trim($this->subject)) . $this->lineEnd);
-		// cabeçalho MIME-Version
 		$this->_addHeader('MIME-Version', '1.0' . $this->lineEnd);
-		// cabeçalho X-Priority
-		$this->_addHeader('X-Priority', $this->getPriority() . $this->lineEnd);
-		// cabeçalho X-Mailer
+		$this->_addHeader('X-Priority', $this->priority . $this->lineEnd);
 		$this->_addHeader('X-Mailer', $this->xMailer . ' (version ' . PHP2GO_VERSION . ')' . $this->lineEnd);
-		// cabeçalho Return-Path
 		$this->_addHeader('Return-Path', trim($this->from) . $this->lineEnd);
-		// cabeçalho Disposition-Notification-To
 		if (!empty($this->confirmReading))
 			$this->_addHeader('Disposition-Notification-To', '<' . trim($this->confirmReading) . '>' . $this->lineEnd);
-		// cabeçalhos customizados pelo usuário
 		if (!empty($this->customHeaders))
 			for ($i=0; $i<sizeof($this->customHeaders); $i++)
 				$this->_addHeader(trim($this->customHeaders[$i][0]), $this->_encodeHeader(trim($this->customHeaders[$i][1])) . $this->lineEnd);
-		// cabeçalhos da Microsoft
 		if ($this->msHeaders) {
 			if ($this->priority == 1)
 				$msPriority = 'High';
@@ -859,7 +917,6 @@ class MailMessage extends PHP2Go
 			$this->_addHeader('X-MSMail-Priority', $msPriority . $this->lineEnd);
 			$this->_addHeader('Importante', $msPriority . $this->lineEnd);
 		}
-		// cabeçalhos Content-Type e Content-Transfer-Encoding
 		switch($this->mailType) {
 			case 'plain' :
 				$this->_addHeader('Content-Transfer-Encoding', $this->contentEncoding . $this->lineEnd);
@@ -879,18 +936,19 @@ class MailMessage extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_buildBody
-	// @desc		Constrói o corpo da mensagem a partir dos valores armazenados
-	//				em $textBody e $htmlBody e a partir do tipo de mensagem
-	//				já definido
-	// @note		Para cada parte envolvida nesta mensagem, o método cria
-	//				uma instância da classe MailPart, que constrói o cabeçalho
-	//				e o conteúdo do elemento para inclusão no corpo principal
-	//				da mensagem
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Build the message body
+	 *
+	 * Based on the {@link textBody} and {@link htmlBody} properties, creates
+	 * and builds text/plain and text/html parts, when applicable.
+	 *
+	 * Builds and renders all mail parts representing attachments and
+	 * embedded files.
+	 *
+	 * @uses StringUtils::wrap()
+	 * @uses StringUtils::encode()
+	 * @access private
+	 */
 	function _buildBody() {
 		$this->body = '';
 		if (!empty($this->htmlBody) && $this->wordWrap > 0)
@@ -901,19 +959,19 @@ class MailMessage extends PHP2Go
 			$this->body .= $this->lineEnd . $this->lineEnd . StringUtils::encode($this->textBody, $this->contentEncoding);
 		} else {
 			$this->body .= sprintf("%sThis is a multi-part message in MIME format.%s", $this->lineEnd, $this->lineEnd . $this->lineEnd);
-			// mail type mixed e relative : delimitador externo
+			// mixed/relative types
 			if ($this->mailType == 'mixed') {
-				// separador mixed
+				// mixed
 				$this->body .= sprintf("--%s%s", $this->_getMimeBoundary('mix'), $this->lineEnd);
-				// header alternative
+				// alternative
 				$this->body .= sprintf("Content-Type: %s;%s\tboundary=\"%s\"%s", 'multipart/alternative', $this->lineEnd, $this->_getMimeBoundary('alt'), $this->lineEnd . $this->lineEnd);
 			} else if ($this->mailType == 'related') {
-				// separador related
+				// related
 				$this->body .= sprintf("--%s%s", $this->_getMimeBoundary('rel'), $this->lineEnd);
-				// header alternative
+				// alternative
 				$this->body .= sprintf("Content-Type: %s;%s\tboundary=\"%s\"%s", 'multipart/alternative', $this->lineEnd, $this->_getMimeBoundary('alt'), $this->lineEnd . $this->lineEnd);
 			}
-			// corpo de texto
+			// text part
 			if (!empty($this->textBody)) {
 				$TextBody = new MailPart();
 				$TextBody->setBoundaryId($this->_getMimeBoundary('alt'));
@@ -924,14 +982,13 @@ class MailMessage extends PHP2Go
 				$this->body .= $TextBody->buildSource();
 				$this->body .= $this->lineEnd . $this->lineEnd;
 			}
-			// corpo html
+			// html part
 			if (!empty($this->htmlBody)) {
 				$HtmlBody = new MailPart();
 				$HtmlBody->setBoundaryId($this->_getMimeBoundary('alt'));
 				$HtmlBody->setCharset($this->getCharset());
 				$HtmlBody->setContentType('text/html');
 				$HtmlBody->setEncoding($this->contentEncoding);
-				// alterar cid com haspas simples
 				if ($this->hasEmbeddedFiles())
 					$this->htmlBody = eregi_replace("\'([ ]?cid[ ]?:.+)\'", "\"\\1\"", $this->htmlBody);
 				$HtmlBody->setContent($this->htmlBody);
@@ -939,10 +996,10 @@ class MailMessage extends PHP2Go
 				$this->body .= $HtmlBody->buildSource();
 				$this->body .= $this->lineEnd . $this->lineEnd;
 			}
-			// terminador boundary alternative
+			// alternative boundary
 			$this->body .= sprintf("%s--%s--%s", $this->lineEnd, $this->_getMimeBoundary('alt'), $this->lineEnd . $this->lineEnd);
-			// arquivos anexos
-			if ($this->hasAttachments())
+			// attachments
+			if ($this->hasAttachments()) {
 				foreach($this->attachments as $attachment) {
 					if ($this->mailType == 'mixed')
 						$attachment->setBoundaryId($this->_getMimeBoundary('mix'));
@@ -950,44 +1007,42 @@ class MailMessage extends PHP2Go
 						$attachment->setBoundaryId($this->_getMimeBoundary('rel'));
 					$this->body .= $attachment->buildSource();
 				}
-			// arquivos embebidos
+			}
+			// embedded files
 			if ($this->hasEmbeddedFiles()) {
 				foreach($this->embeddedFiles as $embedded) {
 					$embedded->setBoundaryId($this->_getMimeBoundary('rel'));
 					$this->body .= $embedded->buildSource();
 				}
 			}
-			// mail type mixed e relative : delimitador externo
 			if ($this->mailType == 'mixed') {
-				// terminador boundary mixed
+				// mixed boundary
 				$this->body .= sprintf("%s--%s--%s", $this->lineEnd, $this->_getMimeBoundary('mix'), $this->lineEnd . $this->lineEnd);
 			} else if ($this->mailType == 'related') {
-				// terminador boundary related
+				// related boundary
 				$this->body .= sprintf("%s--%s--%s", $this->lineEnd, $this->_getMimeBoundary('rel'), $this->lineEnd . $this->lineEnd);
 			}
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_addHeader
-	// @desc		Inclui um elemento no vetor de cabeçalhos da mensagem
-	// @param		name string	Nome do cabeçalho
-	// @param		value string	Valor do cabeçalho
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Register a message header
+	 *
+	 * @param string $name Name
+	 * @param string $value Value
+	 * @access private
+	 */
 	function _addHeader($name, $value) {
 		$this->headers[$name] = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_buildAddressList
-	// @desc		Constrói uma lista de endereços a partir de um dos
-	//				vetores de destinatários da mensagem
-	// @param		recipientType int	Tipo de destinatário (vide constantes da classe)
-	// @return		string	Lista de remetentes do tipo passado por parâmetro
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Serialize all recipients of a given type to build a message header
+	 *
+	 * @param int $recipientType Recipient type
+	 * @access private
+	 * @return string
+	 */
 	function _buildAddressList($recipientType) {
 		switch($recipientType) {
 			case MAIL_RECIPIENT_TO :
@@ -1005,23 +1060,24 @@ class MailMessage extends PHP2Go
 			default :
 				return '';
 		}
-		$addressList = $this->formatAddress($list[0]);
+		$addressList = $this->_formatAddress($list[0]);
 		$listSize = sizeof($list);
 		if ($listSize > 1) {
 			for ($i=1; $i<$listSize; $i++)
-				$addressList .= sprintf(", %s", $this->formatAddress($list[$i]));
+				$addressList .= sprintf(", %s", $this->_formatAddress($list[$i]));
 		}
 		$addressList .= $this->lineEnd;
 		return $addressList;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_received
-	// @desc		Constrói o cabeçalho "Received" para permitir rastreamento
-	//				da mensagem da origem até o seu destino
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the 'Received' header
+	 *
+	 * @uses Date::formatTime()
+	 * @uses HttpRequest::protocol()
+	 * @uses HttpRequest::remoteAddress()
+	 * @access private
+	 */
 	function _buildReceived() {
 		if (Environment::get('SERVER_NAME')) {
 			$protocol = HttpRequest::protocol();
@@ -1035,22 +1091,37 @@ class MailMessage extends PHP2Go
 		}
         $str = sprintf(
 			"from %s %s\tby %s with %s (%s);%s\t%s%s",
-			$remote, $this->lineEnd, $this->getHostName(),
-			$protocol, $this->xMailer, $this->lineEnd, $this->_getDate(), $this->lineEnd
+			$remote, $this->lineEnd, $this->hostName, $protocol, $this->xMailer,
+			$this->lineEnd, Date::formatTime(time(), DATE_FORMAT_RFC822), $this->lineEnd
 		);
 		$this->_addHeader('Received', $str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_encodeHeader
-	// @desc		Codifica o conteúdo de um header da mensagem para adaptá-lo
-	//				aos padrões de codificação exigidos
-	// @param		content string	Conteúdo de um cabeçalho da mensagem
-	// @param		type string		Tipo do conteúdo: phrase, comment ou text
-	// @author		Brent R. Matzelle <bmatzelle@yahoo.com>
-	// @return		string Valor do cabeçalho codificado
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Formats a recipient address
+	 *
+	 * @param array $address Array containing e-mail address and name
+	 * @access private
+	 * @return string
+	 */
+	function _formatAddress($address) {
+		if (!isset($address[1]) || empty($address[1]))
+			$formatted = $address[0];
+		else
+			$formatted = sprintf('%s %s', $this->_encodeHeader($address[1], 'phrase'), '<' . $address[0] . '>');
+        return $formatted;
+	}
+
+	/**
+	 * Encodes a message header
+	 *
+	 * @author Brent R. Matzelle <bmatzelle@yahoo.com>
+	 * @uses StringUtils::wrap()
+	 * @param string $content Header value
+	 * @param string $type Encoding type
+	 * @return string Encoded header
+	 * @access private
+	 */
 	function _encodeHeader($content, $type='text') {
 		$search = 0;
 		$matches = array();
@@ -1071,7 +1142,6 @@ class MailMessage extends PHP2Go
 				break;
 			case 'text':
 			default:
-				// retira caracteres ASCII altos e caracteres de controle
 				$search += preg_match_all('/[\000-\010\013\014\016-\037\177-\377]/', $content, $matches);
 				break;
 		}
@@ -1094,15 +1164,15 @@ class MailMessage extends PHP2Go
 		return($encoded);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_encodeQuoted
-	// @desc		Codifica uma string para o modo de codificação Q (quoted)
-	// @param		content string	Conteúdo a ser codificado
-	// @param		type string		Tipo do conteúdo: phrase, comment ou text
-	// @author		Brent R. Matzelle <bmatzelle@yahoo.com>
-	// @return		string String codificada
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Encodes a string using the quoted-printable encoding
+	 *
+	 * @author Brent R. Matzelle <bmatzelle@yahoo.com>
+	 * @param string $content Input string
+	 * @param string $type Message type: 'phrase', 'comment' or 'text'
+	 * @return string Encoded string
+	 * @access private
+	 */
 	function _encodeQuoted($content, $type='text') {
 		$encoded = preg_replace("[\r\n]", '', $content);
 		switch (strtolower($type)) {
@@ -1114,23 +1184,20 @@ class MailMessage extends PHP2Go
 				break;
 			case 'text' :
 			default :
-				// substitui todos os caracteres ASCII altos, caracteres de controle e underlines
 				$encoded = preg_replace('/([\000-\011\013\014\016-\037\075\077\137\177-\377])/e', "'='.sprintf('%02X', ord('\\1'))", $encoded);
 				break;
 		}
-		// substitui todos os espaços em branco por underlines
 		$encoded = str_replace(' ', '_', $encoded);
 		return $encoded;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_getMimeBoundary
-	// @desc		Armazena em variáveis estáticas os delimitadores de partes
-	//				da mensagem (boundaries), retornando-os para inclusão
-	//				nos cabeçalhos e no corpo
-	// @return		string	Valor do limitador MIME
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a MIME boundary
+	 *
+	 * @param string $type Type
+	 * @access private
+	 * @return string
+	 */
 	function _getMimeBoundary($type) {
 		static $alt;
 		static $rel;
@@ -1143,20 +1210,6 @@ class MailMessage extends PHP2Go
 		} else {
 			return FALSE;
 		}
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	MailMessage::_getDate
-	// @desc		Constrói a definição da data segundo o formato definido no RFC 822
-	// @return		string Data formatada para inclusão nos cabeçalhos da mensagem
-	// @access		private
-	//!-----------------------------------------------------------------
-	function _getDate() {
-        $timeZone = date("Z");
-        $timeZoneSig = ($timeZone < 0) ? "-" : "+";
-        $timeZone = TypeUtils::parseIntegerPositive($timeZone);
-        $timeZone = ($timeZone/3600)*100 + ($timeZone%3600)/60;
-        return sprintf("%s %s%04d", date("D, j M Y H:i:s"), $timeZoneSig, $timeZone);
 	}
 }
 ?>

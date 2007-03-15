@@ -1,28 +1,30 @@
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/resources/javascript/inputmask.js,v 1.10 2006/11/19 18:21:52 mpont Exp $
-// $Date: 2006/11/19 18:21:52 $
-// $Revision: 1.10 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 /**
  * @fileoverview
@@ -41,7 +43,7 @@ PHP2Go.include(PHP2Go.baseUrl + 'form.js');
  * handlers that interact with an instance of the
  * {@link Mask} class to validate and format the data
  * that is entered in the associated text input
- * @class InputMask
+ * @constructor
  * @param {Object} fld Field reference
  * @param {Object} mask Mask instance
  */
@@ -310,7 +312,7 @@ InputMask.prototype.update = function(e, isBlur) {
  * length and acceptable chars) and literals (members
  * of the mask with fixed contents and sometimes fixed
  * position)
- * @class Mask
+ * @constructor
  */
 Mask = function() {
 	/**
@@ -767,7 +769,7 @@ Mask.prototype.onBlur = function(fld) {
 Mask.prototype.filter = function(field) {
 	var newVal = field.value, f = this.fields;
 	newVal = this.onBeforeChange(newVal);
-	newVal = f[0].value = newVal.replace(f[0].negative, "");		
+	newVal = f[0].value = newVal.replace(f[0].negative, "");
 	newVal = this.onAfterChange(field.maxLength != -1 ? newVal.substring(0, field.maxLength) : newVal);
 	if (newVal != field.value)
 		field.value = newVal;

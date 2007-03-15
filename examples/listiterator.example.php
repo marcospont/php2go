@@ -1,9 +1,31 @@
 <?php
-
-	// $Header: /www/cvsroot/php2go/examples/listiterator.example.php,v 1.7 2006/10/26 04:55:43 mpont Exp $
-	// $Revision: 1.7 $
-	// $Date: 2006/10/26 04:55:43 $
-	// vim: set expandtab tabstop=4 shiftwidth=4:
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 	require_once('config.example.php');
 	import('php2go.util.AbstractList');
@@ -11,7 +33,7 @@
 	echo '<b>PHP2Go Example</b> : php2go.util.AbstractList<br><br>';
 
 	$list = new AbstractList(array(1,2,3,4,5,6,7,8,9,0));
-	
+
 	$iterator =& $list->iterator();
 	println('From start to end');
 	while ($iterator->hasNext()) {

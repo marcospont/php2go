@@ -1,28 +1,30 @@
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/resources/javascript/dom.js,v 1.11 2006/11/25 11:55:56 mpont Exp $
-// $Date: 2006/11/25 11:55:56 $
-// $Revision: 1.11 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 /**
  * @fileoverview
@@ -410,13 +412,19 @@ Element.classNames = function(elm) {
 };
 
 /**
- * Verify if a given element is visible (display != none)
+ * Verify if a given element is visible
  * @param {Object} elm Element
  * @type Boolean
  */
 Element.isVisible = function(elm) {
-	if (elm = $(elm))
-		return (elm.style.display != 'none');
+	if (elm = $(elm)) {
+		while (elm && elm != document) {
+			if (elm.style.display == 'none' || elm.style.visibility == 'hidden')
+				return false;
+			elm = elm.parentNode;
+		}
+		return true;
+	}
 	return false;
 };
 
@@ -926,13 +934,21 @@ Event.onDOMReady = function(fn) {
  * @type void
  */
 Event.addLoadListener = function(fn) {
-	var oldLoad = window.onload;
-	if (typeof oldLoad != 'function') {
-		window.onload = fn;
+	/**
+	 * avoid conflicts between window.onload
+	 * and <body onload=""></body>
+	 */
+	if (!document.body) {
+		Event.addListener(window, 'load', fn);
 	} else {
-		window.onload = function() {
-			oldLoad();
-			fn();
+		var oldLoad = window.onload;
+		if (typeof oldLoad != 'function') {
+			window.onload = fn;
+		} else {
+			window.onload = function() {
+				oldLoad();
+				fn();
+			}
 		}
 	}
 };

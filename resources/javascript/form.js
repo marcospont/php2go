@@ -1,28 +1,30 @@
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/resources/javascript/form.js,v 1.12 2006/11/19 18:21:33 mpont Exp $
-// $Date: 2006/11/19 18:21:33 $
-// $Revision: 1.12 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 /**
  * @fileoverview
@@ -210,7 +212,7 @@ var Form = {
 			Event.addListener(form, 'submit', function(e) {
 				var frm, evt = $EV(e);
 				var elm = $E(evt.element());
-				evt.stop();				
+				evt.stop();
 				if (frm = elm.getParentByTagName('form'))
 					frm.ajax();
 			}, true);
@@ -250,7 +252,7 @@ var Form = {
 		}
 	}
 };
-Event.addLoadListener(function() {
+Event.addListener(window, 'load', function() {
 	var forms = $C(document.getElementsByTagName('form'));
 	forms.walk(function(item, idx) {
 		Event.addListener(item, 'submit', function() {
@@ -994,7 +996,7 @@ ComponentField.prototype.raiseEvent = function(name, args) {
  * @param {String} frm Form name
  * @param {String} name Group name (including [] chars)
  * @param {Object} opts Options
- * @class CheckboxController
+ * @constructor
  */
 CheckboxController = function(frm, name, opts) {
 	/**

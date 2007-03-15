@@ -1,105 +1,119 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/data/adapter/DataSetDb.class.php,v 1.8 2006/10/11 22:11:37 mpont Exp $
-// $Date: 2006/10/11 22:11:37 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//-----------------------------------------
 import('php2go.data.adapter.DataAdapter');
-//-----------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		DataSetDb
-// @desc		Esta classe tem como funcionalidade implementar um adaptador para
-//				construir um DataSet a partir dos resultados de uma consulta ou
-//				procedimento armazenado no banco de dados
-// @package		php2go.data.adapter
-// @extends		DataAdapter
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.8 $
-// @note		Exemplo de uso:<pre>
-//
-//				# exemplo básico
-//				$dataset =& DataSet::factory('db');
-//				$dataset->load("select * from products");
-//				while (!$dataset->eof()) {
-//				&nbsp;&nbsp;&nbsp;&nbsp;print $dataset->getField('short_desc');
-//				}
-//
-//				# utilizando uma conexão ao banco diferente da default
-//				$dataset =& DataSet::factory('db', array('connectionId' => 'CONN_ID'));
-//				$dataset->load("select * from TABLE_NAME");
-//				while ($row = $dataset->fetch()) {
-//				&nbsp;&nbsp;&nbsp;&nbsp;print $row['column'];
-//				}
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * DB data adapter
+ *
+ * Implementation of a data adapter that is able to read and navigate
+ * through a set of records returned by a database query or cursor.
+ *
+ * The $stmt argument passed to {@link load()} and {@link loadSubSet()}
+ * methods can be either an SQL string or an array returned by
+ * {@link Db::prepare()}. Below you can see some use cases:
+ *
+ * <code>
+ * /* simple navigation example using {@link fetch()} {@*}
+ * $ds =& DataSet::factory('db');
+ * $ds->load("select * from users");
+ * while ($row = $ds->fetch()) {
+ *   print $ds->getField('name');
+ * }
+ *
+ * /* using {@link eof()} and {@link moveNext()} and a different connection ID {@*}
+ * $ds =& DataSet::factory('db', array('connectionId'=>'CONN_ID'));
+ * $ds->load("select * from table");
+ * while (!$ds->eof()) {
+ *   $row = $ds->current();
+ *   $ds->moveNext();
+ * }
+ * </code>
+ *
+ * @package data
+ * @subpackage adapter
+ * @uses Db
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class DataSetDb extends DataAdapter
 {
-	var $RecordSet = NULL;		// @var RecordSet ADORecordSet object	RecordSet para navegação nos registros da consulta ao banco
+	/**
+	 * ADODb recordset used to navigate and fetch records
+	 *
+	 * @var ADORecordSet
+	 */
+	var $RecordSet = NULL;
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::DataSetDb
-	// @desc		Construtor da classe
-	// @param		params array	"array()" Vetor de parâmetros de inicialização
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 *
+	 * @param array $params Configuration parameters
+	 * @return DataSetDb
+	 */
 	function DataSetDb($params=array()) {
 		parent::DataAdapter($params);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::load
-	// @desc		Constrói o conjunto de dados a partir de uma consulta
-	//				SQL, ou um statement ou procedure previamente preparados
-	//				com o método Db::prepare
-	// @param		stmt mixed			Consulta ou statement SQL ou de procedure previamente preparados
-	// @param		bindVars mixed		"FALSE" Vetor de variáveis de amarração
-	// @param		isProcedure bool	"FALSE" Indica se a fonte de dados é um procedimento armazenado no banco de dados
-	// @param		cursorName string	"NULL" Nome da variável do cursor (somente para o driver oci8)
-	// @note		Define $isProcedure=TRUE quando for utilizar stored procedures
-	//				para a montagem do dataset. Para os drivers oci8, mysqli, db2 e
-	//				sybase, apenas é necessário fornecer o nome da procedure: o
-	//				restante da sintaxe para execução do procedimento será inserido
-	//				automaticamente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Loads data using an SQL query, prepared statement or stored procedure
+	 *
+	 * Examples:
+	 * <code>
+	 * $ds->load("select * from users where status = ?", array($status));
+	 * $ds->load("package.proc_name(:STATUS, :CURSOR)", array('STATUS'=>$status), TRUE, 'CURSOR');
+	 * $ds->load("proc_get_users(?)", array($status), TRUE);
+	 * </code>
+	 *
+	 * @param mixed $stmt SQL query, stored procedure call or prepared statement
+	 * @param array $bindVars Bind vars
+	 * @param bool $isProcedure Whether $stmt is a stored procedure call
+	 * @param string $cursorName Cursor name used by $stmt
+	 * @return bool
+	 */
 	function load($stmt, $bindVars=FALSE, $isProcedure=FALSE, $cursorName=NULL) {
-		// cria a conexão e prepara o statement
+		// open connection and prepare statement, if not prepared
 		$Db =& Db::getInstance(@$this->params['connectionId']);
 		$Db->setDebug(@$this->params['debug']);
-		if (TypeUtils::isString($stmt))
+		if (is_string($stmt))
 			$stmt = $Db->prepare(($isProcedure ? $Db->getProcedureSQL($stmt) : $stmt), $isProcedure);
-		// executa o statement
+		// execute statement
 		$oldMode = $Db->setFetchMode(ADODB_FETCH_ASSOC);
 		$this->RecordSet =& $Db->execute($stmt, $bindVars, ($isProcedure ? $cursorName : NULL));
 		$Db->setFetchMode($oldMode);
-		// seta as propriedades do result set
+		// set class properties
 		if ($this->RecordSet) {
+			$this->absolutePosition =& $this->RecordSet->_currentRow;
+			$this->fields =& $this->RecordSet->fields;
 			$this->fieldCount = $this->RecordSet->fieldCount();
+			$this->eof =& $this->RecordSet->EOF;
 			$this->recordCount = $this->RecordSet->recordCount();
 			$this->totalRecordCount = $this->recordCount;
 			$this->_buildFieldNames();
@@ -108,31 +122,37 @@ class DataSetDb extends DataAdapter
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::loadSubSet
-	// @desc		Constrói um subconjunto dos dados, a partir de uma consulta SQL ou
-	//				statement preparado, um deslocamento a partir do início do conjunto
-	//				e um tamanho (número de linhas)
-	// @param		offset int			Deslocamento a partir do início do conjunto (baseado em zero)
-	// @param		size int			Tamanho do conjunto
-	// @param		stmt mixed			Consulta ou statement SQL ou de procedure previamente preparados
-	// @param		bindVars array		"FALSE" Vetor de variáveis de amarração
-	// @param		isProcedure bool	"FALSE" Indica se o statement passado em $stmt é uma chamada de procedure
-	// @param		cursorName string	"NULL" Nome da variável do cursor (somente para o driver oci8)
-	// @note		Quando o parêmtro $stmt for uma chamada para uma stored procedure, esta
-	//				deve possuir três paremtros obrigatórios: RECORD_COUNT (parâmetro de retorno,
-	//				deve ser usado para retornar o total de registros na consulta), OFFSET (deslocamento
-	//				inicial) e SIZE (tamanho da página)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Loads a subset of data from an SQL query, prepared
+	 * statement or procedure call
+	 *
+	 * When $stmt is a procedure call, it <b>must</b> accept 3 mandatory arguments:
+	 * # record count (to be used by the procedure to return the total record count, ignoring offset and size)
+	 * # offset (starting offset of the requested subset)
+	 * # size (subset size)
+	 *
+	 * Examples:
+	 * <code>
+	 * $ds->loadSubSet(0, 30, "select * from table where active = ?", array($active));
+	 * $ds->loadSubSet(30, 30, "proc_name(?, ?, ?)", array(), TRUE);
+	 * $ds->loadSubSet(0, 30, "package.proc(:RECORD_COUNT, :OFFSET, :SIZE, :CURSOR)", array(), TRUE, 'CURSOR');
+	 * </code>
+	 *
+	 * @param int $offset Starting offset (zero-based)
+	 * @param int $size Subset size
+	 * @param mixed $stmt SQL query, stored procedure call or prepared statement
+	 * @param array $bindVars Bind vars
+	 * @param bool $isProcedure Whether $stmt is a procedure call
+	 * @param string $cursorName Cursor name used by $stmt
+	 * @return bool
+	 */
 	function loadSubSet($offset, $size, $stmt, $bindVars=FALSE, $isProcedure=FALSE, $cursorName=NULL) {
-		// cria a conexão e prepara o statement
+		// open connection and prepare statement, if not prepared
 		$Db =& Db::getInstance(@$this->params['connectionId']);
 		$Db->setDebug(@$this->params['debug']);
 		if (TypeUtils::isString($stmt))
 			$stmt = $Db->prepare(($isProcedure ? $Db->getProcedureSQL($stmt) : $stmt), $isProcedure);
-		// executa o statement
+		// execute statement
 		$oldMode = $Db->setFetchMode(ADODB_FETCH_ASSOC);
 		if ($isProcedure) {
 			$Db->bind($stmt, &$this->totalRecordCount, 'RECORD_COUNT');
@@ -145,9 +165,12 @@ class DataSetDb extends DataAdapter
 			$this->RecordSet =& $Db->limitQuery((TypeUtils::isArray($stmt) ? $stmt[0] : $stmt), $size, $offset, TRUE, $bindVars);
 		}
 		$Db->setFetchMode($oldMode);
-		// seta as propriedades do result set
+		// set class properties
 		if ($this->RecordSet) {
+			$this->absolutePosition =& $this->RecordSet->_currentRow;
+			$this->fields =& $this->RecordSet->fields;
 			$this->fieldCount = $this->RecordSet->fieldCount();
+			$this->eof =& $this->RecordSet->EOF;
 			$this->recordCount = $this->RecordSet->recordCount();
 			$this->_buildFieldNames();
 			return TRUE;
@@ -155,127 +178,81 @@ class DataSetDb extends DataAdapter
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::getField
-	// @desc		Retorna o valor de um determinado campo a partir de seu índice ou de seu nome
-	// @param		fieldId mixed
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
-	function getField($fieldId) {
-		if (!TypeUtils::isNull($this->RecordSet))
-			return (isset($this->RecordSet->fields[$fieldId])) ? $this->RecordSet->fields[$fieldId] : NULL;
-		return NULL;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::getAbsolutePosition
-	// @desc		Retorna a posição atual do cursor de registros
-	// @return		int Posição atual do cursor
-	// @access		public
-	//!-----------------------------------------------------------------
-	function getAbsolutePosition() {
-		if (!TypeUtils::isNull($this->RecordSet))
-			return $this->RecordSet->absolutePosition();
-		return 0;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::current
-	// @desc		Retorna o registro apontado pela posição atual do cursor
-	// @return		array Vetor contendo o registro atual
-	// @access		public
-	//!-----------------------------------------------------------------
-	function current() {
-		if (!TypeUtils::isNull($this->RecordSet))
-			return $this->RecordSet->fields;
-		return array();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::fetch
-	// @desc		Retorna um vetor contendo o registro atual
-	// @return		array Vetor contendo o registro atual
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Overrides parent implementation to call fetchRow
+	 * method of the internal {@link RecordSet}
+	 *
+	 * @return array
+	 */
 	function fetch() {
-		if (!TypeUtils::isNull($this->RecordSet))
+		if (is_object($this->RecordSet))
 			return $this->RecordSet->fetchRow();
 		return array();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::fetchInto
-	// @desc		Copia para o vetor passado no parâmetro $dataArray o
-	//				conteúdo do registro atual
-	// @param		&dataArray array	Vetor para armazenamento do registro
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Overrides parent implementation to call fetchInto
+	 * method of the internal {@link RecordSet}
+	 *
+	 * @param array $dataArray Variable to copy record data
+	 * @return bool
+	 */
 	function fetchInto(&$dataArray) {
-		if (!TypeUtils::isNull($this->RecordSet))
+		if (is_object($this->RecordSet))
 			return $this->RecordSet->fetchInto($dataArray);
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::eof
-	// @desc		Verifica se o final do conjunto de resultados foi alcançado
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function eof() {
-		if (!TypeUtils::isNull($this->RecordSet))
-			return $this->RecordSet->EOF;
-		return TRUE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::move
-	// @desc		Move o cursor para uma determinada posição
-	// @param		recordNumber int	Número do registro
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function move($recordNumber) {
-		if (!TypeUtils::isNull($this->RecordSet) && TypeUtils::isInteger($recordNumber))
-			return $this->RecordSet->move($recordNumber);
+	/**
+	 * Move cursor to a given position
+	 *
+	 * @param int $index
+	 * @return bool
+	 */
+	function move($index) {
+		if (is_object($this->RecordSet) && TypeUtils::isInteger($index))
+			return $this->RecordSet->move($index);
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::moveNext
-	// @desc		Move o cursor para a próxima posição, se existente
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Move to the next record, if existent
+	 *
+	 * @return bool
+	 */
 	function moveNext() {
-		if (!TypeUtils::isNull($this->RecordSet))
+		if (is_object($this->RecordSet))
 			return $this->RecordSet->moveNext();
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::movePrevious
-	// @desc		Move o cursor para a posição anterior, se existente
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Move to the previous record, if existent
+	 *
+	 * @return bool
+	 */
 	function movePrevious() {
-		if (!TypeUtils::isNull($this->RecordSet))
-			return ($this->RecordSet->absolutePosition() > 1) ? $this->RecordSet->move($this->RecordSet->absolutePosition()-1) : FALSE;
-		return FALSE;
+		return ($this->absolutePosition > 1 && is_object($this->RecordSet) ? $this->RecordSet->move($this->absolutePosition-1) : FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	DataSetDb::_buildFieldNames
-	// @desc		Monta um vetor contendo os nomes das colunas presentes no conjunto de dados
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Closes internal {@link RecordSet}
+	 */
+	function close() {
+		if (isset($this->RecordSet) && is_object($this->RecordSet)) {
+			$this->RecordSet->close();
+			unset($this->RecordSet);
+		}
+	}
+
+	/**
+	 * Parse field names using the meta data provided by {@link RecordSet}
+	 *
+	 * @access private
+	 */
 	function _buildFieldNames() {
 		$this->fieldNames = array();
-		if (!TypeUtils::isNull($this->RecordSet)) {
+		if (is_object($this->RecordSet)) {
 			for ($i=0, $s=$this->RecordSet->fieldCount(); $i<$s; $i++) {
 				$FieldObject =& $this->RecordSet->fetchField($i);
 				$this->fieldNames[] = $FieldObject->name;

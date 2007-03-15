@@ -34,7 +34,7 @@
   <div id="{$id}_container" style="margin-top:1px;">
     <div id="{$id}_window">
       {$hiddenField}
-      <iframe id="{$id}_iframe" style="width:{$width}px;height:{$height}px"></iframe>
+      <iframe id="{$id}_iframe" style="width:{$width}px;height:{$height}px;background-color:#fff;"></iframe>
       <textarea id="{$id}_textarea" style="width:{$width}px;height:{$height}px;display:none" rows="50" cols="8"></textarea>
     </div>
     <div id="{name}_footer" style="margin-left:2px;padding-bottom:2px;padding-right:2px;">

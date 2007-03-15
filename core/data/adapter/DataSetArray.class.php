@@ -1,84 +1,115 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/data/adapter/DataSetArray.class.php,v 1.4 2006/04/05 23:43:22 mpont Exp $
-// $Date: 2006/04/05 23:43:22 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//-----------------------------------------
 import('php2go.data.adapter.DataAdapter');
 import('php2go.util.AbstractList');
-//-----------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		DataSetArray
-// @desc		Implementa um adaptador capaz de construir um DataSet baseado em
-//				um array bidimensional.<br><br>
-//				Este array deve ser indexado numericamente e cada entrada deste array representa
-//				um registro, podendo ser um array, um objeto ou um valor escalar. Porém, para fins
-//				de determinação dos nomes das colunas do registro, somente arrays associativos e objetos 
-//				poderão ser interpretados como um conjunto de colunas=>valores
-// @package		php2go.data.adapter
-// @extends		DataAdapter
-// @uses		AbstractList
-// @uses		ListIterator
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.4 $
-//!-----------------------------------------------------------------
+/**
+ * Array data adapter
+ *
+ * Implementation of a data adapter that is able to read and navigate
+ * through a PHP array.
+ *
+ * The arrays provided to load methods must be indexed numerically,
+ * and each member of the first dimension (another array, an object or
+ * a scalar variable) will be a record in the data set.
+ *
+ * The example below demonstrates how to use this class
+ * to handle arrays of objects:
+ * <code>
+ * class person {
+ *   var $firstName;
+ *   var $lastName;
+ *   function persion($firstName, $lastName) {
+ *     $this->firstName = $firstName;
+ *     $this->lastName = $lastName;
+ *   }
+ * }
+ * $source = array();
+ * $source[] = new person('John', 'Smith');
+ * $source[] = new person('Mary', 'Smith');
+ * $ds = DataSet::factory('array');
+ * $ds->load($source);
+ * print $ds->getField('firstName'); /* prints 'John' {@*}
+ * $ds->moveNext();
+ * print $ds->getField('lastName'); /* prints 'Smith' {@*}
+ * </code>
+ *
+ * @package data
+ * @subpackage adapter
+ * @uses AbstractList
+ * @uses ListIterator
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class DataSetArray extends DataAdapter
 {
-	var $Iterator;		// @var Iterator ListIterator object	Objeto Iterator para navegação nos registros do conjunto
-	var $fields;		// @var fields array					Armazena as colunas do registro apontado pelo cursor
-	var $recordType;	// @var recordType string				Tipo de dado de cada registro do DataSet
-	var $eof = TRUE;	// @var eof bool						"FALSE" Indica se o final do conjunto de dados foi alcançado
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::DataSetArray
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		params array	"array()" Vetor de parâmetros de inicialização	
-	//!-----------------------------------------------------------------
+	/**
+	 * Iterator used to navigate through the array members
+	 *
+	 * @var object ListIterator
+	 * @access private
+	 */
+	var $Iterator;
+
+	/**
+	 * Holds the record type (array, object, string, int, float, ...)
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $recordType;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param array $params Configuration parameters
+	 * @return DataSetArray
+	 */
 	function DataSetArray($params=array()) {
 		parent::DataAdapter($params);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::load
-	// @desc		Carrega os dados do dataset a partir de um array
-	// @access		public
-	// @param		arr array	Array contendo os dados
-	// @note		O array deve ser bidimensional e indexado numericamente
-	// @return		bool	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Loads an array
+	 *
+	 * @param array $arr Data array
+	 * @return bool
+	 */
 	function load($arr) {
-		if (TypeUtils::isArray($arr)) {
-			$content = $arr;
-			if (empty($content)) {
-				$this->recordCount = 0;
-			} else {
-				$this->recordCount = sizeof($content);
-				$DataList = new AbstractList($content);
+		if (is_array($arr)) {
+			if (!empty($arr)) {
+				$DataList = new AbstractList($arr);
 				$this->Iterator =& $DataList->iterator();
+				$this->absolutePosition = 0;
+				$this->recordCount = sizeof($arr);
 				$this->fields = $this->Iterator->next();
 				$this->_setFieldProperties();
 				$this->eof = FALSE;
@@ -87,18 +118,15 @@ class DataSetArray extends DataAdapter
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::loadSubSet
-	// @desc		Carrega para o dataset um subconjunto dos dados armazenados no array original,
-	//				baseado no deslocamento e tamanho fornecidos
-	// @access		public
-	// @param		offset int		Deslocamento a partir do início do conjunto (baseado em zero)
-	// @param		size int		Tamanho do subconjunto	
-	// @param		arr array		Array contendo os dados
-	// @note		O array deve ser bidimensional e indexado numericamente
-	// @return		bool	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Loads a subset of an array
+	 *
+	 * @param int $offset Starting offset (zero-based)
+	 * @param int $size Subset size
+	 * @param array $arr Original array
+	 * @return bool
+	 */
 	function loadSubSet($offset, $size, $arr) {
 		if (TypeUtils::isArray($arr)) {
 			$content = $arr;
@@ -107,8 +135,9 @@ class DataSetArray extends DataAdapter
 			} else {
 				$subSet = array_slice($content, $offset, $size);
 				if (sizeof($subSet) > 0) {
+					$this->absolutePosition = 0;
 					$this->recordCount = sizeof($subSet);
-					$this->totalRecordCount = sizeof($content);					
+					$this->totalRecordCount = sizeof($content);
 					$DataList = new AbstractList($subSet);
 					$this->Iterator =& $DataList->iterator();
 					$this->fields = $this->Iterator->next();
@@ -121,102 +150,36 @@ class DataSetArray extends DataAdapter
 			return TRUE;
 		}
 		return FALSE;
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::getField
-	// @desc		Retorna o valor de um determinado campo a partir de seu índice ou de seu nome
-	// @access		public
-	// @param		fieldId mixed	
-	//!-----------------------------------------------------------------
+	}
+
+	/**
+	 * Overrides parent class implementation in order to correctly
+	 * fetch field values when records are objects
+	 *
+	 * @param string $fieldId Field name
+	 * @return mixed
+	 */
 	function getField($fieldId) {
-		if (!TypeUtils::isNull($this->Iterator)) {
-			if ($this->recordType == 'object')
+		switch ($this->recordType) {
+			case 'object' :
 				return (array_key_exists($fieldId, get_object_vars($this->fields)) ? $this->fields->{$fieldId} : NULL);
-			else
+			case 'array' :
 				return (array_key_exists($fieldId, $this->fields) ? $this->fields[$fieldId] : NULL);
-		}			
-		return NULL;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::getAbsolutePosition
-	// @desc		Retorna a posição atual do cursor de registros
-	// @access		public
-	// @return		int Posição atual do cursor
-	//!-----------------------------------------------------------------
-	function getAbsolutePosition() {
-		if (!TypeUtils::isNull($this->Iterator))
-			return $this->Iterator->getCurrentIndex();
-		return 0;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::current
-	// @desc		Retorna o registro apontado pela posição atual do cursor
-	// @access		public
-	// @return		array Vetor contendo o registro atual
-	//!-----------------------------------------------------------------
-	function current() {
-		if (!TypeUtils::isNull($this->Iterator))
-			return $this->fields;
-		return array();
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::fetch
-	// @desc		Retorna um vetor contendo o registro atual
-	// @access		public
-	// @return		array Vetor contendo o registro atual
-	//!-----------------------------------------------------------------
-	function fetch() {
-		if (!TypeUtils::isNull($this->Iterator) && !$this->eof()) {
-			$dataArray = $this->fields;
-			$this->moveNext();
-			return $dataArray;
+			default :
+				return NULL;
 		}
-		return array();
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::fetchInto
-	// @desc		Copia para o vetor passado no parâmetro $dataArray o
-	//				conteúdo do registro atual
-	// @access		public
-	// @param		&dataArray array	Vetor para armazenamento do registro
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function fetchInto(&$dataArray) {
-		if (!TypeUtils::isNull($this->Iterator) && !$this->eof()) {
-			$dataArray = $this->fields;
-			$this->moveNext();
-			return TRUE;
-		}
-		return FALSE;
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::eof
-	// @desc		Verifica se o final do conjunto de resultados foi alcançado
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function eof() {
-		if (!TypeUtils::isNull($this->Iterator))
-			return $this->eof;
-		return TRUE;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::move
-	// @desc		Move o cursor para uma determinada posição
-	// @access		public
-	// @param		recordNumber int	Número do registro
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function move($recordNumber) {
-		if (!TypeUtils::isNull($this->Iterator) && TypeUtils::isInteger($recordNumber)) {
-			if ($this->Iterator->moveToIndex($recordNumber)) {
+
+	/**
+	 * Move to a given position in the data set
+	 *
+	 * @param int $index Record index
+	 * @return bool
+	 */
+	function move($index) {
+		if (is_object($this->Iterator) && TypeUtils::isInteger($index)) {
+			if ($this->Iterator->moveToIndex($index)) {
+				$this->absolutePosition = $this->Iterator->getCurrentIndex();
 				$this->fields = $this->Iterator->next();
 				$this->eof = FALSE;
 				return TRUE;
@@ -224,46 +187,56 @@ class DataSetArray extends DataAdapter
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::moveNext
-	// @desc		Move o cursor para a próxima posição, se existente
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Move to the next record, if existent
+	 *
+	 * @return bool
+	 */
 	function moveNext() {
-		if (!TypeUtils::isNull($this->Iterator) && $this->Iterator->hasNext()) {
+		if (is_object($this->Iterator) && $this->Iterator->hasNext()) {
 			$this->fields = $this->Iterator->next();
+			$this->absolutePosition = $this->Iterator->getCurrentIndex();
 			return TRUE;
 		}
 		$this->eof = TRUE;
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::movePrevious
-	// @desc		Move o cursor para a posição anterior, se existente
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Move to the previous record, if existent
+	 *
+	 * @return bool
+	 */
 	function movePrevious() {
-		if (!TypeUtils::isNull($this->Iterator) && $this->getAbsolutePosition() > 0) {
+		if (is_object($this->Iterator) && $this->getAbsolutePosition() > 0) {
 			$this->fields = $this->Iterator->previous();
+			$this->absolutePosition = $this->Iterator->getCurrentIndex();
 			if ($this->eof())
 				$this->eof = FALSE;
 			return TRUE;
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	DataSetArray::_setFieldProperties
-	// @desc		Define os campos, nomes de campos e quantidade de campos,
-	//				dependendo do tipo de cada entrada do array correspondente
-	//				a um registro do DataSet
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Free internal {@link Iterator}
+	 */
+	function close() {
+		unset($this->Iterator);
+	}
+
+	/**
+	 * Define fields, field names and field count, depending
+	 * on the native type of a record
+	 *
+	 * This method is called inside {@link load} and
+	 * {@link loadSubSet}, and determines the value of
+	 * {@link recordType}, {@link fieldNames} and
+	 * {@link fieldCount}.
+	 *
+	 * @access private
+	 */
 	function _setFieldProperties() {
 		$this->recordType = TypeUtils::getType($this->fields);
 		if ($this->recordType == 'array') {

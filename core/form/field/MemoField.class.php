@@ -1,74 +1,77 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/MemoField.class.php,v 1.30 2006/10/29 17:31:58 mpont Exp $
-// $Date: 2006/10/29 17:31:58 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.EditableField');
-import('php2go.template.Template');
-//------------------------------------------------------------------
 
-// @const	MEMOFIELD_DEFAULT_COLS		"40"
-// Número de colunas padrão na c7onstrução de campos do tipo TEXTAREA
+/**
+ * Default value to the COLS attribute
+ */
 define('MEMOFIELD_DEFAULT_COLS', 40);
-// @const	MEMOFIELD_DEFAULT_ROWS		"5"
-// Número de linhas padrão para campos do tipo TEXTAREA
+/**
+ * Default value to the ROWS attribute
+ */
 define('MEMOFIELD_DEFAULT_ROWS', 5);
 
-//!-----------------------------------------------------------------
-// @class		MemoField
-// @desc		Classe responsável por construir um INPUT HTML do
-//				tipo TEXTAREA, para edição de texto com várias linhas
-// @package		php2go.form.field
-// @extends		EditableField
-// @uses		Template
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.30 $
-//!-----------------------------------------------------------------
+/**
+ * Builds textarea inputs
+ *
+ * @package form
+ * @subpackage field
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class MemoField extends EditableField
 {
-	var $charCountControl = FALSE; // @var charCountControl bool	"FALSE" Indica se deve ser incluído um contador de caracteres
+	/**
+	 * Whether a char counter must be displayed below the textarea
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $charCountControl = FALSE;
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::MemoField
-	// @desc		Construtor da classe MemoField, inicializa os atributos do campo
-	// @access		public
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @param		child bool			"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return MemoField
+	 */
 	function MemoField(&$Form, $child=FALSE) {
 		parent::EditableField($Form, $child);
 		$this->htmlType = 'TEXTAREA';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::display
-	// @desc		Gera o código HTML do campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		if (isset($this->maxLength) && $this->charCountControl) {
@@ -96,122 +99,99 @@ class MemoField extends EditableField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::setCols
-	// @desc		Define o número de colunas (largura) do campo
-	// @access		public
-	// @param		cols int	Número de colunas
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the number of columns of the textarea
+	 *
+	 * @param int $cols Number of columns
+	 */
 	function setCols($cols) {
 		$this->attributes['COLS'] = $cols;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::setRows
-	// @desc		Define o número de linhas (altura) do campo
-	// @access		public
-	// @param		rows int 	Número de linhas
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the number of rows of the textarea
+	 *
+	 * @param int $rows Number of rows
+	 */
 	function setRows($rows) {
 		$this->attributes['ROWS'] = $rows;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::setWidth
-	// @desc		Define a largura em pixels (via CSS) do campo memo
-	// @param		width int	Largura, em pixels
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the textarea's width in pixels
+	 *
+	 * @param int $width Width
+	 */
 	function setWidth($width) {
 		if (TypeUtils::isInteger($width))
 			$this->attributes['WIDTH'] = $width;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::setWidth
-	// @desc		Define a altura em pixels (via CSS) do campo memo
-	// @param		height int	Altura, em pixels
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the textarea's height in pixels
+	 *
+	 * @param int $height Height
+	 */
 	function setHeight($height) {
 		if (TypeUtils::isInteger($height))
 			$this->attributes['HEIGHT'] = $height;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::charCount
-	// @desc		Habilita ou desabilita o controle de máximo de caracteres no campo
-	//				com exibição no número de caracteres restantes em um campo de edição
-	// @access		public
-	// @param		setting bool	Valor para a propriedade (habilitado ou desabilitado)
-	// @param		maxLength int	"NULL" Permite setar o número máximo de caracteres para o campo
-	// @return		void
-	// @note		O mesmo efeito é obtido na seguinte seqüencia de comandos:<br>
-	//				<pre>
-	//
-	//				$field->charCount(TRUE);
-	//				$field->setMaxLength(20);
-	//
-	//				</pre>
-	//!-----------------------------------------------------------------
+	/**
+	 * Enables or disables rendering a char count below the textarea input
+	 *
+	 * The method also allows to define the maximum
+	 * length of the component's value.
+	 *
+	 * @param bool $setting Enable/disable
+	 * @param int $maxLength Maxlength
+	 */
 	function charCount($setting, $maxLength=NULL) {
 		$this->charCountControl = TypeUtils::toBoolean($setting);
 		if (TypeUtils::isInteger($maxLength))
 			parent::setMaxLength($maxLength);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		// número de colunas
+		// columns
 		if (isset($attrs['COLS']) && TypeUtils::isInteger($attrs['COLS']))
 			$this->setCols($attrs['COLS']);
 		else
 			$this->setCols(MEMOFIELD_DEFAULT_COLS);
-		// número de linhas
+		// rows
 		if (isset($attrs['ROWS']) && TypeUtils::isInteger($attrs['ROWS']))
 			$this->setRows($attrs['ROWS']);
 		else
 			$this->setRows(MEMOFIELD_DEFAULT_ROWS);
-		// largura em pixels
+		// width in pixels
 		$this->setWidth(@$attrs['WIDTH']);
-		// altura em pixels
+		// height in pixels
 		$this->setHeight(@$attrs['HEIGHT']);
-		// contador de caracteres
+		// char counter
 		$this->charCount(resolveBooleanChoice(@$attrs['CHARCOUNT']));
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	MemoField::onDataBind
-	// @desc		Evita arrays como valor do campo
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
 		if (is_array($this->value))
-			$this->value = '';			
-	}	
+			$this->value = '';
+	}
 
-	//!-----------------------------------------------------------------
-	// @function	MemoField::onPreRender
-	// @desc		Define o INLINESTYLE do componente a partir do valor
-	//				dos atributos WIDTH e HEIGHT fornecidos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		if (isset($this->maxLength) && $this->charCountControl)
