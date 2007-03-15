@@ -1,62 +1,60 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/CheckField.class.php,v 1.33 2006/10/26 04:55:12 mpont Exp $
-// $Date: 2006/10/26 04:55:12 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.FormField');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		CheckField
-// @desc		Esta classe constrói um campo de formulário do tipo CHECKBOX
-// @package		php2go.form.field
-// @extends		FormField
-// @author		Marcos Pont
-// @version		$Revision: 1.33 $
-//!-----------------------------------------------------------------
+/**
+ * Builds a CHECKBOX input
+ *
+ * @package form
+ * @subpackage field
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class CheckField extends FormField
 {
-	//!-----------------------------------------------------------------
-	// @function	CheckField::CheckField
-	// @desc		Construtor da classe CheckField, inicializa os atributos do campo
-	// @param		&Form Form object		Formulário onde o campo será inserido
-	// @param		child bool				"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return CheckField
+	 */
 	function CheckField(&$Form, $child=FALSE) {
 		parent::FormField($Form, $child);
 		$this->htmlType = 'CHECKBOX';
 		$this->searchDefaults['OPERATOR'] = 'EQ';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::display
-	// @desc		Gera o código HTML do checkbox, junto com sua caption	
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		$captionString = '';
@@ -85,13 +83,13 @@ class CheckField extends FormField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::setLabel
-	// @desc		Como o rótulo (atributo LABEL) não é obrigatório para um campo
-	//				CHECKFIELD, este método retornará a CAPTION se o label for vazio
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Overrides parent class implementation to read the
+	 * field's label from the CAPTION attribute, when the LABEL
+	 * attribute is missing
+	 *
+	 * @return string
+	 */
 	function getLabel() {
 		if (empty($this->label) || $this->label == 'empty') {
 			if ($this->attributes['CAPTION'] != '' && $this->attributes['CAPTION'] != 'empty')
@@ -101,23 +99,26 @@ class CheckField extends FormField
 		return $this->label;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::getDisplayValue
-	// @desc		Monta uma representação compreensível do valor do campo
-	// @access		public
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Overrides parent class implementation to build human-readable
+	 * representation of the value based on the language entries
+	 *
+	 * In english, it would return:
+	 * # checked: %field_name is checked
+	 * # unchecked: %field_name is not checked
+	 *
+	 * @return string
+	 */
 	function getDisplayValue() {
 		$descriptions = PHP2Go::getLangVal('CHECKBOX_DESCRIPTIONS');
 		return sprintf($descriptions[$this->value], $this->attributes['CAPTION']);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::getSearchData
-	// @desc		Retorna o conjunto de informações de busca para este campo
-	// @return		array Dados de busca deste campo
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Return search value and search settings for this component
+	 *
+	 * @return array
+	 */
 	function getSearchData() {
 		$search = array_merge($this->searchDefaults, $this->search);
 		if ($this->_Form->isPosted()) {
@@ -127,18 +128,20 @@ class CheckField extends FormField
 		return $search;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::setValue
-	// @desc		Sobrescreve o método setValue em FormField para converter
-	//				o valor do campo para T ou F (a requisição envia "on" ou vazio)
-	// @param		aValue string	Valor para o checkbox
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Normalize checked and unchecked values
+	 *
+	 * Checkbox inputs in PHP2Go are submitted with the value "on", and
+	 * then converted to T or F (when unchecked). When loaded from a
+	 * database and published to the form, checkbox values can be T or 1
+	 * (checked) and F or 0 (unchecked).
+	 *
+	 * @param string $value Checkbox value
+	 */
 	function setValue($value) {
 		if (!$this->dataBind)
 			$this->onDataBind();
-		// traduz o valor do campo
+		// translate the field's value
 		$value = (string)$value;
 		switch ($value) {
 			case 'T' :
@@ -154,33 +157,29 @@ class CheckField extends FormField
 				$value = 'F';
 				break;
 		}
-		// armazena o novo valor nos arrays globais
+		// store the new value on the superglobals
 		$method = '_' . HttpRequest::method();
 		$$method["V_{$this->name}"] = $_REQUEST["V_{$this->name}"] = $value;
-		// define o valor do atributo CHECKED
+		// set CHECKED attribute
 		$this->attributes['CHECKED'] = ($value == 'T' ? ' checked' : '');
 		$this->value = $value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::setCaption
-	// @desc		Altera ou define uma caption para o campo checkbox
-	// @param		caption string	Texto da caption
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the caption of the checkbox
+	 *
+	 * @param string $caption Caption
+	 */
 	function setCaption($caption) {
 		if ($caption)
 			$this->attributes['CAPTION'] = $caption;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::setChecked
-	// @desc		Define se o campo deverá ser marcado
-	// @param		setting bool	"TRUE" Marcar ou não o campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the checkbox as checked or unchecked
+	 *
+	 * @param bool $setting Checked/unchecked
+	 */
 	function setChecked($setting=TRUE) {
 		$setting = (bool)$setting;
 		if ($setting) {
@@ -192,35 +191,30 @@ class CheckField extends FormField
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::onLoadNode
-	// @desc		Método responsável por processar atributos e nodos filhos
-	//				provenientes da especificação XML do campo
-	// @param		attrs array		Atributos do nodo
-	// @param		children array	Vetor de nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
 		// caption
 		$this->setCaption(@$attrs['CAPTION']);
-		// label vazio se não fornecido
+		// empty label
 		if (!isset($attrs['LABEL']))
 			$this->setLabel('empty');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckField::onDataBind
-	// @desc		Tenta determinar o valor do campo buscando o nome do
-	//				campo escondido associado na requisição
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures component's dynamic properties
+	 *
+	 * @access protected
+	 */
 	function onDataBind() {
 		parent::onDataBind();
 		if (empty($this->value) || $this->value == @$this->attributes['DEFAULT']) {
-			// tenta buscar o valor a partir do nome do campo escondido associado
+			// try to define the component's value from the associated hidden field
 			$hiddenValue = HttpRequest::getVar('V_' . $this->name, 'all', 'ROSGPCE');
 			if ($hiddenValue)
 				$this->setValue($hiddenValue);

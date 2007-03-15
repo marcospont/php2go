@@ -1,29 +1,31 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/p2gConfig.php,v 1.67 2006/11/25 17:20:23 mpont Exp $
-// $Date: 2006/11/25 17:20:23 $
-// $Revision: 1.67 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 	/**
 	 * Define framework's root folder
@@ -49,81 +51,93 @@
 	$Init =& Init::getInstance();
 
 	/**
-	 * Constants used to store global and absolute paths
+	 * Represents the frameworks's absolute URI
 	 */
-
-	// @const PHP2GO_ABSOLUTE_PATH "ABSOLUTE_URI"
-	// Representa a URL absoluta do framework, informada no vetor de configurações do usuário
-	define("PHP2GO_ABSOLUTE_PATH", $Conf->getConfig('ABSOLUTE_URI'));
-	// @const PHP2GO_OFFSET_PATH "Retorno da função getPhp2GoOffset(), em p2gLib.php"
-	// Caminho relativo calculado entre o domínio atual e a URL informada para o PHP2Go
+	define('PHP2GO_ABSOLUTE_PATH', $Conf->getConfig('ABSOLUTE_URI'));
 	$offset = getPhp2GoOffset();
-	define("PHP2GO_OFFSET_PATH", ($offset !== FALSE ? $offset : PHP2GO_ABSOLUTE_PATH));
-	// @const PHP2GO_CSS_PATH "PHP2GO_OFFSET_PATH . 'resources/css/'"
-	// Define o caminho absoluto http para o diretório de folhas de estilo do PHP2Go
-	define("PHP2GO_CSS_PATH", PHP2GO_OFFSET_PATH . "resources/css/");
-	// @const PHP2GO_ICON_PATH "PHP2GO_OFFSET_PATH . 'resources/icon/'"
-	// Define o caminho absoluto http para o diretório de ícones e imagens do PHP2Go
-	define("PHP2GO_ICON_PATH", PHP2GO_OFFSET_PATH . "resources/icon/");
-	// @const PHP2GO_JAVASCRIPT_PATH "PHP2GO_OFFSET_PATH . 'resources/jsrun/'"
-	// Constante a ser utilizada no momento de inserir scripts JavaScript que estão incluídos no framework
-	define("PHP2GO_JAVASCRIPT_PATH", PHP2GO_OFFSET_PATH . "resources/jsrun/");
-	// @const PHP2GO_CACHE_PATH "PHP2GO_ROOT . 'cache/'"
-	// Constante que define o caminho para o diretório 'cache/' do PHP2Go, utilizado para o armazenamento de arquivos temporários
-	define("PHP2GO_CACHE_PATH", PHP2GO_ROOT . "cache/");
-	// @const PHP2GO_TEMPLATE_PATH "PHP2GO_ROOT . 'resources/template/'"
-	// Constante que representa o caminho no servidor onde os templates HTML do PHP2Go estão armazenados
-	define("PHP2GO_TEMPLATE_PATH", PHP2GO_ROOT . "resources/template/");
-
 	/**
-	 * Other constants
+	 * Represents the offset between the current dir and the framework's root
 	 */
-
-	// @const PHP2GO_VERSION "0.5.4"
-	/// Versão do framework
-	define("PHP2GO_VERSION", "0.5.4");
-	// @const PHP2GO_RELEASE_DATE "25/11/2006"
-	// Data de lançamento da última versão
-	define("PHP2GO_RELEASE_DATE", "25/11/2006");
-	// @const PHP2GO_INCLUDE_KEY "php2go"
-	// Nome da chave de inclusão de módulos padrão a ser utilizada
-	define("PHP2GO_INCLUDE_KEY", 'php2go');
-	// @const PHP2GO_DIRECTORY_SEPARATOR "/"
-	// Separador padrão de diretórios do framework
-	define("PHP2GO_DIRECTORY_SEPARATOR", '/');
-	// @const PHP2GO_PATH_SEPARATOR
-	// Separador padrão para PATH
-	define("PHP2GO_PATH_SEPARATOR", (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? ';' : ':'));
-	// @const IS_PHP5 ""
-	// Guarda, em um valor booleano, se a versão do PHP é 5.0.0 ou superior
-	define("IS_PHP5", (floatval(PHP_VERSION) >= 5));
-	// @const T_BYFILE "0"
-	// Identifica que um determinado parâmetro de uma função ou método é um caminho para um arquivo no filesystem
+	define('PHP2GO_OFFSET_PATH', ($offset !== FALSE ? $offset : PHP2GO_ABSOLUTE_PATH));
+	/**
+	 * Framework's CSS path
+	 */
+	define('PHP2GO_CSS_PATH', PHP2GO_OFFSET_PATH . "resources/css/");
+	/**
+	 * Framework's icons path
+	 */
+	define('PHP2GO_ICON_PATH', PHP2GO_OFFSET_PATH . "resources/icon/");
+	/**
+	 * Framework's Javascript libraries path
+	 */
+	define('PHP2GO_JAVASCRIPT_PATH', PHP2GO_OFFSET_PATH . "resources/jsrun/");
+	/**
+	 * Framework's cache path
+	 */
+	define('PHP2GO_CACHE_PATH', PHP2GO_ROOT . "cache/");
+	/**
+	 * Framework's templates path
+	 */
+	define('PHP2GO_TEMPLATE_PATH', PHP2GO_ROOT . "resources/template/");
+	/**
+	 * Framework's version
+	 */
+	define('PHP2GO_VERSION', '0.5.5');
+	/**
+	 * Date when latest framework's version was released
+	 */
+	define('PHP2GO_RELEASE_DATE', '12/03/2007');
+	/**
+	 * Special key representing framework's modules in import operations
+	 */
+	define('PHP2GO_INCLUDE_KEY', 'php2go');
+	/**
+	 * Default directory separator
+	 */
+	define('PHP2GO_DIRECTORY_SEPARATOR', '/');
+	/**
+	 * Path separator
+	 */
+	define('PHP2GO_PATH_SEPARATOR', (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? ';' : ':'));
+	/**
+	 * Indicates if we're running PHP 5.0.0 or higher
+	 */
+	define('IS_PHP5', (floatval(PHP_VERSION) >= 5));
+	/**
+	 * Indicates a file name parameter
+	 */
 	define('T_BYFILE', 0);
-	// @const T_BYVAR "1"
-	// Identifica que um determinado parâmetro de uma função ou método é uma string
+	/**
+	 * Indicates a string or variable parameter
+	 */
 	define('T_BYVAR', 1);
-	// @const LONG_MAX
-	// Valor máximo de número inteiro com sinal
+	/**
+	 * Highest signed integer
+	 */
 	define('LONG_MAX', is_int(2147483648) ? 9223372036854775807 : 2147483647);
-	// @const LONG_MIN
-	// Valor mínimo de número inteiro com sinal
+	/**
+	 * Lowest signed integer
+	 */
 	define('LONG_MIN', -LONG_MAX - 1);
-	// @const PHP2GO_I18N_PATTERN "/#i18n.([^#]+)#/"
-	// Padrão para referência à mensagens internacionalizadas em templates e definições de formulário
+	/**
+	 * Internationalization pattern for templates and XML specifications
+	 */
 	define('PHP2GO_I18N_PATTERN', '/#i18n:([^#]+)#/');
-	// @const PHP2GO_MASK_PATTERN ""
-	// Expressão regular de validação de máscaras para campos editable ou filtros de busca
+	/**
+	 * Input masks pattern
+	 */
 	define('PHP2GO_MASK_PATTERN', "/^(CPFCNPJ|CURRENCY|DATE|EMAIL|FLOAT|(FLOAT)(\-([1-9][0-9]*)\:([1-9][0-9]*))?|DIGIT|INTEGER|LOGIN|WORD|TIME(?:\-AMPM)?|URL|(ZIP)(\-?([1-9])\:?([1-9])))$/");
 
 	/**
 	 * Set INI variables
-	 */
-	ini_set('magic_quotes_gpc', 'off');
-	ini_set('register_argc_argv', 'off');
+	 */	
+	ini_set('short_open_tag', 'on');
+	ini_set('asp_tags', 'off');
+	ini_set('arg_separator.output', "&amp;");
 	ini_set('register_globals', 'off');
-	ini_set('short_open_tag', 'off');
-	ini_set('variables_order', 'EPROSGC');
+	ini_set('register_argc_argv', 'on');	
+	ini_set('magic_quotes_gpc', 'off');
+	ini_set('magic_quotes_runtime', 'off');
 
 	/**
 	 * Mandatory classes

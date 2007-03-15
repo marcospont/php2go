@@ -1,63 +1,106 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/util/Callback.class.php,v 1.11 2006/05/07 15:10:16 mpont Exp $
-// $Date: 2006/05/07 15:10:16 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const	CALLBACK_DYNAMIC_METHOD "1"	Método dinâmico (objeto + método)
+/**
+ * Dynamic method (object + method name)
+ */
 define('CALLBACK_DYNAMIC_METHOD', 1);
-// @const	CALLBACK_STATIC_METHOD "2" Método estático (classe + método)
+/**
+ * Static method (class name + method name)
+ */
 define('CALLBACK_STATIC_METHOD', 2);
-// @const	CALLBACK_FUNCTION "3" Função procedural simples
+/**
+ * Procedural function
+ */
 define('CALLBACK_FUNCTION', 3);
 
-//!-----------------------------------------------------------------
-// @class		Callback
-// @desc		Esta classe valida e executa métodos ou funções, quando estes são
-//				utilizados como callbacks dentro de outras classes do framework. Os tipos
-//				de callbacks permitidos são pares objeto-método e pares
-//				classe-método (na forma de um array), chamadas estáticas de métodos no
-//				formato classe::metodo e chamadas de funções simples
-// @package		php2go.util
-// @extends		PHP2Go
-// @uses		System
-// @uses		TypeUtils
-// @version		$Revision: 1.11 $
-// @author		Marcos Pont
-//!-----------------------------------------------------------------
+/**
+ * Common interface to different types of callable functions and methods
+ *
+ * Examples:
+ * <code>
+ * /* creating a callback from a procedural function {@*}
+ * $func = new Callback('strtoupper');
+ * $upper = $func->invoke('hello world');
+ *
+ * /* creating a callback from a static method {@*}
+ * $method = new Callback('MyClass::myMethod');
+ * /* invoke it with 3 arguments {@*}
+ * $method->invoke(array($a, $b, $c), TRUE);
+ *
+ * /* creating a callback from an object's method {@*}
+ * $obj = new MyClass();
+ * $callback = new Callback(array($obj, 'myMethod'));
+ * $callback->invoke($arg);
+ * </code>
+ *
+ * @package util
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Callback extends PHP2Go
 {
-	var $function = NULL;			// @var function mixed		"NULL" Contém a função ou método atualmente ativo na classe
-	var $type;						// @var type int			Tipo da callback atual
-	var $valid = FALSE;				// @var valid bool			"FALSE" Indica se a callback ativa é válida
-	var $throwErrors = TRUE;		// @var throwErrors bool	"TRUE" Se esta propriedade for verdadeira, o uso de callbacks inválidas irá disparar um erro
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::Callback
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		function mixed		Função ou método
-	//!-----------------------------------------------------------------
+	/**
+	 * Current callback
+	 *
+	 * @var mixed
+	 */
+	var $function = NULL;
+
+	/**
+	 * Current callback type
+	 *
+	 * @var int
+	 */
+	var $type;
+
+	/**
+	 * Indicates if the current callback is valid
+	 *
+	 * @var bool
+	 */
+	var $valid = FALSE;
+
+	/**
+	 * Throw an error when an invalid callback is detected
+	 *
+	 * @var bool
+	 */
+	var $throwErrors = TRUE;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string|array $function Callback specification
+	 * @return Callback
+	 */
 	function Callback($function=NULL) {
 		parent::PHP2Go();
 		if (!TypeUtils::isNull($function)) {
@@ -65,97 +108,91 @@ class Callback extends PHP2Go
 			$this->_parseFunction();
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::&getInstance
-	// @desc		Retorna o singleton da classe
-	// @access		public
-	// @return		Callback object		Instância única da classe Callback
-	// @static
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the singleton of the Callback class
+	 *
+	 * @return Callback
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
 			$instance = new Callback();
 		return $instance;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::getType
-	// @desc		Busca o tipo da callback ativa
-	// @access		public
-	// @return		int Tipo da calllback ativa
-	// @note		Verifique a lista de tipos de callbacks na seção de constantes desta classe
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the type of the current callback
+	 *
+	 * @return int
+	 */
 	function getType() {
 		return $this->type;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::isType
-	// @desc		Testa se a callback ativa é de um determinado tipo
-	// @access		public
-	// @param		type int	Tipo de callback
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Checks if the current callback is of a given type
+	 *
+	 * @param int $type Type
+	 * @return bool
+	 */
 	function isType($type) {
 		return ($this->type == $type);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::isValid
-	// @desc		Consulta pelo status de validade da callback ativa
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Checks if the current callback is valid
+	 *
+	 * @return bool
+	 */
 	function isValid() {
 		return $this->valid;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::setFunction
-	// @desc		Altera ou define a função/método armazenada na classe
-	// @access		public
-	// @param		function mixed		Definição da função ou método
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Changes or defines the callback
+	 *
+	 * @param string|array $function Callback
+	 */
 	function setFunction($function) {
 		$this->function = $function;
 		$this->_parseFunction();
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::setThrowErrors
-	// @desc		Define se os erros de validação nas funções é métodos devem ser disparados
-	// @access		public
-	// @param		setting bool		Valor para a propriedade
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Enable/disable errors when invalid callbacks are detected
+	 *
+	 * @param bool $setting Boolean value
+	 */
 	function setThrowErrors($setting) {
-		$this->throwErrors = TypeUtils::toBoolean($setting);
+		$this->throwErrors = (bool)$setting;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::invoke
-	// @desc		Executa a função ou método atual, utilizando ou não um conjunto de argumentos
-	// @access		public
-	// @param		args mixed			"NULL" Recebe um ou mais argumentos para a execução da função/método
-	// @param		nargs bool			"FALSE" Indica que o parâmetro args é um conjunto de argumentos para a callback e não um único argumento
-	// @return		mixed Devolve o retorno da função ou método ou NULL por padrão se a callback atual não for válida
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Invoke the callback with the given arguments
+	 *
+	 * The $args parameter will be used as argument
+	 * of the function or method. To invoke the callback
+	 * with N arguments, $args must be an array and
+	 * $nargs must be TRUE.
+	 *
+	 * @param mixed $args Callback arguments
+	 * @param bool $nargs Multiple arguments flag
+	 * @return mixed Callback return
+	 */
 	function invoke($args=NULL, $nargs=FALSE) {
 		if ($this->isValid())
 			return (TypeUtils::isNull($args) ? call_user_func($this->function) : ($nargs && TypeUtils::isArray($args) ? call_user_func_array($this->function, $args) : call_user_func($this->function, $args)));
 		return NULL;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::invokeByRef
-	// @desc		Executa a função ou método atual, enviado UM parâmetro por referência
-	// @access		public
-	// @param		&argument mixed		Argumento - passado por referência
-	// @return		mixed Devolve o retorno da função ou NULL por padrão se a callback atual não for válida
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Invoke the callback with a single parameter by reference
+	 *
+	 * @param mixed &$argument Callback argument
+	 * @return mixed Callback return
+	 */
 	function invokeByRef(&$argument) {
 		if ($this->isValid()) {
 			$params = array();
@@ -164,32 +201,30 @@ class Callback extends PHP2Go
 		}
 		return NULL;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::toString
-	// @desc		Exporta informação sobre a função/método ativo na classe
-	// @access		private
-	// @return		string Nome da função ou método
-	//!-----------------------------------------------------------------
-	function toString() {
+
+	/**
+	 * Builds a string representation of the object
+	 *
+	 * @return string
+	 */
+	function __toString() {
 		if (isset($this->function))
 			return (is_array($this->function) ? (is_object($this->function[0]) ? get_class($this->function[0]) . '=>' . $this->function[1] : $this->function[0] . '=>' . $this->function[1]) : $this->function);
 		return NULL;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	Callback::_parseFunction
-	// @desc		Define o tipo e a validade da função/método atual
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Defines type and validity of the current callback
+	 *
+	 * @access private
+	 */
 	function _parseFunction() {
-		if (TypeUtils::isArray($this->function) && sizeof($this->function) == 2) {			
+		if (TypeUtils::isArray($this->function) && sizeof($this->function) == 2) {
 			if (TypeUtils::isObject($this->function[0])) {
 				$this->type = CALLBACK_DYNAMIC_METHOD;
 				$this->valid = (method_exists($this->function[0], $this->function[1]));
 			} else {
-				if (!System::isPHP5()) {
+				if (!IS_PHP5) {
 					$this->function[0] = strtolower($this->function[0]);
 					$this->function[1] = strtolower($this->function[1]);
 				}
@@ -208,6 +243,6 @@ class Callback extends PHP2Go
 			}
 		}
 		if (!$this->valid && $this->throwErrors)
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_CALLBACK', $this->toString()), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_CALLBACK', $this->__toString()), E_USER_ERROR, __FILE__, __LINE__);
 	}
 }

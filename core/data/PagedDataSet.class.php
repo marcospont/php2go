@@ -1,88 +1,124 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/data/PagedDataSet.class.php,v 1.11 2006/06/17 15:04:05 mpont Exp $
-// $Date: 2006/06/17 15:04:05 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//-----------------------------------------
 import('php2go.data.DataSet');
 import('php2go.net.HttpRequest');
-//-----------------------------------------
 
-// @const PDS_DEFAULT_PAGE_SIZE	"30"
-// Define o tamanho padrão de uma página de resultados
+/**
+ * Default page size
+ */
 define('PDS_DEFAULT_PAGE_SIZE', 30);
 
-//!-----------------------------------------------------------------
-// @class		PagedDataSet
-// @desc		A classe PagedDataSet implementa um mecanismo de paginação
-//				sobre os conjuntos de dados criados com a classe DataSet.
-//				Os adaptadores de dados montam um subconjunto de registros
-//				baseado no número da página atual, habilitando a navegação
-//				sobre os mesmos e armazenando na classe o total de registros
-//				do conjunto (todas as páginas de resultados somadas)
-// @package		php2go.data
-// @extends		DataSet
-// @uses		HttpRequest
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.11 $
-// @note		Exemplo de uso:<pre>
-//
-//				# exemplo de dataset paginado utilizando XML
-//				$dataset =& PagedDataSet::factory('xml');
-//				$dataset->setPageSize(5);
-//				$dataset->load('dataset.xml', DS_XML_CDATA);
-//
-//				# monta os links de paginação
-//				if ($previous = $dataset->getPreviousPage()) {
-//				&nbsp;&nbsp;&nbsp;&nbsp;print HtmlUtils::anchor(HttpRequest::basePath() . '?page=' . $previous, 'Previous');
-//				}
-//				if ($next = $dataset->getNextPage()) {
-//				&nbsp;&nbsp;&nbsp;&nbsp;print HtmlUtils::anchor(HttpRequest::basePath() . '?page=' . $next, 'Next');
-//				}
-//
-//				# navega nos registros
-//				while (!$dataset->eof()) {
-//				&nbsp;&nbsp;&nbsp;&nbsp;print $dataset->getField('fieldname');
-//				}
-//				
-//
-//				</pre>
-//!-----------------------------------------------------------------
+/**
+ * Handles data sets split into pages
+ * 
+ * The PagedDataSet class applies pagination on data sets. Data pages
+ * are built by calling loadSubSet method on data adapters, using
+ * current page and page size as arguments. The page number is 
+ * automatically loaded from the "page" get parameter
+ * 
+ * The total record count (total records in all pages) can be retrieved
+ * by calling {@link getTotalRecordCount}.
+ * 
+ * Example:
+ * <code>
+ * /**
+ *  * create and fill data set;
+ *  * page number is read from $_GET['page'] variable
+ * {@*}
+ * $pds =& PagedDataSet::factory('db');
+ * $pds->load("select * from users");
+ * 
+ * /* build navigation links {@*}
+ * if ($prev = $pds->getPreviousPage())
+ *   print HtmlUtils::anchor(HttpRequest::basePath() . '?page=' . $prev, 'Previous');
+ * if ($next = $pds->getNextPage())
+ *   print HtmlUtils::anchor(HttpRequest::basePath() . '?page=' . $next, 'Next');
+ * 
+ * /* browse page contents {@*}
+ * while (!$pds->eof()) {
+ *   print $pds->getField('username') . '<br />';
+ *   $pds->moveNext();
+ * }
+ * </code>
+ * 
+ * @package data
+ * @uses HttpRequest
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class PagedDataSet extends DataSet
 {
-	var $_currentPage;		// @var _currentPage int	Número da página atual
-	var $_pageCount = 0;	// @var _pageCount int		"0" Total de páginas do conjunto de dados
-	var $_offset;			// @var _offset int			Deslocamento atual no conjunto (início da página atual)
-	var $_pageSize;			// @var _pageSize int		Tamanho das páginas de resultados
+	/**
+	 * Current page number
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $_currentPage;
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::PagedDataSet
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		type string		Tipo do adaptador de dados a ser utilizado	
-	//!-----------------------------------------------------------------
+	/**
+	 * Total page count
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $_pageCount = 0;
+	
+	/**
+	 * Current starting offset
+	 * 
+	 * Index of the first record of the current page.
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $_offset;
+	
+	/**
+	 * Page size
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $_pageSize;
+	
+	/**
+	 * Class constructor
+	 * 
+	 * Shouldn't be called directly. Prefer calling static method 
+	 * {@link getInstance} and {@link factory}
+	 *
+	 * @param string $type Adapter type
+	 * @return PagedDataSet
+	 */
 	function PagedDataSet($type) {
 		parent::DataSet($type);
 		$this->_pageSize = PDS_DEFAULT_PAGE_SIZE;
@@ -92,16 +128,25 @@ class PagedDataSet extends DataSet
 		$this->_offset = (($this->_currentPage - 1) * $this->_pageSize);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::&factory
-	// @desc		Cria uma nova instância da classe PagedDataSet a 
-	//				partir dos parâmetros fornecidos
-	// @param		type string		Tipo do adaptador de dados
-	// @param		params array	"array()" Parâmetros de inicialização do adaptador
-	// @return		PagedDataSet object
-	// @access		public	
-	// @static
-	//!-----------------------------------------------------------------
+	
+	/**
+	 * Creates a new paged data set of type $type, using a
+	 * given set of configuration $params
+	 *
+	 * The argument $type is mandatory and must be one of
+	 * the supported adapter types: db, xml, csv or array.
+	 * 
+	 * The set of parameters accepted by data adapters are:
+	 * # db : debug (bool), connectionId (string), optimizeCount (bool)
+	 * # xml : none
+	 * # csv : none
+	 * # array : none
+	 *
+	 * @param string $type Adapter type
+	 * @param array $params Adapter parameters
+	 * @return PagedDataSet
+	 * @static
+	 */
 	function &factory($type, $params=array()) {
 		$type = strtolower($type);
 		$params = (array)$params;
@@ -109,16 +154,23 @@ class PagedDataSet extends DataSet
 		return $instance;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::&getInstance
-	// @desc		Retorna uma instância única da classe PagedDataSet,
-	//				para um determinado tipo de adaptador de dados
-	// @param		type string		Tipo do adaptador de dados
-	// @param		params array	"array()" Parâmetros de inicialização do adaptador
-	// @return		PagedDataSet object
-	// @access		public	
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of a given paged data set type
+	 *
+	 * The argument $type is mandatory and must be one of
+	 * the supported adapter types: db, xml, csv or array.
+	 *
+	 * The set of parameters accepted by data adapters are:
+	 * # db : debug (bool), connectionId (string), optimizeCount (bool)
+	 * # xml : none
+	 * # csv : none
+	 * # array : none
+	 *
+	 * @param string $type Adapter type
+	 * @param array $params Adapter parameters
+	 * @return PagedDataSet
+	 * @static
+	 */
 	function &getInstance($type, $params=array()) {
 		static $instances;
 		if (!isset($instances))
@@ -131,95 +183,45 @@ class PagedDataSet extends DataSet
 		return $instances[$hash];
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::getPageSize
-	// @desc		Retorna o tamanho de página atual
-	// @access		public
-	// @return		int
-	//!-----------------------------------------------------------------
+	/**
+	 * Get page size
+	 *
+	 * @return int
+	 */
 	function getPageSize() {
 		return $this->_pageSize;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::setPageSize
-	// @desc		Define o tamanho de página a ser utilizado
-	// @access		public
-	// @param		pageSize int	Novo tamanho de página
-	// @return		void
-	//!-----------------------------------------------------------------	
+	/**
+	 * Set page size
+	 * 
+	 * Doesn't take effect if called after calling {@link load()}.
+	 *
+	 * @param int $pageSize New page size
+	 */
 	function setPageSize($pageSize) {
 		$this->_pageSize = max(1, $pageSize);
 		$this->_offset = (($this->_currentPage - 1) * $this->_pageSize);
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::getCurrentPage
-	// @desc		Retorna o número da página atual
-	// @access		public
-	// @return		int
-	//!-----------------------------------------------------------------
+	/**
+	 * Get current page number
+	 *
+	 * @return int
+	 */
 	function getCurrentPage() {
 		return $this->_currentPage;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::getPreviousPage
-	// @desc		Retorna o número da página anterior do relatório, se existente
-	// @access		public
-	// @return		int Número da página anterior ou FALSE se a atual é a primeira
-	//!-----------------------------------------------------------------
-	function getPreviousPage() {
-		return ($this->atFirstPage() ? FALSE : $this->_currentPage - 1);
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::getNextPage
-	// @desc		Retorna o número da próxima página do relatório, se existente
-	// @access		public
-	// @return		int Número da próxima página ou FALSE se a atual é a última
-	//!-----------------------------------------------------------------
-	function getNextPage() {
-		return ($this->atLastPage() ? FALSE : $this->_currentPage + 1);
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::atFirstPage
-	// @desc		Verifica se a página atual é a primeira
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function atFirstPage() {
-		return $this->_currentPage == 1;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::atLastPage
-	// @desc		Verifica se a página atual é a última
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function atLastPage() {
-		return $this->_currentPage == $this->_pageCount;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::getPageCount
-	// @desc		Retorna o total de páginas do conjunto de resultados
-	// @access		public
-	// @return		int Total de páginas
-	//!-----------------------------------------------------------------
-	function getPageCount() {
-		return $this->_pageCount;
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::setCurrentPage
-	// @desc		Define a página do dataset que deverá ser carregada
-	// @access		public
-	// @param		page int	Número da página
-	// @return		
-	//!-----------------------------------------------------------------
+	/**
+	 * Set page number to be loaded
+	 * 
+	 * Page number is fetched from the request inside the class constructor.
+	 * However, you can manually load a given page number by calling this
+	 * method. Don't forget to call it before calling {@link load()}.
+	 *
+	 * @param int $page Page number
+	 */
 	function setCurrentPage($page) {
 		if (TypeUtils::isInteger($page) && $page > 0) {
 			$this->_currentPage = $page;
@@ -227,53 +229,98 @@ class PagedDataSet extends DataSet
 		}
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::getTotalRecordCount
-	// @desc		Retorna o total de registros do conjunto de dados, somando
-	//				todas as páginas existentes
-	// @access		public
-	// @return		int
-	//!-----------------------------------------------------------------
+	/**
+	 * Get previous page number
+	 * 
+	 * Returns FALSE if we're at the first page.
+	 *
+	 * @return int|FALSE
+	 */
+	function getPreviousPage() {
+		return ($this->atFirstPage() ? FALSE : $this->_currentPage - 1);
+	}
+	
+	/**
+	 * Get next page number
+	 * 
+	 * Returns FALSE if we're at the last page.
+	 *
+	 * @return int|FALSE
+	 */
+	function getNextPage() {
+		return ($this->atLastPage() ? FALSE : $this->_currentPage + 1);
+	}
+	
+	/**
+	 * Check if we're at the first page
+	 *
+	 * @return bool
+	 */
+	function atFirstPage() {
+		return $this->_currentPage == 1;
+	}
+	
+	/**
+	 * Check if we're at the last page
+	 *
+	 * @return bool
+	 */
+	function atLastPage() {
+		return $this->_currentPage == $this->_pageCount;
+	}
+	
+	/**
+	 * Get total of pages
+	 *
+	 * @return int
+	 */
+	function getPageCount() {
+		return $this->_pageCount;
+	}
+	
+	/**
+	 * Get total record count
+	 * 
+	 * This is the total of records in all data set pages
+	 *
+	 * @return int
+	 */
 	function getTotalRecordCount() {
 		return $this->adapter->totalRecordCount;
 	}
 	
-	//!-----------------------------------------------------------------	
-	// @function	PagedDataSet::load
-	// @desc		Este método recebe uma quantidade variável de parâmetros
-	//				dependendo do adaptador de dados utilizado. A partir dos parâmetros
-	//				recebidos, o método load() interno ao adaptador é executado
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------	
+	/**
+	 * Loads a data subset onto the data adapter, using
+	 * requested page number and desired page size as
+	 * "offset" and "size"
+	 * 
+	 * This method receives a variable number of arguments,
+	 * depending on the active data adapter. Internally
+	 * calls loadSubSet() method of the data adapter.
+	 *
+	 * @see DataSetArray::loadSubSet()
+	 * @see DataSetCsv::loadSubSet()
+	 * @see DataSetDb::loadSubSet()
+	 * @see DataSetXml::loadSubSet()
+	 */
 	function load() {
 		$args = func_get_args();
 		$args = array_merge(array($this->_offset, $this->_pageSize), $args);
-		if (call_user_func_array(array(&$this->adapter, 'loadSubSet'), $args)) {
+		if (call_user_func_array(array(&$this->adapter, 'loadSubSet'), $args))
 			$this->_calculatePages();
-			return TRUE;
-		}
-		return FALSE;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::loadSubSet
-	// @desc		Sobrescreve o método loadSubSet da classe pai, anulando
-	//				a sua funcionalidade
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Anulls parent class implementation
+	 */
 	function loadSubSet() {
-		return FALSE;
 	}
 	
-	//!-----------------------------------------------------------------
-	// @function	PagedDataSet::_calculatePages
-	// @desc		Calcula o número total de páginas no conjunto de dados,
-	//				baseado no número total de registros e no tamanho da página
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Calculate page count based on total record count and page size
+	 *
+	 * @access private
+	 */
 	function _calculatePages() {
 		if (($this->adapter->totalRecordCount % $this->_pageSize) == 0)
 			$this->_pageCount = ($this->adapter->totalRecordCount / $this->_pageSize);

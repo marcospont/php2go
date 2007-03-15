@@ -1,28 +1,30 @@
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/resources/javascript/form/formdatabind.js,v 1.4 2006/11/19 17:59:14 mpont Exp $
-// $Date: 2006/11/19 17:59:14 $
-// $Revision: 1.4 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
 /**
  * @fileoverview
@@ -47,10 +49,10 @@ PHP2Go.include(PHP2Go.baseUrl + 'jsrsclient.js');
  * @param {String} tbl Table name
  * @param {String} pk Table primary key
  * @param {Boolean} readOnly Is the form in readonly state?
- * @param {Boolean} forcePost Must we save records using a simple POST?
+ * @param {Boolean} jsrsSubmit Must we save records using a JSRS request?
  * @param {String} uri URI to be used to save records
  */
-FormDataBind = function(db, frm, tbl, pk, readOnly, forcePost, uri) {
+FormDataBind = function(db, frm, tbl, pk, readOnly, jsrsSubmit, uri) {
 	this.absoluteUri = uri || document.location.pathname;
 	this.tableName = tbl;
 	this.pkName = pk;
@@ -59,7 +61,7 @@ FormDataBind = function(db, frm, tbl, pk, readOnly, forcePost, uri) {
 	this.db = eval("document.all." + db);
 	this.rs = null;
 	this.readOnly = !!readOnly;
-	this.forcePost = !!forcePost;
+	this.jsrsSubmit = !!jsrsSubmit;
 	this.action = null;
 	this.cacheValues = null;
 	this.cachePosition = 1;
@@ -222,7 +224,7 @@ FormDataBind.prototype.editRecord = function() {
  */
 FormDataBind.prototype.saveRecord = function() {
 	if (!this.form.validator || this.form.validator.run()) {
-		if (this.forcePost) {
+		if (!this.jsrsSubmit) {
 			this.form.elements['lastposition'].value = this.rs.AbsolutePosition;
 			this.form.submit();
 		} else {
@@ -279,7 +281,7 @@ FormDataBind.prototype.deleteRecord = function() {
 		return '';
 	}
 	if (confirm(Lang.dataBind.deleteConfirm)) {
-		if (this.forcePost) {
+		if (!this.jsrsSubmit) {
 			this.form.elements['lastposition'].value = this.rs.AbsolutePosition;
 			this.form.elements['removeid'].value = getPrimaryKeyValue();
 			this.form.submit();

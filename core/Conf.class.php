@@ -1,129 +1,110 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/Conf.class.php,v 1.19 2006/10/26 04:21:40 mpont Exp $
-// $Date: 2006/10/26 04:21:40 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		Conf
-// @desc		Classe que gerencia os dados de configuração do framework,
-//				carregando os dados a partir de arquivos, buscando os valores
-//				de entradas da configuração ou modificando-as
-// @author		Marcos Pont
-// @version		$Revision: 1.19 $
-//!-----------------------------------------------------------------
+/**
+ * Read and write global configuration settings
+ *
+ * This class manages the global configuration settings, defined
+ * in the $P2G_USER_CFG array and processed by the framework's
+ * initialization script (via {@link Init} class).
+ *
+ * @package php2go
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Conf
 {
-	var $config;	// @var config array		Vetor com os dados de configuração do framework
+	/**
+	 * Configuration settings
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $config;
 
-	//!-----------------------------------------------------------------
-	// @function	Conf::Conf
-	// @desc		Construtor da classe Conf
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 *
+	 * Shouldn't be called directly. Always use {@link getInstance}
+	 * when you need to read, add or modify configuration settings.
+	 *
+	 * @return Conf
+	 */
 	function Conf() {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Conf::&getInstance
-	// @desc		Retorna uma instância única (singleton) da classe Conf
-	// @access		public
-	// @return		Conf object
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the singleton of the Conf class
+	 *
+	 * @return Conf
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
 			$instance = new Conf;
 		return $instance;
 	}
-
-	//!-----------------------------------------------------------------
-	// @function	Conf::loadConfig
-	// @desc		Carrega o conteúdo da configuração do sistema a partir
-	//				de um módulo (arquivo no servidor)
-	// @access		public
-	// @param		configModule string	Caminho do módulo
-	// @return		void
-	//!-----------------------------------------------------------------
-	function loadConfig($configModule) {
-		$this->config = includeFile($configModule, TRUE);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Conf::getConfig
-	// @desc		Busca o valor de uma chave no vetor de configurações
-	// @access		public
-	// @param		configName string		Nome da entrada
-	// @param		fallback mixed			"FALSE" Valor a ser retornado se a chave não for encontrada
-	// @return		mixed Valor da entrada ou FALSE se ela não for encontrada
-	//!-----------------------------------------------------------------
-	function getConfig($configName, $fallback=FALSE) {
-		return findArrayPath($this->config, $configName, '.', $fallback);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Conf::&getAll
-	// @desc		Retorna o conjunto completo de configurações registradas
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
-	function &getAll() {
-		return $this->config;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Conf::getConnectionParameters
-	// @desc		Método estático que busca no vetor de configuração as propriedades
-	//				de conexão com o banco de dados
-	// @access		public
-	// @param		connectionId string		"NULL" ID da conexão desejada
-	// @return		array Vetor contendo os parâmetros da conexão
-	// @note		Se o parâmetro $cid for omitido, a conexão default será utilizada
-	// @static
-	//!-----------------------------------------------------------------
+	
+	/**
+	 * Get database connection settings for a given connetion ID
+	 *
+	 * If the $connectionId argument is missing, the method will
+	 * try to use the DATABASE.DEFAULT_CONNECTION setting or the
+	 * first key of the DATABASE.CONNECTIONS array.
+	 *
+	 * @param string $connectionId Connection ID
+	 * @return array|FALSE Connection properties or FALSE in case of error
+	 * @static
+	 */
 	function getConnectionParameters($connectionId=NULL) {
 		$Conf =& Conf::getInstance();
 		$connections = $Conf->getConfig('DATABASE.CONNECTIONS');
 		if (is_array($connections)) {
-			// foi solicitado um determinado ID de conexão
+			// a connection ID was requested
 			if ($connectionId !== NULL) {
 				if (isset($connections[$connectionId]))
 					$params = (array)$connections[$connectionId];
 			} else {
-				// ID de conexão default
+				// default connection ID
 				$connectionId = $Conf->getConfig('DATABASE.DEFAULT_CONNECTION');
 				if ($connectionId) {
 					if (isset($connections[$connectionId]))
 						$params = (array)$connections[$connectionId];
 				} else {
-					// não existe uma conexão default, utilizar a primeira conexão na lista
+					// use first connection of the connections hashmap
 					list($connectionId, $value) = each($connections);
 					if (is_array($value))
 						$params = $value;
 				}
 			}
-			// conexão não encontrada
+			// connection ID not found
 			if (!isset($params))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_DATABASE_PARAMETERS', $connectionId), E_USER_ERROR, __FILE__, __LINE__);
 			if (array_key_exists('PERSISTENT', $params))
@@ -147,22 +128,34 @@ class Conf
 			return $params;
 		PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_DATABASE_PARAMETERS', $connectionId), E_USER_ERROR, __FILE__, __LINE__);
 		return FALSE;
+	}	
+
+	/**
+	 * Load a new set of configuration entries from a given file
+	 *
+	 * This method is used by {@link Init} class to initialize global
+	 * configuration settings.
+	 *
+	 * @param string $configModule Configuration file path
+	 */
+	function loadConfig($configModule) {
+		$this->config = includeFile($configModule, TRUE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Conf::setConfig
-	// @desc		Define um valor para uma entrada do vetor de configurações
-	//				ou adiciona/substitui valor ao vetor principal de configuração
-	// @access		public
-	// @param		configName mixed	Vetor de configuração a ser utilizado ou nome da entrada a ser setada
-	// @param		configValue mixed	"" Valor para a entrada
-	// @return		void
-	// @note		Exemplos das duas possibilidades do método setConfig:
-	//				$Conf->setConfig(array('foo'=>'bar', 'baz'=>'xpto')); ou
-	//				$Conf->setConfig('foo', 'bar');
-	//!-----------------------------------------------------------------
+	/**
+	 * Create or replace a single configuration entry or a set of entries
+	 *
+	 * <code>
+	 * $Conf =& Conf::getInstance();
+	 * $Conf->setConfig('LOCALE', 'en-us');
+	 * $Conf->setConfig(array('KEY'=>'value', 'ANOTHER_KEY'=>'another_value'));
+	 * </code>
+	 *
+	 * @param string|array $configName Config key or a key=>value hashmap
+	 * @param mixed $configValue Value
+	 * @todo Allow setting array members by using a dot path
+	 */
 	function setConfig($configName, $configValue='') {
-		// TODO: Permitir setar chaves internas de array utilizando uma string de caminho
 		if (is_array($configName) && trim($configValue) == '') {
 			if (isset($this->config))
 				$this->config = array_merge($this->config, $configName);
@@ -171,6 +164,26 @@ class Conf
 		} else {
 			$this->config[$configName] = $configValue;
 		}
+	}
+
+	/**
+	 * Get a configuration setting
+	 *
+	 * @param string $configName Config key
+	 * @param mixed $fallback Return value to be used when the key is not found
+	 * @return mixed Config key value or $fallback if the key doesn't exist
+	 */
+	function getConfig($configName, $fallback=FALSE) {
+		return findArrayPath($this->config, $configName, '.', $fallback);
+	}
+
+	/**
+	 * Get all configuration settings
+	 *
+	 * @return array
+	 */
+	function &getAll() {
+		return $this->config;
 	}
 }
 ?>

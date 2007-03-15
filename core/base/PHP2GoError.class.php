@@ -1,78 +1,139 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/base/PHP2GoError.class.php,v 1.28 2006/10/26 04:27:02 mpont Exp $
-// $Date: 2006/10/26 04:27:02 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const E_DATABASE_ERROR "0"
-// Define o tipo dos erros de banco de dados, que são disparados a partir da biblioteca ADODB
+/**
+ * Database error type, thrown from {@link dbErrorHandler()}
+ */
 define('E_DATABASE_ERROR', 0);
-
+/**
+ * Define strict errors constant when not available
+ */
 if (!defined('E_STRICT'))
 	define('E_STRICT', 2048);
 
-//!-----------------------------------------------------------------
-// @class		PHP2GoError
-// @desc		Controla os erros disparados pelos objetos, reunindo
-// 				informações sobre o erro e tratando-os
-// @package		php2go.base
-// @extends 	PHP2Go
-// @author 		Marcos Pont
-// @version		$Revision: 1.28 $
-//!-----------------------------------------------------------------
+/**
+ * Base error class
+ *
+ * This class is used by the framework as a wrapper to throw and log
+ * application errors.
+ *
+ * During the initialization, PHP2Go defines the function
+ * {@link php2goErrorHandler()} as the error handler for
+ * warnings, notices and user errors. Inside this function,
+ * PHP2GoError class is used to create an error object, save
+ * it in the error log file and raise it through {@link trigger_error()}.
+ *
+ * @package base
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class PHP2GoError extends PHP2Go
 {
-	var $object; 						// @var object object			Objeto onde ocorreu o erro
-	var $msg = ''; 						// @var msg string				"" Mensagem de Erro
-	var $extra = '';					// @var extra string			"" Informações adicionais do erro
-	var $type = E_USER_ERROR; 			// @var type int				"E_USER_ERROR" Tipo do erro capturado
-	var $typeDesc; 						// @var	typeDesc string			Descrição do tipo de erro capturado
-	var $file; 							// @var file string				Arquivo onde o erro foi disparado, setado pelo usuário
-	var $line; 							// @var line int				Linha do arquivo onde o erro ocorreu, setado pelo usuário
-	var $dateFormat = '%b %d %H:%M:%S';	// @var dateFormat string		Formato de data utilizado nos logs de erro	
-	var $ignoreErrors = 				// @var ignoreErrors array		Vetor de erros a serem ignorados
-	array (
-		'UNDEFINED INDEX',
-		'USE OF UNDEFINED CONSTANT'
-	);
+	/**
+	 * Class that generated the error
+	 *
+	 * @var object
+	 */
+	var $object;
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::PHP2GoError
-	// @desc 		Construtor da classe PHP2GoError
-	// @access 		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Error message
+	 *
+	 * @var string
+	 */
+	var $msg = '';
+
+	/**
+	 * Extra/detailed error message
+	 *
+	 * @var string
+	 */
+	var $extra = '';
+
+	/**
+	 * Error type
+	 *
+	 * @var int
+	 */
+	var $type = E_USER_ERROR;
+
+	/**
+	 * String description of the error type, loaded
+	 * from the active language table
+	 *
+	 * @var string
+	 */
+	var $typeDesc;
+
+	/**
+	 * Error file path
+	 *
+	 * @var string
+	 */
+	var $file;
+
+	/**
+	 * Error line number
+	 *
+	 * @var int
+	 */
+	var $line;
+
+	/**
+	 * Format for log entry dates
+	 *
+	 * @var string
+	 */
+	var $dateFormat = '%b %d %H:%M:%S';
+
+	/**
+	 * Set of error messages that should be ignored
+	 *
+	 * @var array
+	 */
+	var $ignoreErrors = array ('UNDEFINED INDEX', 'USE OF UNDEFINED CONSTANT');
+
+	/**
+	 * Class constructor
+	 *
+	 * @return PHP2GoError
+	 */
 	function PHP2GoError() {
 		parent::PHP2Go();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::&getInstance
-	// @desc 		Retorna uma instância do tratador de erros atual,
-	// 				criando uma se não existir (singleton)
-	// @return 		PHP2GoError object Instância da classe PHP2GoError
-	// @access 		public	
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a singleton of the PHP2GoError class
+	 *
+	 * @return PHP2GoError
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
@@ -80,120 +141,104 @@ class PHP2GoError extends PHP2Go
 		return $instance;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::setObject
-	// @desc 		Configura o objeto onde o erro ocorreu
-	// @param 		object object	Objeto onde o erro ocorreu
-	// @access 		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the class where the error happened
+	 *
+	 * @param object $object
+	 */
 	function setObject($object) {
 		$this->object = get_class($object);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::setMessage
-	// @desc 		Configura a mensagem do erro
-	// @param 		message string	Mensagem de erro
-	// @param		extra string	"" Descrição adicional/complementar do erro
-	// @access 		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the error message
+	 *
+	 * @param string $message Message
+	 * @param mixed $extra Detailed message, or extra information about the error
+	 */
 	function setMessage($message, $extra='') {
 		$this->msg = $message;
 		if (!empty($extra))
-			$this->extra = $extra; 
+			$this->extra = $extra;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::setType
-	// @desc 		Configura o tipo do erro capturado
-	// @param 		type int		Tipo do erro, conforme a especificação do PHP
-	// @param		typeDesc string	"" Descritivo do tipo de erro
-	// @access 		public	
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Set the error type
+	 *
+	 * @param int $type Error type
+	 */
 	function setType($type) {
 		$this->type = $type;
-		$errorTypes = PHP2Go::getLangVal('ERR_TYPES');				
+		$errorTypes = PHP2Go::getLangVal('ERR_TYPES');
 		$this->typeDesc = ($type == E_DATABASE_ERROR ? PHP2Go::getLangVal('ERR_DATABASE') : $errorTypes[$type]);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::setFile
-	// @desc		Seta o arquivo onde o erro ocorreu
-	// @param		fileName string	"" Nome do arquivo
-	// @access		public	
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Set the path to the file where the error happened
+	 *
+	 * @param string $fileName File path
+	 */
 	function setFile($fileName='') {
 		if (trim($fileName) != '')
 			$this->file = $fileName;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::setLine
-	// @desc		Seta a linha do arquivo onde o erro ocorreu
-	// @param		lineNumber int	"NULL" Número da linha
-	// @access		public	
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Set the line number where the error happened
+	 *
+	 * @param int $lineNumber Error line number
+	 */
 	function setLine($lineNumber=NULL) {
 		if (!TypeUtils::isNull($lineNumber))
 			$this->line = $lineNumber;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::captureErrors
-	// @desc 		Verifica na configuração se os erros devem ser capturados
-	// @access 		public
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if errors should be captured, according to the
+	 * global configuration settings
+	 *
+	 * @return bool
+	 */
 	function captureErrors() {
 		return (TypeUtils::isTrue(PHP2Go::getConfigVal('CAPTURE_ERRORS', FALSE)));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::logErrors
-	// @desc 		Verifica se o log dos erros ocorridos está habilitado
-	// @access 		public
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if errors should be logged, according to the
+	 * global configuration settings
+	 *
+	 * @return bool
+	 */
 	function logErrors() {
 		return (TypeUtils::isTrue(PHP2Go::getConfigVal('LOG_ERRORS', FALSE)));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::showErrors
-	// @desc 		Verifica na configuração se os erros encontrados devem ser exibidos
-	// @access 		public
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if errors should be displayed, according to the
+	 * global configuration settings
+	 *
+	 * @return bool
+	 */
 	function showErrors() {
 		return (TypeUtils::isTrue(PHP2Go::getConfigVal('SHOW_ERRORS', FALSE)));
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::debugTrace
-	// @desc		Verifica se o backtrace dos erros deve ser capturado
-	// @access		public
-	// @return		bool
-	// @static	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if debug trace should be displayed/logged along with
+	 * the error message
+	 *
+	 * @return bool
+	 */
 	function debugTrace() {
 		return (TypeUtils::isTrue(PHP2Go::getConfigVal('DEBUG_TRACE', FALSE)));
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::isIgnoreError
-	// @desc		Verifica se uma determinada mensagem de erro deve ser ignorada
-	// @param		errorMessage string	Mensagem do erro encontrado
-	// @access		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if a given error message should be ignored
+	 *
+	 * @param string $errorMessage Error message
+	 * @return bool
+	 */
 	function isIgnoreError($errorMessage) {
 		$userIgnoreErrors = PHP2Go::getConfigVal('IGNORE_ERRORS', FALSE);
 		$ignoreErrors = (!TypeUtils::isArray($userIgnoreErrors) ? $this->ignoreErrors : array_merge($this->ignoreErrors, $userIgnoreErrors));
@@ -203,53 +248,34 @@ class PHP2GoError extends PHP2Go
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::isStrictWarning
-	// @desc		Verifica se o erro é do tipo E_STRICT, introduzido no
-	//				PHP 5 para informar trechos de código que devem ser
-	//				alterados para se adaptar à Zend Engine 2
-	// @param		errorCode int	Código do erro disparado
-	// @access		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function isStrictWarning($errorCode) {
-		return ($errorCode == E_STRICT);
-	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::isUserError
-	// @desc		Verifica se o erro disparado é um erro da família E_USER
-	// @param		errorCode int	Código do erro disparado
-	// @access		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if a given error code is E_USER_* (user error codes)
+	 *
+	 * @param int $errorCode Error code
+	 * @return bool
+	 */
 	function isUserError($errorCode) {
 		return ($errorCode == E_USER_ERROR || $errorCode == E_USER_WARNING || $errorCode == E_USER_NOTICE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::raise
-	// @desc 		Dispara o tratador de erros
-	// @access 		public
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Raise the error, if capturing errors is enabled
+	 */
 	function raise() {
 		if ($this->captureErrors()) {
 			Registry::set('PHP2Go_error', $this);
 			trigger_error($this->msg, $this->type);
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::log
-	// @desc		Dispara o tratador de erros apenas para gravar em log a exceção ocorrida
-	// @param		logFile string		Nome do arquivo de log
-	// @note		O nome do arquivo será processado pela função strftime para substituir
-	//				valores como dia, mês, ano, hora, minuto, ...
-	// @access		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Log the error using the given $logFile
+	 *
+	 * The log file path can contain {@link strftime()} placeholders.
+	 *
+	 * @param string $logFile Log file path
+	 */
 	function log($logFile) {
 		if ($this->captureErrors()) {
 			$this->_logError(array(
@@ -265,16 +291,17 @@ class PHP2GoError extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::handle
-	// @desc		Trata um erro ocorrido, exibindo e/ou gravando em log de acordo
-	//				com a configuração definida pelo usuário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Handle the error by logging and/or displaying according
+	 * with the global configuration settings
+	 *
+	 * This method is called inside {@link php2goErrorHandler()}
+	 * to handle manually thrown errors or normal warnings/notices
+	 * captured by the error handler.
+	 */
 	function handle() {
 		if ($this->type != E_STRICT) {
-			// monta o conjunto de dados do erro
+			// build the error information
 			$errorData = array(
 				'CODE' => $this->type,
 				'TYPE' => $this->typeDesc,
@@ -285,25 +312,24 @@ class PHP2GoError extends PHP2Go
 				'TRACE' => $this->_getStackTrace(),
 				'REQUEST' => $this->_getRequestData()
 			);
-			// exibe o erro, dependendo da configuração de exibição de erros
+			// display the error, if displaying errors is enabled
 			if ($this->showErrors())
 				$this->_displayError($errorData);
-			// grava o erro no arquivo de log
-			$logFile = ($this->type == E_DATABASE_ERROR ? PHP2Go::getConfigVal('DB_ERROR_LOG_FILE', FALSE) : PHP2Go::getConfigVal('ERROR_LOG_FILE', FALSE));				
+			// log the error
+			$logFile = ($this->type == E_DATABASE_ERROR ? PHP2Go::getConfigVal('DB_ERROR_LOG_FILE', FALSE) : PHP2Go::getConfigVal('ERROR_LOG_FILE', FALSE));
 			$this->_logError($errorData, strftime($logFile));
-			// aborta a execução do script para erros de usuário ou erros de banco de dados
+			// abort the script for user errors or database errors
 			if ($this->type == E_USER_ERROR || $this->type == E_DATABASE_ERROR)
-				exit;			
+				exit;
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::_displayError
-	// @desc 		Exibe informações sobre um erro ocorrido
-	// @param 		errData array	Vetor de dados do erro
-	// @access 		private	
-	// @return		void	
-	//!-----------------------------------------------------------------
+	/**
+	 * Display HTML information about the error
+	 *
+	 * @param array $errData Error data
+	 * @access private
+	 */
 	function _displayError($errData) {
 		$extra = @$errData['EXTRA'];
 		$location = ($errData['FILE'] != '' && $errData['LINE'] != '' ? "<br>on {$errData['FILE']}, {$errData['LINE']}" : '');
@@ -327,14 +353,17 @@ class PHP2GoError extends PHP2Go
 			</table>
 		");
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::_logError
-	// @desc		Responsável por gravar em um arquivo de log um erro ocorrido
-	// @param		errData array	Vetor de dados do erro
-	// @access		private	
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Build a log message from a given set of error properties
+	 * and save it in a given log file
+	 *
+	 * No action is performed if logging errors is disabled in
+	 * the global configuration settings.
+	 *
+	 * @param array $errData Error data
+	 * @param string $logFile Log file path
+	 */
 	function _logError($errData, $logFile) {
 		if ($this->logErrors()) {
 			$nl = (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? "\r\n" : "\n");
@@ -353,7 +382,7 @@ class PHP2GoError extends PHP2Go
 					$i++;
 				}
 			}
-			if (!empty($errData['REQUEST'])) {				
+			if (!empty($errData['REQUEST'])) {
 				foreach ($errData['REQUEST'] as $key=>$value) {
 					if (is_array($value))
 						$logString .= "\t{$key}=\"" . dumpArray($value) . "\"" . $nl;
@@ -365,28 +394,29 @@ class PHP2GoError extends PHP2Go
 				@error_log($logString, 3, $logFile);
 			else
 				@error_log($logString, 0);
-		}		
-	}	
-	
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::_formatMessage
-	// @desc 		Constrói a mensagem descritiva do erro
-	// @return	 	string Mensagem formatada (objeto + mensagem)
-	// @access 		private	
-	//!-----------------------------------------------------------------
+		}
+	}
+
+	/**
+	 * Format the error message
+	 *
+	 * @return string
+	 * @access private
+	 */
 	function _formatMessage() {
 		if (!isset($this->object))
-			return PHP2Go::getLangVal('ERR_SCRIPT_MESSAGE', $this->msg);		
+			return PHP2Go::getLangVal('ERR_SCRIPT_MESSAGE', $this->msg);
 		return PHP2Go::getLangVal('ERR_OBJ_MESSAGE', array($this->object, $this->msg));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	PHP2GoError::_getStackTrace
-	// @desc		Constrói o stack trace da pilha de execução para um erro encontrado
-	// @access		private	
-	// @return		void	
-	//!-----------------------------------------------------------------
-	function _getStackTrace() {		
+	/**
+	 * Get the stack trace of the error, for
+	 * display or log purposes
+	 *
+	 * @return array Error stack trace
+	 * @access private
+	 */
+	function _getStackTrace() {
 		if ($this->debugTrace()) {
 			$trace = debug_backtrace();
 			$result = array();
@@ -394,9 +424,9 @@ class PHP2GoError extends PHP2Go
 				$qualifiedName = (isset($trace[$i]['class']) ? $trace[$i]['class'] . $trace[$i]['type'] : '') . $trace[$i]['function'];
 				if (strtolower($qualifiedName) == 'php2goerror->_getstacktrace')
 					continue;
-				// nome da função ou método
+				// function or method name
 				$element['FUNCTION'] = $qualifiedName;
-				// parâmetros da função ou método
+				// function or method parameters
 				if (sizeof($trace[$i]['args']) > 0) {
 					$pars = array();
 					for ($j=0; $j<sizeof($trace[$i]['args']); $j++) {
@@ -422,9 +452,9 @@ class PHP2GoError extends PHP2Go
 				} else {
 					$element['ARGS'] = '';
 				}
-				// caminho completo para o arquivo
+				// error file path
 				$element['FILE'] = @$trace[$i]['file'];
-				// linha do arquivo
+				// error line number
 				$element['LINE'] = @$trace[$i]['line'];
 				$result[] = $element;
 			}
@@ -432,13 +462,14 @@ class PHP2GoError extends PHP2Go
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function 	PHP2GoError::_getRequestData
-	// @desc 		Captura informações sobre a requisição no momento do erro
-	// @return 		string Informações sobre o sistema para serem registradas junto à mensagem de erro
-	// @access 		private	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Collect information about the request to save in the log
+	 * file along with the error data
+	 *
+	 * @return array
+	 * @access private
+	 */
 	function _getRequestData() {
 		$info = array();
 		if (isset($_SERVER)) {
@@ -455,7 +486,7 @@ class PHP2GoError extends PHP2Go
 							$info['PARAMS'][$key] = dumpArray($value);
 						else
 							$info['PARAMS'][$key] = $value;
-					}						
+					}
 				}
 			} elseif ($method == 'POST') {
 				$info['METHOD'] = 'POST';
@@ -476,7 +507,7 @@ class PHP2GoError extends PHP2Go
 			// cookies
 			if (!empty($_COOKIE))
 				$info['COOKIES'] = $_COOKIE;
-			// variáveis de sessão
+			// session variables
 			if (!empty($_SESSION)) {
 				$info['SESSION'] = array();
 				foreach ($_SESSION as $key=>$value) {
@@ -492,6 +523,6 @@ class PHP2GoError extends PHP2Go
 			}
 		}
 		return $info;
-	}	
+	}
 }
 ?>

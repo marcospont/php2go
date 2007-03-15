@@ -62,7 +62,7 @@
 
 if (!PHP2Go.included[PHP2Go.baseUrl + 'vendor/jscalendar/calendar-setup.js']) {
 
-Calendar.langMap = { 'pt-br':'calendar-br', 'en-us':'calendar-en', 'es':'calendar-es', 'cs':'calendar-cs-win', 'it':'calendar-it', 'de-de':'calendar-de', 'fr-fr':'calendar-fr' };
+Calendar.langMap = { 'pt-br':'calendar-br', 'en-us':'calendar-en', 'es':'calendar-es', 'cs':'calendar-cs-win', 'it':'calendar-it', 'de-de':'calendar-de', 'fr-fr':'calendar-fr', 'th':'calendar-th' };
 PHP2Go.include(PHP2Go.baseUrl + 'vendor/jscalendar/lang/' + Calendar.langMap[PHP2Go.locale] + '.js');
 
 Calendar.setup = function (params) {

@@ -1,69 +1,68 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/CheckGroup.class.php,v 1.16 2006/11/02 19:21:34 mpont Exp $
-// $Date: 2006/11/02 19:21:34 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.GroupField');
-import('php2go.template.Template');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		CheckGroup
-// @desc		Classe que constrói um grupo de campos do tipo CHECKBOX, com controle
-//				de obrigatoriedade de seleção de um dos itens, pelo menos
-// @package		php2go.form.field
-// @extends		GroupField
-// @uses		TypeUtils
-// @uses		Template
-// @author		Marcos Pont
-// @version		$Revision: 1.16 $
-//!-----------------------------------------------------------------
+/**
+ * Builds a group of checkbox inputs
+ *
+ * Group options are defined statically inside the XML
+ * specification through option nodes.
+ *
+ * @package form
+ * @subpackage field
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class CheckGroup extends GroupField
 {
-	//!-----------------------------------------------------------------
-	// @function	CheckGroup::CheckGroup
-	// @desc		Construtor da classe, inicializa os atributos básicos do campo
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @param		child bool			"FALSE" Se for TRUE, indica que o campo é membro de um campo composto
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Component's constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @param bool $child Whether the component is child of another component
+	 * @return CheckGroup
+	 */
 	function CheckGroup(&$Form, $child=FALSE) {
 		parent::FormField($Form, $child);
 		$this->htmlType = 'CHECKBOX';
 		$this->searchDefaults['OPERATOR'] = 'IN';
-		$this->templateFile = PHP2GO_TEMPLATE_PATH . 'checkgroup.tpl';
 		$this->attributes['MULTIPLE'] = TRUE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckGroup::renderGroup
-	// @desc		Implementa o método da classe pai para construir o conjunto
-	//				de dados sobre os elementos do grupo (checkboxes)
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the HTML code of the checkbox inputs
+	 *
+	 * @access protected
+	 * @return array
+	 */
 	function renderGroup() {
 		$group = array();
 		$groupName = (substr($this->name, -2) != '[]' ? $this->name . '[]' : $this->name);
@@ -130,39 +129,33 @@ class CheckGroup extends GroupField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckGroup::setShortcuts
-	// @desc		Habilita/desabilita shortcuts (Todos/Nenhum/Inverter)
-	// @param		setting bool	Valor para o flag
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable/disable shortcuts
+	 *
+	 * Shortcuts are links rendered above the checkbox inputs used
+	 * to check all inputs, uncheck all inputs and invert selection
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setShortcuts($setting) {
 		$this->attributes['SHORTCUTS'] = (bool)$setting;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckGroup::onLoadNode
-	// @desc		Processa atributos e nodos filhos da especificação XML do campo
-	// @param		attrs array		Atributos
-	// @param		children array	Nodos filhos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
 		// shortcuts
 		$this->setShortcuts(resolveBooleanChoice(@$attrs['SHORTCUTS']));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	CheckGroup::onPreRender
-	// @desc		Insere o sufixo "[]" na propriedade validationName,
-	//				que indica como o campo deve ser referenciado pela
-	//				API de validação client-side
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		if (substr($this->validationName, -2) != '[]')
 			$this->validationName .= '[]';

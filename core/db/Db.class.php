@@ -1,92 +1,127 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/db/Db.class.php,v 1.61 2006/10/11 22:11:12 mpont Exp $
-// $Date: 2006/10/11 22:11:12 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 require_once(PHP2GO_ROOT . "vendor/adodb/adodb.inc.php");
 require_once(PHP2GO_ROOT . "vendor/adodb/adodb-active-record.inc.php");
 import('php2go.datetime.Date');
 import('php2go.util.Callback');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		Db
-// @desc		Responsável por criar conexões a banco através da
-//				biblioteca ADODb, e por conter funções que facilitam
-//				a execução de instruções DML e operações sobre os
-//				result sets que retornam do banco. Sobrecarrega as
-//				funções mais importantes implementas na classe ADOConnection
-// @package		php2go.db
-// @extends		PHP2Go
-// @uses		ADOConnection
-// @uses		Callback
-// @uses		Date
-// @uses		TypeUtils
-// @note		Esta classe utiliza as funcionalidades da biblioteca
-//				ADODb. Para maiores informações sobre o projeto ADODb,
-//				manuais e documentação, acesse http://adodb.sourceforge.net
-// @author		Marcos Pont
-// @version		$Revision: 1.61 $
-//!-----------------------------------------------------------------
+/**
+ * Database connection class
+ *
+ * The Db class is a simple wrapper over the connection class provided
+ * by the ADODb database abstract library. Overrides the most important
+ * functions of the ADOConnection class, and adds new utility methods
+ * to perform SQL/DML commands and manage database statements.
+ *
+ * @package db
+ * @uses Callback
+ * @uses Date
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Db extends PHP2Go
 {
-	var $connected;					// @var connected bool				Flag de controle do status da conexão com o banco de dados
-	var $affectedRows;				// @var affectedRows int			Linhas afetadas ou resultantes da consulta
-	var $lastStatement = array();	// @var lastStatement array			"array()" Armazena o último statement (comando ou query) executado no banco de dados
-	var $makeCache;					// @var makeCache bool				Flag para utilização de cache nos comandos de query e busca por resultados
-	var $cacheSecs;					// @var cacheSecs int				Número de segundos para cache de um comando/consulta
-	var $AdoDb;						// @var AdoDb ADOConnection object	Objeto da conexão ao banco. Através dele, podem ser executados outros métodos implementados pela classe AdoConnection
+	/**
+	 * Indicates if we're connected to the database
+	 *
+	 * @var bool
+	 */
+	var $connected;
 
-	//!-----------------------------------------------------------------
-	// @function	Db::Db
-	// @desc		Construtor da classe. Verifica as variáveis
-	//				da configuração do PHP2Go necessárias e cria a
-	//				conexão com o banco através do ADODb
-	// @param		id string	"NULL" ID da conexão desejada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Rows affected by last SQL command
+	 *
+	 * @var int
+	 */
+	var $affectedRows;
+
+	/**
+	 * Holds the SQL executed command
+	 *
+	 * This is useful to gather information on
+	 * error situations.
+	 *
+	 * @var array
+	 */
+	var $lastStatement = array();
+
+	/**
+	 * Tells if result sets cache is enabled
+	 *
+	 * @var bool
+	 */
+	var $makeCache;
+
+	/**
+	 * Holds lifetime for cached result sets
+	 *
+	 * @var int
+	 */
+	var $cacheSecs;
+
+	/**
+	 * Internal instance of the ADODb connection class
+	 *
+	 * @var ADOConnection
+	 */
+	var $AdoDb;
+
+	/**
+	 * Class constructor
+	 *
+	 * Shouldn't be called directly. Prefer calling always {@link getInstance},
+	 * so that you'll open only one connection for each ID, and will have the
+	 * ability to use a custom connection class.
+	 *
+	 * @param unknown_type $id
+	 * @return Db
+	 */
 	function Db($id=NULL) {
 		parent::PHP2Go();
-		// busca dos parâmetros de conexão
 		$connParameters = Conf::getConnectionParameters($id);
 		if (!empty($connParameters['DSN'])) {
-			// conexão utilizando DSN (Database Storage Name)
+			// connect using a single DSN string
 			$this->AdoDb =& ADONewConnection($connParameters['DSN']);
 			if (!$this->AdoDb)
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_DATABASE_CONNECTION_FAILED'), E_USER_ERROR, __FILE__, __LINE__);
 		} else {
-			// conexão com os parâmetros de conexão separados (type, host, user, password, database)
+			// connect using separated parameters
 			$this->AdoDb =& AdoNewConnection($connParameters['TYPE']);
 			$connFunc = ($connParameters['PERSISTENT'] ? 'PConnect' : 'Connect');
 			if (!$this->AdoDb || !$this->AdoDb->$connFunc(@$connParameters['HOST'], $connParameters['USER'], @$connParameters['PASS'], $connParameters['BASE']))
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_DATABASE_CONNECTION_FAILED'), E_USER_ERROR, __FILE__, __LINE__);
 		}
-		// fetch mode padrão
+		// default fetch mode
 		if (array_key_exists('FETCH_MODE', $connParameters))
 			$this->AdoDb->SetFetchMode($connParameters['FETCH_MODE']);
-		// transaction mode padrão
+		// defulat transaction mode
 		if (array_key_exists('TRANSACTION_MODE', $connParameters))
 			$this->AdoDb->SetTransactionMode($connParameters['TRANSACTION_MODE']);
 		$this->AdoDb->raiseErrorFn = 'dbErrorHandler';
@@ -98,29 +133,39 @@ class Db extends PHP2Go
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::__destruct
-	// @desc		Destrutor da classe
-	// @note		Este método será executado automaticamente pelo PHP2Go
-	//				ao término do script que contém a instância do objeto
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 */
   	function __destruct() {
     	$this->close();
   	}
 
-  	//!-----------------------------------------------------------------
-  	// @function	Db::&getInstance
-  	// @desc		Método estático que armazena instâncias únicas de diferentes conexões a banco de dados
-  	// @param		id string	"NULL" ID da conexão desejada
-  	// @return		Db object Instância da classe Db
-	// @note		É recomendável que todo e qualquer acesso a uma conexão a banco de dados
-	//				se inicie por uma chamada a este método, garantindo economia de recursos
-	//				tanto na aplicação quanto no SGBD
-  	// @access		public
-	// @static
-  	//!-----------------------------------------------------------------
+  	/**
+  	 * Get the singleton of a database connection
+  	 *
+  	 * Always use this method whenever you need a database
+  	 * connection. The $id parameter represents the connection
+  	 * ID that you want to use. If this argument is missing,
+  	 * the value of the DATABASE.DEFAULT_CONNECTION configuration
+  	 * setting will be used.
+  	 *
+  	 * When there's a customized connection class set in the
+  	 * global configuration (DATABASE.CONNECTION_CLASS_PATH),
+  	 * getInstance will return an instance of this class instead
+  	 * of returning an instance of the default connection class.
+  	 *
+  	 * Examples:
+  	 * <code>
+  	 * /* use the default connection ID {@*}
+  	 * $db =& Db::getInstance();
+  	 * /* use the SECONDARY_DB connection ID {@*}
+  	 * $db =& Db::getInstance('SECONDARY_DB');
+  	 * </code>
+  	 *
+  	 * @param string $id Connection ID
+  	 * @return Db
+  	 * @static
+  	 */
   	function &getInstance($id=NULL) {
   		static $instances;
   		if (!isset($instances))
@@ -158,19 +203,21 @@ class Db extends PHP2Go
   		return $instances[$key];
   	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::setCache
-	// @desc		Configura o objeto de banco de dados para utilizar
-	//				ou não cache em consultas, comandos DML e métodos
-	//				que buscam resultados
-	// @note		Para utilizar cache, utilize $flag=TRUE e $seconds>0
-	// @note		Para remover result sets em cache, utilize $flag=TRUE e $seconds=0
-	// @note		Para não utilizar cache, utilize $flag=FALSE
-	// @param		flag bool		Novo valor para configuração de uso de cache
-	// @param		seconds int		Número de segundos de durabilidade da cache realizada
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable cache for all result sets
+	 *
+	 * When enabling cache, the result sets will be retrieved
+	 * from cache during a number of seconds provided by the
+	 * $seconds argument.
+	 *
+	 * If you want to purge cached result sets, call:
+	 * <code>
+	 * $db->setCache(TRUE, 0);
+	 * </code>
+	 *
+	 * @param bool $flag Enable/disable
+	 * @param int $seconds Cache lifetime, in seconds
+	 */
 	function setCache($flag, $seconds=0) {
 		$flag = !!$flag;
 		$seconds = abs(intval($seconds));
@@ -183,62 +230,53 @@ class Db extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::setDebug
-	// @desc		Habilita ou desabilita debug na conexão com o banco de dados
-	// @param		setting bool	Valor para o flag de debug
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Enable debug for all SQL commands
+	 *
+	 * When debug mode is on, all commands executed in the
+	 * database are displayed in the screen.
+	 *
+	 * @param bool $setting Enable/disable
+	 */
 	function setDebug($setting=TRUE) {
 		$this->AdoDb->debug = ($setting ? 1 : 0);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::setErrorHandler
-	// @desc		Configura a função de tratamento de erros no banco de dados
-	// @param		errorHandler mixed	Nome da função
-	// @return		string Nome do tratador de erros configurado antes da execução deste método
-	// @note		Utilize o valor FALSE para desabilitar o tratamento de erros de
-	//				banco de dados do PHP2Go
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the error handler function for all database errors
+	 *
+	 * To disable error handling on database operations, you
+	 * can set error handler to FALSE, or use the @ operator
+	 * when executing database commands.
+	 *
+	 * @param string $errorHandler Function name
+	 * @return string Old error handler
+	 */
 	function setErrorHandler($errorHandler) {
 		$oldErrorHandler = $this->AdoDb->raiseErrorFn;
 		$this->AdoDb->raiseErrorFn = $errorHandler;
 		return $oldErrorHandler;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::setFetchMode
-	// @desc		Configura o modo de construção dos resultados de uma consulta
-	// @param		mode int	Modo a ser utilizado
-	// @note		Valores possiveis para o parâmetro $mode (constantes):<br>
-	//				ADODB_FETCH_DEFAULT: utilizar o padrão do banco de dados<br>
-	//				ADODB_FETCH_NUM: fetch numérico<br>
-	//				ADODB_FETCH_ASSOC: fetch associativo<br>
-	//				ADODB_FETCH_BOTH: fetch numérico E associativo
-	// @return		int Valor antigo da propriedade
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Set fetch mode for query operations
+	 *
+	 * @link http://phplens.com/lens/adodb/docs-adodb.htm#setfetchmode
+	 * @param int $mode Fetch mode
+	 * @return int Old setting
+	 */
 	function setFetchMode($mode) {
 		return $this->AdoDb->SetFetchMode($mode);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::setForceType
-	// @desc		Define o tipo de tratamento que deve ser dado a colunas vazias
-	//				nos métodos insert (construção automática de comando INSERT) e
-	//				update (construção automática de comando UPDATE)
-	// @param		forceType int	Tipo de tratamento
-	// @note		Valores possíveis para o parâmetro $forceType (constantes):<br>
-	//				ADODB_FORCE_IGNORE: ignorar colunas vazias, NULL ou 'null'<br>
-	//				ADODB_FORCE_NULL: transformar em SQL NULL as colunas vazias, null ou 'null'<br>
-	//				ADODB_FORCE_EMPTY: forçar valor SQL vazio para colunas vazias, null ou 'null'<br>
-	//				ADODB_FORCE_VALUE: deixar o valor como está; colunas vazias serão mapeadas para SQL vazio e NULL e 'null' para SQL NULL
-	// @return		mixed	Valor antigo da propriedade, ou FALSE se a alteração não pode ser efetuada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the behaviour of routines that build DML commands
+	 * when converting empty PHP values to SQL
+	 *
+	 * @link http://phplens.com/lens/adodb/docs-adodb.htm#force_type
+	 * @param int $forceType Force type
+	 * @return int Old force type
+	 */
 	function setForceType($forceType) {
 		if (in_array($forceType, array(ADODB_FORCE_IGNORE, ADODB_FORCE_NULL, ADODB_FORCE_EMPTY, ADODB_FORCE_VALUE))) {
 			global $ADODB_FORCE_TYPE;
@@ -249,66 +287,52 @@ class Db extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::affectedRows
-	// @desc		Retorna o número de linhas retornadas da consulta
-	//				ou o número de linhas afetadas pelo comando DML
-	// @return		int Número de linhas da consulta ou afetadas por DML
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the number of rows affected by the last operation
+	 *
+	 * @return int
+	 */
 	function affectedRows() {
 		return $this->affectedRows;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::lastInsertId
-	// @desc		Retorna o último código AUTONUMBER gerado pelo banco de dados
-	// @return		int O último código gerado ou FALSE se não suportado pelo tipo de banco utilizado
-	// @access		public
-	//!-----------------------------------------------------------------
-	function lastInsertId() {
-		return ($this->AdoDb->hasInsertID ? $this->AdoDb->Insert_ID() : 0);
-	}
-
-  	//!-----------------------------------------------------------------
-  	// @function	Db::getConnectionId
-  	// @desc		Retorna o handle da conexão ativa
-  	// @return		resource Handle da conexão ativa ou NULL se não existir
-  	// @access		public
-  	//!-----------------------------------------------------------------
+  	/**
+  	 * Get database connection handle
+  	 *
+  	 * @return resource
+  	 */
   	function getConnectionId() {
   		return ($this->connected ? $this->AdoDb->_connectionID : NULL);
   	}
 
-  	//!-----------------------------------------------------------------
-  	// @function	Db::getDatabaseType
-  	// @desc		Retorna o nome do driver associado a esta conexão
-  	// @return		string Nome do driver
-  	// @access		public
-  	//!-----------------------------------------------------------------
+  	/**
+  	 * Get database driver name
+  	 *
+  	 * @return string
+  	 */
   	function getDatabaseType() {
   		return $this->AdoDb->databaseType;
   	}
 
-  	//!-----------------------------------------------------------------
-  	// @function	Db::getServerInfo
-  	// @desc		Busca as informações sobre o servidor de banco de
-  	//				dados da conexão ativa
-  	// @return		array Vetor de informações
-  	// @note		Para uma documentação mais detalhada das informações
-  	//				retornadas, consulte a documentação da biblioteca ADODb
-  	// @access		public
-  	//!-----------------------------------------------------------------
+  	/**
+  	 * Return information about the database server
+  	 *
+  	 * The value returned is an array containing the 'description'
+  	 * and 'version' keys.
+  	 *
+  	 * @return unknown
+  	 */
   	function getServerInfo() {
   		return ($this->connected ? $this->AdoDb->ServerInfo() : NULL);
   	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getError
-	// @desc		Verifica se existe uma mensagem de erro armazenada
-	// @return		string A última mensagem de erro armazenada ou FALSE se não existir
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the error message reported by the database
+	 *
+	 * Returns FALSE if there's no error message available.
+	 *
+	 * @return string|bool
+	 */
 	function getError() {
 		$errorMsg = $this->AdoDb->ErrorMsg();
 		if (!empty($errorMsg) && strlen($errorMsg) > 0)
@@ -316,97 +340,84 @@ class Db extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getErrorCode
-	// @desc		Busca o código de erro do banco de dados
-	// @return		int Código de erro do banco de dados, ou NULL se não existir
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the error code reported by the database
+	 *
+	 * @return int
+	 */
 	function getErrorCode() {
 		return $this->AdoDb->ErrorNo();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getDatabases
-	// @desc		Retorna as bases de dados existentes no banco de dados
-	// @return		array Vetor contendo as bases de dados encontradas
-	// @see			Db::getTables
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all database names
+	 *
+	 * @return array
+	 */
 	function getDatabases() {
 		return $this->AdoDb->MetaDatabases();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getTables
-	// @desc		Retorna as tabelas existentes na base de dados atual
-	// @param		tableType string	'TABLE' lista apenas tabelas, 'VIEW' lista apenas views
-	// @return		array Vetor contendo as tabelas encontradas
-	// @see			Db::getDatabases
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all tables and/or views of the database
+	 *
+	 * @param string|bool $tableType 'TABLE' (tables only), 'VIEW' (views only) or FALSE (all)
+	 * @return array
+	 */
 	function getTables($tableType=FALSE) {
 		$tables = $this->AdoDb->MetaTables($tableType);
 		return $tables;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getColumns
-	// @desc		Retorna a lista de colunas de uma tabela ou view, onde
-	//				cada elemento da lista é uma instância de ADOFieldObject
-	// @param		table string		Nome da tabela ou view
-	// @return		array Vetor contendo os objetos das colunas da tabela
-	// @see			Db::getColumnNames
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get an array of objects representing the columns of a given table or view
+	 *
+	 * @param string $table Table or view name
+	 * @return array
+	 */
 	function getColumns($table) {
 		return $this->AdoDb->MetaColumns($table);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getColumnNames
-	// @desc		Busca os nomes das colunas de uma tabela ou view
-	// @param		table string		Nome da tabela ou view
-	// @param		assoc bool			"TRUE" Retornar um array associativo (TRUE) ou numérico (FALSE)
-	// @return		array Vetor contendo os nomes das colunas da tabela
-	// @see			Db::getColumns
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get column names of a given table or view
+	 *
+	 * @param string $table Table or view name
+	 * @param bool $assoc Whether to return a hash array
+	 * @return array
+	 */
 	function getColumnNames($table, $assoc=TRUE) {
 		return $this->AdoDb->MetaColumnNames($table, !$assoc);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getPrimaryKeys
-	// @desc		Busca os nomes das chaves primárias da tabela $table
-	// @param		table string		Nome da tabela
-	// @return		array Vetor contendo os nomes das chaves primárias
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get primary key(s) of a given table
+	 *
+	 * @param string $table Table name
+	 * @return array
+	 */
 	function getPrimaryKeys($table) {
 		return $this->AdoDb->MetaPrimaryKeys($table);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getIndexes
-	// @desc		Busca os nomes dos índices definidos para uma tabela
-	// @param		table string		Nome da tabela
-	// @return		array Vetor contendo os nomes dos índices da tabela
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get indexes of a given table
+	 *
+	 * @param string $table Table name
+	 * @return array
+	 */
 	function getIndexes($table) {
 		return $this->AdoDb->MetaIndexes($table);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getProcedureSQL
-	// @desc		Monta o SQL para a execução de uma procedure no banco de dados.
-	//				Possui implementações diferentes dependendo do banco utilizado
-	// @param		stmt string		SQL da procedure
-	// @param		prepare bool	"FALSE" Retornar um statement preparado ou somente a string SQL
-	// @return		mixed String SQL ou o array do statement preparado
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Generate the call for a stored procedure
+	 *
+	 * @param string $stmt Procedure name and arguments
+	 * @param bool $prepare Whether to prepare the created SQL command
+	 * @todo Add support for other drivers
+	 * @return string|array
+	 */
 	function getProcedureSQL($stmt, $prepare=FALSE) {
 		switch ($this->AdoDb->dataProvider) {
 			// oci8, oci805, ocipo
@@ -423,7 +434,6 @@ class Db extends PHP2Go
 			case 'sybase' :
 				$stmt = "exec {$stmt}";
 				break;
-			// @todo suportar outros formatos de execução de procedure
 			default :
 				break;
 		}
@@ -433,33 +443,45 @@ class Db extends PHP2Go
 			return $stmt;
 	}
 
-  	//!-----------------------------------------------------------------
-  	// @function	Db::getNextId
-  	// @desc		Busca o próximo valor de uma seqüência, para preenchimento de
-  	//				chaves primárias nas inserções de dados
-  	// @param		seqName string		"p2gseq" Nome da seqüência
-  	// @param		startId int			"1" ID inicial, caso a seqüência não exista
-  	// @return		int Próximo valor da seqüência indicada
-  	// @access		public
-  	//!-----------------------------------------------------------------
+  	/**
+  	 * Generate and return the next value of a given database sequence
+  	 *
+  	 * If the database driver doesn't support sequences, ADODb will use
+  	 * regular tables instead. If the sequence doesn't exist, it is created.
+  	 *
+  	 * @link http://phplens.com/lens/adodb/docs-adodb.htm#genid
+  	 * @param string $seqName Sequence name
+  	 * @param int $startId Start ID, if sequence needs to be created
+  	 * @return int
+  	 */
   	function getNextId($seqName='p2gseq', $startId=1) {
   		return ($this->connected ? $this->AdoDb->GenID($seqName, $startId) : 0);
   	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getFirstCell
-	// @desc		Executa o comando SQL indicado pela variável $sql,
-	//				buscando apenas a primeira célula do result set resultante
-	// @param		stmt mixed			Comando SQL ou statement preparado
-	// @param		bindVars mixed		"FALSE" Variáveis de bind a serem utilizadas
-	// @return		string Valor da primeira célula do result set ou FALSE se ocorrer algum erro
-	// @note		Se a cache estiver habilitada no objeto, busca o result set correspondente
-	//				à consulta SQL na cache
-	// @see			Db::getFirstRow
-	// @see			Db::getFirstCol
-	// @see			Db::getAll
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get database last insert ID
+	 *
+	 * Returns 0 if database doesn't support this feature.
+	 *
+	 * @return int
+	 */
+	function lastInsertId() {
+		return ($this->AdoDb->hasInsertID ? $this->AdoDb->Insert_ID() : 0);
+	}
+
+	/**
+	 * Get the first cell (0,0) of a result set
+	 *
+	 * Example:
+	 * <code>
+	 * /* this will print the name of the first user in the returned result set {@*}
+	 * print $db->getFirstCell("select name from users");
+	 * </code>
+	 *
+	 * @param string|array $stmt SQL query or prepared statement
+	 * @param array $bindVars Bind variables
+	 * @return mixed
+	 */
 	function getFirstCell($stmt, $bindVars=FALSE) {
 		$this->lastStatement = array(
 			'source' => 'getFirstCell',
@@ -472,20 +494,13 @@ class Db extends PHP2Go
 			return $this->AdoDb->GetOne($stmt, $bindVars);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getFirstRow
-	// @desc		Executa o comando SQL indicado pelo parâmetro $sql,
-	//				buscando a primeira linha do result set e ignorando o restante
-	// @param		stmt mixed			Comando SQL ou statement preparado
-	// @param		bindVars mixed		"FALSE" Variáveis de bind a serem utilizadas
-	// @return		string Vetor unidimensional da primeira linha do result set ou FALSE se ocorrerem erros
-	// @note		Se a cache estiver habilitada no objeto, busca o result set correspondente
-	//				à consulta SQL na cache
-	// @see			Db::getFirstCell
-	// @see			Db::getFirstCol
-	// @see			Db::getAll
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the first row of a result set
+	 *
+	 * @param string|array $stmt SQL query or prepared statement
+	 * @param array $bindVars Bind variables
+	 * @return array
+	 */
 	function getFirstRow($stmt, $bindVars=FALSE) {
 		$this->lastStatement = array(
 			'source' => 'getFirstRow',
@@ -498,20 +513,13 @@ class Db extends PHP2Go
 			return $this->AdoDb->GetRow($stmt, $bindVars);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getFirstCol
-	// @desc		Executa o comando SQL indicado pela variável $sql,
-	//				buscando a primeira coluna do result set e ignorando o restante
-	// @param		stmt mixed			Comando SQL ou statement preparado
-	// @param		bindVars mixed		"FALSE" Variáveis de bind a serem utilizadas
-	// @return		array Vetor unidimensional da primeira coluna do result set ou FALSE se ocorrerem erros
-	// @note		Se a cache estiver habilitada no objeto, busca o result set correspondente
-	//				à consulta SQL na cache
-	// @see			Db::getFirstCell
-	// @see			Db::getFirstRow
-	// @see			Db::getAll
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the first column of a result set
+	 *
+	 * @param string|array $stmt SQL query or prepared statement
+	 * @param array $bindVars Bind variables
+	 * @return array
+	 */
 	function getFirstCol($stmt, $bindVars=FALSE) {
 		$this->lastStatement = array(
 			'source' => 'getFirstCol',
@@ -524,23 +532,25 @@ class Db extends PHP2Go
 			return $this->AdoDb->GetCol($stmt, $bindVars);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::&getActiveRecords
-	// @desc		Executa uma query na tabela $table, usando a cláusula
-	//				de condição $clause, e retorna uma lista de objetos que
-	//				podem ser manipulados. Estes objetos são baseados no
-	//				padrão ActiveRecord
-	// @param		table string	Nome da tabela
-	// @param		clause string	"NULL" Cláusula de condição
-	// @param		bindVars array	"FALSE" Conjunto de variáveis de bind
-	// @param		options array	"array()" Opções extra para o método
-	// @note		O parâmetro $options aceita as seguintes opções:<br>
-	//				class: nome da classe a ser instanciada para cada resultado da consulta<br>
-	//				order: cláusula de ordenação para a consulta<br>
-	//				primaryKeys: conjunto de chaves primárias da tabela
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Get a set of active records
+	 *
+	 * Run a query on table $table, using $clause as condition clause,
+	 * and return the results as a list of objects that can be manipulated.
+	 * These objects are based on the Active Record pattern.
+	 *
+	 * Options:
+	 * # class : active records class name (defaults to ADODB_Active_Record)
+	 * # primaryKeys : allows to manually set the table primary keys (by default, this is auto detected)
+	 * # order : orderby clause
+	 *
+	 * @link http://phplens.com/lens/adodb/docs-active-record.htm
+	 * @param string $table Table name
+	 * @param string $clause Condition clause
+	 * @param array $bindVars Bind variables
+	 * @param array $options Extra options
+	 * @return array
+	 */
 	function &getActiveRecords($table, $clause=NULL, $bindVars=FALSE, $options=array()) {
 		$options = (array)$options;
 		$className = (array_key_exists('class', $options) ? $options['class'] : 'ADODB_Active_Record');
@@ -556,20 +566,13 @@ class Db extends PHP2Go
 		return $records;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getAll
-	// @desc		Executa o comando SQL indicado pela variável $sql,
-	//				retornando todo o conteúdo do result set
-	// @param		stmt mixed			Comando SQL ou statement preparado
-	// @param		bindVars mixed		"FALSE" Variáveis de bind a serem utilizadas
-	// @return		array Vetor bidimensional do result set ou FALSE se ocorrerem erros
-	// @note		Se a cache estiver habilitada no objeto, busca o result set correspondente
-	//				à consulta SQL na cache
-	// @see			Db::getFirstCell
-	// @see			Db::getFirstRow
-	// @see			Db::getFirstCol
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get all results of an SQL query
+	 *
+	 * @param string|array $stmt SQL query or prepared statement
+	 * @param array $bindVars Bind Variables
+	 * @return array
+	 */
 	function getAll($stmt, $bindVars=FALSE) {
 		$this->lastStatement = array(
 			'source' => 'getAll',
@@ -582,23 +585,27 @@ class Db extends PHP2Go
 			return $this->AdoDb->GetAll($stmt, $bindVars);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::getCount
-	// @desc		Executa o comando SQL a fim de buscar o total de linhas resultante da consulta
-	// @param		stmt mixed			Comando SQL ou statement preparado
-	// @param		bindVars mixed		"FALSE" Variáveis de bind a serem utilizadas
-	// @param		optimize bool		"TRUE" Otimizar a contagem retirando cláusulas de ordenação da consulta
-	// @return		int Total de linhas resultantes da consulta fornecida
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds a query that counts records based on a normal SQL query
+	 *
+	 * The method will use nested SQL if available. Otherwise, it will remove
+	 * grouping and ordering clauses, replace most significant select/from
+	 * pair by "select count(*) from", and perform other transformations
+	 * in order to get the number of records.
+	 *
+	 * @param string|array $stmt SQL query or prepared statement
+	 * @param array $bindVars Bind variables
+	 * @param bool $optimize Set this to FALSE to disable query transformations (removal or grouping and ordering clauses)
+	 * @return int Number of records
+	 */
 	function getCount($stmt, $bindVars=FALSE, $optimize=TRUE) {
 		$count = 0;
 		$matches = array();
 		$sql = (TypeUtils::isArray($stmt) ? $stmt[0] : $stmt);
-		// drivers com nestedSQL, consultas com DISTINCT ou GROUP BY
+		// drivers that support nested SQL, queries that use DISTINCT or GROUP BY
 		if (!empty($this->AdoDb->_nestedSQL) || preg_match("/^\s*SELECT\s+DISTINCT/is", $sql) || preg_match('/\s+GROUP\s+BY\s+/is',$sql) || preg_match('/\s+UNION\s+/is',$sql)) {
 			$rewriteSql = $sql;
-			// oci8 e oci8po
+			// oci8 and oci8po
 			if ($this->AdoDb->dataProvider == 'oci8') {
 				if ($optimize)
 					$rewriteSql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is', '', $rewriteSql);
@@ -607,7 +614,7 @@ class Db extends PHP2Go
 				else
 					$rewriteSql = "SELECT COUNT(*) FROM ({$rewriteSql})";
 			}
-			// mysql e mysqli
+			// mysql and mysqli
 			elseif (strncmp($this->AdoDb->databaseType, 'mysql', 5) == 0) {
 				$info = $this->AdoDb->ServerInfo();
 				$version = TypeUtils::parseFloat($info['version']);
@@ -619,19 +626,19 @@ class Db extends PHP2Go
 					$rewriteSql = "select COUNT(*) from ($rewriteSql) _ADODB_ALIAS_";
 				}
 			}
-			// postgres7 e postgres8
+			// postgres7 and postgres8
 			elseif (strncmp($this->AdoDb->databaseType, 'postgres', 8) == 0) {
 				if ($optimize)
 					$rewriteSql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is', '', $rewriteSql);
 				$rewriteSql = "select COUNT(*) from ($rewriteSql) _ADODB_ALIAS_";
 			}
-		// outros tipos de consultas: substituir o select (.+) from mais significativo por select count(*) from
+		// other query types: replace most significant select/from pair by "select count(*) from"
 		} else {
 			$stack = 1;
 			$index = -1;
-			// remover a primeira instrução select
+			// remove first "select" instruction
 			$sql = preg_replace("/^select/i", "", trim($sql));
-			// remover funções que utilizam a palavra "from"
+			// remove functions that use the "from" word
 			$sql = preg_replace('/(substring|extract)\s*\([^\)]+\)\s*/is', '', $sql);
 			$words = preg_split('/\s+/', $sql);
 			for ($i=0, $size=sizeof($words); $i<$size; $i++) {
@@ -655,7 +662,7 @@ class Db extends PHP2Go
 				}
 			}
 		}
-		// executa a consulta de count se ela for válida
+		// execute the count sql, if it's valid
 		if (isset($rewriteSql) && $rewriteSql != $sql) {
 			if ($this->makeCache)
 				$count = $this->AdoDb->CacheGetOne($this->cacheSecs, $rewriteSql, $bindVars);
@@ -670,7 +677,7 @@ class Db extends PHP2Go
 				return $count;
 			}
 		}
-		// reescrita da query falhou, a consulta original será utilizada
+		// query rewrite has failed, use original query
 		if (preg_match('/\s*UNION\s*/is', $sql) || !$optimize)
 			$rewriteSql = $sql;
 		else
@@ -695,157 +702,142 @@ class Db extends PHP2Go
 		return 0;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::setTransactionMode
-	// @desc		Define o tipo de transações que devem ser criadas pela
-	//				conexão ativa ao banco de dados.
-	// @note		Consulte a documentação da biblioteca ADODb para maiores
-	//				informações sobre os possíveis valores para $mode
-	// @param		mode string		Tipo de transações
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set transaction mode
+	 *
+	 * @link http://phplens.com/lens/adodb/docs-adodb.htm#SetTransactionMode
+	 * @param string $mode Transaction mode
+	 */
 	function setTransactionMode($mode) {
 		$this->AdoDb->SetTransactionMode($mode);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::startTransaction
-	// @desc		Cria uma nova transação no banco de dados
-	// @note		Se for executada em um tipo de banco de dados que não
-	//				suporta transações, retorna FALSE
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Start a new transaction
+	 *
+	 * ADODb supports nested transactions.
+	 * Returns FALSE when the database driver doesn't support transactions.
+	 *
+	 * @return bool
+	 */
 	function startTransaction() {
 		return $this->AdoDb->StartTrans();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::failTransaction
-	// @desc		Reporta um erro na execução de um comando de uma transação
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Flags the active transaction as failed
+	 *
+	 * @return bool
+	 */
 	function failTransaction() {
 		return $this->AdoDb->FailTrans();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::hasFailedTransaction
-	// @desc		Verifica se a transação ativa falhou
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Verify if the active transaction has failed
+	 *
+	 * @return bool
+	 */
 	function hasFailedTransaction() {
 		return $this->AdoDb->HasFailedTrans();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::completeTransaction
-	// @desc		Finaliza a transação, verificando os erros e executando
-	//				automaticamente a efetivação com commit ou a recuperação
-	//				com rollback
-	// @param		forceRollback bool	"FALSE" Forçar a execução de rollback mesmo que não existam erros
-	// @return		bool TRUE se a transação foi comitada, ou FALSE em caso contrário
-	// @note		Se for executada em um driver que não suporta transações, retorna FALSE
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Completes the active transaction
+	 *
+	 * The ADODb library verifies if the active transaction was
+	 * flagged as failed. If yes, a rollback operation will be
+	 * performed. Otherwise, the transaction will be committed.
+	 *
+	 * @param bool $forceRollback Whether to force a rollback
+	 * @return bool Returns TRUE when a commit was executed
+	 */
 	function completeTransaction($forceRollback=FALSE) {
 		return $this->AdoDb->CompleteTrans(!TypeUtils::toBoolean($forceRollback));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::commit
-	// @desc		Encerra uma transação com sucesso. Se o parâmetro
-	//				$flag for FALSE, executa um rollback na transação
-	// @param		flag bool		"TRUE" Indica se a transação deve ser encerrada com sucesso (TRUE) ou não (FALSE)
-	// @return		bool Indica o status da operação realizada
-	// @note		Se for executada em um tipo de banco de dados que não
-	//				suporta transações, retorna TRUE
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Finishes the active transaction
+	 *
+	 * @param bool $flag If TRUE, transaction will be committed. Otherwise, it will be rolled back
+	 * @deprecated Prefer using {@link startTransaction}, {@link failTransaction} and {@link completeTransaction}
+	 * @return bool
+	 */
 	function commit($flag=TRUE) {
 		return $this->AdoDb->CommitTrans(TypeUtils::toBoolean($flag));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::rollback
-	// @desc		Encerra uma transação desfazendo todas as suas
-	//				alterações no estado do banco de dados
-	// @return		bool Indica o status da operação realizada
-	// @note		Se for executada em um tipo de banco de dados que não
-	//				suporta transações, retorna FALSE
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Rollback the active transaction
+	 *
+	 * @deprecated Prefer using {@link startTransaction}, {@link failTransaction} and {@link completeTransaction}
+	 * @return bool
+	 */
 	function rollback() {
 		return $this->AdoDb->RollbackTrans();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::&prepare
-	// @desc		Prepara uma instrução SQL para execução
-	// @param		stmtCode string	Código da instrução a ser preparada
-	// @param		cursor bool		"FALSE" Indica se haverá retorno de cursor na instrução executada
-	// @return		string Array contendo instrução SQL e parâmetros ou a instrução
-	//				SQL original se o driver utilizado não suportar esta funcionalidade
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepare an SQL statement for execution
+	 *
+	 * @param string $stmtCode SQL statement
+	 * @param bool $cursor Set to TRUE if the statement will return a cursor (oci8 only)
+	 * @return bool
+	 */
 	function prepare($stmtCode, $cursor=FALSE) {
 		return $this->AdoDb->Prepare($stmtCode, TypeUtils::toBoolean($cursor));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::bind
-	// @desc		Atribui um valor a uma variável de substituição em um statement criado
-	// @param		statement array		Statement previamente criado com $Db->prepare()
-	// @param		&value mixed		Valor para o parâmetro
-	// @param		varName string		Nome da variável no statement
-	// @param		type mixed			"FALSE" Tipo da variável, depende dos tipos pré-definidos pelo BD
-	// @param		maxLen int			"4000" Tamanho máximo para a variável bind
-	// @param		isOutput bool		"FALSE" Indica se o parâmetro é IN (FALSE) ou OUT (TRUE)
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Registers a bind variable in a given statement
+	 *
+	 * @param array $statement Prepared statement returned by {@link prepare}
+	 * @param mixed &$value Variable value
+	 * @param mixed $varName Variable name or position
+	 * @param int $type Variable type
+	 * @param int $maxLen Value maxlength
+	 * @param bool $isOutput Whether this is an output variable (when supported by the driver)
+	 * @return bool
+	 */
 	function bind($statement, &$value, $varName, $type=FALSE, $maxLen=4000, $isOutput=FALSE) {
 		return $this->AdoDb->Parameter($statement, $value, $varName, $isOutput, $maxLen, $type);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::quoteString
-	// @desc		Insere corretamente haspas em uma string levando em conta
-	//				os caracteres de escape
-	// @param		str string			String a ser processada
-	// @param		magicQuotes bool	"FALSE" Forneça o retorno da função get_magic_quotes_gpc()
-	//									ou get_magic_quotes_runtime() para levar em conta estes casos
-	//									no tratamento de caracteres de escape
-	// @access		public
-	// @return		string String processada
-	//!-----------------------------------------------------------------
+	/**
+	 * Correctly quotes a string
+	 *
+	 * Add and escape quotes inside a string according to the
+	 * rules of the active database driver.
+	 *
+	 * @param string $str Input string
+	 * @param bool $magicQuotes If $str comes from the request, set this to get_magic_quotes_gpc()
+	 * @return unknown
+	 */
 	function quoteString($str, $magicQuotes=FALSE) {
 		return $this->AdoDb->qstr($str, $magicQuotes);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::date
-	// @desc		Permite transformar uma data ou timestamp para o formato
-	//				de data do banco de dados, incluindo os quotes
-	// @note		Forneça TRUE no parâmetro $bind quando o valor de data ou data/hora
-	//				for utilizando na amarração de variáveis para um statement, pois
-	//				os valores retornados não irão possuir os quotes
-	// @param		date mixed Data em formato string (EURO, SQL ou US) ou unix timestamp
-	// @param		time bool	"FALSE" Formatar data/hora (TRUE) ou data (FALSE)
-	// @param		bind bool	"FALSE" Formatar para bind
-	// @return		string Data formatada de acordo com os padrões da conexão ativa
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepare a given date string to be saved by the database
+	 *
+	 * Date strings written in EURO or US formats are converted.
+	 * Time part can be preserved by setting $time=TRUE. If you
+	 * don't want the method to add quotes in the date string,
+	 * set $bind=TRUE.
+	 *
+	 * @param string $date Date string
+	 * @param bool $time Whether to preserve/add time values
+	 * @param bool $bind If FALSE, a quoted date string will be returned
+	 * @return string
+	 */
 	function date($date=NULL, $time=FALSE, $bind=FALSE) {
 		if (empty($date)) {
 			return ($time ? $this->AdoDb->sysTimeStamp : $this->AdoDb->sysDate);
 		} else {
 			if (!TypeUtils::isInteger($date)) {
-				// aplica conversão euro->sql (se não for data euro, não muda o valor)
+				// convert euro->sql
 				$date = Date::fromEuroToSqlDate($date, $time);
-				// aplica conversão us->sql (se não for data us, não muda o valor)
+				// convert us->sql
 				$date = Date::fromUsToSqlDate($date, $time);
 			}
 			if ($time)
@@ -855,17 +847,21 @@ class Db extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::&execute
-	// @desc		Executa um statement na conexão com o banco de dados
-	// @param		statement mixed		Vetor com dados do statement ou instrução SQL a ser executada
-	// @param		bindVars mixed		"FALSE" Variáveis de bind a serem utilizadas
-	// @param		cursorName string	"NULL" Nome do cursor dentro do código do statement (apenas para oci8)
-	// @return		ADORecordset object Result Set ou FALSE em caso de erros ou resultado vazio
-	// @note		Se a cache estiver habilitada no objeto, busca o result set correspondente
-	//				na cache
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Execute a command on the database
+	 *
+	 * The difference between {@link execute} and {@link query} is that
+	 * the first should be used to perform operations that return a boolean
+	 * result (success or failure). The second should only be used to
+	 * run regular SQL queries that return record sets.
+	 *
+	 * @param mixed $statement SQL code or prepared statement
+	 * @param array $bindVars Bind variables
+	 * @param string $cursorName Cursor name (oci8 only)
+	 * @see query
+	 * @see limitQuery
+	 * @return bool
+	 */
 	function &execute($statement, $bindVars=FALSE, $cursorName=NULL) {
 		$this->lastStatement = array(
 			'source' => 'execute',
@@ -888,16 +884,14 @@ class Db extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::&query
-	// @desc		Executa uma query na conexão com o banco de dados
-	// @param		sqlCode string	Código SQL a ser executado
-	// @param		execute	bool		"TRUE" Flag para executar ou exibir o código
-	// @param		bindVars  mixed		"FALSE" Variáveis de bind a serem aplicadas no código SQL
-	// @note		Se a cache estiver habilitada no objeto, busca o result set correspondente à consulta SQL na cache
-	// @return		ADORecordset object Result set se a consulta puder ser executada ou FALSE em caso de erros
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Execute an SQL query on the database
+	 *
+	 * @param mixed $sqlCode SQL code or prepared statement
+	 * @param bool $execute Whether to execute or just print the SQL code
+	 * @param array $bindVars Bind variables
+	 * @return ADORecordSet
+	 */
 	function &query($sqlCode, $execute=TRUE, $bindVars=FALSE) {
 		if ($execute) {
 			$this->lastStatement = array(
@@ -923,18 +917,23 @@ class Db extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::&limitQuery
-	// @desc		Executa uma query com limite no banco de dados
-	// @param		sqlCode string	Código da consulta SQL
-	// @param		offset int			"-1" Número de linhas requerido, omita para buscar todas a partir de $lowerBound
-	// @param		lowerBound int		"0" Limite inferior requerido, omita para buscar todas até $offset
-	// @param		execute bool		"TRUE" Flag para executar ou exibir o código
-	// @param		bindVars array		"FALSE" Vetor opcional de variáveis bind a serem aplicadas no código SQL
-	// @note		Se a cache estiver habilitada no objeto, busca o result set correspondente à consulta SQL na cache
-	// @return		ADORecordset object Result set se a consulta puder ser executada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Execute an SQL query on the database, rescricting the returned number of rows
+	 *
+	 * <code>
+	 * /* get first 30 rows {@*}
+	 * $db->limitQuery("select * from users", 30);
+	 * /* get 20 rows, starting from the 20th row {@*}
+	 * $db->limitQuery("select * from users", 20, 20);
+	 * </code>
+	 *
+	 * @param mixed $sqlCode SQL code or prepared statement
+	 * @param int $offset Subset size
+	 * @param int $lowerBound Starting offset (defaults to 0)
+	 * @param bool $execute Whether to execute, or just print the SQL code
+	 * @param array $bindVars Bind variables
+	 * @return ADORecordSet
+	 */
 	function &limitQuery($sqlCode, $offset=-1, $lowerBound=0, $execute=TRUE, $bindVars=FALSE) {
 		if ($lowerBound < 0) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MUST_BE_POSITIVE', array("\$lowerBound", "limitQuery")), E_USER_WARNING, __FILE__, __LINE__);
@@ -964,30 +963,38 @@ class Db extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::insert
-	// @desc		Constrói e executa um comando DML 'INSERT'
-	// @param		table string		Nome da tabela ou view
-	// @param		arrData array		Array associativo com os dados
-	// @param		options array		"array()" Opções de inserção
-	// @note		Conjunto de opções disponíveis para o parâmetro $options:<br>
-	//				forceType: tipo de tratamento para as colunas vazias (string vazia, NULL ou string 'null')
-	//				sequenceName: nome da seqüência ou ID generator para a chave primária<br>
-	// @return		mixed Se o banco suportar, retorna o último ID inserido. Do
-	//				contrário, retorna um valor booleano representando o sucesso
-	//				ou a falha da operação de inserção
-	// @see			Db::update
-	// @see			Db::delete
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Build and execute an INSERT on the database
+	 *
+	 * Options:
+	 * # forceType (int) - read ADODb docs for more details
+	 * # sequenceName (string) - sequence to be used to generate a new primary key value
+	 *
+	 * The primary key value will be determined by calling
+	 * {@link lastInsertId} (when database driver supports
+	 * auto-increment columns).
+	 *
+	 * Returns the PK value of the new record, or FALSE in case of errors.
+	 *
+	 * Examples:
+	 * <code>
+	 * $db->insert('person', $personData);
+	 * $db->insert('user', $userData, array('sequenceName'=>'seq_user'));
+	 * </code>
+	 *
+	 * @param string $table Table name
+	 * @param array $arrData Hash array of fields
+	 * @param array $options Extra options
+	 * @return int|bool
+	 */
 	function insert($table, $arrData, $options=array()) {
 		if (empty($table))
 			return FALSE;
 		if (TypeUtils::isHashArray($arrData)) {
-			// definição do forceType
+			// set force type
 			if (isset($options['forceType']))
 				$this->setForceType($options['forceType']);
-			// definição da chave primária a partir do nome de seqüência fornecido
+			// generate pk value using a sequence
 			if (isset($options['sequenceName'])) {
 				$pk = $this->AdoDb->MetaPrimaryKeys($table);
 				if ($pk && sizeof($pk) == 1) {
@@ -1004,12 +1011,11 @@ class Db extends PHP2Go
 				);
         		$result = $this->AdoDb->Execute($insertSQL);
 				if ($result) {
-					// apenas para manter populada esta propriedade
+					// update affectedRows property
 					$this->affectedRows = $this->AdoDb->Affected_Rows();
-					if (!isset($insertId)) {
-						// retorna o último ID inserido apenas se ele for não-zero
+					if (!isset($insertId))
+						// return last inserted ID
 						$insertId = $this->lastInsertId();
-					}
 					return ($insertId ? $insertId : TRUE);
 				} else {
 					$this->affectedRows = 0;
@@ -1020,27 +1026,30 @@ class Db extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::update
-	// @desc		Constrói e executa um comando DML 'UPDATE'
-	// @param		table string		Nome da tabela ou view
-	// @param		arrData array		Array associativo de valores a serem alterados
-	// @param		clause string		Cláusula de condição
-	// @param		force bool			"FALSE" Forçar a execução do update mesmo quando não existirem campos a serem atualizados
-	// @param		options array		"array()" Opções de atualização
-	// @note		Se não for informada uma cláusula de condição para o
-	//				comando UPDATE, este método retornará FALSE
-	// @see			Db::insert
-	// @see			Db::delete
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Build and execute an UPDATE command on the database
+	 *
+	 * Options:
+	 * # forceType (int) (see ADODb docs for more details).
+	 *
+	 * Example:
+	 * <code>
+	 * $db->update('person', $_POST, 'id_person='.$_POST['id_person']);
+	 * </code>
+	 *
+	 * @param string $table Table name
+	 * @param array $arrData Hahs array of fields
+	 * @param string $clause Condition clause
+	 * @param bool $force Force update even when record is unchanged
+	 * @param array $options Extra options
+	 * @return bool
+	 */
 	function update($table, $arrData, $clause, $force=FALSE, $options=array()) {
 		if (empty($table) || empty($clause))
 			return FALSE;
 		$rs =& $this->AdoDb->Execute(sprintf("SELECT * FROM %s WHERE %s", $table, $clause));
 		if ($rs && TypeUtils::isHashArray($arrData)) {
-			// force type
+			// set force type
 			if (isset($options['forceType']))
 				$this->setForceType($options['forceType']);
 			$updateSQL = $this->AdoDb->GetUpdateSQL($rs, $arrData, $force);
@@ -1059,21 +1068,23 @@ class Db extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::updateLob
-	// @desc		Armazena valores em campos do tipo CLOB e BLOB
-	// @param		table string	Nome da tabela
-	// @param		column string	Nome da coluna
-	// @param		value mixed		Valor do LOB ou arquivo contendo os dados
-	// @param		clause string	Cláusula de condição (para o INSERT ou para o UPDATE já realizado)
-	// @param		blobType string	"BLOB" Tipo do LOB (BLOB ou CLOB)
-	// @param		valueType int	"T_BYVAR" T_BYVAR: string, T_BYFILE: arquivo
-	// @note		Em bancos de dados onde valores do tipo LOB não podem ser diretamente
-	//				populados em cláusulas INSERT e UPDATE, deve ser utilizado o método
-	//				updateLob, logo após a execução da instrução INSERT ou UPDATE
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Update columns of type CLOB/BLOB
+	 *
+	 * Examples:
+	 * <code>
+	 * $db->updateLob('person', 'photo', '/upload/pic.gif', 'id_person='.$idPerson, 'BLOB', T_BY_FILE);
+	 * $db->updateLob('person', 'photo', file_get_contents('/upload/pic.gif'), 'id_person='.$idPerson);
+	 * </code>
+	 *
+	 * @param string $table Table name
+	 * @param string $column LOB column name
+	 * @param string $value LOB value
+	 * @param string $clause Condition clause
+	 * @param string $lobType LOB type ('BLOB' or 'CLOB')
+	 * @param int $valueType Value type ({@link T_BY_VAR} or {@link T_BY_FILE})
+	 * @return bool
+	 */
 	function updateLob($table, $column, $value, $clause, $lobType='BLOB', $valueType=T_BYVAR) {
 		$lobType = strtoupper($lobType);
 		if ($valueType == T_BYVAR)
@@ -1081,36 +1092,36 @@ class Db extends PHP2Go
 		return $this->AdoDb->UpdateBlobFile($table, $column, $value, $clause, $lobType);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::replace
-	// @desc		Busca por registros na tabela $table que satisfaçam
-	//				o(s) valor(s) da(s) chave(s) indicadas em $keyFields
-	//				cujos valores devem estar em $arrFields. Atualiza
-	//				o(s) registro(s) se forem encontrados ou insere um
-	//				registro novo em caso contrário
-	// @param		table string		Nome da tabela a ser atualizada/incrementada
-	// @param		arrFields array		Array associativo de valores para o novo registro ou atualização dos registros existentes
-	// @param		keyFields mixed		Chave simples em um string ou chave composta em um array
-	// @param		quoteVals bool		"FALSE" Quotar os valores não numéricos automaticamente nos comandos DML executados
-	// @return		int 0 em caso de falha, 1 se a atualização foi efetuada e 2 se a inserção foi efetuada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Insert or update the database row represented by $arrFields
+	 *
+	 * If the record is already on the database, an UPDATE command
+	 * is executed. Otherwise, an INSERT is performed.
+	 *
+	 * Return values:
+	 * # returns 0 in case of error
+	 * # returns 1 if an UPDATE was executed
+	 * # returns 2 if an INSERT was executed
+	 *
+	 * @link http://phplens.com/lens/adodb/docs-adodb.htm#replace
+	 * @param string $table Table name
+	 * @param array $arrFields Hash array of fields
+	 * @param array $keyFields Primary key field(s)
+	 * @param bool $quoteVals Whether to quote string values
+	 * @return int
+	 */
 	function replace($table, $arrFields, $keyFields, $quoteVals=FALSE) {
 		return $this->AdoDb->Replace($table, $arrFields, $keyFields, $quoteVals);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::delete
-	// @desc		Constrói e executa um comando DML 'DELETE'
-	// @param		table string		Nome da tabela ou view
-	// @param		clause string		Cláusula de condição
-	// @note		Se não for informada uma cláusula de condição para o
-	//				comando DELETE, este método retornará FALSE
-	// @see			Db::insert
-	// @see			Db::update
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Build and execute a DELETE command on the database
+	 *
+	 * @param string $table Table name
+	 * @param string $clause Delete condition clause
+	 * @param array $bindVars Bind variables
+	 * @return bool Operation result
+	 */
 	function delete($table, $clause, $bindVars=FALSE) {
 		if (empty($table) || empty($clause))
 			return FALSE;
@@ -1125,21 +1136,26 @@ class Db extends PHP2Go
 		return ($result ? TRUE : FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::checkIntegrity
-	// @desc		Verifica a integridade referencial de uma tabela
-	//				em uma determinada coluna para as referências do
-	//				parâmetro 'reference'
-	// @param		table string		Tabela a ser testada
-	// @param		column string		Coluna da tabela acima
-	// @param		value mixed		Valor de 'column' sendo testado
-	// @param		reference mixed	Vetor 'tabela'=>'coluna' ou tabela simples a ser testada a integridade
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Apply integrity tests on a given table/column
+	 *
+	 * Example:
+	 * <code>
+	 * /* setup a list of table/column pairs that refer person.id_person {@*}
+	 * $ref = array('client'=>'id_client', 'user'=>'id_user');
+	 * /* check integrity {@*}
+	 * $bool = $db->checkIntegrity('person', 'id_person', 7, $ref);
+	 * </code>
+	 *
+	 * @param string $table Table name
+	 * @param string $column Column name
+	 * @param mixed $value Column value
+	 * @param array $reference Table/column pairs to be tested
+	 * @return bool
+	 */
 	function checkIntegrity($table, $column, $value, $reference) {
 		$ok = TRUE;
-		if (TypeUtils::isArray($reference)) {
+		if (is_array($reference)) {
 			foreach($reference as $tb => $col) {
 				$fields = "{$table}.{$column}";
 				$tables = "{$table},{$tb}";
@@ -1172,21 +1188,21 @@ class Db extends PHP2Go
 		return $ok;
      }
 
-	//!-----------------------------------------------------------------
-	// @function	Db::toGlobals
-	// @desc		Publica como variáveis globais os valores das
-	//				colunas da primeira linha do resultado de 'sqlCode'
-	// @param		sqlCode string			Consulta SQL para publicação das variáveis
-	// @param		bindVars array			"FALSE" Variáveis de amarração para a consulta
-	// @param		ignoreEmptyResults bool	"TRUE" Não gerar erro para uma consulta SQL que não retorna resultados
-	// @note		A principal utilidade deste método é publicar no escopo global os
-	//				dados de um registro para que eles possam ser carregados para um
-	//				formulário de edição
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Publish the first record returned by an SQL query in the registry
+	 *
+	 * This commands expects an SQL query or prepared statement in
+	 * the $sqlCode argument. This command is executed (using $bindVars,
+	 * if available), and the first returned row is registered in the
+	 * registry singleton (global scope).
+	 *
+	 * @param string $sqlCode SQL query
+	 * @param array $bindVars SQL bind vars
+	 * @param bool $ignoreEmptyResults Ignore empty results (TRUE) or throw an error (FALSE)
+	 * @uses Registry::set()
+	 * @return bool
+	 */
 	function toGlobals($sqlCode, $bindVars=FALSE, $ignoreEmptyResults=FALSE) {
-		// testa a natureza do comando passado por parâmetro
 		if (!$this->isDbQuery($sqlCode) || $this->isDbDesign($sqlCode)) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TOGLOBALS_WRONG_USAGE'), E_USER_WARNING, __FILE__, __LINE__);
 			return FALSE;
@@ -1212,30 +1228,22 @@ class Db extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::&emptyRecordSet
-	// @desc		Retorna um result set vazio em consultas e operações
-	//				que retornam erros ou não retornam resultados no BD
-	// @return		ADORecordSet_empty object
-	// @note		Ao executar uma query ou uma operação no BD, tanto o
-	//				teste $Db->affectedRows() quanto o $Rs->RecordCount()
-	//				deverão retornar zero. Porém, possíveis erros poderão
-	//				ser encontrados em $Db->getError()
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns an empty record set
+	 *
+	 * @return ADORecordSet_empty
+	 */
 	function &emptyRecordSet() {
 		$Rs = new ADORecordSet_empty();
 		return $Rs;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::isDbDesign
-	// @desc		Verifica se uma query possui palavras reservadas
-	//				indicativas de um comando DML ou DDL
-	// @param		sql string	Código SQL
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given command is a database design operation (DML or DDL)
+	 *
+	 * @param string $sql SQL command
+	 * @return bool
+	 */
 	function isDbDesign($sql) {
 		if (TypeUtils::isArray($sql))
 			$sql = $sql[0];
@@ -1248,14 +1256,12 @@ class Db extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::isDbQuery
-	// @desc		Verifica se uma query possui a palavra SELECT,
-	//				indicativa de um comando DQL
-	// @param		sql string	Código SQL
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given command is DQL (contains "SELECT")
+	 *
+	 * @param string $sql SQL command
+	 * @return bool
+	 */
 	function isDbQuery($sql) {
 		if (TypeUtils::isArray($sql))
 			$sql = $sql[0];
@@ -1267,12 +1273,11 @@ class Db extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::close
-	// @desc		Fecha a conexão atual com o banco de dados
-	// @return		bool Indica o status da operação realizada
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Close the database connection
+	 *
+	 * @return bool
+	 */
 	function close() {
 		if (isset($this->AdoDb->_connectionID) && TypeUtils::isResource($this->AdoDb->_connectionID)) {
 			$this->onBeforeClose();
@@ -1283,25 +1288,19 @@ class Db extends PHP2Go
 		return ($this->connected === FALSE);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::onAfterConnect
-	// @desc		Método abstrato que pode ser implementado em uma classe
-	//				extendida para executar comandos no momento em que a
-	//				conexão ao banco de dados é estabelecida
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract method, must be implemented by custom connection class
+	 *
+	 * @abstract
+	 */
 	function onAfterConnect() {
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Db::onBeforeClose
-	// @desc		Método abstrato que pode ser implementado em uma classe
-	//				extendida para executar comandos antes que a conexão
-	//				ao banco de dados seja encerrada
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Abstract method, must be implemented by custom connection class
+	 *
+	 * @abstract
+	 */
 	function onBeforeClose() {
 	}
 }

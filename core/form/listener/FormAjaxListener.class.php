@@ -1,66 +1,129 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/listener/FormAjaxListener.class.php,v 1.4 2006/11/19 18:34:18 mpont Exp $
-// $Date: 2006/11/19 18:34:18 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.net.HttpRequest');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		FormAjaxListener
-// @desc		Esta classe constrói funções que criam, configuram e
-//				executam requests utilizando as bibliotecas AJAX do
-//				framework Javascript incluído no PHP2Go. Os parâmetros
-//				para a requisição podem ser definidos diretamente na
-//				especificação do XML, utilizando elementos do tipo
-//				"param" ou diretamente por código JS
-// @extends		FormEventListener
-// @package		php2go.form.listener
-// @author		Marcos Pont
-// @version		$Revision: 1.4 $
-//!-----------------------------------------------------------------
+/**
+ * Builds AJAX-based form event listeners
+ *
+ * Based on the provided arguments, this class can bind an AJAX request
+ * with an event of a form component.
+ *
+ * The properties of the AJAX request must be defined in the form
+ * XML specification, in the #text node of the listener element,
+ * or inside "param" child nodes.
+ *
+ * Example:
+ * <code>
+ * <lookupfield name="states" label="States" width="200">
+ *   <datasource>
+ *     <keyfield>state_id</keyfield>
+ *     <displayfield>name</displayfield>
+ *     <lookuptable>state</lookuptable>
+ *     <orderby>name</orderby>
+ *   </datasource>
+ *   <listener type="AJAX" event="onChange" url="get_cities.php">
+ *     <param name="method">post</param>
+ *     <param name="async">true</param>
+ *     <param name="params">{state_id:$F('states').getValue()}</param>
+ *     <param name="onSuccess"><![CDATA[
+ *       var cities = $F('cities');
+ *       cities.importOptions(response.responseText);
+ *       cities.focus();
+ *     ]]></param>
+ *   </listener>
+ * </lookupfield>
+ * <lookupfield name="cities" label="Cities" width="200" first="Choose a state first"/>
+ * </code>
+ *
+ * @package form
+ * @subpackage listener
+ * @uses HttpRequest
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FormAjaxListener extends FormEventListener
 {
-	var $url;				// @var url string				URL da requisição
-	var $class;				// @var class string			Classe AJAX
-	var $formSubmit;		// @var formSubmit bool			Flag indicativo de submissão de formulário
-	var $params;				// @var params array				Parâmetros AJAX
-	var $paramsFuncBody;		// @var paramsFuncBody string	Função de montagem dos parâmetros AJAX
+	/**
+	 * AJAX request URL
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $url;
 
-	//!-----------------------------------------------------------------
-	// @function	FormAjaxListener::FormAjaxListener
-	// @desc		Construtor da classe
-	// @param		eventName string		Nome do evento
-	// @param		autoDispatchIf string	"" Expressão que define se o evento é disparado automaticamente ou não
-	// @param		url string				"" URL alvo para o request
-	// @param		class string			"" Nome da classe AJAX (default é AjaxRequest)
-	// @param		formSubmit bool			"FALSE" Indica se o request AJAX deve submeter o formulário onde é inserido
-	// @param		params array				"array()" Parâmetros AJAX
-	// @param		paramsFuncBody string	"" Corpo de uma função JS que retorna os parâmetros AJAX
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * AJAX request class
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $class;
+
+	/**
+	 * If TRUE, indicates this listener must control
+	 * the submission of the form in which it's inserted
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $formSubmit;
+
+	/**
+	 * AJAX parameters
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $params;
+
+	/**
+	 * Function body, written in the #text child node of the listener,
+	 * representing a JS function body that defines AJAX parameters
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $paramsFuncBody;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $eventName Event name
+	 * @param string $autoDispatchIf Evaluates if listener should be dispatched automatically upon page load
+	 * @param string $url AJAX request URL
+	 * @param string $class AJAX request class
+	 * @param bool $formSubmit Whether this listener submits its form
+	 * @param array $params AJAX parameters
+	 * @param string $paramsFuncBody Function body that defines AJAX parameters
+	 * @return FormAjaxListener
+	 */
 	function FormAjaxListener($eventName, $autoDispatchIf='', $url='', $class='', $formSubmit=FALSE, $params=array(), $paramsFuncBody='') {
 		parent::FormEventListener(FORM_EVENT_AJAX, $eventName, '', $autoDispatchIf);
 		$this->url = $url;
@@ -70,39 +133,40 @@ class FormAjaxListener extends FormEventListener
 		$this->paramsFuncBody = $paramsFuncBody;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormAjaxListener::getScriptCode
-	// @desc		Sobrescreve o método da classe superior para que a função
-	//				que cria, configura e executa o request AJAX possa ser montada
-	//				e adicionada no final do documento HTML ativo
-	// @param		targetIndex int		"NULL" Índice de um grupo de opções
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Overrides the parent class implementation in order to generate
+	 * the function that performs the AJAX request and add it in the
+	 * end of the document's body
+	 *
+	 * @param int $targetIndex Index, when bound to a group option invidually
+	 * @return string Function call
+	 */
 	function getScriptCode($targetIndex=NULL) {
 		$Form =& $this->_Owner->getOwnerForm();
 		$Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'ajax.js');
-		// submissão de formulrio
-		if ($this->formSubmit) {
+		// is the owner a submit button?
+		$isSubmit = (TypeUtils::isInstanceOf($this->_Owner, 'FormButton') && $this->_Owner->getAttribute('TYPE') == 'SUBMIT');
+		// form submission
+		if ($this->formSubmit || $isSubmit) {
 			$this->url = $Form->formAction;
 			$this->params['method'] = $Form->formMethod;
 			$this->params['form'] = $Form->formName;
 		} elseif (empty($this->url)) {
 			$this->url = HttpRequest::uri(FALSE);
 		}
-		// um listener AJAX em um botão do tipo SUBMIT deve sobrepor o evento 
-		// onsubmit do formulário, através do método Form.ajaxify
-		if (TypeUtils::isInstanceOf($this->_Owner, 'FormButton') && $this->_Owner->attributes['TYPE'] == 'SUBMIT') {
+		// if a listener AJAX is declared inside a button whose type is "SUBMIT",
+		// the onsubmit event handler of the form must be overlapped by a call
+		// to the Form.ajaxify method
+		if ($isSubmit) {
 			$Form->Document->addScriptCode(
 				"\tForm.ajaxify($('{$Form->formName}'), function() {\n" .
 				$this->getParamsScript() .
-				"\t\tvar request = new {$this->class}('{$this->url}', getParams());\n" .
+				"\t\tvar request = new {$this->class}('{$this->url}', params);\n" .
 				"\t\trequest.send();\n" .
 				"\t});",
 			'Javascript', SCRIPT_END);
 			return NULL;
 		} else {
-			// nome da função
 			$funcName = PHP2Go::generateUniqueId(preg_replace("~[^\w]+~", "", $this->_Owner->getName()) . ucfirst($this->eventName));
 			if ($this->custom) {
 				$params = $this->getParamsScript();
@@ -113,7 +177,7 @@ class FormAjaxListener extends FormEventListener
 			}
 			$Form->Document->addScriptCode(
 				"\tfunction {$funcName}({$ctorArgs}) {\n{$params}" .
-				"\t\tvar request = new {$this->class}('{$this->url}', getParams());\n" .
+				"\t\tvar request = new {$this->class}('{$this->url}', params);\n" .
 				"\t\trequest.send();\n" .
 				"\t}",
 			'Javascript', SCRIPT_END);
@@ -123,22 +187,21 @@ class FormAjaxListener extends FormEventListener
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormAjaxListener::getParamsScript
-	// @desc		Monta o código Javascript que constrói o conjunto de
-	//				argumentos a serem enviados para o componente AJAX
-	// @access		protected
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Build the script code that configures the
+	 * parameters of the AJAX request
+	 *
+	 * @access protected
+	 * @return string
+	 */
 	function getParamsScript() {
-		$buf = "\t\tvar getParams = function() {\n";
+		$buf = "";
 		if (!empty($this->paramsFuncBody)) {
 			$funcBody = rtrim(ltrim($this->paramsFuncBody, "\r\n "));
-			preg_match("/^([\t]+)/", $funcBody, $matches);
-			$funcBody = (isset($matches[1]) ? preg_replace("/^\t{" . strlen($matches[1]) . "}/m", "\t\t\t\t", $funcBody) : $funcBody);
-			$buf .= "\t\t\tvar params = function() {\n{$funcBody}\n\t\t\t}();\n";
+			$funcBody = $this->_convertTabs($funcBody, 3);
+			$buf .= "\t\tvar params = function() {\n{$funcBody}\n\t\t}();\n";
 		} else {
-			$buf .= "\t\t\tvar params = {};\n";
+			$buf .= "\t\tvar params = {};\n";
 		}
 		foreach ($this->params as $name => $value) {
 			switch ($name) {
@@ -147,50 +210,72 @@ class FormAjaxListener extends FormEventListener
 				case 'body' :
 				case 'form' :
 				case 'throbber' :
-					$buf .= "\t\t\tparams.{$name} = '{$value}';\n";
+					$value = trim($value);
+					$buf .= "\t\tparams.{$name} = '{$value}';\n";
 					break;
 				case 'async' :
 				case 'params' :
 				case 'headers' :
 				case 'formFields' :
-					$buf .= "\t\t\tparams.{$name} = {$value};\n";
+					$value = trim($value);
+					$buf .= "\t\tparams.{$name} = {$value};\n";
 					break;
 				case 'container' :
-					$buf .= "\t\t\tparams.{$name} = " . (preg_match("/{.*}/", $value) ? $value : "'{$value}'") . ";\n";
+					$value = trim($value);
+					$buf .= "\t\tparams.{$name} = " . (preg_match("/{.*}/s", $value) ? $value : "'{$value}'") . ";\n";
 					break;
 				case 'onLoading' :
 				case 'onLoaded' :
 				case 'onInteractive' :
-					$buf .=	"\t\t\tparams.{$name} = function() {\n" .
-							"\t\t\t{$value}\n" .
-							"\t\t\t}\n";
-							break;
+					$value = trim(rtrim($value), "\n");
+					$value = $this->_convertTabs($value, 3);
+					$buf .=	"\t\tparams.{$name} = function() {\n" .
+							"{$value}\n" .
+							"\t\t};\n";
+					break;
 				case 'onComplete' :
 				case 'onSuccess' :
 				case 'onFailure' :
 				case 'onJSONResult' :
 				case 'onXMLResult' :
-					$buf .=	"\t\t\tparams.{$name} = function(response) {\n" .
-							"\t\t\t{$value}\n" .
-							"\t\t\t}\n";
-							break;
+					$value = trim(rtrim($value), "\n");
+					$value = $this->_convertTabs($value, 3);
+					$buf .=	"\t\tparams.{$name} = function(response) {\n" .
+							"{$value}\n" .
+							"\t\t};\n";
+					break;
 				case 'onException' :
-					$buf .=	"\t\t\tparams.{$name} = function(e) {\n" .
-					$buf .= "\t\t\t{$value}\n" .
-							"\t\t\t}\n";
+					$value = trim(rtrim($value), "\n");
+					$value = $this->_convertTabs($value, 3);
+					$buf .=	"\t\tparams.{$name} = function(e) {\n" .
+							"{$value}\n" .
+							"\t\t};\n";
+					break;
 			}
 		}
-		$buf .= "\t\t\treturn params;\n";
-		$buf .= "\t\t}\n";
 		return $buf;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormAjaxListener::validate
-	// @desc		Valida as propriedades do tratador de eventos
-	// @access		protected
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Configure listener's dynamic properties
+	 *
+	 * @access protected
+	 */
+	function onDataBind() {
+		parent::onDataBind();
+		// resolve variables and expressions on the URL attribute
+		if (preg_match("/~[^~]+~/", $this->url)) {
+			$Form =& $this->getOwnerForm();
+			$this->url = $Form->resolveVariables($this->url);
+		}
+	}
+
+	/**
+	 * Validates the listener's properties
+	 *
+	 * @access protected
+	 * @return bool
+	 */
 	function validate() {
 		if (!empty($this->eventName)) {
 			if ($this->class == 'AjaxUpdater')
@@ -200,12 +285,11 @@ class FormAjaxListener extends FormEventListener
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormAjaxListener::__toString
-	// @desc		Monta informações do listener, para exibição de mensagens de erro
-	// @access		protected
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds a string representation of the AJAX listener
+	 *
+	 * @return string
+	 */
 	function __toString() {
 		$info = $this->_Owner->getName();
 		if (isset($this->_ownerIndex))
@@ -219,6 +303,21 @@ class FormAjaxListener extends FormEventListener
 			$info .= "; {$this->class}";
 		$info .= ']';
 		return $info;
+	}
+
+	/**
+	 * Normalize tab characters inside a function body or an AJAX param definition
+	 *
+	 * @param string $str Input string
+	 * @param int $n Minimum tab chars on left side
+	 * @access private
+	 * @return string
+	 */
+	function _convertTabs($str, $n) {
+		$matches = array();
+		$tabs = str_repeat("\t", $n);
+		preg_match("/^([\t]+)/", $str, $matches);
+		return (isset($matches[1]) ? preg_replace("/^\t{" . strlen($matches[1]) . "}/m", $tabs, $str) : $str);
 	}
 }
 

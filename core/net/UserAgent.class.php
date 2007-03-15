@@ -1,175 +1,280 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/UserAgent.class.php,v 1.5 2006/04/05 23:43:25 mpont Exp $
-// $Date: 2006/04/05 23:43:25 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
-import('php2go.net.HttpRequest');
-//------------------------------------------------------------------
-
-//!-----------------------------------------------------------------
-// @class		UserAgent
-// @desc		Esta classe é responsável por capturar informações sobre o agente
-//				do usuário: informações sobre o navegador, sobre o sistema operacional
-//				utilizado, sobre funcionalidades do navegador, além de armazenar os tipos
-//				MIME, as linguages, as codificações e os charsets aceitos pelo cliente.
-//				A classe ainda contém métodos que facilitam a comparação do browser/OS do
-//				cliente contra uma lista de valores
-// @package		php2go.net
-// @extends		PHP2Go
-// @uses		Environment
-// @uses		HttpRequest
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.5 $
-//!-----------------------------------------------------------------
+/**
+ * Provides information about the user agent
+ *
+ * Provides information about the user's browser, operating system, accepted
+ * languages, accepted MIME types, accepted encodings and browser features.
+ *
+ * @package net
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class UserAgent extends PHP2Go
 {
-	var $userAgent;			// @var userAgent string		Valor original do user agent
-	var $identifier;		// @var identifier string		String de identificação do user agent, capturada do início da string original
-	var $fullVersion;		// @var fullVersion string		Informação completa de versão
-	var $majorVersion;		// @var majorVersion string		Parte principal da versão do cliente
-	var $minorVersion;		// @var minorVersion string		Parte secundária da versão do cliente
-	var $verlet;			// @var verlet string			Informação adicional da versão do cliente
-	var $browser;			// @var browser array			Conjunto de flags boolenos contendo categorias/tipos de navegador
-	var $browserName;		// @var browserName string		Abreviação do nome do browser
-	var $browserFullName;	// @var browserFullName string	Nome completo do browser
-	var $os;				// @var os array				Conjunto de flags booleanos contendo categorias/tipos de sistemas operacionais
-	var $osName;			// @var osName string			Abreviação do nome do sistema operacional
-	var $osFullName;		// @var osFullName string		Nome completo do sistema operacional
-	var $features;			// @var features array			Conjunto de features, com seu respectivo valor baseado no user agent atual
-	var $mimeTypes;			// @var mimeTypes array			Conjunto de tipos mime aceitos
-	var $language;			// @var language array			Conjunto de linguagens aceitas
-	var $encoding;			// @var encoding array			Conjunto de codificações aceitas
-	var $charset;			// @var charset array			Conjunto de charsets aceitos
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::UserAgent
-	// @desc		Construtor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Full user agent
+	 *
+	 * @var string
+	 */
+	var $userAgent;
+
+	/**
+	 * User agent's identifier
+	 *
+	 * @var string
+	 */
+	var $identifier;
+
+	/**
+	 * Full browser version
+	 *
+	 * @var string
+	 */
+	var $fullVersion;
+
+	/**
+	 * Browser's major version
+	 *
+	 * @var int
+	 */
+	var $majorVersion;
+
+	/**
+	 * Brower's minor version
+	 *
+	 * @var int
+	 */
+	var $minorVersion;
+
+	/**
+	 * Extra information about brower's version
+	 *
+	 * @var mixed
+	 */
+	var $verlet;
+
+	/**
+	 * Browser's flags
+	 *
+	 * @var array
+	 */
+	var $browser;
+
+	/**
+	 * Browser's name
+	 *
+	 * @var string
+	 */
+	var $browserName;
+
+	/**
+	 * Browser's full name
+	 *
+	 * @var string
+	 */
+	var $browserFullName;
+
+	/**
+	 * User's operating system
+	 *
+	 * @var string
+	 */
+	var $os;
+
+	/**
+	 * User's operating system name
+	 *
+	 * @var string
+	 */
+	var $osName;
+
+	/**
+	 * User's operating system full name
+	 *
+	 * @var string
+	 */
+	var $osFullName;
+
+	/**
+	 * Set of browser features
+	 *
+	 * @var array
+	 */
+	var $features;
+
+	/**
+	 * Accepted MIME types
+	 *
+	 * @var array
+	 */
+	var $mimeTypes;
+
+	/**
+	 * Accepted language codes
+	 *
+	 * @var array
+	 */
+	var $language;
+
+	/**
+	 * Accepted types of content encoding
+	 *
+	 * @var array
+	 */
+	var $encoding;
+
+	/**
+	 * Accepted charsets
+	 *
+	 * @var array
+	 */
+	var $charset;
+
+	/**
+	 * Class constructor
+	 *
+	 * Shouldn't be called directly. Prefer calling {@link getInstance}.
+	 *
+	 * @return UserAgent
+	 */
 	function UserAgent() {
 		parent::PHP2Go();
 		$this->_initializeProperties();
 		$this->_detectProperties();
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::&getInstance
-	// @desc		Retorna uma instância única da classe UserAgent, com as informações de detecção
-	// @access		public
-	// @return		UserAgent object
-	// @note		É recomendado que o acesso a esta classe seja feito sempre através do método
-	//				getInstance, a fim de evitar que o mecanismo de detecção seja executado mais de
-	//				uma vez para um mesmo script
-	// @static
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the singleton of the UserAgent class
+	 *
+	 * Use this method when you need to read information
+	 * about the request's user agent
+	 *
+	 * @return UserAgent
+	 * @static
+	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
 			$instance = new UserAgent();
 		return $instance;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::getBrowserName
-	// @desc		Retorna uma abreviação do nome do browser cliente
-	// @access		public
-	// @return		string Nome do browser
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get client browser's name
+	 *
+	 * @return string
+	 */
 	function getBrowserName() {
 		return $this->browserName;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::getBrowserFullName
-	// @desc		Retorna o nome completo do browser cliente
-	// @access		public
-	// @return		string Nome completo do browser
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get client browser's full name
+	 *
+	 * @return string
+	 */
 	function getBrowserFullName() {
 		return $this->browserFullName;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::getOSName
-	// @desc		Retorna uma abreviação do nome do sistema operacional do cliente
-	// @access		public
-	// @return		string Nome do sist. operacional
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the name of the user's operating system
+	 *
+	 * @return string
+	 */
 	function getOSName() {
 		return $this->osName;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::getFullOSName
-	// @desc		Retorna o nome completo do sistema operacional do cliente
-	// @access		public
-	// @return		string Nome completo do sist. operacional
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the full name of the user's operating system
+	 *
+	 * @return string
+	 */
 	function getOSFullName() {
 		return $this->osFullName;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::getFeature
-	// @desc		Retorna o valor de uma determinada funcionalidade exigida do browser cliente
-	// @access		public
-	// @param		feature string	Nome da funcionalidade
-	// @return		mixed Valor da funcionalidade (ou flag indicando que está ativa)
-	// @note		Funcionalidades disponíveis:<br>
-	//				* javascript (retorna a versão JavaScript no browser cliente)<br>
-	//				* dom (verifica se a implementação do modelo DOM está habilitada)<br>
-	//				* dhtml (verifica se há suporte a DHTML)<br>
-	//				* gecko (retorna a data de compilação da engine Gecko no browser cliente)
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get information about a given browser feature
+	 *
+	 * Supports the following properties:
+	 * # javascript (returns the Javascript version bundled with the browser)
+	 * # dom (check if browser supports the DOM model)
+	 * # dhtml (check if browser supports DHTML)
+	 * # gecko (get compilation date of the internal Gecko engine)
+	 *
+	 * @param string $feature Feature name
+	 * @return mixed
+	 */
 	function getFeature($feature) {
 		return (isset($this->features[$feature]) ? $this->features[$feature] : FALSE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchBrowser
-	// @desc		Fornecido um flag da lista de flags booleanos de browser, este método
-	//				retorna o valor para este flag, se ele existir
-	// @access		public
-	// @param		identifier string	Nome do flag
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Tests the user's browser against a given pattern
+	 *
+	 * Available browser patterns:
+	 * ns, ns2, ns3, ns4, ns4+, nav, ns6, ns6+, galeon, konqueror,
+	 * nautilus, safari, text, gecko, firefox, firefox0x, firefox1x,
+	 * firefox2x, ie, ie3, ie4, ie4+, ie5, ie55, ie55+, ie6, ie6+, ie7,
+	 * myie, opera, opera2, opera3, opera4, opera5, opera6, opera7, opera8,
+	 * opera9, opera5+, opera6+, opera7+, opera8+, opera9+, aol, aol3, aol4,
+	 * aol5, aol6, aol7, aol8, webtv, aoltv, hotjava, hotjava3, hotjava3+,
+	 * avant, k-meleon, crazy, epiphany, netgem, webdav.
+	 *
+	 * Examples:
+	 * <code>
+	 * $agent =& UserAgent::getInstance();
+	 * $isIE = $agent->matchBrowser('ie');
+	 * $isOpera7 = $agent->matchBrowser('opera7');
+	 * </code>
+	 *
+	 * @param string $identifier Browser identifier
+	 * @return bool
+	 */
 	function matchBrowser($identifier) {
 		$identifier = strtolower($identifier);
 		return (isset($this->browser[$identifier]) ? $this->browser[$identifier] : FALSE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchBrowserList
-	// @desc		A partir de uma lista de flags, realiza verificação para todos contra
-	//				a tabela de flags booleanos de browser, retornando aquele que primeiro 
-	//				possuir uma valor verdadeiro
-	// @access		public
-	// @param		list array	Lista de flags
-	// @return		mixed Valor do flag verdadeiro, ou FALSE se nenhum for verdadeiro
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Tests the user's browser against a list of patterns
+	 *
+	 * Returns first accepted pattern, otherwise returns FALSE.
+	 *
+	 * @param array $list Patterns list
+	 * @return mixed
+	 */
 	function matchBrowserList($list) {
 		$list = (array)$list;
 		foreach ($list as $entry) {
@@ -178,28 +283,40 @@ class UserAgent extends PHP2Go
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchOS
-	// @desc		Dado um flag de sistema operacional, retorna o valor para este flag
-	// @access		public
-	// @param		identifier string 	Flag de sistema operacional
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Tests the user's OS name against a given pattern
+	 *
+	 * Available OS patterns:
+	 * win, win16, win31, win95, win98, wince, winme, win2k, winxp, win2003,
+	 * winnt, win32, aix, aix1, aix2, aix3, aix4, amiga, beos, freebsd, hpux,
+	 * hpux9, hpux10, irix, irix5, irix6, linux, mac, macosx, macppc, mac68k,
+	 * netbsd, os3, openbsd, openvms, palmos, photon, sco, sinix, sun, sun4,
+	 * sun5, suni86, unixware, bsd, unix.
+	 *
+	 * Examples:
+	 * <code>
+	 * $agent =& UserAgent::getInstance();
+	 * $isXP = $agent->matchOS('winxp');
+	 * $isLinux = $agent->matchOS('linux');
+	 * </code>
+	 *
+	 * @param string $identifier OS identifier
+	 * @return bool
+	 */
 	function matchOS($identifier) {
 		$identifier = strtolower($identifier);
 		return (isset($this->os[$identifier]) ? $this->os[$identifier] : FALSE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchOSList
-	// @desc		A partir de uma lista de flags, realiza verificação para todos contra
-	//				a tabela de flags booleanos de sist. operacional, retornando aquele que
-	//				primeiro possuir um valor verdadeiro
-	// @access		public
-	// @param		list array	Lista de flags
-	// @return		mixed Valor do flag verdadeiro, ou FALSE se nenhum for verdadeiro
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Tests the user's OS name against a list of patterns
+	 *
+	 * Returns first accepted pattern, otherwise returns FALSE.
+	 *
+	 * @param array $list Patterns list
+	 * @return mixed
+	 */
 	function matchOSList($list) {
 		$list = (array)$list;
 		foreach ($list as $entry) {
@@ -209,62 +326,59 @@ class UserAgent extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchMimeType
-	// @desc		Verifica se um determinado tipo mime é aceito para a requisição atual
-	// @access		public
-	// @param		mime string	Tipo mime
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if a given MIME type is accepted
+	 *
+	 * @param string $mime MIME type
+	 * @return bool
+	 */
 	function matchMimeType($mime) {
 		$mimestr = implode('|', $this->mimeTypes);
 		return preg_match("/{$mime}/i", $mimestr);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchLanguage
-	// @desc		Verifica se uma determinada linguagem é aceita
-	// @access		public
-	// @param		lang string Código da linguagem
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if a given language code is accepted
+	 *
+	 * @param string $lang Language code
+	 * @return bool
+	 */
 	function matchLanguage($lang) {
 		$langstr = implode('|', $this->language);
 		return preg_match("/{$lang}/i", $langstr);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchEncoding
-	// @desc		Verifica se um determinado tipo de codificação é aceito
-	// @access		public
-	// @param		encoding string Tipo de codificação
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if a given type of content encoding is accepted
+	 *
+	 * @param string $encoding Encoding type
+	 * @return bool
+	 */
 	function matchEncoding($encoding) {
 		$encodingstr = implode('|', $this->encoding);
 		return preg_match("/{$encoding}/", $encodingstr);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchCharset
-	// @desc		Verifica se um determinado conjunto de caracteres de codificação é aceito
-	// @access		public
-	// @param		charset string	Charset
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Check if a given charset is accepted
+	 *
+	 * @param string $charset Charset
+	 * @return bool
+	 */
 	function matchCharset($charset) {
 		$charsetstr = implode('|', $charset);
 		return preg_match("/{$charset}/", $charsetstr);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::matchAcceptList
-	// @desc		Valida uma lista de valores contra uma das tabelas "accept" da requisição atual
-	// @access		public
-	// @param		list array			Lista de valores
-	// @param		acceptType string	Nome da tabela (mimeTypes, language, encoding ou charset)
-	// @return		mixed Primeiro valor aceito, ou FALSE se nenhum for aceito
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Validates a list of values against one of the "accept" tables
+	 *
+	 * Returns the first accepted value, otherwise returns FALSE.
+	 *
+	 * @param array $list List of values
+	 * @param string $acceptType Accept type: 'mimeTypes', 'language', 'encoding' or 'charset'
+	 * @return mixed
+	 */
 	function matchAcceptList($list, $acceptType) {
 		if (in_array($acceptType, array('mimeTypes', 'language', 'encoding', 'charset'))) {
 			$str = implode('|', $this->{$acceptType});
@@ -276,33 +390,31 @@ class UserAgent extends PHP2Go
 		}
 		return FALSE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::toString
-	// @desc		Monta uma representação string do user agent
-	// @access		public
-	// @return		string Representação string, com um resumo das informações coletadas
-	//!-----------------------------------------------------------------
-	function toString() {
+
+	/**
+	 * Builds a string representation of the UserAgent object
+	 *
+	 * @return string
+	 */
+	function __toString() {
 		$features = array();
 		foreach ($this->features as $name => $value)
 			$features[] = $name . '=' . (TypeUtils::isBoolean($value) ? intval($value) : $value);
 		$features = implode(', ', $features);
 		return sprintf("Browser: %s\nOS: %s\nFeatures: %s\nAccept-Types: %s\nAccept-Languages: %s\nAccept-Encoding: %s\nAccept-Charset: %s",
-				$this->browserFullName, $this->osFullName, $features, 
+				$this->browserFullName, $this->osFullName, $features,
 				implode(', ', $this->mimeTypes), implode(', ', $this->language),
 				implode(', ', $this->encoding), implode(', ', $this->charset)
 		);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_initializeProperties
-	// @desc		Inicializa as propriedades da classe
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Initializes class properties
+	 *
+	 * @access private
+	 */
 	function _initializeProperties() {
-		$this->userAgent = HttpRequest::userAgent();
+		$this->userAgent = $_SERVER['HTTP_USER_AGENT'];
 		$this->identifier = 'unknown';
 		$this->fullVersion = 0;
 		$this->majorVersion = 0;
@@ -323,13 +435,12 @@ class UserAgent extends PHP2Go
 		$this->encoding = array();
 		$this->charset = array();
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_detectProperties
-	// @desc		Método principal de detecção das propriedades do cliente
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Detects browser properties
+	 *
+	 * @access private
+	 */
 	function _detectProperties() {
 		$agent = strtolower($this->userAgent);
 		if (preg_match(";^([[:alnum:]]+)[ /\(]*[[:alpha:]]*([0-9]*)(\.[0-9a-z\.]*);", $agent, $matches)) {
@@ -350,19 +461,19 @@ class UserAgent extends PHP2Go
 		$this->_detectBrowserFlags($agent);
         $this->_detectOSFlags($agent);
         $this->_detectFeatures($agent);
-		$this->_detectAccept();	
+		$this->_detectAccept();
 		$this->_detectBrowserName();
 		$this->_detectOSName();
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_detectBrowserFlags
-	// @desc		Monta a tabela de flags de browser
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Detects boolean values for all browser patterns
+	 *
+	 * @param string $agent Original user agent
+	 * @access private
+	 */
 	function _detectBrowserFlags($agent) {
-        $this->browser['ns'] = ($this->_match('mozilla', $agent) && $this->_dontMatch('spoofer|compatible|hotjava|opera|webtv', $agent));        
+        $this->browser['ns'] = ($this->_match('mozilla', $agent) && $this->_dontMatch('spoofer|compatible|hotjava|opera|webtv', $agent));
         $this->browser['ns2'] = ($this->browser['ns'] && $this->majorVersion == 2);
         $this->browser['ns3'] = ($this->browser['ns'] && $this->majorVersion == 3);
         $this->browser['ns4'] = ($this->browser['ns'] && $this->majorVersion == 4);
@@ -374,11 +485,12 @@ class UserAgent extends PHP2Go
         $this->browser['konqueror'] = $this->_match('konqueror|safari', $agent);
         $this->browser['nautilus'] = $this->_match('nautilus', $agent);
         $this->browser['safari'] = $this->_match('konqueror|safari', $agent);
-        $this->browser['text'] = $this->_match('links|lynx|w3m', $agent);        
+        $this->browser['text'] = $this->_match('links|lynx|w3m', $agent);
         $this->browser['gecko'] = ($this->_match('gecko', $agent) && !$this->browser['konqueror']);
         $this->browser['firefox'] = ($this->browser['gecko'] && $this->_match("firefox|firebird", $agent));
         $this->browser['firefox0x'] = ($this->browser['firefox'] && $this->_match("firebird/0.|firefox/0.", $agent));
         $this->browser['firefox1x'] = ($this->browser['firefox'] && $this->_match("firefox/1.", $agent));
+        $this->browser['firefox2x'] = ($this->browser['firefox'] && $this->_match("firefox/2.", $agent));
         $this->browser['ie'] = ($this->_match('msie', $agent) && $this->_dontMatch('opera', $agent));
         $this->browser['ie3'] = ($this->browser['ie'] && $this->majorVersion == 3);
         $this->browser['ie4'] = ($this->browser['ie'] && $this->majorVersion == 4 && $this->_match('msie 4', $agent));
@@ -386,9 +498,10 @@ class UserAgent extends PHP2Go
         $this->browser['ie5'] = ($this->browser['ie4+'] && $this->_match('msie 5.0', $agent));
         $this->browser['ie55'] = ($this->browser['ie4+'] && $this->_match('msie 5.5', $agent));
         $this->browser['ie5+'] = ($this->browser['ie4+'] && !$this->browser['ie3'] && !$this->browser['ie4']);
-        $this->browser['ie55+'] = ($this->browser['ie5+'] && !$this->browser['ie5']);           
+        $this->browser['ie55+'] = ($this->browser['ie5+'] && !$this->browser['ie5']);
         $this->browser['ie6'] = $this->_match('msie 6', $agent);
         $this->browser['ie6+'] = ($this->browser['ie5+'] && !$this->browser['ie5'] && !$this->browser['ie5_5']);
+        $this->browser['ie7'] = $this->_match('msie 7', $agent);
         $this->browser['myie'] = ($this->browser['ie'] && $this->_match('myie', $agent));
         $this->browser['opera'] = $this->_match('opera', $agent);
         $this->browser['opera2'] = $this->_match('opera[ /]2', $agent);
@@ -397,9 +510,13 @@ class UserAgent extends PHP2Go
         $this->browser['opera5'] = $this->_match('opera[ /]5', $agent);
         $this->browser['opera6'] = $this->_match('opera[ /]6', $agent);
         $this->browser['opera7'] = $this->_match('opera[ /]7', $agent);
+        $this->browser['opera8'] = $this->_match('opera[ /]8', $agent);
+        $this->browser['opera9'] = $this->_match('opera[ /]9', $agent);
         $this->browser['opera5+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][234]', $agent));
         $this->browser['opera6+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][2345]', $agent));
         $this->browser['opera7+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][23456]', $agent));
+        $this->browser['opera8+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][234567]', $agent));
+        $this->browser['opera9+'] = ($this->browser['opera'] && $this->_dontMatch('opera[ /][2345678]', $agent));
         $this->browser['aol'] = $this->_match('aol', $agent);
         $this->browser['aol3'] = ($this->browser['aol'] && $this->browser['ie3']);
         $this->browser['aol4'] = ($this->browser['aol'] && $this->browser['ie4']);
@@ -416,16 +533,16 @@ class UserAgent extends PHP2Go
         $this->browser['k-meleon'] = $this->_match('k-meleon', $agent);
         $this->browser['crazy'] = $this->_match('crazy browser', $agent);
         $this->browser['epiphany'] = $this->_match('epiphany', $agent);
-		$this->browser['netgem'] = $this->_match('netgem', $agent);        
+		$this->browser['netgem'] = $this->_match('netgem', $agent);
         $this->browser['webdav'] = ($agent == 'microsoft data access internet publishing provider dav' || $agent == 'microsoft data access internet publishing provider protocol discovery');
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_detectOSFlags
-	// @desc		Monta a tabela de flags de sistema operacional
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Detects boolean values for all OS patterns
+	 *
+	 * @param string $agent Original user agent
+	 * @access private
+	 */
 	function _detectOSFlags($agent) {
         $this->os['win'] = $this->_match('win|16bit', $agent);
         $this->os['win16'] = $this->_match('win16|16bit|windows 3.1|windows 16-bit', $agent);
@@ -437,6 +554,7 @@ class UserAgent extends PHP2Go
         $this->os['win2k'] = $this->_match('wi(n|ndows)[ -]?(2000|nt 5.0)', $agent);
         $this->os['winxp'] = $this->_match('wi(n|ndows)[ -]?(xp|nt 5.1)', $agent);
         $this->os['win2003'] = $this->_match('win(n|ndows)[ -]?(2003|nt 5.2)', $agent);
+		$this->os['winvista'] = $this->_match('win(n|ndows)[ -]}(vista|nt 6.0)', $agent);
         $this->os['winnt'] = $this->_match('wi(n|ndows)[ -]?nt', $agent);
         $this->os['win32'] = ($this->os['win95'] || $this->os['win98'] || $this->os['winnt'] || $this->_match('win32', $agent) || $this->_match('32bit', $agent));
         $this->os['aix'] = $this->_match('aix', $agent);
@@ -472,15 +590,15 @@ class UserAgent extends PHP2Go
         $this->os['suni86'] = ($this->os['sun'] && $this->_match('i86', $agent));
         $this->os['unixware'] = $this->_match('unixware|unix_system_v', $agent);
         $this->os['bsd'] = $this->_match('bsd', $agent);
-        $this->os['unix'] = ($this->_match('x11|unix', $agent) || $this->os['aix'] || $this->os['hpux'] || $this->os['irix'] || $this->os['linux'] || $this->os['bsd'] || $this->os['sco'] || $this->os['sinix']);		
+        $this->os['unix'] = ($this->_match('x11|unix', $agent) || $this->os['aix'] || $this->os['hpux'] || $this->os['irix'] || $this->os['linux'] || $this->os['bsd'] || $this->os['sco'] || $this->os['sinix']);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_detectFeatures
-	// @desc		Monta a tabela de features do browser cliente
-	// @access		private
-	// @return		void	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Detects browser features
+	 *
+	 * @param string $agent Original user agent
+	 * @access private
+	 */
 	function _detectFeatures($agent) {
         if ($this->browser['ns2'] || $this->browser['ie3'])
         	$this->features['javascript'] = '1.0';
@@ -503,31 +621,29 @@ class UserAgent extends PHP2Go
         if ($this->browser['ie4+'] || $this->browser['ns4+'] || $this->browser['opera5+'] || $this->browser['konqueror'] || $this->browser['netgem'])
         	$this->features['dhtml'] = TRUE;
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_detectAccept
-	// @desc		Monta as tabelas "accept" da requisição
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
-	function _detectAccept() {		
+
+	/**
+	 * Detects accept tables
+	 *
+	 * @access private
+	 */
+	function _detectAccept() {
 		$Negotiator =& LocaleNegotiator::getInstance();
 		$this->language = $Negotiator->getSupportedLanguages();
 		if (empty($this->language))
 			$this->language = array('en');
-		$this->charset = $Negotiator->getSupportedCharsets();		
+		$this->charset = $Negotiator->getSupportedCharsets();
 		if (empty($this->charset))
-			$this->charset = array('*');		
-        $this->mimeTypes = TypeUtils::toArray(preg_split(';[\s,]+;', Environment::get('HTTP_ACCEPT'), -1, PREG_SPLIT_NO_EMPTY));
-		$this->encoding = TypeUtils::toArray(preg_split(';[\s,]+;', Environment::get('HTTP_ACCEPT_ENCODING'), -1, PREG_SPLIT_NO_EMPTY));
+			$this->charset = array('*');
+        $this->mimeTypes = TypeUtils::toArray(preg_split(';[\s,]+;', $_SERVER['HTTP_ACCEPT'], -1, PREG_SPLIT_NO_EMPTY));
+		$this->encoding = TypeUtils::toArray(preg_split(';[\s,]+;', $_SERVER['HTTP_ACCEPT_ENCODING'], -1, PREG_SPLIT_NO_EMPTY));
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_detectBrowserName
-	// @desc		Detecta o nome completo do browser
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Detects full browser name
+	 *
+	 * @access private
+	 */
 	function _detectBrowserName() {
 		$vstr = array(
 			'aol' => 'AOL Browser',
@@ -543,17 +659,22 @@ class UserAgent extends PHP2Go
 			'netgem' => 'Netgem/iPlayer',
 			'text' => 'Text based Browser',
 			'webdav' => 'WebDAV',
+			'opera9+' => 'Opera 9.x',
+			'opera8+' => 'Opera 8.x',
 			'opera7+' => 'Opera 7.x',
 			'opera6+' => 'Opera 6.x',
 			'opera5+' => 'Opera 5.x',
 			'opera4' => 'Opera 4.x',
-			'opera' => 'Opera',			
+			'opera' => 'Opera',
+			'ie7' => 'Microsoft Internet Explorer 7.x',
 			'ie6+' => 'Microsoft Internet Explorer 6.x',
 			'ie5+' => 'Microsoft Internet Explorer 5.x',
 			'ie4+' => 'Microsoft Internet Explorer 4.x',
 			'ie' => 'Microsoft Internet Explorer',
 			'nav' => 'Netscape Navigator',
-			'firefox' => 'Mozilla Firefox',
+			'firefox2x' => 'Mozilla Firefox 2.x',
+			'firefox1x' => 'Mozilla Firefox 1.x',
+			'firefox0x' => 'Mozilla Firefox 0.x',
 			'ns6+' => 'Mozilla/Netscape 6.x',
 			'ns4' => 'Netscape 4.x',
 			'ns' => 'Netscape'
@@ -567,15 +688,15 @@ class UserAgent extends PHP2Go
 			$this->browserFullName = $this->identifier;
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_detectOSName
-	// @desc		Detecta o nome completo do sistema operacional do cliente
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------	
+
+	/**
+	 * Detects full OS name
+	 *
+	 * @access private
+	 */
 	function _detectOSName() {
 		$vstr = array(
+			'winvista' => 'Microsoft Windows Vista',
 			'win2003' => 'Microsoft Windows 2003',
 			'winxp' => 'Microsoft Windows XP',
 			'win2k' => 'Microsoft Windows 2000',
@@ -591,7 +712,7 @@ class UserAgent extends PHP2Go
 			'hpux' => 'HP UX',
 			'irix' => 'Irix',
 			'linux' => 'Linux',
-			'macppc' => 'MacOS PPC',			
+			'macppc' => 'MacOS PPC',
 			'macosx' => 'MacOS X',
 			'mac' => 'MacOS',
 			'netbsd' => 'NetBSD',
@@ -608,27 +729,29 @@ class UserAgent extends PHP2Go
 			$this->osFullName = 'Unkown/Other';
 		}
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_match
-	// @desc		Método utilitário para teste de padrões na string original do user agent
-	// @access		private
-	// @param		pattern string	Padrão
-	// @param		value string	Valor de teste
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Utility method, used to check if an input
+	 * string is <b>accepted</b> by a given pattern
+	 *
+	 * @param string $pattern Pattern
+	 * @param string $value Input string
+	 * @access private
+	 * @return bool
+	 */
 	function _match($pattern, $value) {
 		return ((bool)preg_match(":{$pattern}:", $value));
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	UserAgent::_dontMatch
-	// @desc		Método utilitário para teste de padrões na string original do user agent
-	// @access		private
-	// @param		pattern string	Padrão
-	// @param		value string	Valor de teste
-	// @return		bool
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Utility method, used to check if an input
+	 * string is <b>rejected</b> by a given pattern
+	 *
+	 * @param string $pattern Pattern
+	 * @param string $value Input string
+	 * @access private
+	 * @return bool
+	 */
 	function _dontMatch($pattern, $value) {
 		return (!(bool)preg_match(":{$pattern}:", $value));
 	}

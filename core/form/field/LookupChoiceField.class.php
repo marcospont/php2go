@@ -1,62 +1,51 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/field/LookupChoiceField.class.php,v 1.19 2006/10/29 17:32:59 mpont Exp $
-// $Date: 2006/10/29 17:32:59 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.form.field.LookupField');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		LookupChoiceField
-// @desc		Esta classe extende a funcionalidade implementada pela
-//				classe LookupField incluindo um campo texto que permite
-//				filtrar a lista de valores à medida que os caracteres
-//				são digitados
-// @package		php2go.form.field
-// @extends		LookupField
-// @author		Marcos Pont
-// @version		$Revision: 1.19 $
-//!-----------------------------------------------------------------
+/**
+ * Select input with type-ahead filtering input
+ *
+ * The LookupChoiceField component extends LookupField by displaying it
+ * along with a text input that performs type-ahead filtering on the
+ * select options.
+ *
+ * @package form
+ * @subpackage field
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class LookupChoiceField extends LookupField
 {
-	//!-----------------------------------------------------------------
-	// @function	LookupChoiceField::LookupChoiceField
-	// @desc		Construtor da classe LookupChoiceField
-	// @param		&Form Form object	Formulário no qual o campo é inserido
-	// @access		public
-	//!-----------------------------------------------------------------
-	function LookupChoiceField(&$Form) {
-		parent::LookupField($Form);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	LookupChoiceField::display
-	// @desc		Monta o código HTML do campo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the component's HTML code
+	 */
 	function display() {
 		ob_start();
 		parent::display();
@@ -68,12 +57,9 @@ class LookupChoiceField extends LookupField
 		);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	LookupChoiceField::onPreRender
-	// @desc		Configura alguns atributos que possuem restrições
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prepares the component to be rendered
+	 */
 	function onPreRender() {
 		parent::onPreRender();
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/lookupchoicefield.js');

@@ -1,107 +1,159 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/util/json/JSONDecoder.class.php,v 1.1 2006/06/23 04:09:26 mpont Exp $
-// $Date: 2006/06/23 04:09:26 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const JSON_LEFT_BRACE "1"
-// Identifica o início de uma declaração de objeto
+/**
+ * JSON object start
+ */
 define('JSON_LEFT_BRACE', 1);
-// @const JSON_RIGHT_BRACE "2"
-// Identifica o fim da declaração de um objeto
+/**
+ * JSON object end
+ */
 define('JSON_RIGHT_BRACE', 2);
-// @const JSON_LEFT_BRACKET "3"
-// Identifica o início da declaração de um array
+/**
+ * JSON array start
+ */
 define('JSON_LEFT_BRACKET', 3);
-// @const JSON_RIGHT_BRACKET "4"
-// Identifica o fim da declaração de um array
+/**
+ * JSON array end
+ */
 define('JSON_RIGHT_BRACKET', 4);
-// @const JSON_COMMA "5"
-// Separador de propriedades de objetos ou itens de arrays
+/**
+ * Array or object members separator
+ */
 define('JSON_COMMA', 5);
-// @const JSON_COLON "6"
-// Separador entre nome e valor de uma propriedade de objeto
+/**
+ * Separates property name and property value inside JSON objects
+ */
 define('JSON_COLON', 6);
-// @const JSON_DATA "7"
-// Tokens do tipo string ou número (int, float)
+/**
+ * JSON data (strings, numbers)
+ */
 define('JSON_DATA', 7);
-// @const JSON_CONTINUE "8"
-// Tipo de token utilizado para detectar nomes de propriedades de objetos
+/**
+ * Token type used to detect property names of JSON objects
+ */
 define('JSON_CONTINUE', 8);
 
-//!-----------------------------------------------------------------
-// @class		JSONDecoder
-// @desc		Esta classe permite decodificar strings em notação JSON
-//				para valores nativos PHP, como objetos, arrays, strings,
-//				números e constantes TRUE, FALSE e NULL. É útil nos casos
-//				em que a comunicação entre cliente/servidor utiliza JSON
-//				nas duas direções
-// @extends		PHP2Go
-// @package		php2go.util.json
-// @author		Marcos Pont
-// @version		$Revision: 1.1 $
-//!-----------------------------------------------------------------
+/**
+ * Unserializes PHP values from JSON strings
+ *
+ * JSON stands for Javascript Object Notation. It's a lightweight
+ * data transfer format, widely used to interchange information between
+ * client and server side by the most common AJAX libraries.
+ *
+ * @package util
+ * @subpackage json
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class JSONDecoder extends PHP2Go
 {
-	var $src = NULL;			// @var src string		"NULL" String JSON ativa
-	var $length = 0;			// @var length int		"0" Tamanho da string JSON
-	var $token = NULL;			// @var token string	"NULL" Último token processado
-	var $tokenType = FALSE;		// @var tokenType bool	"FALSE" Último tipo de token
-	var $pos = 0;				// @var pos int			"0" Offset atual dentro da string JSON
-	var $looseType;				// @var looseType bool	Indica como objetos devem ser decodificados
+	/**
+	 * Current JSON string
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $src = NULL;
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::JSONDecoder
-	// @desc		Construtor da classe
-	// @param		looseType bool	"FALSE" Indica se objetos JSON serão tratados como objetos PHP ou arrays associativos
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Length of the JSON string
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $length = 0;
+
+	/**
+	 * Last token
+	 *
+	 * @var string
+	 * @access private
+	 */
+	var $token = NULL;
+
+	/**
+	 * Last token's type
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $tokenType = FALSE;
+
+	/**
+	 * Current offset in the JSON string
+	 *
+	 * @var int
+	 * @access private
+	 */
+	var $pos = 0;
+
+	/**
+	 * Determines how JSON objects should be decoded
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $looseType;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param bool $looseType Parse JSON objects as arrays (TRUE) or objects (FALSE)
+	 * @return JSONDecoder
+	 */
 	function JSONDecoder($looseType=FALSE) {
 		parent::PHP2Go();
 		$this->looseType = (bool)$looseType;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::decode
-	// @desc		Método estático para decodificação de uma string JSON
-	// @param		str string		String no formato JSON
-	// @param		looseType bool	"FALSE" Interpretar objetos JSON como arrays (TRUE) ou como objetos PHP (FALSE)
-	// @return		mixed
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Shortcut method to decode a JSON string
+	 *
+	 * @param string $str JSON string
+	 * @param bool $looseType Parse JSON objects as arrays (TRUE) or objects (FALSE)
+	 * @return mixed Decoded value
+	 * @static
+	 */
 	function decode($str, $looseType=FALSE) {
 		$decode = new JSONDecoder($looseType);
 		return $decode->decodeValue($str);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::decodeValue
-	// @desc		Decodifica uma string JSON
-	// @param		str string	String JSON
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Decodes a given JSON string
+	 *
+	 * @param string $str JSON string
+	 * @return mixed Decoded value
+	 */
 	function decodeValue($str) {
-		// remove comentários da string JSON
+		// remove comments from the JSON string
 		$str = preg_replace(array(
 			'~^\s*//(.+)$#~',
 			'~^\s*/\*(.+)\*/~Us',
@@ -114,12 +166,12 @@ class JSONDecoder extends PHP2Go
 		return $this->_decodeToken();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::_decodeToken
-	// @desc		Processa o último token lido da string JSON
-	// @access		private
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes the last token read
+	 *
+	 * @return mixed Token value
+	 * @access private
+	 */
 	function _decodeToken() {
 		if ($this->tokenType == JSON_DATA) {
 			$token = $this->token;
@@ -134,12 +186,12 @@ class JSONDecoder extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::_decodeObject
-	// @desc		Decodifica um objeto JSON
-	// @access		private
-	// @return		mixed
-	//!-----------------------------------------------------------------
+	/**
+	 * Decodes an object
+	 *
+	 * @access private
+	 * @return object
+	 */
 	function _decodeObject() {
 		$properties = array();
 		$tokenType = $this->_getToken();
@@ -185,12 +237,12 @@ class JSONDecoder extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::_decodeArray
-	// @desc		Decodifica um array JSON
-	// @access		private
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Decodes an array
+	 *
+	 * @access private
+	 * @return array
+	 */
 	function _decodeArray() {
 		$items = array();
 		$tokenType = $this->_getToken();
@@ -210,13 +262,15 @@ class JSONDecoder extends PHP2Go
 		return $items;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::_getToken
-	// @desc		Lê um token da string JSON
-	// @return		int Tipo de token encontrado (vide constantes da classe)
-	// @note		Retorna FALSE quando o fim da string é atingido
-	// @access		private
-	//!-----------------------------------------------------------------
+	/**
+	 * Reads the next token from the JSON string
+	 *
+	 * Returns the token type, or FALSE when the end of
+	 * the string is reached.
+	 *
+	 * @return int|bool
+	 * @access private
+	 */
 	function _getToken() {
 		$this->token = '';
 		$this->_skipWhitespace();
@@ -351,12 +405,11 @@ class JSONDecoder extends PHP2Go
 		return $this->tokenType;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	JSONDecoder::_skipWhitespace
-	// @desc		Ignora quaisquer caracteres brancos antes do próximo token a ser lido
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Ignores whitespace chars before the next token
+	 *
+	 * @access private
+	 */
 	function _skipWhitespace() {
 		$matches = array();
 		$result = preg_match("/(\s|\t|\n|\r|\f|\b)*/", $this->src, $matches, PREG_OFFSET_CAPTURE, $this->pos);

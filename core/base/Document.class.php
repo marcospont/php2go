@@ -1,137 +1,302 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/base/Document.class.php,v 1.51 2006/10/26 04:42:10 mpont Exp $
-// $Date: 2006/10/26 04:42:10 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.datetime.Date');
 import('php2go.datetime.TimeCounter');
-import('php2go.file.FileManager');
 import('php2go.net.HttpRequest');
 import('php2go.net.HttpResponse');
 import('php2go.template.DocumentElement');
-import('php2go.text.StringBuffer');
-import('php2go.text.StringUtils');
-import('php2go.util.HtmlUtils');
-//------------------------------------------------------------------
 
-// @const SCRIPT_START "1"
-// Valor de posicionamento de scripts gerados dentro da tag HEAD
+/**
+ * Indicates scripts positioned inside the document's HEAD
+ */
 define('SCRIPT_START', 1);
-// @const SCRIPT_END "2"
-// Valor de posicionamento de scripts gerados no final da tag BODY
+/**
+ * Indicates scripts positioned in the end of document's BODY
+ */
 define('SCRIPT_END', 2);
-// @const BODY_START "1"
-// Valor de posicionamento de conteúdo adicionado no início da tag BODY
+/**
+ * Content positioned in the start of document's BODY
+ */
 define('BODY_START', 1);
-// @const BODY_END "2"
-// Valor de posicionamento de conteúdo adicionado no final da tag BODY
+/**
+ * Content positioned in the end of document's BODY
+ */
 define('BODY_END', 2);
 
-//!-----------------------------------------------------------------
-// @class		Document
-// @desc		Responsável por gerenciar e gerar os documentos HTML
-//				do sistema. Gerencia o esqueleto HTML fornecido ao
-//				documento (Layout) e os elementos declarados no mesmo
-//				(Elementos de documento). Controla a geração do cabeçalho
-//				do documento, configurações de interface, cache, entre
-//				outras funcionalidades.
-// @package		php2go.base
-// @extends		PHP2Go
-// @uses		Db
-// @uses		DocumentElement
-// @uses		FileManager
-// @uses		HtmlUtils
-// @uses		HttpRequest
-// @uses		HttpResponse
-// @uses		StringBuffer
-// @uses		StringUtils
-// @uses		System
-// @uses		TimeCounter
-// @author		Marcos Pont
-// @version		$Revision: 1.51 $
-// @note		Exemplo de uso:
-//				<pre>
-//
-//				$doc = new Document('page_layout.tpl');
-//				$doc->setTitle('Page Title');
-//				$doc->setCache(FALSE);
-//				$doc->setCompression(TRUE, 9);
-//				$doc->addBodyCfg(array('bgcolor'=>'#ffffff'));
-//				$doc->addScript('functions.js');
-//				$doc->addStyle('style.css');
-//				$doc->createElement('header', 'header.tpl');
-//				$menu =& $doc->createElement('menu');
-//				$menu->put('menu.tpl', T_BYFILE);
-//				$menu->put('ads.tpl', T_BYFILE);
-//				$menu->parse();
-//				... other elements ...
-//				$doc->display();
-//
-//				</pre>
-// @note		Os scripts JS libs/div.js, libs/object.js e libs/window.js
-//				já são adicionados automaticamente a todo documento instanciado
-//!-----------------------------------------------------------------
+/**
+ * HTML documents builder
+ *
+ * The Document class is the main gateway to produce HTML output in PHP2Go.
+ * Based on a master layout template provided by the developer, this class
+ * builds an HTML document, putting the layout contents inside a BODY tag.
+ *
+ * Each variable declared in the layout template is considered a "document
+ * element". A document element is a page slot whose contents should be defined
+ * by the developer.
+ *
+ * Normally, a page will contain a main element, which represents the main content
+ * area. Other elements can be created to encapsulate and reuse interface elements
+ * or areas that repeat over multiple pages, like a header, a navigation menu and
+ * a footer.
+ *
+ * Document class also controls items of the document head (external scripts, inline
+ * scripts, alternate links, external CSS files, inline CSS code) and properties of
+ * the document body (Javascript events, inline attributes, inline scripts).
+ *
+ * The main member of the bundled Javascript framework (javascript/php2go.js) is
+ * included by default in all pages built with this class. This gives you access
+ * to a wide set of features, like DOM functions, event handling functions, logging
+ * helper and much more.
+ *
+ * <code>
+ * /* my_templates/my_layout_template.tpl {@*}
+ * <div style="width:800px">
+ * This is my website!
+ * {$main}
+ * </div>
+ * /* my_templates/my_home_template.tpl {@*}
+ * <div>{$message}</div>
+ * /* my_page.php {@*}
+ * $doc = new Document('my_templates/my_layout_template.tpl');
+ * $doc->setTitle('My Home Page');
+ * $doc->addBodyCfg(array('style'=>'background-color:#fff'));
+ * /* enable browser cache and gzip compression {@*}
+ * $doc->setCache(true);
+ * $doc->setCompression(true, 9);
+ * /* add JS and CSS files {@*}
+ * $doc->addScript('my_js_files/functions.js');
+ * $doc->addStyle('my_css_files/site.css');
+ * /* populate the main page element {@*}
+ * $main = new Template('my_template/my_home_template.tpl');
+ * $main->parse();
+ * $main->assign('message', 'Hello World!');
+ * $doc->assignByRef('main', $main);
+ * /* build and display the final output {@*}
+ * $doc->display();
+ * </code>
+ *
+ * @package base
+ * @uses Db
+ * @uses DocumentElement
+ * @uses HttpResponse
+ * @uses System
+ * @uses TimeCounter
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Document extends PHP2Go
 {
-	var $docTitle;						// @var	docTitle string					Título do documento
-	var $docCharset;					// @var	docCharset string				Charset do conteúdo do documento
-	var $docLanguage;					// @var	docLanguage string				Linguagem do documento
-	var $docLayout;						// @var	docLayout string				Nome do Template base que serve como 'esqueleto' para o documento
-	var $metaTagsName = array();		// @var	metaTagsName array				"array()" Conjunto de tags META do tipo NAME e seus valores
-	var $metaTagsHttp = array();		// @var	metaTagsHttp array				"array()" Conjunto de tags META do tipo HTTP-EQUIV
-	var $scriptFiles = array();			// @var	scriptFiles array				"array()" Conjunto de arquivos de script adicionados no documento
-	var $scriptExtCode = array();		// @var	scriptExtCode string			"array()" Código de script inserido direto pelo usuário
-	var $onLoadCode = array();			// @var onLoadCode array				"array()" Conjunto de instruções (Javascript) a serem executadas no evento onLoad da página
-	var $styles = array();				// @var	styles string					"array()" Conjunto de arquivos de folha de estilo adicionados no documento
-	var $importedStyles = array();		// @var importedStyles array			"array()" Array de controle para folhas de estilo CSS importadas
-	var $styleExtCode = '';				// @var styleExtCode string				"" Código de estilo inserido diretamente pelo usuário
-	var $alternateLinks = array();		// @var alternateLinks array			"array()" Conjunto de alternate links do documento
-	var $extraHeaderCode = '';			// @var	extraHeaderCode string			"" Código extra a ser incluído no header do documento
-	var $bodyEvents = array();			// @var	bodyEvents array				"array()" Vetor associativo contendo eventos e respectivas ações tratadas na tag BODY
-	var $bodyCfg = array();				// @var	bodyCfg array					"array()" Vetor associativo contendo as configuração da tag BODY do documento
-	var $extraBodyContent = array();	// @var extraBodyContent array			"array()" Código extra que será incluído no corpo do documento
-	var $allowRobots = TRUE;			// @var allowRobots bool				"TRUE" Se for FALSE, inclui a tag META que previne contra a ação de robôs de pesquisa
-	var $makeCache = FALSE;				// @var	makeCache bool					"FALSE" Indica a utilização ou não de headers HTTP para habilitação de cache
-	var $makeCompression = FALSE;		// @var	makeCompression bool			"FALSE" Indica que o conteúdo HTML gerado deve ser compactado ao enviar para o cliente
-	var $compressionLevel;				// @var	compressionLevel int			Nível de compressão aplicado ao conteúdo do documento
-	var $Template;						// @var	Template Template object		Template de manipulação do layout do documento
-	var $TimeCounter;					// @var TimeCounter TimeCounter object	Utilizado para calcular o tempo de geração da página
-	var $elements;						// @var	elements array					Vetor de elementos declarados no layout do documento
+	/**
+	 * Document title
+	 *
+	 * Defaults to the configuration setting TITLE
+	 *
+	 * @var string
+	 */
+	var $docTitle;
 
-	//!-----------------------------------------------------------------
-	// @function	Document::Document
-	// @desc		Construtor da classe Document. Cria uma instância
-	//				da classe Template para manipulação do layout de
-	//				documento e parseia seu conteúdo
-	// @param		docLayout string	Nome do arquivo template base do documento
-	// @param		docIncludes array	"array()" Vetor de templates de inclusão
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Document charset
+	 *
+	 * Defaults to the configuration setting CHARSET
+	 *
+	 * @var string
+	 */
+	var $docCharset;
+
+	/**
+	 * Document language code
+	 *
+	 * Defaults to the active language code.
+	 *
+	 * @var string
+	 */
+	var $docLanguage;
+
+	/**
+	 * Set of "name" meta tags
+	 *
+	 * @var array
+	 */
+	var $metaTagsName = array();
+
+	/**
+	 * Set of "http-equiv" meta tags
+	 *
+	 * @var array
+	 */
+	var $metaTagsHttp = array();
+
+	/**
+	 * Set of external script files
+	 *
+	 * @var array
+	 */
+	var $scriptFiles = array();
+
+	/**
+	 * Set of inline scripts
+	 *
+	 * @var array
+	 */
+	var $scriptExtCode = array();
+
+	/**
+	 * Sequence of script actions to perform when document loads
+	 *
+	 * @var array
+	 */
+	var $onLoadCode = array();
+
+	/**
+	 * Set of stylesheet files
+	 *
+	 * @var array
+	 */
+	var $styles = array();
+
+	/**
+	 * Set of imported stylesheet files
+	 *
+	 * This property is populated by {@link importStyle}.
+	 *
+	 * @var array
+	 */
+	var $importedStyles = array();
+
+	/**
+	 * Set of inline style definitions
+	 *
+	 * @var string
+	 */
+	var $styleExtCode = '';
+
+	/**
+	 * Set of alternate links for this document
+	 *
+	 * @var array
+	 */
+	var $alternateLinks = array();
+
+	/**
+	 * Extra HTML content to be included inside the head tag
+	 *
+	 * @var string
+	 */
+	var $extraHeaderCode = '';
+
+	/**
+	 * Set of script event handlers for document's body
+	 *
+	 * @var array
+	 */
+	var $bodyEvents = array();
+
+	/**
+	 * Set of attributes for document's body
+	 *
+	 * @var array
+	 */
+	var $bodyCfg = array();
+
+	/**
+	 * Extra HTML content that must be rendered in the top or in
+	 * the bottom of the HTML document
+	 *
+	 * @var array
+	 */
+	var $extraBodyContent = array();
+
+	/**
+	 * Whether to allow crawlers and robots
+	 *
+	 * @var bool
+	 */
+	var $allowRobots = TRUE;
+
+	/**
+	 * Whether to enable browser cache
+	 *
+	 * @var bool
+	 */
+	var $makeCache = FALSE;
+
+	/**
+	 * Whether to enable gzip compression for this page
+	 *
+	 * @var bool
+	 */
+	var $makeCompression = FALSE;
+
+	/**
+	 * Compression level
+	 *
+	 * @var int
+	 */
+	var $compressionLevel;
+
+	/**
+	 * Set of document elements detected in the layout template
+	 *
+	 * @var array
+	 */
+	var $elements;
+
+	/**
+	 * {@link Template} instance used to manage the master layout template
+	 *
+	 * @var object Template
+	 */
+	var $Template;
+
+	/**
+	 * Used to measure time spent to create and display the HTML document
+	 *
+	 * @var object TimeCounter
+	 * @access private
+	 */
+	var $TimeCounter;
+
+	/**
+	 * Class constructor
+	 *
+	 * Initializes the layout template using the provided $docLayout. The
+	 * array of $docIncludes could contain a set of include files for the
+	 * layout template.
+	 *
+	 * @param string $docLayout Layout template file name
+	 * @param array $docIncludes Set of template includes
+	 * @return Document
+	 */
 	function Document($docLayout, $docIncludes=array()) {
 		parent::PHP2Go();
-		$this->docLayout = $docLayout;
 		$this->docCharset = PHP2Go::getConfigVal('CHARSET', FALSE);
 		$this->docLanguage = PHP2Go::getConfigVal('LOCALE', FALSE);
 		$this->docTitle = PHP2Go::getConfigVal('TITLE', FALSE);
@@ -146,34 +311,28 @@ class Document extends PHP2Go
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::__destruct
-	// @desc		Destrutor da classe
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Class destructor
+	 */
 	function __destruct() {
 		unset($this);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::getTitle
-	// @desc		Busca o título do documento
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the document's title
+	 *
+	 * @return string
+	 */
 	function getTitle() {
 		return $this->docTitle;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setTitle
-	// @desc		Configura o título do documento a partir da variável $title
-	// @param		title string		Título para o documento
-	// @param		ignoreSpaces bool	"FALSE"	Ignorar espaços à esquerda e à direita do título
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the document's title
+	 *
+	 * @param string $title New title
+	 * @param bool $ignoreSpaces Whether to remove trailing whitespaces
+	 */
 	function setTitle($title, $ignoreSpaces=FALSE) {
 		if ($ignoreSpaces)
 			$this->docTitle = $title;
@@ -181,14 +340,15 @@ class Document extends PHP2Go
 			$this->docTitle = trim($title);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setTitleFromDb
-	// @desc		Configura o título a partir de uma consulta SQL
-	// @param		sql string				Consulta SQL para o título
-	// @param		connectionId string		"NULL" ID da conexão ao BD
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the document's title based on a given SQL query
+	 *
+	 * The first cell of the first row of the SQL results
+	 * will be used as the document's title.
+	 *
+	 * @param string $sql SQL query that defines the document title
+	 * @param string $connectionId DB connection ID
+	 */
 	function setTitleFromDb($sql, $connectionId=NULL) {
 		$Db =& Db::getInstance($connectionId);
 		$dbTitle = $Db->getFirstCell($sql);
@@ -196,15 +356,13 @@ class Document extends PHP2Go
 			$this->docTitle = $dbTitle;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::appendTitle
-	// @desc		Concatena um valor ao título do documento
-	// @param		aTitle string		Valor a ser concatenado ao título
-	// @param		useSeparator bool	"TRUE"	Utilizar ou não separador com relação ao título existente
-	// @param		separator string	"-"		Separador com relação ao título existente
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Append a given string in the document's title
+	 *
+	 * @param string $aTitle Value to be appended
+	 * @param bool $useSeparator Whether to use a separator between existent title and appended value
+	 * @param string $separator Separator to be used
+	 */
 	function appendTitle($aTitle, $useSeparator=TRUE, $separator='-') {
 		if ($this->docTitle == "") {
 			$this->setTitle($aTitle);
@@ -215,16 +373,17 @@ class Document extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::appendTitleFromDb
-	// @desc		Concatena um valor ao título do documento a partir de uma consulta SQL
-	// @param		sql string			Consulta SQL para concatenação no título do documento
-	// @param		useSeparator bool	"TRUE" Utilizar ou não separador com relação ao título existente, padrão é TRUE
-	// @param		separator string	"-" Separador com relação ao título existente, padrão é '-'
-	// @param		connectionId string	"NULL" ID da conexão ao BD
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Append some value in the document's title based on an SQL query
+	 *
+	 * The first cell of the first row of the SQL results will be
+	 * appended in the document's title.
+	 *
+	 * @param string $sql SQL query
+	 * @param bool $useSeparator Whether to use separator between existent title and appended value
+	 * @param string $separator Separator to be used
+	 * @param string $connectionId DB connection ID
+	 */
 	function appendTitleFromDb($sql, $useSeparator=TRUE, $separator='-', $connectionId=NULL) {
 		$Db =& Db::getInstance($connectionId);
 		$dbTitle = $Db->getFirstCell($sql);
@@ -232,73 +391,72 @@ class Document extends PHP2Go
 			$this->appendTitle($dbTitle, $useSeparator, $separator);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setCache
-	// @desc		Seta o flag de utilização de cache no documento
-	// @param		flag bool		"TRUE"	Valor para o parâmetro de utilização de cache
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setCache($flag=TRUE) {
-		$this->makeCache = TypeUtils::toBoolean($flag);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Document::preventRobots
-	// @desc		Indica que a página deve incluir um cabaçalho de prevenção contra robôs
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
-	function preventRobots() {
-		$this->allowRobots = FALSE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Document::getCharset
-	// @desc		Retorna o conjunto de caracteres setado para o documento
-	// @return		string
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the document's charset
+	 *
+	 * @return string
+	 */
 	function getCharset() {
 		return $this->docCharset;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setCharset
-	// @desc		Configura o conjunto de caracteres do documento
-	// @param		charset string		Conjunto de caracteres. Ex: iso-8859-1, UTF-8, etc...
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the document's charset
+	 *
+	 * @param string $charset New charset code
+	 */
 	function setCharset($charset) {
 		$this->docCharset = $charset;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setCompression
-	// @desc		Configura o objeto para realizar compressão no conteúdo HTML do documento
-	// @param		flag bool			"TRUE"	Habilitação ou desabilitação da compressão de documento
-	// @param		level int			"9"		Nível de compressão, de 1 a 9. Será ignorado se $flag for TRUE
-	// @note		Atualmente, a funcionalidade de compressão de documento não funciona em versões do PHP para Windows
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the document's language code
+	 *
+	 * @param string $lang New language code
+	 */
+	function setLanguage($lang) {
+		$this->docLanguage = $lang;
+	}
+
+	/**
+	 * Enable or disable browser cache for this document
+	 *
+	 * Browser cache is not enabled by the default inside the class. Although,
+	 * it could be useful for pages that need more performance and thus need
+	 * to rely on caching tecniques.
+	 *
+	 * @param bool $flag Enable/disable
+	 */
+	function setCache($flag=TRUE) {
+		$this->makeCache = TypeUtils::toBoolean($flag);
+	}
+
+	/**
+	 * Enable/disable gzip compression for this document
+	 *
+	 * GZIP compression isn't enabled by default. However, this is one of
+	 * the good practices when dealing with pages that produce large HTML
+	 * payloads.
+	 *
+	 * @param bool $flag Enable/disable
+	 * @param int $level Compression level
+	 */
 	function setCompression($flag=TRUE, $level=9) {
 		$this->makeCompression = TypeUtils::toBoolean($flag);
 		if ($this->makeCompression)
 			$this->compressionLevel = ($level >= 1 ? min($level, 9) : 9);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setFocus
-	// @desc		Configura o campo de formulário que deve receber foco após a geração do documento HTML
-	// @note		Se o segundo parâmetro for NULL, o foco será direcionado
-	//				para o primeiro campo não desabilitado do formulário
-	// @param		formName string		Nome do formulário
-	// @param		formField string	"NULL" Nome do campo do formulário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the form (or form+field) that should receive focus
+	 * right after the document is loaded
+	 *
+	 * If $formField is missing, the first available field of
+	 * $formName will get the focus.
+	 *
+	 * @param string $formName Form ID or name
+	 * @param string $formField Field name
+	 */
 	function setFocus($formName, $formField=NULL) {
 		$this->addScript(PHP2GO_JAVASCRIPT_PATH . 'form.js');
 		if (empty($formField))
@@ -307,27 +465,16 @@ class Document extends PHP2Go
 			$this->addOnloadCode(sprintf("if (__fld = \$FF('%s', '%s')) { __fld.focus(); }", $formName, $formField));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setLanguage
-	// @desc		Configura a linguagem do documento HTML
-	// @param		lang string			Linguagem a ser utilizada
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setLanguage($lang) {
-		$this->docLanguage = $lang;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Document::addScript
-	// @desc		Adiciona um arquivo de script ao cabeçalho do documento
-	// @param		scriptFile string	Nome do arquivo de script
-	// @param		language string		"Javascript" Linguagem do script
-	// @param		charset string		"NULL" Charset para o arquivo de script
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a script file in the document head
+	 *
+	 * @param string $scriptFile Relative or absolute path to the script
+	 * @param string $language Script language
+	 * @param string $charset Script charset
+	 * @see addScriptCode
+	 */
 	function addScript($scriptFile, $language="Javascript", $charset=NULL) {
+		$scriptFile = htmlentities($scriptFile);
 		if (!array_key_exists($scriptFile, $this->scriptFiles)) {
 			$this->scriptFiles[$scriptFile] = sprintf("<script language=\"%s\" src=\"%s\" type=\"text/%s\"%s></script>\n",
 				$language, $scriptFile, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), (!empty($charset) ? " charset=\"{$charset}\"" : '')
@@ -335,119 +482,119 @@ class Document extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::addScriptCode
-	// @desc		Adiciona um código de script ao cabeçalho do documento
-	// @param		scriptCode string	Código de script
-	// @param		language string		"Javascript" Linguagem do script
-	// @param		position int		"SCRIPT_START" Posição onde o código deve ficar
-	// @note		A classe agrupa as funções de linguagens diferentes
-	//				em estruturas separadas, para geração uma tag SCRIPT
-	//				para cada linguagem no momento da construção do documento
-	// @note		Além da linguagem, é possível definir a posição onde o código
-	//				será exibido: a constante SCRIPT_START posiciona o código dentro
-	//				da tag HEAD do documento, enquanto a constante SCRIPT_END posiciona
-	//				o código no fim da tag BODY
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a block of script code in the document
+	 *
+	 * The $position argument determines if the script will be added
+	 * in the end of the document's head ({@link SCRIPT_START}) or in
+	 * the end of the document's body ({@link SCRIPT_END}).
+	 *
+	 * @param string $scriptCode Block of script code
+	 * @param string $language Script language
+	 * @param int $position Insert position
+	 * @see addScript
+	 */
 	function addScriptCode($scriptCode, $language="Javascript", $position=SCRIPT_START) {
 		if ($position != SCRIPT_START && $position != SCRIPT_END)
 			$position = SCRIPT_START;
 		$this->scriptExtCode[$position][$language] = isset($this->scriptExtCode[$position][$language]) ? $this->scriptExtCode[$position][$language] . $scriptCode . "\n" : $scriptCode . "\n";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::addOnloadCode
-	// @desc		Adiciona código que deve ser executado no carregamento da página
-	// @param		instruction string	Instrução Javascript (uma ou mais linhas, será transformado em uma só linha no código fonte)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Register a script instruction that must be
+	 * executed when document is loaded
+	 *
+	 * @param string $instruction Script instruction
+	 */
 	function addOnloadCode($instruction) {
 		$instruction = ltrim(preg_replace("/\s{1,}/", ' ', $instruction));
 		$this->onLoadCode[] = $instruction;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::setShortcutIcon
-	// @desc		Define o ícone do sistema, utilizado para criação de shortcuts
-	//				ou identificação nos bookmarks nos navegadores
-	// @param		iconUrl string		URL do ícone
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setShortcutIcon($iconUrl) {
-		$this->appendHeaderContent("<link rel=\"shortcut icon\" href=\"{$iconUrl}\">");
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Document::addStyle
-	// @desc		Adiciona um arquivo do tipo stylesheet ao documento
-	// @param		styleFile string	Arquivo de estilos CSS
-	// @param		media string		"NULL" Mídia para a qual o arquivo de estilos será utilizado
-	// @param		charset string		"NULL" Charset do arquivo de estilos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a stylesheet file in the document's head
+	 *
+	 * @param string $styleFile Relative or absolute path to the stylesheet file
+	 * @param string $media Media type
+	 * @param string $charset Charset of the stylesheet file
+	 * @see importStyle
+	 * @see addStyleCode
+	 */
 	function addStyle($styleFile, $media=NULL, $charset=NULL) {
+		$styleFile = htmlentities($styleFile);
 		if (!array_key_exists($styleFile, $this->styles))
 			$this->styles[$styleFile] = sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s>\n",
 				$styleFile, (!empty($media) ? " media=\"{$media}\"" : ''), (!empty($charset) ? " charset=\"{$charset}\"" : '')
 			);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::importStyle
-	// @desc		Importa um estilo CSS a partir de uma fonte externa para o documento HTML
-	// @param		styleUrl string		URL onde se encontra o arquivo CSS
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Import a stylesheet file onto the document
+	 *
+	 * In contrast with {@link addStyle}, which builds a link element, this method
+	 * builds a style element containing an @import(styleUrl) statement.
+	 *
+	 * @param string $styleUrl Relative or absolute path to the stylesheet file
+	 * @see addStyle
+	 * @see addStyleCode
+	 */
 	function importStyle($styleUrl) {
+		$styleUrl = htmlentities($styleUrl);
 		if (!in_array($styleUrl, $this->importedStyles)) {
 			$this->importedStyles[] = $styleUrl;
 			$this->styleExtCode .= sprintf("@import url(%s);\n", trim($styleUrl));
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::addStyleCode
-	// @desc		Adiciona declarações de estilo explícitas,
-	//				a serem inseridas dentro do cabeçalho do documento
-	// @param		styleCode string	Código de definição de estilos
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add a block of style definitions in the document's head
+	 *
+	 * @param string $styleCode Block of style definitions
+	 * @see addStyle
+	 * @see importStyle
+	 */
 	function addStyleCode($styleCode) {
 		$this->styleExtCode .= ltrim($styleCode) . "\n";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::addAlternateLink
-	// @desc		Adiciona um alternate link ao documento
-	// @param		type string			Mime-type do conteúdo do link
-	// @param		linkUrl string		URL do link
-	// @param		linkTitle string	Título do link
-	// @note		Este método pode ser utilizado para incluir links para feeds
-	//				associados a este documento (RSS, ATOM, ...)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Add an alternate link in the document
+	 *
+	 * This method can be used to build references to feeds:
+	 * <code>
+	 * $doc->addAlternateLink('application/rss+xml', 'feeds/latest.xml', 'RSS Feed');
+	 * </code>
+	 *
+	 * @param string $type Link type
+	 * @param string $linkUrl Link URL
+	 * @param string $linkTitle Link title
+	 */
 	function addAlternateLink($type, $linkUrl, $linkTitle) {
+		$linkUrl = htmlentities($linkUrl);
 		if (!array_key_exists($linkUrl, $this->alternateLinks))
 			$this->alternateLinks[$linkUrl] = sprintf("<link rel=\"alternate\" type=\"%s\" href=\"%s\"%s>\n", $type, $linkUrl, (!empty($linkTitle) ? " title=\"" . $linkTitle . "\"" : ""));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::addMetaData
-	// @desc		Adiciona uma nova tag META ao documento
-	// @param		name string			Nome da meta informação
-	// @param		value mixed			Valor
-	// @param		httpEquiv bool		Se TRUE, indica equivalência com um header HTTP (http-equiv)
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Define the shortcut icon of this document
+	 *
+	 * The shortcut icon is used by browsers in the main address bar
+	 * and in the bookmark sections
+	 *
+	 * @param string $iconUrl Relative or absolute path to the icon
+	 */
+	function setShortcutIcon($iconUrl) {
+		$iconUrl = htmlentities($iconUrl);
+		$this->appendHeaderContent("<link rel=\"shortcut icon\" href=\"{$iconUrl}\">");
+	}
+
+	/**
+	 * Add/replace a meta tag in the document
+	 *
+	 * @param string $name Meta name
+	 * @param string $value Meta value
+	 * @param bool $httpEquiv Is this an http-equiv meta tag?
+	 */
 	function addMetaData($name, $value, $httpEquiv=FALSE) {
 		if ($httpEquiv) {
 			$this->metaTagsHttp[$name] = $value;
@@ -457,25 +604,28 @@ class Document extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::appendHeaderContent
-	// @desc		Insere um valor extra ao cabeçalho do documento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Flags the document to prevent robots using a meta tag
+	 */
+	function preventRobots() {
+		$this->allowRobots = FALSE;
+	}
+
+	/**
+	 * Append extra HTML content in the document's head
+	 *
+	 * @param string $value Value to append
+	 */
 	function appendHeaderContent($value) {
 		$this->extraHeaderCode .= $value . "\n";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::addBodyCfg
-	// @desc		Configura uma propriedade da tag BODY do documento,
-	//				sobrescrevendo valores anteriormente setados
-	// @param		attr mixed		Nome do atributo ou vetor associativo de atributos
-	// @param		value string	""	Valor para o atributo em caso de atributo único
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set one or more properties of the document's body
+	 *
+	 * @param string|array $attr Proprety name or hash array of properties
+	 * @param string $value Property value
+	 */
 	function addBodyCfg($attr, $value="") {
 		if (TypeUtils::isArray($attr)) {
 			foreach($attr as $key => $value)
@@ -485,47 +635,66 @@ class Document extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::attachBodyEvent
-	// @desc		Adiciona um ação a um determinado evento tratado
-	//				na tag BODY do documento
-	// @param		event string	Nome de evento, como onLoad ou onUnload
-	// @param		action string	Ação para o evento
-	// @note		Use aspas simples na definição das ações dos eventos. Exemplo: "onLoad","funcao('parametro')"
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function attachBodyEvent($event, $action) {
+	/**
+	 * Add a script event handler in the document
+	 *
+	 * <code>
+	 * $doc->attachBodyEvent('onLoad', "alert('this will execute first!');");
+	 * $doc->attachBodyEvent('onLoad', "alert('and then, this!');");
+	 * </code>
+	 *
+	 * @param string $event Event name
+	 * @param string $action Associated action
+	 * @param bool $pushStart Whether to add the event listener before all existent ones
+	 */
+	function attachBodyEvent($event, $action, $pushStart=FALSE) {
+		$event = strtolower($event);
 		$action = str_replace("\"", "'", $action);
 		if (substr($action, -1, 1) != ';')
 			$action .= ';';
-		$this->bodyEvents[$event] = (isset($this->bodyEvents[$event])) ? $this->bodyEvents[$event] . $action : $action;
+		if (!isset($this->bodyEvents[$event]))
+			$this->bodyEvents[$event] = $action;
+		else
+			$this->bodyEvents[$event] = ($pushStart ? $action . $this->bodyEvents[$event] : $this->bodyEvents[$event] . $action);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::appendBodyContent
-	// @desc		Insere um trprint de código HTML no início ou no final do corpo do documento (tag BODY)
-	// @param		content string		Valor a ser incluído
-	// @param		position int		"BODY_END" Início (BODY_START) ou final (BODY_END) do corpo do documento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Append extra HTML contents in the document's body
+	 *
+	 * @param string $content Contents to append
+	 * @param int $position Insert position: {@link BODY_START} or {@link BODY_END}
+	 */
 	function appendBodyContent($content, $position=BODY_END) {
 		if ($position != BODY_START && $position != BODY_END)
 			$position = BODY_START;
 		$this->extraBodyContent[$position] = isset($this->extraBodyContent[$position]) ? $this->extraBodyContent[$position] . $content . "\n" : $content . "\n";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::&createElement
-	// @desc		Método utilitário para criação de um DocumentElement
-	//				a partir do nome, do conteúdo e do tipo de conteúdo
-	// @param		elementName string	Nome do elemento, como declarado no template do documento
-	// @param		elementSrc string	Conteúdo do elemento (arquivo ou string)
-	// @param		srcType int			"T_BYFILE" Tipo do conteúdo
-	// @return		DocumentElement object
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Create a {@link DocumentElement} given its name, the path
+	 * of the template source and the source type
+	 *
+	 * <code>
+	 * $doc = new Document('layout.tpl');
+	 * /* bind "header" slot with an external template file {@*}
+	 * $header =& $doc->createElement('header', 'header.tpl', T_BYFILE);
+	 * /* bind "menu" slot with an external template file and assign a simple collection of data {@*}
+	 * $menu =& $doc->createElement('menu', 'menu.tpl', T_BYFILE);
+	 * $menu->assign('items', $db->query("select * from menu"));
+	 * /* create and populate the main page slot {@*}
+	 * $main = new Template('main.tpl');
+	 * $main->parse();
+	 * $main->assign('message', 'This is the main slot!');
+	 * $doc->assignByRef('main', $main);
+	 * /* display the document {@*}
+	 * $doc->display();
+	 * </code>
+	 *
+	 * @param string $elementName Element name
+	 * @param string $elementSrc Element source
+	 * @param int $srcType Source type
+	 * @return DocumentElement
+	 */
 	function &createElement($elementName, $elementSrc='', $srcType=T_BYFILE) {
 		if (!empty($elementSrc))
 			$this->elements[$elementName] =& DocumentElement::factory($elementSrc, $srcType);
@@ -534,44 +703,48 @@ class Document extends PHP2Go
 		return $this->elements[$elementName];
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::assign
-	// @desc		Define o valor de um elemento do documento
-	// @param		elementName string	Nome do elemento
-	// @param		elementValue string	Conteúdo para o elemento
-	// @note		<strong>ATENÇÃO:</strong> no PHP4, não utilize este método
-	//				com instâncias de objetos que irão modificar o documento
-	//				dentro do método "getContent" como, por exemplo,
-	//				formulários
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the contents of a given document element
+	 *
+	 * When assigning objects to document elements under PHP4, always
+	 * use {@link assignByRef} instead of {@link assign}.
+	 *
+	 * @param string $elementName Element name
+	 * @param string|Component $elementValue Element contents
+	 * @see assignByRef
+	 */
 	function assign($elementName, $elementValue) {
 		$this->elements[$elementName] = $elementValue;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::assignByRef
-	// @desc		Atribui a um elemento do documento um objeto por referência.
-	//				Este objeto	deve implementar o método "getContent"
-	// @param		elementName string	Nome do elemento
-	// @param		&ContentObj object	Objeto a ser atribuído ao elemento
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the contents of a given document element by reference
+	 *
+	 * This method is specially suited to assign renderizable
+	 * components to document elements. By using this approach,
+	 * significant performance improvements could be achieved.
+	 * <code>
+	 * $doc = new Document('layout.tpl');
+	 * $form = new FormBasic('form.xml', 'form', $doc);
+	 * $doc->assignByRef('main', $form);
+	 * $doc->display();
+	 * </code>
+	 *
+	 * @param string $elementName Element name
+	 * @param Component &$ContentObj Component to fill the slot
+	 * @see assign
+	 */
 	function assignByRef($elementName, &$ContentObj) {
 		$this->elements[$elementName] =& $ContentObj;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::display
-	// @desc		Envia para a tela o conteúdo do documento HTML
-	// @note		Se a compressão tiver sido habilitada através da
-	//				função setCompression(), o conteúdo compactado
-	//				será enviado à tela e as configurações de cache
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and <b>displays</b> the final document output
+	 *
+	 * Uses {@link ob_start()} when gzip compression is enabled. If
+	 * you run into any issues when compression is enabled, maybe
+	 * ob_gzhandler doesn't work very well at your environment.
+	 */
 	function display() {
 		$this->_buildBodyContent();
 		$this->_preRenderHeader(TRUE);
@@ -589,12 +762,11 @@ class Document extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::getContent
-	// @desc		Constrói o cabeçalho e o corpo do documento e retorna o código gerado
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and <b>returns</b> the final document output
+	 *
+	 * @return string
+	 */
 	function getContent() {
 		$this->_buildBodyContent();
 		$this->_preRenderHeader(FALSE);
@@ -604,13 +776,13 @@ class Document extends PHP2Go
 		return ob_get_clean();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::toFile
-	// @desc		Permite gerar o conteúdo do documento e salvá-lo em um arquivo
-	// @param		fileName string		Nome do arquivo
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Generate the HTML output for this document and
+	 * save it in a given file name
+	 *
+	 * @param string $fileName File path
+	 * @return bool Whether the file was saved or not
+	 */
 	function toFile($fileName) {
 		$fp = @fopen($fileName, 'wb');
 		if ($fp === FALSE) {
@@ -623,14 +795,13 @@ class Document extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::_initialize
-	// @desc		Inicializa o documento HTML
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Initialize some properties of the document
+	 *
+	 * @access private
+	 */
 	function _initialize() {
-		// inicializa as meta tags do documento
+		// initialize meta tags
 		$this->metaTagsName['TITLE'] =& $this->docTitle;
 		$this->metaTagsName['AUTHOR'] = PHP2Go::getConfigVal('AUTHOR', FALSE);
 		$this->metaTagsName['DESCRIPTION'] = PHP2Go::getConfigVal('DESCRIPTION', FALSE);
@@ -640,7 +811,7 @@ class Document extends PHP2Go
 		$this->metaTagsName['GENERATOR'] = 'PHP2Go Web Development Framework ' . PHP2GO_VERSION;
 		$this->metaTagsName['DATE_CREATION'] = PHP2Go::getConfigVal('DATE_CREATION', FALSE);
 		$this->metaTagsHttp['Content-Language'] = $this->docLanguage;
-		// inicializa os elementos (slots) do documento
+		// initialize document slots
 		$elements = $this->Template->getDefinedVariables();
 		$elementCount = sizeof($elements);
 		if (!$elementCount) {
@@ -648,18 +819,17 @@ class Document extends PHP2Go
 		}
 		for ($i=0; $i<$elementCount; $i++)
 			$this->elements[$elements[$i]] = '';
-		// adiciona as bibliotecas JS básicas
+		// add basic JS libraries
 		$Conf =& Conf::getInstance();
 		$this->addScript(PHP2GO_JAVASCRIPT_PATH . 'php2go.js?locale=' . $Conf->getConfig('LANGUAGE_CODE') . '&charset=' . $Conf->getConfig('CHARSET'));
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::_preRenderHeader
-	// @desc		Executa operações antes da construção do cabeçalho da página
-	// @param		display bool	"TRUE" A página será exibida ou armazenada em um buffer
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Perform configuration routines before rendering the document's head
+	 *
+	 * @param bool $display Indicates if the page will be displayed or serialized into a file
+	 * @access private
+	 */
 	function _preRenderHeader($display=TRUE) {
 		if (!$this->makeCache) {
 			if ($display && !headers_sent() && !$this->makeCompression) {
@@ -677,14 +847,11 @@ class Document extends PHP2Go
 			$this->metaTagsName['ROBOTS'] = 'NOINDEX,NOFOLLOW,NOARCHIVE';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::_printDocumentHeader
-	// @desc		Imprime o cabeçalho do documento HTML a partir
-	//				dos headers, meta tags, scripts e estilos
-	//				inseridos no objeto
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prints the document head: meta tags, scripts, stylesheets, links
+	 *
+	 * @access private
+	 */
 	function _printDocumentHeader() {
 		print "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n";
 		print "<html>\n<head>\n";
@@ -715,12 +882,12 @@ class Document extends PHP2Go
 				$onLoad .= "\t\t$instruction\n";
 			$onLoad .= "\t}";
 			$this->addScriptCode($onLoad, 'Javascript');
-			$this->attachBodyEvent('onLoad', 'p2gOnLoad();');
+			$this->attachBodyEvent('onload', 'p2gOnLoad();', TRUE);
 		}
-		// scripts direcionados para a tag HEAD
+		// inline scripts located in the document's head
 		if (isset($this->scriptExtCode[SCRIPT_START])) {
 			foreach($this->scriptExtCode[SCRIPT_START] as $language => $scripts) {
-				if (StringUtils::right($scripts, 1) != "\n")
+				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
 				print sprintf("<script language=\"%s\" type=\"text/%s\">\n<!--\n%s//-->\n</script>\n", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
@@ -729,14 +896,12 @@ class Document extends PHP2Go
 		print "</head>\n";
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::_printDocumentBody
-	// @desc		Imprime o corpo do documento HTML, a partir dos eventos
-	//				e scripts associados à tag BODY, do conteúdo do template
-	//				de layout
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Prints the document body: body tag with properties and event
+	 * handlers, layout template, inline scripts and extra HTML code
+	 *
+	 * @access private
+	 */
 	function _printDocumentBody() {
 		print "<body";
 		foreach($this->bodyCfg as $attr => $value)
@@ -749,10 +914,10 @@ class Document extends PHP2Go
 		$this->Template->display();
 		if (!empty($this->extraBodyContent[BODY_END]))
 			print "\n" . $this->extraBodyContent[BODY_END];
-		// scripts direcionados para o fim da tag BODY
+		// scripts located in the end of the document's body
 		if (isset($this->scriptExtCode[SCRIPT_END])) {
 			foreach($this->scriptExtCode[SCRIPT_END] as $language => $scripts) {
-				if (StringUtils::right($scripts, 1) != "\n")
+				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
 				print sprintf("\n<script language=\"%s\" type=\"text/%s\">\n<!--\n%s//-->\n</script>", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
@@ -763,14 +928,15 @@ class Document extends PHP2Go
 		print sprintf("\n<!-- Timespent : %.3f -->", $this->TimeCounter->getElapsedTime());
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Document::_buildBodyContent
-	// @desc		Constrói o conteúdo do corpo do documento a partir
-	//				do conteúdo de cada elemento armazenado no objeto
-	//				através do atributo elements
-	// @access		private
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Process all document elements before rendering the page body
+	 *
+	 * # For template elements, call {@link Template::parse()} if not called yet
+	 * # For component elements, call {@link Component::onPreRender()} if not called yet
+	 * # Assign object elements by ref and scalar elements by value
+	 *
+	 * @access private
+	 */
 	function _buildBodyContent() {
 		$elmNames = array_keys($this->elements);
 		foreach ($elmNames as $name) {

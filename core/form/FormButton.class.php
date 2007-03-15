@@ -1,178 +1,130 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/FormButton.class.php,v 1.36 2006/11/19 18:30:38 mpont Exp $
-// $Date: 2006/11/19 18:30:38 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.util.HtmlUtils');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		FormButton
-// @desc		Armazena informações sobre um botão incluído em um
-// 				formulário. A partir das configurações criadas para
-// 				o botão, esta classe cria o código HTML do mesmo
-// @package		php2go.form
-// @extends		Component
-// @uses		FormEventListener
-// @uses		HtmlUtils
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.36 $
-//!-----------------------------------------------------------------
+/**
+ * Builds form buttons
+ *
+ * Generates the HTML code of a form button, based on the settings
+ * defined in the form XML specification. Supports 5 types of buttons:
+ * submit, reset, clear, button and back. Supports buttons with text
+ * or images (including swap image).
+ *
+ * @package form
+ * @uses FormEventListener
+ * @uses HtmlUtils
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FormButton extends Component
 {
-	var $id;					// @var id string			ID do botão
-	var $name;					// @var name string			Nome do botão
-	var $value = '';			// @var value string		"" Caption/texto do botão
-	var $listeners = array();	// @var listeners array		"array()" Tratadores de eventos associados ao botão
-	var $disabled = NULL;		// @var disabled bool		"NULL" Status do botão
-	var $_Form = NULL;			// @var _Form Form object	"NULL" Objeto Form no qual o botão será incluído
+	/**
+	 * Button ID
+	 *
+	 * @var string
+	 */
+	var $id;
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::FormButton
-	// @desc		Inicializa as propriedades do botão e executa a
-	// 				função de construção do código HTML
-	// @param 		&Form Form object		Objeto Form onde o botão será incluído
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Button name
+	 *
+	 * @var string
+	 */
+	var $name;
+
+	/**
+	 * Button value
+	 *
+	 * @var string
+	 */
+	var $value = '';
+
+	/**
+	 * Whether the button is disabled
+	 *
+	 * @var bool
+	 */
+	var $disabled = NULL;
+
+	/**
+	 * Button event listeners
+	 *
+	 * @var array
+	 * @access protected
+	 */
+	var $listeners = array();
+
+	/**
+	 * Indicates the data bind phase was already executed
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $dataBind = FALSE;
+
+	/**
+	 * Parent form
+	 *
+	 * @var object Form
+	 * @access private
+	 */
+	var $_Form = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param Form &$Form Parent form
+	 * @return FormButton
+	 */
 	function FormButton(&$Form) {
 		parent::Component();
 		$this->_Form =& $Form;
 		parent::registerDestructor($this, '__destruct');
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::__destruct
-	// @desc		Destrutor da classe
-	// @access		public
-	//!-----------------------------------------------------------------
-	function __destruct() {
-		unset($this);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::getId
-	// @desc		Retorna o ID do botão
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
-	function getId() {
-		return $this->id;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setId
-	// @desc		Define o ID do botão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setId($id) {
-		if (!empty($id))
-			$this->id = $id;
-		else
-			$this->id = PHP2Go::generateUniqueId(parent::getClassName());
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::getName
-	// @desc		Consulta o nome do botão
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
-	function getName() {
-		return $this->name;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setName
-	// @desc		Define o nome do botão (atributos NAME e ID da tag INPUT)
-	// @param		name string		Nome para o botão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setName($name) {
-		if (!empty($name))
-			$this->name = $name;
-		else
-			$this->name = $this->id;
-		Form::verifyButtonName($this->_Form->formName, $this->name);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::getValue
-	// @desc		Consulta o valor (caption) do botão
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
-	function getValue() {
-		return $this->value;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setValue
-	// @desc		Define valor para o atributo VALUE do botão
-	// @param		value string	Valor para o botão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function setValue($value) {
-		if (!empty($value))
-			$this->value = resolveI18nEntry($value);
-		elseif (!empty($this->name))
-			$this->value = ucfirst($this->name);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::&getOwnerForm
-	// @desc		Retorna o formulário no qual o botão está inserido
-	// @return		Form object
-	// @access		public
-	//!-----------------------------------------------------------------
-	function &getOwnerForm() {
-		return $this->_Form;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	FormButton::display
-	// @desc		Monta o conteúdo HTML do botão
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds the button's HTML code
+	 */
 	function display() {
 		(!$this->preRendered) && ($this->onPreRender());
 		if ($this->attributes['IMG'] != '') {
 			if ($this->attributes['TYPE'] == 'SUBMIT') {
-				// código HTML do botão, utilizando o type "IMAGE"
-				// com este tipo de botão, é possível mapear as coordenadas x e y do clique
+				// builds an IMAGE input
 				print sprintf("<input id=\"%s\" name=\"%s\" type=\"image\" value=\"%s\" src=\"%s\" border=\"0\"%s%s%s%s%s%s>",
 					$this->id, $this->name, $this->value, $this->attributes['IMG'], $this->attributes['ALTHTML'], $this->attributes['SCRIPT'],
 					$this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['DISABLED'], $this->attributes['STYLE']
 				);
 			} else {
 				$btnScript = ($this->disabled ? " onClick=\"return false;\"" : $this->attributes['SCRIPT']);
-				// dimensões da imagem
+				// image dimensions
 				$size = @getimagesize($this->attributes['IMG']);
 				if (!empty($size)) {
 					$width = $size[0];
@@ -181,7 +133,7 @@ class FormButton extends Component
 					$width = 0;
 					$height = 0;
 				}
-				// código HTML do botão, utilizando a tag A com a imagem dentro
+				// builds an anchor containing the button image
 				print sprintf("<a id=\"%s\" name=\"%s\" style=\"cursor:pointer;\" %s%s%s%s>%s</a>",
 					$this->id, $this->name, HtmlUtils::statusBar($this->attributes['ALT']), $btnScript, $this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'],
 					HtmlUtils::image($this->attributes['IMG'], '', $width, $height, -1, -1, '', "{$this->name}_img", $this->attributes['SWPIMG'])
@@ -196,13 +148,85 @@ class FormButton extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setImage
-	// @desc		Define a imagem associada ao botão
-	// @param		img string	Caminho da imagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the button's ID
+	 *
+	 * @return string
+	 */
+	function getId() {
+		return $this->id;
+	}
+
+	/**
+	 * Set the button's ID
+	 *
+	 * @param string $id New ID
+	 */
+	function setId($id) {
+		if (!empty($id))
+			$this->id = $id;
+		else
+			$this->id = PHP2Go::generateUniqueId(parent::getClassName());
+	}
+
+	/**
+	 * Get the button's name
+	 *
+	 * @return string
+	 */
+	function getName() {
+		return $this->name;
+	}
+
+	/**
+	 * Set the button's name
+	 *
+	 * @param string $name New name
+	 */
+	function setName($name) {
+		if (!empty($name))
+			$this->name = $name;
+		else
+			$this->name = $this->id;
+		Form::verifyButtonName($this->_Form->formName, $this->name);
+	}
+
+	/**
+	 * Get the button's value
+	 *
+	 * @return string
+	 */
+	function getValue() {
+		return $this->value;
+	}
+
+	/**
+	 * Set the button's value
+	 *
+	 * @param string $value New value
+	 */
+	function setValue($value) {
+		if (!empty($value))
+			$this->value = resolveI18nEntry($value);
+		elseif (!empty($this->name))
+			$this->value = ucfirst($this->name);
+	}
+
+	/**
+	 * Get the button's parent form
+	 *
+	 * @return Form
+	 */
+	function &getOwnerForm() {
+		return $this->_Form;
+	}
+
+	/**
+	 * Set the button's image
+	 *
+	 * @param string $img Image URL
+	 * @param string $swpImg Swap image URL
+	 */
 	function setImage($img, $swpImg='') {
 		$this->attributes['IMG'] = trim(TypeUtils::parseString($img));
 		if ($swpImg && trim($swpImg) != '')
@@ -211,16 +235,17 @@ class FormButton extends Component
 			$this->attributes['SWPIMG'] = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setStyle
-	// @desc		Altera o valor do estilo do botão
-	// @param		style string	Estilo para o botão
-	// @note		Este método permite customizar o estilo de um determinado
-	//				botão em relação à configuração global definida para todo
-	//				o formulário
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the button's CSS class
+	 *
+	 * To define a single CSS class for all buttons in
+	 * a form, use {@link Form::setButtonStyle()} or declare
+	 * it in the XML file (//form/style[@button]). To define
+	 * a global CSS configuration for all forms, use the
+	 * FORMS entry of the global configuration settings.
+	 *
+	 * @param string $style CSS class
+	 */
 	function setStyle($style) {
 		$style = trim($style);
 		if ($style == 'empty')
@@ -231,13 +256,11 @@ class FormButton extends Component
 			$this->attributes['STYLE'] = $this->_Form->getButtonStyle();
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setAccessKey
-	// @desc		Define a tecla de atalho do campo
-	// @param		accessKey string	Tecla de atalho
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the button's access key
+	 *
+	 * @param string $accessKey Access key
+	 */
 	function setAccessKey($accessKey) {
 		if (trim($accessKey) != '')
 			$this->attributes['ACCESSKEY'] = " accesskey=\"$accessKey\"";
@@ -245,13 +268,11 @@ class FormButton extends Component
 			$this->attributes['ACCESSKEY'] = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setTabIndex
-	// @desc		Define o índice de tab order do botão
-	// @param		tabIndex int	Índice para o botão
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the button's tab index
+	 *
+	 * @param int $tabIndex Tab index
+	 */
 	function setTabIndex($tabIndex) {
 		if (TypeUtils::isInteger($tabIndex))
 			$this->attributes['TABINDEX'] = " tabindex=\"$tabIndex\"";
@@ -259,14 +280,11 @@ class FormButton extends Component
 			$this->attributes['TABINDEX'] = '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setAltText
-	// @desc		Define o texto alternativo do botão
-	// @param		altText string	Texto alternativo para o botão
-	// @note		Este atributo apenas tem efeito quando o botão utiliza uma imagem
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the button's alternative text
+	 *
+	 * @param string $altText Alt text
+	 */
 	function setAltText($altText) {
 		if (!empty($altText)) {
 			$this->attributes['ALTHTML'] = " alt=\"$altText\"";
@@ -277,12 +295,11 @@ class FormButton extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::setDisabled
-	// @desc		Define o estado do botão (habilitado ou desabilitado)
-	// @param		setting bool	"TRUE" Estado do botão (TRUE=desabilitado)
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Disables or enables the button
+	 *
+	 * @param bool $setting Disable/enable
+	 */
 	function setDisabled($setting=TRUE) {
 		if (TypeUtils::isTrue($setting)) {
 			$this->attributes['DISABLED'] = " disabled";
@@ -293,14 +310,12 @@ class FormButton extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::addEventListener
-	// @desc		Adiciona um novo tratador de eventos no botão
-	// @param		Listener FormEventListener object	Tratador de evento
-	// @param		pushStart boolean	Adicionar antes de todos os handlers do mesmo tipo existentes
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds a new event listener
+	 *
+	 * @param FormEventListener $Listener New listener
+	 * @param bool $pushStart Whether to add the listener before all existent ones
+	 */
 	function addEventListener($Listener, $pushStart=FALSE) {
 		$Listener->setOwner($this);
 		if ($Listener->isValid()) {
@@ -327,27 +342,26 @@ class FormButton extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::onLoadNode
-	// @desc		Processa as informações provenientes da especificação XML do botão
-	// @param		attrs array		Atributos do nodo XML
-	// @param		children array	"array()" Vetor associativo de filhos do nodo
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Processes attributes and child nodes loaded from the XML specification
+	 *
+	 * @param array $attrs Node attributes
+	 * @param array $children Node children
+	 */
 	function onLoadNode($attrs, $children=array()) {
 		// id
 		$this->setId(TypeUtils::ifNull(@$attrs['ID'], @$attrs['NAME']));
-		// nome
+		// name
 		$this->setName(@$attrs['NAME']);
-		// valor
+		// value
 		$this->setValue(@$attrs['VALUE']);
-		// tipo
+		// type
 		$this->attributes['TYPE'] = (isset($attrs['TYPE']) && preg_match('/submit|reset|clear|back|button/i', $attrs['TYPE']) ? strtoupper($attrs['TYPE']) : 'BUTTON');
-		// imagem e imagem de swap
+		// image and swap image
 		$this->setImage(@$attrs['IMG'], @$attrs['SWPIMG']);
-		// define valor submetido, se o formulário foi postado
-		// captura coordenadas para botões que utilizam imagem
+		// when the button is type=SUBMIT and image-based,
+		// the submitted value of the button will be pair
+		// of coordinates the user clicked
 		if ($this->_Form->isPosted()) {
 			if ($this->attributes['TYPE'] == 'SUBMIT' && $this->attributes['IMG'] != '') {
 				$x = HttpRequest::getVar($this->name . '_x', $this->_Form->formMethod);
@@ -360,33 +374,33 @@ class FormButton extends Component
 					$this->_Form->submittedValues[$this->name] = $submittedValue;
 			}
 		}
-		// estilo CSS
+		// CSS class
 		$this->setStyle(@$attrs['STYLE']);
 		// access key
 		$this->setAccessKey(@$attrs['ACCESSKEY']);
 		// tab index
 		$this->setTabIndex(@$attrs['TABINDEX']);
-		// texto alternativo
+		// alt text
 		$this->setAltText(@$attrs['ALT']);
-		// status
+		// disabled
 		$disabled = (resolveBooleanChoice(@$attrs['DISABLED']) || $this->_Form->readonly);
 		if ($disabled)
 			$this->setDisabled();
-		// adiciona um listener para botões do tipo CLEAR (limpar todos os campos do formulário)
+		// register an event listener when type=CLEAR, calling Form.clear()
 		if ($this->attributes['TYPE'] == 'CLEAR') {
 			$this->attributes['TYPE'] = 'BUTTON';
 			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onClick', sprintf("Form.clear('%s')", $this->_Form->formName)));
 		}
-		// adiciona uma chamada para document.form.reset() para botões do tipo RESET usando imagem
+		// register an event listener when type=RESET and images are used, calling form.reset()
 		if ($this->attributes['TYPE'] == 'RESET' && $this->attributes['IMG'] != '')
 			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onClick', sprintf("Form.reset('%s')", $this->_Form->formName)));
-		// adiciona event listeners para botões submit com imagem e imagem de swap
+		// register event listeners to handle with image swapping
 		if ($this->attributes['TYPE'] == 'SUBMIT' && $this->attributes['IMG'] != '' && $this->attributes['SWPIMG'] != '') {
 			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onLoad', sprintf("var %s_swp=new Image();%s_swp.src='%s'", $this->name, $this->name, $this->attributes['SWPIMG'])));
 			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onMouseOver', sprintf("this.src='%s'", $this->attributes['SWPIMG'])));
 			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onMouseOut', sprintf("this.src='%s'", $this->attributes['IMG'])));
 		}
-		// adiciona um listener para botões do tipo BACK (voltar à página anterior)
+		// register an event listener when type=BACK
 		if ($this->attributes['TYPE'] == 'BACK') {
 			$this->attributes['TYPE'] = 'BUTTON';
 			if (empty($this->_Form->backUrl))
@@ -402,17 +416,27 @@ class FormButton extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::onPreRender
-	// @desc		Aplica configurações ao botão antes que seu código
-	//				HTML final seja gerado pelo método getCode
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configure button's dynamic properties
+	 *
+	 * @access protected
+	 */
+	function onDataBind() {
+		for ($i=0,$s=sizeof($this->listeners); $i<$s; $i++) {
+			$Listener =& $this->listeners[$i];
+			$Listener->onDataBind();
+		}
+		$this->dataBind = TRUE;
+	}
+
+	/**
+	 * Prepare the button to be rendered
+	 */
 	function onPreRender() {
 		if (!$this->preRendered) {
 			parent::onPreRender();
-			// revalida a propriedade "disabled"
+			if (!$this->dataBind)
+				$this->onDataBind();
 			if ($this->disabled === NULL) {
 				if ($this->_Form->readonly)
 					$this->setDisabled();
@@ -423,14 +447,14 @@ class FormButton extends Component
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormButton::renderListeners
-	// @desc		A partir dos tratadores de eventos armazenados na classe,
-	//				constrói a string com as declarações dos eventos para inclusão
-	//				no código HTML final do botão
-	// @access		protected
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Render button's event listeners
+	 *
+	 * Collects all event listeners, join their calls and save
+	 * them in the SCRIPT attribute.
+	 *
+	 * @access protected
+	 */
 	function renderListeners() {
 		$script = '';
 		$events = array();

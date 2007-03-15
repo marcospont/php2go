@@ -1,11 +1,11 @@
 PHP2Go Web Development Framework - INSTALL
 ===========================================
 
-	Version 0.5.4 - November 2006
-	---------------------------------
+	Version 0.5.5 - March 2007
+	--------------------------------
 	http://www.php2go.com.br
 
-		Copyright (C) 2002-2006 Marcos Pont <mpont@uses.sourceforge.net>
+		Copyright (C) 2002-2007 Marcos Pont <mpont@uses.sourceforge.net>
 
 		This library is free software; you can redistribute it and/or
 		modify it under the terms of the GNU Lesser General Public

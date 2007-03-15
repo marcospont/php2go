@@ -1,196 +1,73 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/util/Hashmap.class.php,v 1.6 2006/05/07 15:23:53 mpont Exp $
-// $Date: 2006/05/07 15:23:53 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//!-----------------------------------------------------------------
-// @class		Hashmap
-// @desc		Esta classe implementa uma tabela hash, que mapeia chaves para valores.
-//				As chaves devem ser não nulas e não vazias, mas os valores aceitam qualquer informação.
-// @package		php2go.util
-// @extends		PHP2Go
-// @uses		TypeUtils
-// @author		Marcos Pont
-// @version		$Revision: 1.6 $
-//!-----------------------------------------------------------------
+/**
+ * Implementation of a hash table, that maps keys to values
+ *
+ * The keys must be not null and not empty, and can't be duplicated.
+ * The values can be of any type.
+ *
+ * @package util
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class Hashmap extends PHP2Go
 {
-	var $elements = array();	// @var elements array		Vetor de pares chave=>valor da tabela
+	/**
+	 * Map elements
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $elements = array();
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::Hashmap
-	// @desc		Construtor da classe
-	// @access		public
-	// @param		arr array		"array()" Array associativo para inicialização do objeto
-	//!-----------------------------------------------------------------
+	/**
+	 * Class constructor
+	 *
+	 * @param array $arr Initializes the map with the given array
+	 * @return Hashmap
+	 */
 	function Hashmap($arr = array()) {
 		parent::PHP2Go();
 		$this->putAll($arr);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::clear
-	// @desc		Remove todos os elementos da tabela
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
-	function clear() {
-		$this->elements = array();
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::get
-	// @desc		Retorna o valor de uma chave da tabela
-	// @access		public
-	// @param		key string		Nome da chave
-	// @param		fallback mixed	"NULL" Valor a ser retornado quando a chave não for encontrada
-	// @return		mixed Valor da chave ou o valor do parâmetro $fallback
-	//!-----------------------------------------------------------------
-	function get($key, $fallback=NULL) {
-		$key = TypeUtils::parseString($key);
-		return (array_key_exists($key, $this->elements) ? $this->elements[$key] : $fallback);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::assertGet
-	// @desc		Executa a operação get forçando o valor buscado para um
-	//				determinado tipo. Se o valor não se enquadrar no tipo solicitado,
-	//				o método retornará o valor do parâmetro $fallback, indicando um erro
-	// @access		public
-	// @param		key string		Nome da chave
-	// @param		type string		Tipo desejado
-	// @param		fallback mixed	"NULL" Valor de fallback, para chaves não encontradas ou não compatíveis com o tipo desejado
-	// @return		mixed Valor buscado, ou valor de fallback
-	//!-----------------------------------------------------------------
-	function assertGet($key, $type, $fallback=NULL) {
-		$value = $this->get($key, $fallback);
-		if ($value !== $fallback) {
-			switch ($type) {
-				case 'string' : return (TypeUtils::isString($value) ? $value : $fallback);
-				case 'integer' : return (TypeUtils::isInteger($value) ? $value : $fallback);
-				case 'float' :
-				case 'double' : return (TypeUtils::isFloat($value) ? $value : $fallback);
-				case 'array' : return (TypeUtils::isArray($value) ? $value : $fallback);
-				case 'hash' : return (TypeUtils::isHashArray($value) ? $value : $fallback);
-				case 'resource' : return (TypeUtils::isResource($value) ? $value : $fallback);
-				case 'boolean' :
-				case 'bool' : return (TypeUtils::isBoolean($value) ? $value : $fallback);
-				case 'object' : return (TypeUtils::isObject($value) ? $value : $fallback);
-				case 'null' : return (TypeUtils::isNull($value) ? $value : $fallback);
-				default : return $value;
-			}
-		}
-		return $fallback;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::assertType
-	// @desc		Verifica a existência de uma chave na tabela, e verifica
-	//				se ela se enquadra em um determinado tipo de dado
-	// @access		public
-	// @param		key string		Nome da chave
-	// @param		type string		Tipo
-	// @return		bool
-	// @note		Tipos aceitos: string, integer, float, double, array, hash,
-	//				resource, boolean, object e null
-	//!-----------------------------------------------------------------
-	function assertType($key, $type) {
-		$value = $this->get($key);
-		$type = strtolower($type);
-		switch ($type) {
-			case 'string' : return TypeUtils::isString($value);
-			case 'integer' : return TypeUtils::isInteger($value);
-			case 'float' :
-			case 'double' : return TypeUtils::isFloat($value);
-			case 'array' : return TypeUtils::isArray($value);
-			case 'hash' : return TypeUtils::isHashArray($value);
-			case 'resource' : return TypeUtils::isResource($value);
-			case 'boolean' :
-			case 'bool' : return TypeUtils::isBoolean($value);
-			case 'object' : return TypeUtils::isObject($value);
-			case 'null' : return TypeUtils::isNull($value);
-		}
-		return FALSE;
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::keys
-	// @desc		Retorna o array das chaves da tabela
-	// @access		public
-	// @return		array
-	// @see			Hashmap::values
-	//!-----------------------------------------------------------------
-	function keys() {
-		return array_keys($this->elements);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::values
-	// @desc		Retorna o array de valores da tabela
-	// @access		public
-	// @return		array
-	// @see			Hashmap::keys
-	//!-----------------------------------------------------------------
-	function values() {
-		return array_values($this->elements);
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::containsKey
-	// @desc		Verifica a existência de uma chave
-	// @access		public
-	// @param		key string		Nome da chave
-	// @return		bool
-	// @see			Hashmap::containsValue
-	//!-----------------------------------------------------------------
-	function containsKey($key) {
-		return (array_key_exists($key, $this->elements));
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::containsValue
-	// @desc		Verifica a existência (ao menos uma vez) de um valor na tabela
-	// @access		public
-	// @param		value mixed		Valor a ser buscado
-	// @param		strict bool		"FALSE" Verifica equivalência de tipos
-	// @return		bool
-	// @see			Hashmap::containsKey
-	//!-----------------------------------------------------------------
-	function containsValue($value, $strict=FALSE) {
-		return (array_search($value, $this->elements, $strict));
-	}
-
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::put
-	// @desc		Insere ou altera uma chave da tabela
-	// @access		public
-	// @param		key string		Nome da chave
-	// @param		value mixed		Valor da chave
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds or changes a key-value pair
+	 *
+	 * @param string $key Key
+	 * @param mixed $value Value
+	 * @return bool
+	 */
 	function put($key, $value) {
-		$key = TypeUtils::parseString($key);
+		$key = strval($key);
 		if (!empty($key)) {
 			$this->elements[$key] = $value;
 			return TRUE;
@@ -198,16 +75,13 @@ class Hashmap extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::putRef
-	// @desc		Implementação especial do método put que recebe o valor da chave
-	//				por referência - ideal para o armazenamento de objetos e valores
-	//				que serão posteriormente alterados
-	// @access		public
-	// @param		key string		Nome da chave
-	// @param		&value mixed	Valor a ser inserido
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds or changes a key passing the value by reference
+	 *
+	 * @param string $key Key
+	 * @param mixed &$value Value
+	 * @return bool
+	 */
 	function putRef($key, &$value) {
 		$key = TypeUtils::parseString($key);
 		if (!empty($key)) {
@@ -217,13 +91,12 @@ class Hashmap extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::putAll
-	// @desc		Adiciona ou atualiza uma coleção de chaves na tabela
-	// @param		collection mixed	Uma outra instância da classe Hashmap ou um array associativo
-	// @access		public	
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Adds all members of a collection in the map
+	 *
+	 * @param array $collection Collection
+	 * @return bool
+	 */
 	function putAll($collection) {
 		$result = TRUE;
 		if (TypeUtils::isInstanceOf($collection, 'Hashmap'))
@@ -235,14 +108,134 @@ class Hashmap extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::merge
-	// @desc		Une a coleção atual de chaves com outra, impedindo sobrescrita
-	// @param		collection mixed	Instância de Hashmap ou array associativo
-	// @param		recursive bool		"FALSE" Unir as tabelas recursivamente
-	// @access		public	
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Clears the map
+	 */
+	function clear() {
+		$this->elements = array();
+	}
+
+	/**
+	 * Get an element of the map, given its key
+	 *
+	 * @param string $key Key
+	 * @param mixed $fallback Fallback value, to be used when the key is not found
+	 * @return mixed
+	 */
+	function get($key, $fallback=NULL) {
+		$key = TypeUtils::parseString($key);
+		return (array_key_exists($key, $this->elements) ? $this->elements[$key] : $fallback);
+	}
+
+	/**
+	 * Get the value of a given map entry, requiring it to be of a given type
+	 *
+	 * The fallback value is returned when the key is not found or
+	 * when the value is of a different data type.
+	 *
+	 * Accepted types: string, integer, float, double, array, hash,
+	 * resource, boolean, bool, object, null.
+	 *
+	 * @param string $key Key
+	 * @param string $type Required type
+	 * @param mixed $fallback Fallback value
+	 * @return mixed
+	 */
+	function assertGet($key, $type, $fallback=NULL) {
+		$value = $this->get($key, $fallback);
+		if ($value !== $fallback) {
+			switch ($type) {
+				case 'string' : return (is_string($value) ? $value : $fallback);
+				case 'integer' : return (TypeUtils::isInteger($value) ? $value : $fallback);
+				case 'float' :
+				case 'double' : return (TypeUtils::isFloat($value) ? $value : $fallback);
+				case 'array' : return (is_array($value) ? $value : $fallback);
+				case 'hash' : return (TypeUtils::isHashArray($value) ? $value : $fallback);
+				case 'resource' : return (is_resource($value) ? $value : $fallback);
+				case 'boolean' :
+				case 'bool' : return (is_bool($value) ? $value : $fallback);
+				case 'object' : return (is_object($value) ? $value : $fallback);
+				case 'null' : return (is_null($value) ? $value : $fallback);
+				default : return $value;
+			}
+		}
+		return $fallback;
+	}
+
+	/**
+	 * Checks if a key exists, and if its value is of a given type
+	 *
+	 * Accepted types: string, integer, float, double, array, hash,
+	 * resource, boolean, bool, object, null.
+	 *
+	 * @param string $key Key
+	 * @param string $type Required type
+	 * @return bool
+	 */
+	function assertType($key, $type) {
+		$value = $this->get($key);
+		$type = strtolower($type);
+		switch ($type) {
+			case 'string' : return is_string($value);
+			case 'integer' : return TypeUtils::isInteger($value);
+			case 'float' :
+			case 'double' : return TypeUtils::isFloat($value);
+			case 'array' : return is_array($value);
+			case 'hash' : return TypeUtils::isHashArray($value);
+			case 'resource' : return is_resource($value);
+			case 'boolean' :
+			case 'bool' : return is_bool($value);
+			case 'object' : return is_object($value);
+			case 'null' : return is_null($value);
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Get hash keys
+	 *
+	 * @return array
+	 */
+	function keys() {
+		return array_keys($this->elements);
+	}
+
+	/**
+	 * Get hash values
+	 *
+	 * @return array
+	 */
+	function values() {
+		return array_values($this->elements);
+	}
+
+	/**
+	 * Checks if a given key exists
+	 *
+	 * @param string $key Key
+	 * @return bool
+	 */
+	function containsKey($key) {
+		return (array_key_exists($key, $this->elements));
+	}
+
+	/**
+	 * Checks if a given value exists
+	 *
+	 * @param mixed $value Value
+	 * @param bool $strict Whether data type must be checked
+	 * @return bool
+	 */
+	function containsValue($value, $strict=FALSE) {
+		return (array_search($value, $this->elements, $strict) !== FALSE);
+	}
+
+	/**
+	 * Merge the hash with another collection
+	 *
+	 * @param array|Hashmap $collection Collection
+	 * @param bool $recursive Recursive merge
+	 */
 	function merge($collection, $recursive=FALSE) {
 		if (TypeUtils::isInstanceOf($collection, 'Hashmap'))
 			$collection = $collection->toArray();
@@ -254,15 +247,13 @@ class Hashmap extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::swap
-	// @desc		Inverte os valores de duas chaves da tabela
-	// @access		public
-	// @param		a string			Nome da primeira chave
-	// @param		b string			Nome da segunda chave
-	// @return		bool
-	// @note		Este método retornará TRUE apenas se as duas chaves já existirem na tabela
-	//!-----------------------------------------------------------------
+	/**
+	 * Swap the values of two map keys
+	 *
+	 * @param string $a First key
+	 * @param string $b Second key
+	 * @return bool
+	 */
 	function swap($a, $b) {
 		if ($this->containsKey($a) && $this->containsKey($b)) {
 			$tmp = $this->get($a);
@@ -273,13 +264,12 @@ class Hashmap extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::remove
-	// @desc		Remove uma determinada chave da tabela
-	// @access		public
-	// @param		key string		Nome da chave
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Removes a given key from the map
+	 *
+	 * @param string $key Key
+	 * @return bool
+	 */
 	function remove($key) {
 		if ($this->containsKey($key)) {
 			unset($this->elements[$key]);
@@ -288,82 +278,67 @@ class Hashmap extends PHP2Go
 		return FALSE;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::sort
-	// @desc		Ordena a tabela pelas chaves, de forma ascendente
-	// @access		public
-	// @param		flags int		Flags de ordenação
-	// @return		void
-	// @note		Para maiores informações sobre o parâmetro $flags, consulte
-	//				a documentação da função sort em http://www.php.net/sort
-	// @see			Hashmap::reverseSort
-	// @see			Hashmap::customSort
-	//!-----------------------------------------------------------------
+	/**
+	 * Sorts the map
+	 *
+	 * @link http://www.php.net/sort
+	 * @param int $flags Sort flags
+	 */
 	function sort($flags=SORT_REGULAR) {
 		sort($this->elements, $flags);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::reverseSort
-	// @desc		Ordena a tabela pelas chaves, de forma descendente
-	// @access		public
-	// @param		flags int		Flags de ordenação
-	// @return		void
-	// @see			Hashmap::sort
-	// @see			Hashmap::customSort
-	//!-----------------------------------------------------------------
+	/**
+	 * Sorts the map in reverse order (highest to lowest)
+	 *
+	 * @param int $flags Sort flags
+	 */
 	function reverseSort($flags=SORT_REGULAR) {
 		rsort($this->elements, $flags);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::customSort
-	// @desc		Ordena a tabela utilizando uma função de comparação definida pelo usuário
-	// @access		public
-	// @param		callback mixed	Função de comparação
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Sorts the map by values based on an user-defined comparison function
+	 *
+	 * @param string|array $callback User defined function
+	 */
 	function customSort($callback) {
 		usort($this->elements, $callback);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::size
-	// @desc		Retorna o tamanho da tabela
-	// @access		public
-	// @return		int Tamanho da tabela
-	//!-----------------------------------------------------------------
+	/**
+	 * Get map size
+	 *
+	 * @return int
+	 */
 	function size() {
 		return sizeof($this->elements);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::isEmpty
-	// @desc		Verifica se a tabela está vazia
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Checks if the map is empty
+	 *
+	 * @return bool
+	 */
 	function isEmpty() {
 		return ($this->size() == 0);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::toArray
-	// @desc		Retorna a tabela na forma de um array associativo
-	// @access		public
-	// @return		array
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds an array representation of the hash map
+	 *
+	 * @return array
+	 */
 	function toArray() {
 		return $this->elements;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	Hashmap::toString
-	// @desc		Monta uma representação string da tabela
-	// @access		public
-	// @return		string
-	//!-----------------------------------------------------------------
-	function toString() {
+	/**
+	 * Builds a string representation of the hash map
+	 *
+	 * @return string
+	 */
+	function __toString() {
 		return sprintf("Hashmap object{\n%s\n}", dumpArray($this->elements));
 	}
 }

@@ -1,128 +1,110 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/net/MimeType.class.php,v 1.10 2006/02/28 21:55:58 mpont Exp $
-// $Date: 2006/02/28 21:55:58 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-// @const	DEFAULT_MIME_TYPE	"application/octet-stream"
-// Tipo MIME padrão para extensões desconhecidas ou não encontradas na tabela da classe
+/**
+ * Default MIME type to be used on unknown file extensions
+ */
 define("DEFAULT_MIME_TYPE", "application/octet-stream");
 
-//------------------------------------------------------------------
-import('php2go.file.FileManager');
-import('php2go.net.HttpRequest');
-import('php2go.text.StringUtils');
-//------------------------------------------------------------------
+import('php2go.file.FileSystem');
 
-//!-----------------------------------------------------------------
-// @class		MimeType
-// @desc		Esta classe mantém uma tabela com os mime types associados
-//				às extensões de arquivo utilizadas. O valor do MIME type
-//				segue o padrão aceito na maioria dos sistemas operacionais,
-//				web servers e navegadores
-// @package		php2go.net
-// @uses		FileManager
-// @uses		HttpRequest
-// @uses		StringUtils
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.10 $
-// @static
-//!-----------------------------------------------------------------
+/**
+ * Resolve MIME types from file extensions or file names
+ *
+ * This class keeps a table mapping file extensions to MIME types. This
+ * MIME type table follows the patterns accepted by most browsers and
+ * operating systems.
+ *
+ * @package net
+ * @uses FileSystem
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class MimeType extends PHP2Go
 {
-	//!-----------------------------------------------------------------
-	// @function	MimeType::has
-	// @desc		Verifica se a tabela de tipos MIME contém um valor para
-	//				uma determinada extensão de arquivo	
-	// @access		public
-	// @param		fileExtension string	Extensão solicitada
-	// @return		bool
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Check if the given file extension is present in the internal MIME table
+	 *
+	 * @param string $fileExtension File extension
+	 * @return bool
+	 * @static
+	 */
 	function has($fileExtension) {
 		$fileExtension = strtolower($fileExtension);
 		$mimeTable = MimeType::getMimeTable();
 		return isset($mimeTable[$fileExtension]);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	MimeType::get
-	// @desc		Retorna o tipo MIME associado a uma extensão de arquivo
-	// @access		public
-	// @param		fileExtension string	Extensão de arquivo
-	// @return		string Tipo MIME associado à extensão
-	// @static
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Resolve the MIME type of a given file extension
+	 *
+	 * @param string $fileExtension File extension
+	 * @return string
+	 * @static
+	 */
 	function get($fileExtension) {
 		$fileExtension = strtolower($fileExtension);
-		$mimeTable = MimeType::getMimeTable();		
+		$mimeTable = MimeType::getMimeTable();
 		return $mimeTable[$fileExtension];
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	MimeType::getFromFile
-	// @desc		Retorna o tipo MIME de um arquivo armazenado no servidor
-	// @access		public
-	// @param		fileName string	Caminho e nome do arquivo no servidor
-	// @return		string Tipo MIME correspondente
-	// @static	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Resolve the MIME type of a file
+	 *
+	 * @param string $fileName File path
+	 * @deprecated Use {@link getFromFileName} instead
+	 * @return string
+	 * @static
+	 */
 	function getFromFile($fileName) {
-		$Mgr =& new FileManager();
-		$Mgr->open($fileName, FILE_MANAGER_READ_BINARY);
-		$extension = $Mgr->getAttribute('extension');
-		$Mgr->close();
-		return MimeType::has($extension) ? MimeType::get($extension) : DEFAULT_MIME_TYPE;
+		$extension = FileSystem::getFileExtension($fileName);
+		return (MimeType::has($extension) ? MimeType::get($extension) : DEFAULT_MIME_TYPE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	MimeType::getFromFileName
-	// @desc		Retorna o tipo MIME a partir de um nome de arquivo
-	// @access		public
-	// @param		fileName string	Nome do arquivo
-	// @return		string Tipo MIME associado
-	// @static	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the MIME type from a file name or path
+	 *
+	 * @param string $fileName File name or path
+	 * @return string
+	 * @static
+	 */
 	function getFromFileName($fileName) {
-		if (!TypeUtils::isFalse($position = strrpos($fileName, '.'))) {
-			$extension = substr($fileName, $position+1);
-			return MimeType::has($extension) ? MimeType::get($extension) : DEFAULT_MIME_TYPE;
-		} else {
-			return FALSE;
-		}
+		$extension = FileSystem::getFileExtension($fileName);
+		return (MimeType::has($extension) ? MimeType::get($extension) : DEFAULT_MIME_TYPE);
 	}
-	
-	//!-----------------------------------------------------------------
-	// @function	MimeType::getMimeTable
-	// @desc		Retorna a tabela de tipos MIME da classe
-	// @access		public
-	// @return		array Tabela de tipos MIME
-	// @note		Este método mantém uma tabela de extensões e seus respectivos
-	//				tipos MIME armazenada em um vetor estático. A tabela foi
-	//				construída com base em informações coletadas na Internet
-	// @static	
-	//!-----------------------------------------------------------------
+
+	/**
+	 * Get the internal MIME table
+	 *
+	 * @return array
+	 * @static
+	 */
 	function getMimeTable() {
 		static $mimeTable;
 		if (!isset($mimeTable)) {
@@ -465,7 +447,7 @@ class MimeType extends PHP2Go
 				'zsh'	=>	'text/x-script.zsh'
 			);
 		}
-		return $mimeTable;		
+		return $mimeTable;
 	}
 }
 ?>

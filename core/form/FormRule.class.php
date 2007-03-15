@@ -1,71 +1,132 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP2Go Web Development Framework                                     |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 2002-2006 Marcos Pont                                  |
-// +----------------------------------------------------------------------+
-// | This library is free software; you can redistribute it and/or        |
-// | modify it under the terms of the GNU Lesser General Public           |
-// | License as published by the Free Software Foundation; either         |
-// | version 2.1 of the License, or (at your option) any later version.   |
-// | 																	  |
-// | This library is distributed in the hope that it will be useful,      |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of       |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU    |
-// | Lesser General Public License for more details.                      |
-// | 																	  |
-// | You should have received a copy of the GNU Lesser General Public     |
-// | License along with this library; if not, write to the Free Software  |
-// | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA             |
-// | 02111-1307  USA                                                      |
-// +----------------------------------------------------------------------+
-//
-// $Header: /www/cvsroot/php2go/core/form/FormRule.class.php,v 1.17 2006/10/19 00:49:03 mpont Exp $
-// $Date: 2006/10/19 00:49:03 $
+/**
+ * PHP2Go Web Development Framework
+ *
+ * Copyright (c) 2002-2007 Marcos Pont
+ *
+ * LICENSE:
+ *
+ * This library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @copyright 2002-2007 Marcos Pont
+ * @license http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @version $Id$
+ */
 
-//------------------------------------------------------------------
 import('php2go.datetime.Date');
 import('php2go.util.Statement');
-//------------------------------------------------------------------
 
-//!-----------------------------------------------------------------
-// @class		FormRule
-// @desc		A classe FormRule representa uma regra de validação a ser
-//				aplicada sobre um campo de formulário: comparação entre valores
-//				de campos, obrigatoriedade condicional baseada na existência de
-//				valor em outro campo ou na comparação do valor de outro campo com
-//				um valor estático e expressão regular
-// @package		php2go.form
-// @uses		Date
-// @uses		Statement
-// @uses		TypeUtils
-// @extends		PHP2Go
-// @author		Marcos Pont
-// @version		$Revision: 1.17 $
-//!-----------------------------------------------------------------
+/**
+ * Validation rule associated with a form field
+ *
+ * The PHP2Go form API supports a set of validation rules that
+ * can be associated with fields in the XML specification: comparison
+ * rule, between a field and a value or between 2 fields; conditional
+ * obligatoriness rule, based on a value or on the value of another
+ * field; regular expression rule; custom function rule.
+ *
+ * Examples:
+ * <code>
+ * <editfield name="age" label="Age" mask="DIGIT" maxlength="4">
+ *   <rule type="GOET" value="18" message="Age must be higher than 18!"/>
+ *   <rule type="LOET" value="50" message="Age must be lower than 50!"/>
+ * </editfield>
+ * <passwdfield name="password" label="Password" maxlength="20"/>
+ * <passwdfield name="confirm_password" label="Confirm Password" maxlength="20">
+ *   <rule type="EQ" field="password" message="Passwords must be equal!"/>
+ * </passwdfield>
+ * </code>
+ *
+ * @package form
+ * @uses Date
+ * @uses Statement
+ * @uses TypeUtils
+ * @author Marcos Pont <mpont@users.sourceforge.net>
+ * @version $Revision$
+ */
 class FormRule extends PHP2Go
 {
-	var $type;					// @var type string				Tipo da regra
-	var $field = NULL;			// @var field string			"NULL" Nome do campo com o qual é feita a comparação
-	var $value = NULL;			// @var value string			"NULL" Valor com o qual é feita a comparação
-	var $compareType = NULL;	// @var compareType string		"NULL" Tipo de comparação (apenas para regras que envolvem comparação)
-	var $message = NULL;		// @var message string			"NULL" Mensagem customizada em caso de falha da regra
-	var $functionBody = NULL;	// @var functionBody string		"NULL" Corpo da função de validação (quanto $type == 'JSFUNC')
-	var $_valid = FALSE;		// @var _valid bool				"FALSE" Armazena o resultado da validação dos dados da regra
-	var $_Field = NULL;			// @var _Field FormField object	"NULL" Campo no qual a regra é inserida
+	/**
+	 * Rule type
+	 *
+	 * @var string
+	 */
+	var $type;
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::FormRule
-	// @desc		Construtor da classe
-	// @param		type string			Tipo da regra
-	// @param		field string		"NULL" Campo de comparação
-	// @param		value string		"NULL" Valor de comparação
-	// @param		compareType string	"NULL" Tipo de dado da comparação
-	// @param		message string		"NULL" Mensagem de erro customizada
-	// @param		functionBody string	"NULL" Corpo da função de validação
-	// @access		public
-	//!-----------------------------------------------------------------
+	/**
+	 * Peer field's name
+	 *
+	 * @var string
+	 */
+	var $field = NULL;
+
+	/**
+	 * Peer value
+	 *
+	 * @var mixed
+	 */
+	var $value = NULL;
+
+	/**
+	 * Comparison data type
+	 *
+	 * @var string
+	 */
+	var $compareType = NULL;
+
+	/**
+	 * Error message
+	 *
+	 * @var string
+	 */
+	var $message = NULL;
+
+	/**
+	 * Function body (for custom rules)
+	 *
+	 * @var string
+	 */
+	var $functionBody = NULL;
+
+	/**
+	 * Are the rule's properties valid?
+	 *
+	 * @var bool
+	 */
+	var $_valid = FALSE;
+
+	/**
+	 * Owner field
+	 *
+	 * @var object FormField
+	 */
+	var $_Field = NULL;
+
+	/**
+	 * Class constructor
+	 *
+	 * @param string $type Type
+	 * @param string $field Peer field
+	 * @param mixed $value Peer value
+	 * @param string $compareType Comparison data type
+	 * @param string $message Error message
+	 * @param string $functionBody Function body
+	 * @return FormRule
+	 */
 	function FormRule($type, $field=NULL, $value=NULL, $compareType=NULL, $message=NULL, $functionBody=NULL) {
 		parent::PHP2Go();
 		$this->type = strtoupper($type);
@@ -81,15 +142,13 @@ class FormRule extends PHP2Go
 			$this->functionBody = $functionBody;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::&fromNode
-	// @desc		Método factory que constrói uma regra de validação a partir
-	//				de um nodo XML da especificação de formulários
-	// @param		Node XmlNode object	Nodo da regra na especificação XML
-	// @return		FormRule object
-	// @access		public
-	// @static
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds a FormRule from a given rule XML node
+	 *
+	 * @param XmlNode $Node Rule node
+	 * @return FormRule
+	 * @static
+	 */
 	function &fromNode($Node) {
 		$type = trim($Node->getAttribute('TYPE'));
 		$field = trim($Node->getAttribute('FIELD'));
@@ -109,84 +168,74 @@ class FormRule extends PHP2Go
 		return $Rule;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::setOwnerField
-	// @desc		Define o campo no qual a regra será inserida
-	// @access		public
-	// @param		&Field FormField object		Campo para inclusão da regra
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Set the rule's owner field
+	 *
+	 * @param FormField &$Field Owner field
+	 */
 	function setOwnerField(&$Field) {
 		$this->_Field =& $Field;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::getType
-	// @desc		Retorna o tipo da regra
-	// @access		public
-	// @return		string Tipo: EQ, NEQ, LT, GT, LOET, GOET, REGEX, REQIF, ...
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the type of the rule
+	 *
+	 * @return string
+	 */
 	function getType() {
 		return $this->type;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::getTargetField
-	// @desc		Retorna o nome do campo de comparação definido na regra
-	// @access		public
-	// @return		string Nome do campo
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the name of the peer field
+	 *
+	 * @return string
+	 */
 	function getTargetField() {
 		return $this->field;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::getValueArgument
-	// @desc		Retorna o argumento de valor da regra (valor de comparação,
-	//				padrão de expressão regular, ...)
-	// @access		public
-	// @return		mixed Argumento de valor utilizado na regra
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the peer value
+	 *
+	 * @return mixed
+	 */
 	function getValueArgument() {
 		return $this->value;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::getCompareType
-	// @desc		Busca o tipo de comparação definido na regra
-	// @access		public
-	// @return		string Tipo de comparação
-	//!-----------------------------------------------------------------
+	/**
+	 * Get comparison data type
+	 *
+	 * @return string
+	 */
 	function getCompareType() {
 		return $this->compareType;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::getMessage
-	// @desc		Retorna a mensagem de erro customizada definida para a regra
-	// @access		public
-	// @return		string Mensagem de erro
-	//!-----------------------------------------------------------------
+	/**
+	 * Get error message
+	 *
+	 * @return string
+	 */
 	function getMessage() {
 		return $this->message;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::&getOwnerField
-	// @desc		Retorna o campo onde a regra está inserida
-	// @access		public
-	// @return		FormField object
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the rule's owner field
+	 *
+	 * @return FormField
+	 */
 	function &getOwnerField() {
 		return $this->_Field;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::&getOwnerForm
-	// @desc		Retorna o formulário ao qual a regra pertence
-	// @access		public
-	// @return		Form object
-	//!-----------------------------------------------------------------
+	/**
+	 * Get the rule's owner form
+	 *
+	 * @return Form
+	 */
 	function &getOwnerForm() {
 		$result = NULL;
 		if (TypeUtils::isInstanceOf($this->_Field, 'FormField'))
@@ -194,12 +243,12 @@ class FormRule extends PHP2Go
 		return $result;
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::getScriptCode
-	// @desc		Monta o código JavaScript de definição da regra
-	// @access		public
-	// @return		string Código JS da regra
-	//!-----------------------------------------------------------------
+	/**
+	 * Builds and returns Javascript statement that registers
+	 * this rule in the client-side form validator
+	 *
+	 * @return string
+	 */
 	function getScriptCode() {
 		if (TypeUtils::isInstanceOf($this->_Field, 'FormField')) {
 			$args = array();
@@ -231,57 +280,52 @@ class FormRule extends PHP2Go
 		return '';
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::isValid
-	// @desc		Verifica se os dados da regra são válidos
-	// @access		public
-	// @return		bool
-	//!-----------------------------------------------------------------
+	/**
+	 * Verify if the rule's properties are valid
+	 *
+	 * @return bool
+	 */
 	function isValid() {
 		if ($this->_valid === TRUE)
 			return $this->_valid;
 		if (TypeUtils::isInstanceOf($this->_Field, 'FormField')) {
 			$this->_valid = TRUE;
-			// verifica se o tipo da regra é válido
+			// validates the rule type
 			if (!ereg("^REGEX$|^REQIF$|^((REQIF)?(EQ|NEQ|GT|LT|GOET|LOET))$|^JSFUNC$", $this->type)) {
 				$this->_valid = FALSE;
-			// se é uma regra de obrigatoriedade condicional, com ou sem comparação, verifica se foi fornecido um campo para a comparação
+			// on a conditional obligatoriness rule, with or without comparison, a peer field is mandatory
 			} elseif (ereg("^REQIF(EQ|NEQ|GT|LT|LOET|GOET)?$", $this->type, $matches) && (TypeUtils::isNull($this->field) || $this->field == $this->_Field->getName())) {
 				$this->_valid = FALSE;
-			// se é uma regra de obrigatoriedade condicional com comparação, o valor de comparação é obrigatório
+			// on a conditional obligatoriness rule with comparison, the peer value is mandatory
 			} elseif (ereg("^REQIF(EQ|NEQ|GT|LT|LOET|GOET)$", $this->type, $matches) && TypeUtils::isNull($this->value, TRUE)) {
 				$this->_valid = FALSE;
-			// se é uma regra de comparação simples, verifica se foi fornecido um campo ou um valor para a comparação
+			// on a comparison rule, a peer field or value is mandatory
 			} elseif (ereg("^EQ|NEQ|GT|LT|GOET|LOET$", $this->type) && (TypeUtils::isNull($this->field) || $this->field == $this->_Field->getName()) && TypeUtils::isNull($this->value)) {
 				$this->_valid = FALSE;
-			// se é uma regra de expressão regular, o valor da expressão é obrigatório
+			// on a regular expression rule, the peer value is mandatory
 			} elseif ($this->type == 'REGEX' && TypeUtils::isNull($this->value)) {
 				$this->_valid = FALSE;
-			// se é uma regra que depende do resultado de uma função JavaScript, o corpo da função é obrigatório
+			// on a rule based on a custom function, the function body is mandatory
 			} elseif ($this->type == 'JSFUNC' && TypeUtils::isNull($this->functionBody)) {
 				$this->_valid = FALSE;
-			// valida o tipo de comparação, se foi fornecido
-			} elseif (!TypeUtils::isNull($this->compareType) && !preg_match("/^(INTEGER|FLOAT|DATE)$/", $this->compareType)) {
+			// validates the comparison data type
+			} elseif (!TypeUtils::isNull($this->compareType) && !preg_match("/^(DATE|INTEGER|FLOAT|CURRENCY)$/", $this->compareType)) {
 				$this->compareType = 'STRING';
 			} else {
-				// elimina o atributo value nas regras do tipo REQIF
 				if ($this->type == 'REQIF')
 					$this->value = NULL;
-				// elimina o atributo comparetype nas regras do tipo REGEX
 				if ($this->type == 'REGEX')
 					$this->compareType = NULL;
-				// corrige valor de expressão regular
 				if ($this->type == 'REGEX') {
 					if ($this->value[0] == '/')
 						$this->value = substr($this->value, 1);
 					if ($this->value{(strlen($this->value)-1)} == '/')
 						$this->value = substr($this->value, 0, -1);
-					// insere quotes nos caracteres "/" não precedidos por "\"
 					$this->value = '/' . ereg_replace('([^\])/', '\\1\/', $this->value) . '/';
 				}
 			}
 			if (!$this->_valid)
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FORM_WRONG_RULE', $this->_getRuleInfo()), E_USER_ERROR, __FILE__, __LINE__);
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FORM_WRONG_RULE', $this->__toString()), E_USER_ERROR, __FILE__, __LINE__);
 			return $this->_valid;
 		} else {
 			$this->_valid = FALSE;
@@ -289,31 +333,30 @@ class FormRule extends PHP2Go
 		}
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::onDataBind
-	// @desc		Resolve expressões e variáveis utilizadas no atributo VALUE da regra
-	// @access		public
-	// @return		void
-	//!-----------------------------------------------------------------
+	/**
+	 * Configures the rule's dynamic properties
+	 *
+	 * @uses Date::parseFieldExpression()
+	 * @uses Form::resolveVariables()
+	 */
 	function onDataBind() {
-		// resolve variáveis e expressões no atributo value
+		// resolve variables and expressions on the VALUE attribute
 		if (!empty($this->value) && preg_match("/~[^~]+~/", $this->value)) {
 			$Form =& $this->getOwnerForm();
-			$this->value = $Form->evaluateStatement($this->value);
+			$this->value = $Form->resolveVariables($this->value);
 		}
-		// processa expressões de data
+		// evaluate date expressions
 		$regs = array();
 		if ($this->compareType == 'DATE' && !empty($this->value) && !Date::isEuroDate($this->value, $regs) && !Date::isUsDate($this->value, $regs))
 			$this->value = Date::parseFieldExpression($this->value);
 	}
 
-	//!-----------------------------------------------------------------
-	// @function	FormRule::_getRuleInfo
-	// @desc		Monta informações da regra, para exibição de mensagens de erro
-	// @access		private
-	// @return		string Texto descritivo da regra
-	//!-----------------------------------------------------------------
-	function _getRuleInfo() {
+	/**
+	 * Builds a string representation of the validation rule
+	 *
+	 * @return string
+	 */
+	function __toString() {
 		$info = $this->_Field->getName() . " - [{$this->type}";
 		if (!empty($this->field))
 			$info .= "; {$this->field}";
