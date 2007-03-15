@@ -327,9 +327,11 @@ class TemplateParser extends PHP2Go
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EMPTY_TEMPLATE_FILE'), E_USER_ERROR, __FILE__, __LINE__);
 			$cacheId = realpath($src);
 			$time = @filemtime($src);
-			$src = @file_get_contents($src);
-			if ($src === FALSE)
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $value), E_USER_ERROR, __FILE__, __LINE__);
+			$fileSrc = @file_get_contents($src);
+			if ($fileSrc === FALSE)
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $src), E_USER_ERROR, __FILE__, __LINE__);
+			else
+				$src = $fileSrc;
 		} else {
 			$cacheId = dechex(crc32($src));
 		}
