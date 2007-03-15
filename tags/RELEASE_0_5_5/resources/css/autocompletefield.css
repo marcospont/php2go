@@ -1,0 +1,29 @@
+.autoCompleteChoices {
+	overflow:auto;
+	border:1px solid ThreeDFace;
+	background-color: Window;
+}
+div.autoCompleteChoices ul {
+	list-style-type: none;
+	padding: 0px;
+	margin: 0px;
+}
+div.autoCompleteChoices ul li {
+	padding: 2px;
+	cursor: pointer;
+	font-family: MS Shell Dlg, Helvetica, Arial, sans-serif;
+	font-size: 13px;
+}
+.autoCompleteNormal {
+	color: WindowText;
+	background-color: Window;
+}
+.autoCompleteSelected {
+	color: HighlightText;
+	background-color: Highlight;
+}
+.autoCompleteHover {
+	color: WindowText;
+	background-color: ThreeDFace;
+}
+

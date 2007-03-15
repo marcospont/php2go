@@ -1,0 +1,474 @@
+<!-- This file is the document type specification for the PHP2Go forms API. -->
+<!-- $Id$ -->
+<!ENTITY % boolean "( T | F )">
+<!ENTITY % color "CDATA">
+<!ENTITY % identifier "NMTOKEN">
+<!ENTITY % word "NMTOKEN">
+<!ENTITY % number "CDATA">
+<!ENTITY % text "CDATA">
+<!ENTITY % weekdays "( 0 | 1 | 2 | 3 | 4 | 5 | 6 )">
+<!ENTITY % align "( LEFT | CENTER | RIGHT )">
+<!ENTITY % mask "( DIGIT | INTEGER | FLOAT | CURRENCY | CPFCNPJ | DATE | TIME | URL | EMAIL | WORD | ZIP )">
+<!ENTITY % method "( GET | POST )">
+<!ENTITY % type.btn "( SUBMIT | RESET | BUTTON | CLEAR | BACK )">
+<!ENTITY % type.list "( JS | JSRS | AJAX )">
+<!ENTITY % type.rul "( REGEX | EQ | NEQ | GT | LT | GOET | LOET | REQIF | REQIFEQ | REQIFNEQ | REQIFGT | REQIFLT | REQIFGOET | REQIFLOET )">
+<!ENTITY % type.compare "( STRING | INTEGER | FLOAT | DATE )">
+<!ENTITY % type.srch "( STRING | INTEGER | FLOAT | DATE | DATETIME )">
+<!ENTITY % type.op "( EQ | NEQ | GT | LT | GOET | LOET | STARTING | ENDING | CONTAINING | IN | NOTIN | BETWEEN )">
+<!ENTITY % type.image "( IMAGETYPE_PNG | IMAGETYPE_GIF | IMAGETYPE_JPEG | IMAGETYPE_XBM | IMAGETYPE_WBMP | IMAGETYPE_GD | IMAGETYPE_GD2 )">
+<!ENTITY % regattrs
+"	id %identifier; #IMPLIED
+	name %identifier; #IMPLIED"
+>
+<!ENTITY % baseattrs
+"	%regattrs;
+	label %text; #IMPLIED
+	help %text; #IMPLIED
+	required %boolean; 'F'
+	disabled %boolean; 'F'"
+>
+<!ENTITY % htmlattrs
+"	style %text; #IMPLIED
+	tabindex %number; #IMPLIED
+	accesskey %text; #IMPLIED"
+>
+<!ENTITY % coreattrs
+"	%baseattrs;
+	%htmlattrs;"
+>
+<!ENTITY % editattrs
+"	upper %boolean; 'F'
+	lower %boolean; 'F'
+	capitalize %boolean; 'F'
+	autotrim %boolean; 'F'"
+>
+<!ENTITY % textattrs
+"	maxlength %number; #IMPLIED
+	minlength %number; #IMPLIED
+	readonly %boolean; 'F'
+	autocomplete %boolean; 'F'"
+>
+<!ENTITY % lengthattrs
+"	size %number; #IMPLIED
+	length %number; #IMPLIED"
+>
+<!ENTITY % sizeattrs
+"	width %number; #IMPLIED
+	height %number; #IMPLIED"
+>
+<!ENTITY % valueattrs
+"	value %text; #IMPLIED
+	default %text; #IMPLIED"
+>
+<!ENTITY % comboattrs
+"	first %text; #IMPLIED
+	nofirst %boolean; 'F'
+	width %number; #IMPLIED
+	multiple %boolean; 'F'
+	size %number; #IMPLIED"
+>
+<!ENTITY % groupattrs
+"	default %text; #IMPLIED
+	cols %number; '1'
+	tablewidth %number; #IMPLIED"
+>
+<!ENTITY % fld.basic
+	"checkfield | checkgroup | combofield | dbcheckgroup | dbradiofield |
+	editfield | filefield | hiddenfield | lookupfield | memofield |
+	passwdfield | radiofield | textfield">
+<!ENTITY % fld.special
+	"autocompletefield | captchafield | colorpickerfield | datagrid | datepickerfield | editorfield |
+	editsearchfield | editselectionfield | lookupchoicefield | lookupselectionfield |
+	multicolumnlookupfield | rangefield">
+<!ENTITY % fld.range
+	"combofield | datepickerfield | editfield | lookupfield"
+>
+<!ENTITY % fld "%fld.basic; | %fld.special;">
+<!ENTITY % fld.cond "%fld; | buttons | button | condsection">
+<!ENTITY % rul.list "listener* | rule*">
+<!ENTITY % rul.list.srch "listener* | rule* | search?">
+<!ENTITY % rul.list.srch.opt "option+ | listener* | rule* | search?">
+<!ENTITY % rul.list.srch.opto "option* | listener* | rule* | search?">
+<!ENTITY % rul.list.srch.ds "datasource, ( listener* | rule* | search? )">
+<!ENTITY % rul.list.srch.dso "datasource?, ( listener* | rule* | search? )">
+<!ELEMENT form ( style? | errors? | help? | section+ | variable* )>
+<!ATTLIST form
+	method %method; #IMPLIED
+	action %text; #IMPLIED
+	target %identifier; #IMPLIED
+	backurl %text; #IMPLIED
+	accesskeyhighlight %boolean; #IMPLIED
+	validatefunc %text; #IMPLIED
+>
+<!ELEMENT style EMPTY>
+<!ATTLIST style
+	input %text; #IMPLIED
+	label %text; #IMPLIED
+	button %text; #IMPLIED
+	fieldset %text; #IMPLIED
+	sectiontitle %text; #IMPLIED
+	width %number; #IMPLIED
+	align %align; #IMPLIED
+	tablepadding %number; #IMPLIED
+	tablespacing %number; #IMPLIED
+	labelwidth %number; #IMPLIED
+	labelalign %align; #IMPLIED
+>
+<!ELEMENT errors EMPTY>
+<!ATTLIST errors
+	style %text; #IMPLIED
+	headertext %text; #IMPLIED
+	headerstyle %text; #IMPLIED
+	listmode %identifier; #IMPLIED
+	clientmode %identifier; #IMPLIED
+	clientcontainer %identifier; #IMPLIED
+	tplplaceholder %identifier; #IMPLIED
+>
+<!ELEMENT help EMPTY>
+<!ATTLIST help
+	mode %identifier; #IMPLIED
+	options %text; #IMPLIED
+>
+<!ELEMENT section ( %fld.cond; )*>
+<!ATTLIST section
+	id %identifier; #REQUIRED
+	name %text; #REQUIRED
+	condition %boolean; "F"
+	evalfunction %text; #IMPLIED
+	required_flag %boolean; "T"
+	required_color %color; "#ff0000"
+	required_text %text; "*"
+>
+<!ELEMENT condsection ( %fld.cond; )*>
+<!ATTLIST condsection
+	id %identifier; #REQUIRED
+	evalfunction %text; #IMPLIED
+	required_flag %boolean; #IMPLIED
+	required_color %color; #IMPLIED
+	required_text %text; #IMPLIED
+>
+<!ELEMENT autocompletefield ( ( choice+ | datasource? ), ( listener* | rule* | search? ) )>
+<!ATTLIST autocompletefield
+	%coreattrs;
+	%valueattrs;
+	%lengthattrs;
+	%textattrs;
+	lower %boolean; #IMPLIED
+	upper %boolean; #IMPLIED
+	source ( LOCAL | AJAX ) #IMPLIED
+	multiple %boolean; #IMPLIED
+	separator %boolean; #IMPLIED
+	height %number; #IMPLIED
+	maxchoices %number; #IMPLIED
+	minchars %number; #IMPLIED
+	ignorecase %boolean; #IMPLIED
+	fullsearch %boolean; #IMPLIED
+	autoselect %boolean; #IMPLIED
+	choicevaluenode %identifier; #IMPLIED
+	normalstyle %text; #IMPLIED
+	hoverstyle %text; #IMPLIED
+	selectedstyle %text; #IMPLIED
+	ajaxoptions %text; #IMPLIED
+	ajaxfield %text; #IMPLIED
+	ajaxthrobber %text; #IMPLIED
+>
+<!ELEMENT captchafield ( %rul.list; )>
+<!ATTLIST captchafield
+	%coreattrs;
+	%textattrs;
+	%sizeattrs;
+	noiselevel %number; "15"
+	fontsize %number; "15"
+	fontshadow %number; "3"
+	fontangle %number; "30"
+	imagepath %text; #IMPLIED
+	imagetype %type.image; "IMAGETYPE_PNG"
+>
+<!ELEMENT checkfield ( %rul.list.srch; )>
+<!ATTLIST checkfield
+	%coreattrs;
+	default %text; #IMPLIED
+	caption %text; #IMPLIED
+>
+<!ELEMENT checkgroup ( %rul.list.srch.opt; )>
+<!ATTLIST checkgroup
+	%coreattrs;
+	%groupattrs;
+	shortcuts %boolean; #IMPLIED
+>
+<!ELEMENT colorpickerfield ( %rul.list.srch; )>
+<!ATTLIST colorpickerfield
+	%coreattrs;
+	%valueattrs;
+	mode ( FLAT | POPUP ) #IMPLIED
+>
+<!ELEMENT combofield ( %rul.list.srch.opto; )>
+<!ATTLIST combofield
+	%coreattrs;
+	%comboattrs;
+	default %text; #IMPLIED
+>
+<!ELEMENT datagrid ( fieldset, datasource )>
+<!ATTLIST datagrid
+	%baseattrs;
+	showheader %boolean; "T"
+	headers %text; #IMPLIED
+	headerstyle %text; #IMPLIED
+	cellstyle %text; #IMPLIED
+	cellsizes %text; #IMPLIED
+	tablewidth %number; #IMPLIED
+>
+<!ELEMENT datepickerfield ( %rul.list.srch; )>
+<!ATTLIST datepickerfield
+	%baseattrs;
+	%valueattrs;
+	style %text; #IMPLIED
+	multiple %boolean; "F"
+	datestatusfunc %text; #IMPLIED
+	time %boolean; "F"
+	firstweekday %weekdays; "0"
+	yearrange %text; #IMPLIED
+	showothers %boolean; "F"
+	showweeknumbers %boolean; "F"
+>
+<!ELEMENT dbradiofield ( %rul.list.srch.ds; )>
+<!ATTLIST dbradiofield
+	%coreattrs;
+	%groupattrs;
+>
+<!ELEMENT dbcheckgroup ( %rul.list.srch.ds; )>
+<!ATTLIST dbcheckgroup
+	%coreattrs;
+	%groupattrs;
+	shortcuts %boolean; #IMPLIED
+>
+<!ELEMENT editfield ( %rul.list.srch; )>
+<!ATTLIST editfield
+	%coreattrs;
+	%valueattrs;
+	%lengthattrs;
+	%textattrs;
+	align %align; #IMPLIED
+	mask %mask; #IMPLIED
+	calculator %boolean; "F"
+	%editattrs;
+>
+<!ELEMENT editorfield EMPTY>
+<!ATTLIST editorfield
+	%baseattrs;
+	%valueattrs;
+	%sizeattrs;
+	style %text; #IMPLIED
+	stylesheet %text; #IMPLIED
+	readonly %boolean; "F"
+	resizemode ( HORIZONTAL | VERTICAL | BOTH | NONE ) "NONE"
+>
+<!ELEMENT editsearchfield ( datasource, datafilter+, lookupfield )>
+<!ATTLIST editsearchfield
+	%coreattrs;
+	%lengthattrs;
+	autodispatch %boolean; "F"
+	autotrim %boolean; "F"
+	btnimg %text; #IMPLIED
+	btnvalue %text; #IMPLIED
+	debug %boolean; "F"
+	url %text; #IMPLIED
+>
+<!ELEMENT editselectionfield ( editfield, lookupfield, listener+ )>
+<!ATTLIST editselectionfield
+	%baseattrs;
+	insfield %identifier; #IMPLIED
+	remfield %identifier; #IMPLIED
+	addimg %text; #IMPLIED
+	remimg %text; #IMPLIED
+	remallimg %text; #IMPLIED
+	tablewidth %number; #IMPLIED
+>
+<!ELEMENT filefield ( %rul.list; )>
+<!ATTLIST filefield
+	%coreattrs;
+	%lengthattrs;
+	maxfilesize %text; #IMPLIED
+	allowedtypes %text; #IMPLIED
+	savefunction %text; #IMPLIED
+	savepath %text; #IMPLIED
+	savename %text; #IMPLIED
+	savemode %text; "0644"
+	overwrite %boolean; "F"
+	uploadonvalidate %boolean; "T"
+>
+<!ELEMENT hiddenfield ( search? )>
+<!ATTLIST hiddenfield
+	%regattrs;
+	%valueattrs;
+>
+<!ELEMENT lookupchoicefield ( %rul.list.srch.ds; )>
+<!ATTLIST lookupchoicefield
+	%coreattrs;
+	%comboattrs;
+	default %text; #IMPLIED
+>
+<!ELEMENT lookupfield ( %rul.list.srch.dso; )>
+<!ATTLIST lookupfield
+	%coreattrs;
+	%comboattrs;
+	default %text; #IMPLIED
+>
+<!ELEMENT lookupselectionfield ( lookupfield, lookupfield, listener+ )>
+<!ATTLIST lookupselectionfield
+	%coreattrs;
+	insfield %identifier; #IMPLIED
+	remfield %identifier; #IMPLIED
+	addimg %text; #IMPLIED
+	addallimg %text; #IMPLIED
+	remimg %text; #IMPLIED
+	remallimg %text; #IMPLIED
+	tablewidth %number; #IMPLIED
+>
+<!ELEMENT multicolumnlookupfield ( %rul.list.srch.ds; )>
+<!ATTLIST multicolumnlookupfield
+	%coreattrs;
+	headers %text; #IMPLIED
+	width %number; #IMPLIED
+	tablewidth %number; #IMPLIED
+	tableheight %number; #IMPLIED
+	tablestyle %text; #IMPLIED
+	normalrowstyle %text; "mclookupNormal"
+	selectedrowstyle %text; "mclookupSelected"
+	hoverrowstyle %text; "mclookupHover"
+>
+<!ELEMENT memofield ( %rul.list.srch; )>
+<!ATTLIST memofield
+	%coreattrs;
+	%valueattrs;
+	%textattrs;
+	cols %number; "40"
+	rows %number; "5"
+	charcount %boolean; "F"
+	upper %boolean; "F"
+	lower %boolean; "F"
+>
+<!ELEMENT passwdfield ( %rul.list.srch; )>
+<!ATTLIST passwdfield
+	%coreattrs;
+	%valueattrs;
+	%lengthattrs;
+	%textattrs;
+	align %align; #IMPLIED
+	upper %boolean; "F"
+	lower %boolean; "F"
+>
+<!ELEMENT radiofield ( %rul.list.srch.opt; )>
+<!ATTLIST radiofield
+	%coreattrs;
+	%groupattrs;
+>
+<!ELEMENT rangefield ( ( %fld.range; ), ( %fld.range; ), search? )>
+<!ATTLIST rangefield
+	%coreattrs;
+	readonly %boolean; "F"
+	mask %mask; #IMPLIED
+	startname %word; "start"
+	endname %word; "end"
+	surroundtext %text; #IMPLIED
+	ruleequal %boolean; "F"
+	rulemessage %text; #IMPLIED
+>
+<!ELEMENT textfield EMPTY>
+<!ATTLIST textfield
+	%regattrs;
+	%valueattrs;
+	label %text; #IMPLIED
+	style %text; #IMPLIED
+	help %text; #IMPLIED
+>
+<!ELEMENT buttons ( button+ )>
+<!ELEMENT button ( listener* )>
+<!ATTLIST button
+	%regattrs;
+	%htmlattrs;
+	type %type.btn; #REQUIRED
+	value %text; #IMPLIED
+	alt %text; #IMPLIED
+	disabled %boolean; "F"
+	img %text; #IMPLIED
+	swpimg %text; #IMPLIED
+>
+<!ELEMENT listener ( #PCDATA | param )*>
+<!ATTLIST listener
+	type %type.list; #REQUIRED
+	event %text; #REQUIRED
+	action %text; #IMPLIED
+	autodispatchif %text; #IMPLIED
+	file %text; #IMPLIED
+	remote %word; #IMPLIED
+	callback %word; #IMPLIED
+	params %text; #IMPLIED
+	debug %boolean; "F"
+	url %text; #IMPLIED
+	class %word; "AjaxRequest"
+	formsubmit %boolean; "F"
+>
+<!ELEMENT rule ( #PCDATA )>
+<!ATTLIST rule
+	type %type.rul; #REQUIRED
+	field %identifier; #IMPLIED
+	value %text; #IMPLIED
+	message %text; #IMPLIED
+	comparetype %type.compare; #IMPLIED
+>
+<!ELEMENT search EMPTY>
+<!ATTLIST search
+	alias %text; #IMPLIED
+	datatype %type.srch; #IMPLIED
+	operator %type.op; #IMPLIED
+	sqlfunc %text; #IMPLIED
+	fieldfunc %text; #IMPLIED
+	valuefunc %text; #IMPLIED
+	descsource ( DISPLAY | VALUE ) "DISPLAY"
+>
+<!ELEMENT datafilter EMPTY>
+<!ATTLIST datafilter
+	id %identifier; #REQUIRED
+	label %text; #REQUIRED
+	expression %text; #REQUIRED
+	mask %mask; #IMPLIED
+>
+<!ELEMENT datasource ( procedure | ( keyfield, displayfield?, lookuptable, clause?, groupby?, orderby?, limit?, groupfield?, groupdisplay? ) )>
+<!ATTLIST datasource
+	connection %identifier; #IMPLIED
+>
+<!ELEMENT keyfield ( #PCDATA )>
+<!ELEMENT displayfield ( #PCDATA )>
+<!ELEMENT lookuptable ( #PCDATA )>
+<!ELEMENT clause ( #PCDATA )>
+<!ELEMENT groupby ( #PCDATA )>
+<!ELEMENT orderby ( #PCDATA )>
+<!ELEMENT limit ( #PCDATA )>
+<!ELEMENT groupfield ( #PCDATA )>
+<!ELEMENT groupdisplay ( #PCDATA )>
+<!ELEMENT procedure ( #PCDATA )>
+<!ATTLIST procedure
+	cursorname %word; #IMPLIED
+>
+<!ELEMENT option ( listener* )>
+<!ATTLIST option
+	value %text; #REQUIRED
+	caption %text; #IMPLIED
+	alt %text; #IMPLIED
+	accesskey %text; #IMPLIED
+	disabled %boolean; "F"
+>
+<!ELEMENT fieldset ( %fld.basic; )>
+<!ELEMENT variable EMPTY>
+<!ATTLIST variable
+	name %identifier; #REQUIRED
+	default %text; #IMPLIED
+	searchorder %word; #IMPLIED
+>
+<!ELEMENT choice ( #PCDATA )>
+<!ELEMENT param ( #PCDATA )>
+<!ATTLIST param
+	name %word; #REQUIRED
+>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE report SYSTEM "..\docs\dtd\php2go_reports.dtd">
+<report>
+	<datasource>
+		<fields>CLIENT.NAME as 'Name', CLIENT.ADDRESS as 'Address', CLIENT.PHONE as 'Phone', CITY.NAME as 'City'</fields>
+		<tables>CLIENT inner join CITY on CLIENT.CITY_ID = CITY.CITY_ID</tables>
+		<clause>CLIENT.STATUS = 1 and CLIENT.TYPE in (1,2,3)</clause>
+		<groupby/>
+		<orderby>CLIENT.NAME</orderby>
+	</datasource>
+	<datafilters>
+		<datafilter label="Client Name" field="CLIENT.NAME" mask="string" index="0"/>
+		<datafilter label="Client Address" field="CLIENT.ADDRESS" mask="string" index="1"/>
+		<datafilter label="Client Birthday" field="CLIENT.BIRTHDATE" mask="date"/>
+		<datafilter label="Client Status" field="CLIENT.STATUS" mask="integer"/>
+		<datafilter label="Client City" field="CITY.NAME" mask="string" index="3"/>
+	</datafilters>
+</report>
