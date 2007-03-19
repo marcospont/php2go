@@ -27,10 +27,9 @@
  * @version $Id$
  */
 
-import('php2go.datetime.Date');
+import('php2go.base.DocumentHead');
 import('php2go.datetime.TimeCounter');
-import('php2go.net.HttpRequest');
-import('php2go.net.HttpResponse');
+import('php2go.template.Template');
 import('php2go.template.DocumentElement');
 
 /**
@@ -105,126 +104,40 @@ define('BODY_END', 2);
  * @package base
  * @uses Db
  * @uses DocumentElement
- * @uses HttpResponse
- * @uses System
  * @uses TimeCounter
+ * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
 class Document extends PHP2Go
 {
 	/**
-	 * Document title
-	 *
-	 * Defaults to the configuration setting TITLE
-	 *
-	 * @var string
-	 */
-	var $docTitle;
-
-	/**
-	 * Document charset
-	 *
-	 * Defaults to the configuration setting CHARSET
-	 *
-	 * @var string
-	 */
-	var $docCharset;
-
-	/**
-	 * Document language code
-	 *
-	 * Defaults to the active language code.
-	 *
-	 * @var string
-	 */
-	var $docLanguage;
-
-	/**
-	 * Set of "name" meta tags
+	 * Set of document body's attributes
 	 *
 	 * @var array
 	 */
-	var $metaTagsName = array();
+	var $bodyCfg = array();
 
 	/**
-	 * Set of "http-equiv" meta tags
-	 *
-	 * @var array
-	 */
-	var $metaTagsHttp = array();
-
-	/**
-	 * Set of external script files
-	 *
-	 * @var array
-	 */
-	var $scriptFiles = array();
-
-	/**
-	 * Set of inline scripts
-	 *
-	 * @var array
-	 */
-	var $scriptExtCode = array();
-
-	/**
-	 * Sequence of script actions to perform when document loads
-	 *
-	 * @var array
-	 */
-	var $onLoadCode = array();
-
-	/**
-	 * Set of stylesheet files
-	 *
-	 * @var array
-	 */
-	var $styles = array();
-
-	/**
-	 * Set of imported stylesheet files
-	 *
-	 * This property is populated by {@link importStyle}.
-	 *
-	 * @var array
-	 */
-	var $importedStyles = array();
-
-	/**
-	 * Set of inline style definitions
-	 *
-	 * @var string
-	 */
-	var $styleExtCode = '';
-
-	/**
-	 * Set of alternate links for this document
-	 *
-	 * @var array
-	 */
-	var $alternateLinks = array();
-
-	/**
-	 * Extra HTML content to be included inside the head tag
-	 *
-	 * @var string
-	 */
-	var $extraHeaderCode = '';
-
-	/**
-	 * Set of script event handlers for document's body
+	 * Set of document body's event listeners
 	 *
 	 * @var array
 	 */
 	var $bodyEvents = array();
 
 	/**
-	 * Set of attributes for document's body
+	 * Set of inline script blocks
 	 *
 	 * @var array
 	 */
-	var $bodyCfg = array();
+	var $scriptBlocks = array();
+
+	/**
+	 * Sequence of scripts to run when the document loads
+	 *
+	 * @var array
+	 */
+	var $onLoadCode = array();
 
 	/**
 	 * Extra HTML content that must be rendered in the top or in
@@ -232,28 +145,21 @@ class Document extends PHP2Go
 	 *
 	 * @var array
 	 */
-	var $extraBodyContent = array();
-
-	/**
-	 * Whether to allow crawlers and robots
-	 *
-	 * @var bool
-	 */
-	var $allowRobots = TRUE;
+	var $extraContent = array();
 
 	/**
 	 * Whether to enable browser cache
 	 *
 	 * @var bool
 	 */
-	var $makeCache = FALSE;
+	var $cacheEnabled = FALSE;
 
 	/**
 	 * Whether to enable gzip compression for this page
 	 *
 	 * @var bool
 	 */
-	var $makeCompression = FALSE;
+	var $compressionEnabled = FALSE;
 
 	/**
 	 * Compression level
@@ -268,6 +174,13 @@ class Document extends PHP2Go
 	 * @var array
 	 */
 	var $elements;
+
+	/**
+	 * {@link DocumentHead} instance used to manage and generate the HEAD section of the page
+	 *
+	 * @var object DocumentHead
+	 */
+	var $Head;
 
 	/**
 	 * {@link Template} instance used to manage the master layout template
@@ -297,17 +210,7 @@ class Document extends PHP2Go
 	 */
 	function Document($docLayout, $docIncludes=array()) {
 		parent::PHP2Go();
-		$this->docCharset = PHP2Go::getConfigVal('CHARSET', FALSE);
-		$this->docLanguage = PHP2Go::getConfigVal('LOCALE', FALSE);
-		$this->docTitle = PHP2Go::getConfigVal('TITLE', FALSE);
-		$this->Template = new Template($docLayout);
-		if (!empty($docIncludes) && TypeUtils::isHashArray($docIncludes)) {
-			foreach ($docIncludes as $blockName => $blockValue)
-				$this->Template->includeAssign($blockName, $blockValue, T_BYFILE);
-		}
-		$this->Template->parse();
-		$this->TimeCounter = new TimeCounter();
-		$this->_initialize();
+		$this->_initialize($docLayout, $docIncludes);
 		parent::registerDestructor($this, '__destruct');
 	}
 
@@ -322,22 +225,20 @@ class Document extends PHP2Go
 	 * Get the document's title
 	 *
 	 * @return string
+	 * @uses DocumentHead::getTitle()
 	 */
 	function getTitle() {
-		return $this->docTitle;
+		return $this->Head->getTitle();
 	}
 
 	/**
 	 * Set the document's title
 	 *
 	 * @param string $title New title
-	 * @param bool $ignoreSpaces Whether to remove trailing whitespaces
+	 * @uses DocumentHead::setTitle()
 	 */
-	function setTitle($title, $ignoreSpaces=FALSE) {
-		if ($ignoreSpaces)
-			$this->docTitle = $title;
-		else
-			$this->docTitle = trim($title);
+	function setTitle($title) {
+		$this->Head->setTitle($title);
 	}
 
 	/**
@@ -348,28 +249,30 @@ class Document extends PHP2Go
 	 *
 	 * @param string $sql SQL query that defines the document title
 	 * @param string $connectionId DB connection ID
+	 * @uses DocumentHead::setTitle()
 	 */
 	function setTitleFromDb($sql, $connectionId=NULL) {
 		$Db =& Db::getInstance($connectionId);
 		$dbTitle = $Db->getFirstCell($sql);
 		if ($dbTitle)
-			$this->docTitle = $dbTitle;
+			$this->Head->setTitle($dbTitle);
 	}
 
 	/**
 	 * Append a given string in the document's title
 	 *
-	 * @param string $aTitle Value to be appended
+	 * @param string $title Value to be appended
 	 * @param bool $useSeparator Whether to use a separator between existent title and appended value
 	 * @param string $separator Separator to be used
+	 * @uses DocumentHead::setTitle()
 	 */
-	function appendTitle($aTitle, $useSeparator=TRUE, $separator='-') {
-		if ($this->docTitle == "") {
-			$this->setTitle($aTitle);
+	function appendTitle($title, $useSeparator=TRUE, $separator='-') {
+		$currentTitle = $this->Head->getTitle();
+		if ($currentTitle == "") {
+			$this->Head->setTitle($title);
 		} else {
-			if ($useSeparator)
-				$this->docTitle .= ' ' . $separator;
-			$this->docTitle .= ' ' . ltrim($aTitle);
+			$newTitle = $currentTitle . ($useSeparator ? ' ' . $separator . ' ' : '') . $title;
+			$this->Head->setTitle($newTitle);
 		}
 	}
 
@@ -392,30 +295,23 @@ class Document extends PHP2Go
 	}
 
 	/**
-	 * Get the document's charset
+	 * Set the document's language code
 	 *
-	 * @return string
+	 * @param string $lang New language code
+	 * @uses DocumentHead::setLanguage()
 	 */
-	function getCharset() {
-		return $this->docCharset;
+	function setLanguage($lang) {
+		$this->Head->setLanguage($lang);
 	}
 
 	/**
 	 * Set the document's charset
 	 *
 	 * @param string $charset New charset code
+	 * @uses DocumentHead::setCharset()
 	 */
 	function setCharset($charset) {
-		$this->docCharset = $charset;
-	}
-
-	/**
-	 * Set the document's language code
-	 *
-	 * @param string $lang New language code
-	 */
-	function setLanguage($lang) {
-		$this->docLanguage = $lang;
+		$this->Head->setCharset($charset);
 	}
 
 	/**
@@ -428,11 +324,11 @@ class Document extends PHP2Go
 	 * @param bool $flag Enable/disable
 	 */
 	function setCache($flag=TRUE) {
-		$this->makeCache = TypeUtils::toBoolean($flag);
+		$this->cacheEnabled = (bool)$flag;
 	}
 
 	/**
-	 * Enable/disable gzip compression for this document
+	 * Enable/disable gzip compression on this document
 	 *
 	 * GZIP compression isn't enabled by default. However, this is one of
 	 * the good practices when dealing with pages that produce large HTML
@@ -442,8 +338,8 @@ class Document extends PHP2Go
 	 * @param int $level Compression level
 	 */
 	function setCompression($flag=TRUE, $level=9) {
-		$this->makeCompression = TypeUtils::toBoolean($flag);
-		if ($this->makeCompression)
+		$this->compressionEnabled = (bool)$flag;
+		if ($this->compressionEnabled)
 			$this->compressionLevel = ($level >= 1 ? min($level, 9) : 9);
 	}
 
@@ -455,31 +351,48 @@ class Document extends PHP2Go
 	 * $formName will get the focus.
 	 *
 	 * @param string $formName Form ID or name
-	 * @param string $formField Field name
+	 * @param string $fieldName Field name
 	 */
-	function setFocus($formName, $formField=NULL) {
-		$this->addScript(PHP2GO_JAVASCRIPT_PATH . 'form.js');
-		if (empty($formField))
+	function setFocus($formName, $fieldName=NULL) {
+		$this->Head->addScript(PHP2GO_JAVASCRIPT_PATH . 'form.js');
+		if (empty($fieldName))
 			$this->addOnloadCode(sprintf("Form.focusFirstField('%s');", $formName));
 		else
-			$this->addOnloadCode(sprintf("if (__fld = \$FF('%s', '%s')) { __fld.focus(); }", $formName, $formField));
+			$this->addOnloadCode(sprintf("if (__fld = \$FF('%s', '%s')) { __fld.focus(); }", $formName, $fieldName));
 	}
 
 	/**
-	 * Adds a script file in the document head
+	 * Adds/replaces a meta tag in the document
 	 *
-	 * @param string $scriptFile Relative or absolute path to the script
+	 * @param string $name Meta name
+	 * @param string $value Meta value
+	 * @param bool $httpEquiv Is this an http-equiv meta tag?
+	 * @uses DocumentHead::addMetaData()
+	 */
+	function addMetaData($name, $value, $httpEquiv=FALSE) {
+		$this->Head->addMetaData($name, $value, $httpEquiv);
+	}
+
+	/**
+	 * Removes a meta tag from the document
+	 *
+	 * @param string $name Meta name
+	 * @param bool $httpEquiv Is this an http-equiv meta tag?
+	 */
+	function removeMetaData($name, $httpEquiv=FALSE) {
+		$this->Head->removeMetaData($name, $httpEquiv);
+	}
+
+	/**
+	 * Adds a script file in the document's head
+	 *
+	 * @param string $path Relative or absolute path to the script
 	 * @param string $language Script language
 	 * @param string $charset Script charset
-	 * @see addScriptCode
+	 * @uses DocumentHead::addScript()
 	 */
-	function addScript($scriptFile, $language="Javascript", $charset=NULL) {
-		$scriptFile = htmlentities($scriptFile);
-		if (!array_key_exists($scriptFile, $this->scriptFiles)) {
-			$this->scriptFiles[$scriptFile] = sprintf("<script language=\"%s\" src=\"%s\" type=\"text/%s\"%s></script>\n",
-				$language, $scriptFile, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), (!empty($charset) ? " charset=\"{$charset}\"" : '')
-			);
-		}
+	function addScript($path, $language="Javascript", $charset=NULL) {
+		$this->Head->addScript($path, $language, $charset);
 	}
 
 	/**
@@ -489,43 +402,53 @@ class Document extends PHP2Go
 	 * in the end of the document's head ({@link SCRIPT_START}) or in
 	 * the end of the document's body ({@link SCRIPT_END}).
 	 *
-	 * @param string $scriptCode Block of script code
-	 * @param string $language Script language
+	 * @param string $block Block of script code
+	 * @param string $language Language
 	 * @param int $position Insert position
-	 * @see addScript
+	 * @uses DocumentHead::addScriptBlock()
 	 */
-	function addScriptCode($scriptCode, $language="Javascript", $position=SCRIPT_START) {
-		if ($position != SCRIPT_START && $position != SCRIPT_END)
-			$position = SCRIPT_START;
-		$this->scriptExtCode[$position][$language] = isset($this->scriptExtCode[$position][$language]) ? $this->scriptExtCode[$position][$language] . $scriptCode . "\n" : $scriptCode . "\n";
+	function addScriptCode($block, $language="Javascript", $position=SCRIPT_START) {
+		switch ($position) {
+			case SCRIPT_END :
+				$this->scriptBlocks[$language] = (isset($this->scriptBlocks[$language]) ? $this->scriptBlocks[$language] . $block . "\n" : $block . "\n");
+				break;
+			default :
+				$this->Head->addScriptCode($block, $language);
+		}
 	}
 
 	/**
-	 * Register a script instruction that must be
+	 * Register a Javascript instruction that must be
 	 * executed when document is loaded
 	 *
 	 * @param string $instruction Script instruction
 	 */
 	function addOnloadCode($instruction) {
 		$instruction = ltrim(preg_replace("/\s{1,}/", ' ', $instruction));
+		$instruction = rtrim($instruction, ';') . ';';
 		$this->onLoadCode[] = $instruction;
 	}
 
 	/**
 	 * Add a stylesheet file in the document's head
 	 *
-	 * @param string $styleFile Relative or absolute path to the stylesheet file
+	 * @param string $path Relative or absolute path to the stylesheet file
 	 * @param string $media Media type
 	 * @param string $charset Charset of the stylesheet file
-	 * @see importStyle
-	 * @see addStyleCode
+	 * @uses DocumentHead::addStyle()
 	 */
-	function addStyle($styleFile, $media=NULL, $charset=NULL) {
-		$styleFile = htmlentities($styleFile);
-		if (!array_key_exists($styleFile, $this->styles))
-			$this->styles[$styleFile] = sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s>\n",
-				$styleFile, (!empty($media) ? " media=\"{$media}\"" : ''), (!empty($charset) ? " charset=\"{$charset}\"" : '')
-			);
+	function addStyle($path, $media=NULL, $charset=NULL) {
+		$this->Head->addStyle($path, $media, $charset);
+	}
+
+	/**
+	 * Add a block of style definitions in the document's head
+	 *
+	 * @param string $styleCode Block of style definitions
+	 * @uses DocumentHead::addStyleCode()
+	 */
+	function addStyleCode($styleCode) {
+		$this->Head->addStyleCode($styleCode);
 	}
 
 	/**
@@ -534,27 +457,11 @@ class Document extends PHP2Go
 	 * In contrast with {@link addStyle}, which builds a link element, this method
 	 * builds a style element containing an @import(styleUrl) statement.
 	 *
-	 * @param string $styleUrl Relative or absolute path to the stylesheet file
-	 * @see addStyle
-	 * @see addStyleCode
+	 * @param string $url Relative or absolute path to the stylesheet file
+	 * @uses DocumentHead::importStyle()
 	 */
-	function importStyle($styleUrl) {
-		$styleUrl = htmlentities($styleUrl);
-		if (!in_array($styleUrl, $this->importedStyles)) {
-			$this->importedStyles[] = $styleUrl;
-			$this->styleExtCode .= sprintf("@import url(%s);\n", trim($styleUrl));
-		}
-	}
-
-	/**
-	 * Add a block of style definitions in the document's head
-	 *
-	 * @param string $styleCode Block of style definitions
-	 * @see addStyle
-	 * @see importStyle
-	 */
-	function addStyleCode($styleCode) {
-		$this->styleExtCode .= ltrim($styleCode) . "\n";
+	function importStyle($url) {
+		$this->Head->importStyle($url);
 	}
 
 	/**
@@ -566,13 +473,12 @@ class Document extends PHP2Go
 	 * </code>
 	 *
 	 * @param string $type Link type
-	 * @param string $linkUrl Link URL
-	 * @param string $linkTitle Link title
+	 * @param string $url Link URL
+	 * @param string $title Link title
+	 * @uses DocumentHead::addAlternateLink()
 	 */
-	function addAlternateLink($type, $linkUrl, $linkTitle) {
-		$linkUrl = htmlentities($linkUrl);
-		if (!array_key_exists($linkUrl, $this->alternateLinks))
-			$this->alternateLinks[$linkUrl] = sprintf("<link rel=\"alternate\" type=\"%s\" href=\"%s\"%s>\n", $type, $linkUrl, (!empty($linkTitle) ? " title=\"" . $linkTitle . "\"" : ""));
+	function addAlternateLink($type, $url, $title) {
+		$this->Head->addAlternateLink($type, $url, $title);
 	}
 
 	/**
@@ -581,43 +487,30 @@ class Document extends PHP2Go
 	 * The shortcut icon is used by browsers in the main address bar
 	 * and in the bookmark sections
 	 *
-	 * @param string $iconUrl Relative or absolute path to the icon
+	 * @param string $url Relative or absolute path to the icon
+	 * @uses DocumentHead::appendContent()
 	 */
-	function setShortcutIcon($iconUrl) {
-		$iconUrl = htmlentities($iconUrl);
-		$this->appendHeaderContent("<link rel=\"shortcut icon\" href=\"{$iconUrl}\">");
-	}
-
-	/**
-	 * Add/replace a meta tag in the document
-	 *
-	 * @param string $name Meta name
-	 * @param string $value Meta value
-	 * @param bool $httpEquiv Is this an http-equiv meta tag?
-	 */
-	function addMetaData($name, $value, $httpEquiv=FALSE) {
-		if ($httpEquiv) {
-			$this->metaTagsHttp[$name] = $value;
-		} else {
-			$name = strtoupper($name);
-			$this->metaTagsName[$name] = $value;
-		}
+	function setShortcutIcon($url) {
+		$this->Head->appendContent(sprintf("<link rel=\"shortcut icon\" href=\"%s\">", htmlentities($url)));
 	}
 
 	/**
 	 * Flags the document to prevent robots using a meta tag
+	 *
+	 * @uses DocumentHead::addMetaData()
 	 */
 	function preventRobots() {
-		$this->allowRobots = FALSE;
+		$this->Head->addMetaData('ROBOTS', 'NOINDEX,NOFOLLOW,NOARCHIVE');
 	}
 
 	/**
 	 * Append extra HTML content in the document's head
 	 *
 	 * @param string $value Value to append
+	 * @uses DocumentHead::appendContent()
 	 */
 	function appendHeaderContent($value) {
-		$this->extraHeaderCode .= $value . "\n";
+		$this->Head->appendContent($value);
 	}
 
 	/**
@@ -627,7 +520,7 @@ class Document extends PHP2Go
 	 * @param string $value Property value
 	 */
 	function addBodyCfg($attr, $value="") {
-		if (TypeUtils::isArray($attr)) {
+		if (is_array($attr)) {
 			foreach($attr as $key => $value)
 				$this->bodyCfg[strtoupper($key)] = $value;
 		} else {
@@ -667,7 +560,7 @@ class Document extends PHP2Go
 	function appendBodyContent($content, $position=BODY_END) {
 		if ($position != BODY_START && $position != BODY_END)
 			$position = BODY_START;
-		$this->extraBodyContent[$position] = isset($this->extraBodyContent[$position]) ? $this->extraBodyContent[$position] . $content . "\n" : $content . "\n";
+		$this->extraContent[$position] = isset($this->extraContent[$position]) ? $this->extraContent[$position] . $content . "\n" : $content . "\n";
 	}
 
 	/**
@@ -748,14 +641,20 @@ class Document extends PHP2Go
 	function display() {
 		$this->_buildBodyContent();
 		$this->_preRenderHeader(TRUE);
-		$Agent =& UserAgent::getInstance();
-		if ($this->makeCompression && !HttpResponse::headersSent() && !connection_aborted() && extension_loaded('zlib') && ($encoding = $Agent->matchAcceptList(array('x-gzip', 'gzip'), 'encoding'))) {
-			System::setIni('zlip.output_compression', $this->compressionLevel);
-			ob_start('ob_gzhandler');
-			$this->_printDocumentHeader();
-			$this->_printDocumentBody();
-			print "\n" . PHP2Go::getLangVal('COMPRESS_USE_MSG', $encoding) . "\n";
-			ob_end_flush();
+		if ($this->compressionEnabled && !headers_sent() && !connection_aborted() && extension_loaded('zlib')) {
+			import('php2go.net.UserAgent');
+			$Agent =& UserAgent::getInstance();
+			if ($encoding = $Agent->matchAcceptList(array('x-gzip', 'gzip'), 'encoding')) {
+				ini_set('zlip.output_compression', $this->compressionLevel);
+				ob_start('ob_gzhandler');
+				$this->_printDocumentHeader();
+				$this->_printDocumentBody();
+				print "\n" . PHP2Go::getLangVal('COMPRESS_USE_MSG', $encoding) . "\n";
+				ob_end_flush();
+			} else {
+				$this->_printDocumentHeader();
+				$this->_printDocumentBody();
+			}
 		} else {
 			$this->_printDocumentHeader();
 			$this->_printDocumentBody();
@@ -796,27 +695,27 @@ class Document extends PHP2Go
 	}
 
 	/**
-	 * Initialize some properties of the document
+	 * Initializes document's properties
 	 *
 	 * @access private
 	 */
-	function _initialize() {
-		// initialize meta tags
-		$this->metaTagsName['TITLE'] =& $this->docTitle;
-		$this->metaTagsName['AUTHOR'] = PHP2Go::getConfigVal('AUTHOR', FALSE);
-		$this->metaTagsName['DESCRIPTION'] = PHP2Go::getConfigVal('DESCRIPTION', FALSE);
-		$this->metaTagsName['KEYWORDS'] = PHP2Go::getConfigVal('KEYWORDS', FALSE);
-		$this->metaTagsName['CATEGORY'] = PHP2Go::getConfigVal('CATEGORY', FALSE);
-		$this->metaTagsName['CODE_LANGUAGE'] = 'PHP';
-		$this->metaTagsName['GENERATOR'] = 'PHP2Go Web Development Framework ' . PHP2GO_VERSION;
-		$this->metaTagsName['DATE_CREATION'] = PHP2Go::getConfigVal('DATE_CREATION', FALSE);
-		$this->metaTagsHttp['Content-Language'] = $this->docLanguage;
+	function _initialize($docLayout, $docIncludes=array()) {
+		// start time counter
+		$this->TimeCounter = new TimeCounter();
+		// initialize document's head
+		$this->Head =& DocumentHead::getInstance();
+		// initialize document's template
+		$this->Template = new Template($docLayout);
+		if (!empty($docIncludes) && TypeUtils::isHashArray($docIncludes)) {
+			foreach ($docIncludes as $blockName => $blockValue)
+				$this->Template->includeAssign($blockName, $blockValue, T_BYFILE);
+		}
+		$this->Template->parse();
 		// initialize document slots
 		$elements = $this->Template->getDefinedVariables();
 		$elementCount = sizeof($elements);
-		if (!$elementCount) {
+		if (!$elementCount)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EMPTY_DOC_LAYOUT'), E_USER_ERROR, __FILE__, __LINE__);
-		}
 		for ($i=0; $i<$elementCount; $i++)
 			$this->elements[$elements[$i]] = '';
 		// add basic JS libraries
@@ -825,75 +724,65 @@ class Document extends PHP2Go
 	}
 
 	/**
+	 * Processes all document elements before rendering the page body
+	 *
+	 * # For template elements, it will call {@link Template::parse()} if not called yet
+	 * # For component elements, it will call {@link Component::onPreRender()} if not called yet
+	 * # It will assign object elements by ref and scalar elements by value
+	 *
+	 * @access private
+	 */
+	function _buildBodyContent() {
+		$elmNames = array_keys($this->elements);
+		foreach ($elmNames as $name) {
+			$element =& $this->elements[$name];
+			if (is_object($element)) {
+				if (TypeUtils::isInstanceOf($element, 'Template') && !$element->isPrepared())
+					$element->parse();
+				if (TypeUtils::isInstanceOf($element, 'Component'))
+					$element->onPreRender();
+				$this->Template->assignByRef($name, $element);
+			} else {
+				$this->Template->assign($name, $element);
+			}
+		}
+	}
+
+	/**
 	 * Perform configuration routines before rendering the document's head
 	 *
 	 * @param bool $display Indicates if the page will be displayed or serialized into a file
+	 * @uses DocumentHead::addMetaData
+	 * @uses DocumentHead::addScriptCode
 	 * @access private
 	 */
 	function _preRenderHeader($display=TRUE) {
-		if (!$this->makeCache) {
-			if ($display && !headers_sent() && !$this->makeCompression) {
+		if (!empty($this->onLoadCode)) {
+			$this->Head->addScriptCode("\tfunction p2gOnLoad() {\n\t\t" . join("\n\t\t", $this->onLoadCode) . "\n\t}", 'Javascript');
+			$this->attachBodyEvent('onload', 'p2gOnLoad();', TRUE);
+		}
+		if (!$this->cacheEnabled) {
+			if ($display && !headers_sent() && !$this->compressionEnabled) {
 				@header('Expires: Tue, 1 Jan 1980 12:00:00 GMT');
 				@header('Last-Modified: ', gmdate('D, d M Y H:i:s') . ' GMT');
 				@header('Cache-Control: no-cache');
 				@header('Pragma: no-cache');
 			}
-			$this->metaTagsHttp['Expires'] = 'Tue, 1 Jan 1980 12:00:00 GMT';
-			$this->metaTagsHttp['Last-Modified'] = gmdate('D, d M Y H:i:s') . ' GMT';
-			$this->metaTagsHttp['Cache-Control'] = 'no-cache';
-			$this->metaTagsHttp['Pragma'] = 'no-cache';
+			$this->Head->addMetaData('Expires', 'Tue, 1 Jan 1980 12:00:00 GMT', TRUE);
+			$this->Head->addMetaData('Last-Modified', gmdate('D, d M Y H:i:s') . ' GMT', TRUE);
+			$this->Head->addMetaData('Cache-Control', 'no-cache');
+			$this->Head->addMetaData('Pragma', 'no-cache');
 		}
-		if (!$this->allowRobots)
-			$this->metaTagsName['ROBOTS'] = 'NOINDEX,NOFOLLOW,NOARCHIVE';
 	}
 
 	/**
-	 * Prints the document head: meta tags, scripts, stylesheets, links
+	 * Prints the contents of the document's head
 	 *
 	 * @access private
+	 * @uses DocumentHead::display()
 	 */
 	function _printDocumentHeader() {
-		print "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n";
-		print "<html>\n<head>\n";
-		print sprintf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", $this->docCharset);
-		foreach($this->metaTagsHttp as $name => $content) {
-			if (!empty($content))
-				print sprintf("<meta http-equiv=\"%s\" content=\"%s\">\n", $name, htmlspecialchars($content));
-		}
-		foreach($this->metaTagsName as $name => $content) {
-			if (!empty($content))
-				print sprintf("<meta name=\"%s\" content=\"%s\">\n", $name, htmlspecialchars($content));
-		}
-		print "<title>{$this->docTitle}</title>\n";
-		// base URL
-		$baseUrl = PHP2Go::getConfigVal('BASE_URL', FALSE);
-		if (!empty($baseUrl)) {
-			$baseUrl = rtrim($baseUrl, '/') . '/';
-			print sprintf("<base href=\"%s\">\n", $baseUrl);
-		}
-		print join("", array_values($this->styles));
-		if (!empty($this->styleExtCode))
-			print sprintf("<style type=\"text/css\">\n<!--\n%s//-->\n</style>\n", $this->styleExtCode);
-		print join("", array_values($this->alternateLinks));
-		print join("", array_values($this->scriptFiles));
-		if (!empty($this->onLoadCode)) {
-			$onLoad = "\tfunction p2gOnLoad() {\n";
-			foreach ($this->onLoadCode as $instruction)
-				$onLoad .= "\t\t$instruction\n";
-			$onLoad .= "\t}";
-			$this->addScriptCode($onLoad, 'Javascript');
-			$this->attachBodyEvent('onload', 'p2gOnLoad();', TRUE);
-		}
-		// inline scripts located in the document's head
-		if (isset($this->scriptExtCode[SCRIPT_START])) {
-			foreach($this->scriptExtCode[SCRIPT_START] as $language => $scripts) {
-				if (substr($scripts, -1) != "\n")
-					$scripts .= "\n";
-				print sprintf("<script language=\"%s\" type=\"text/%s\">\n<!--\n%s//-->\n</script>\n", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
-			}
-		}
-		print $this->extraHeaderCode;
-		print "</head>\n";
+		$this->Head->display();
 	}
 
 	/**
@@ -915,42 +804,17 @@ class Document extends PHP2Go
 		if (!empty($this->extraBodyContent[BODY_END]))
 			print "\n" . $this->extraBodyContent[BODY_END];
 		// scripts located in the end of the document's body
-		if (isset($this->scriptExtCode[SCRIPT_END])) {
-			foreach($this->scriptExtCode[SCRIPT_END] as $language => $scripts) {
+		if (isset($this->scriptBlocks)) {
+			foreach($this->scriptBlocks as $language => $scripts) {
 				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
 				print sprintf("\n<script language=\"%s\" type=\"text/%s\">\n<!--\n%s//-->\n</script>", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
 		}
 		print "\n</body>\n</html>";
-		print "\n<!-- This content is powered by PHP2Go v. " . PHP2GO_VERSION . " (http://www.php2go.com.br) -->";
+		print "\n<!-- This page is powered by PHP2Go " . PHP2GO_VERSION . " (http://www.php2go.com.br) -->";
 		$this->TimeCounter->stop();
 		print sprintf("\n<!-- Timespent : %.3f -->", $this->TimeCounter->getElapsedTime());
-	}
-
-	/**
-	 * Process all document elements before rendering the page body
-	 *
-	 * # For template elements, call {@link Template::parse()} if not called yet
-	 * # For component elements, call {@link Component::onPreRender()} if not called yet
-	 * # Assign object elements by ref and scalar elements by value
-	 *
-	 * @access private
-	 */
-	function _buildBodyContent() {
-		$elmNames = array_keys($this->elements);
-		foreach ($elmNames as $name) {
-			$element =& $this->elements[$name];
-			if (is_object($element)) {
-				if (TypeUtils::isInstanceOf($element, 'Template') && !$element->isPrepared())
-					$element->parse();
-				if (TypeUtils::isInstanceOf($element, 'Component'))
-					$element->onPreRender();
-				$this->Template->assignByRef($name, $element);
-			} elseif (is_scalar($element) && !is_bool($element)) {
-				$this->Template->assign($name, $element);
-			}
-		}
 	}
 }
 ?>
