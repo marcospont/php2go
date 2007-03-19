@@ -79,6 +79,50 @@ class Widget extends Component
 	}
 
 	/**
+	 * Returns the singleton of a given widget,
+	 * configured with a given set of properties
+	 *
+	 * @param string $path Widget dot path
+	 * @param array $attrs Widget's attributes
+	 * @return Widget
+	 * @static
+	 */
+	function &getInstance($path, $attrs=array()) {
+		static $instances;
+		if (!isset($instances))
+			$instances = array();
+		if (!isset($instances[$path])) {
+			$widgetClass = classForPath($path);
+			$instances[$path] = new $widgetClass($attrs);
+		} else {
+			$instances[$path]->loadAttributes($attrs);
+		}
+		return $instances[$path];
+	}
+
+	/**
+	 * Loads resources needed by a given widget
+	 *
+	 * This method will check if the widget class contains
+	 * a method called "loadResources". If yes, the singleton
+	 * of the DocumentHead class is passed to this method, so
+	 * that the widget is able to register all scripts, stylesheets
+	 * and other resources it needs to run.
+	 *
+	 * @param string $path Widget's path
+	 * @static
+	 */
+	function preload($path) {
+		$widgetClass = classForPath($path);
+		$methodName = (IS_PHP5 ? 'loadResources' : 'loadresources');
+		if (in_array($methodName, get_class_methods($widgetClass))) {
+			$params = array();
+			$params[] =& DocumentHead::getInstance();
+			call_user_func_array(array($widgetClass, $methodName), $params);
+		}
+	}
+
+	/**
 	 * Load widget attributes
 	 *
 	 * This method can be overriden in the child classes in order
