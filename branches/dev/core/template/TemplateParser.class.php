@@ -302,7 +302,8 @@ class TemplateParser extends PHP2Go
 				TP_ROOTBLOCK, TP_ROOTBLOCK
 			));
 			// compilation
-			$this->_parseTemplate($this->tplBase['source'], $this->tplBase['type'], $this->tplBase['compiled'], $controlBlock);
+			$this->_parseTemplate($this->tplBase['source'], $this->tplBase['type'], $this->tplBase['compiled'], $this->tplWidgets, $controlBlock);
+			// post process source
 			$this->tplBase['compiled'] = preg_replace("~\?>\s*<\?(php)?~", '', $this->tplBase['compiled']);
 			$this->tplBase['compiled'] = rtrim($this->tplBase['compiled'], "\n");
 			$this->prepared = TRUE;
@@ -317,9 +318,10 @@ class TemplateParser extends PHP2Go
 	 * @param string $src Template source (string contents or file path)
 	 * @param int $type Source type ({@link T_BYFILE} or {@link T_BYVAR})
 	 * @param string &$output Used to return compiled contents
+	 * @param array &$widgets Widgets registry
 	 * @param string &$controlBlock Active dynamic block
 	 */
-	function _parseTemplate($src, $type, &$output, &$controlBlock)
+	function _parseTemplate($src, $type, &$output, &$widgets, &$controlBlock)
 	{
 		// 1st phase: prepare template source
 		if ($type == T_BYFILE) {
@@ -353,6 +355,7 @@ class TemplateParser extends PHP2Go
 			if ($cached) {
 				$output .= $cached['output'];
 				$includes = $cached['includes'];
+				$widgets = $cached['widgets'];
 				foreach ($cached['def'] as $block => $def) {
 					if ($block != $controlBlock && array_key_exists($block, $this->tplDef))
 						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
@@ -374,6 +377,7 @@ class TemplateParser extends PHP2Go
 				$compiled = $this->_compileTemplate($src, $controlBlock);
 				$output .= $compiled['output'];
 				$includes = $compiled['includes'];
+				$widgets = $compiled['widgets'];
 				// repetition blocks balancing
 				if (!empty($this->blockStack)) {
 					$last = array_pop($this->blockStack);
@@ -388,6 +392,7 @@ class TemplateParser extends PHP2Go
 				$this->_Cache->save(array(
 					'output' => $output,
 					'includes' => $includes,
+					'widgets' => $widgets,
 					'def' => $this->tplDef,
 				), $cacheId, $this->_Template->cacheOptions['group']);
 				// restore control variables
@@ -407,6 +412,7 @@ class TemplateParser extends PHP2Go
 			$compiled = $this->_compileTemplate($src, $controlBlock);
 			$output .= $compiled['output'];
 			$includes = $compiled['includes'];
+			$widgets = $compiled['widgets'];
 			// repetition blocks balancing
 			if (!empty($this->blockStack)) {
 				$last = array_pop($this->blockStack);
@@ -448,6 +454,7 @@ class TemplateParser extends PHP2Go
 		$tagBlocks = array();
 		$outputBlocks = array();
 		$includes = array();
+		$widgets = array();
 		// gather all tags and code blocks
 		$matches = array();
 		preg_match_all("~(\r?\n?[\s]*){$this->tagDelimiters[0]}\s*(.*?)\s*{$this->tagDelimiters[1]}|{([^}]+)}~s", $src, $matches, PREG_OFFSET_CAPTURE);
@@ -518,12 +525,12 @@ class TemplateParser extends PHP2Go
 					case 'WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
-						$outputBlocks[] = $this->_compileWidgetInclude($tagParts[2]);
+						$outputBlocks[] = $this->_compileWidgetInclude($tagParts[2], $widgets);
 						break;
 					case 'START WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
-						$outputBlocks[] = $this->_compileWidgetStart($tagParts[2], $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetStart($tagParts[2], $widgets, $controlBlock);
 						break;
 					case 'END WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('START WIDGET'), $controlBlock))
@@ -702,7 +709,8 @@ class TemplateParser extends PHP2Go
 		$output .= $codeBlocks[$i];
 		return array(
 			'output' => $output,
-			'includes' => $includes
+			'includes' => $includes,
+			'widgets' => $widgets
 		);
 	}
 
@@ -1041,7 +1049,7 @@ class TemplateParser extends PHP2Go
 		}
 		$this->includeDepth++;
 		$output = $this->_compilePHPBlock('array_unshift(\$this->tplConfigVars, \$this->tplConfigVars[0]);');
-		$this->_parseTemplate($src, $type, $output, $controlBlock);
+		$this->_parseTemplate($src, $type, $output, $widgets, $controlBlock);
 		$output .= $this->_compilePHPBlock('array_shift(\$this->tplConfigVars);');
 		$this->includeDepth--;
 		return $output;
@@ -1322,18 +1330,19 @@ class TemplateParser extends PHP2Go
 	 * Compiles an "include widget" tag
 	 *
 	 * @param string $widgetProperties Raw widget properties
+	 * @param array &$widgets Widgets registry
 	 * @return string Compiled code
 	 * @access private
 	 */
-	function _compileWidgetInclude($widgetProperties) {
+	function _compileWidgetInclude($widgetProperties, &$widgets) {
 		$widgetData = $this->_parseWidgetProperties($widgetProperties);
 		if ($widgetData) {
 			// if no path is provided, then use the default path "php2go.gui"
 			if (preg_match('/\w+/', $widgetData['path']))
 				$widgetData['path'] = "php2go.gui.{$widgetData['path']}";
+			$widgets[$widgetData['path']] = TRUE;
 			return $this->_compilePHPBlock(
-				'$widgetClass = classForPath("' . $widgetData['path'] . '"); ' .
-				'$widget = new $widgetClass(' . $widgetData['properties'] . '); ' .
+				'$widget =& Widget::getInstance("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
 				'print "\n"; $widget->display();'
 			);
 		}
@@ -1344,18 +1353,22 @@ class TemplateParser extends PHP2Go
 	 * Compiles a "start widget" tag
 	 *
 	 * @param string $widgetProperties Raw widget properties
+	 * @param array &$widgets Widgets registry
 	 * @param string $controlBlock Active dynamic block
 	 * @return string Compiled code
 	 * @access private
 	 */
-	function _compileWidgetStart($widgetProperties, $controlBlock) {
+	function _compileWidgetStart($widgetProperties, &$widgets, $controlBlock) {
 		$widgetData = $this->_parseWidgetProperties($widgetProperties);
 		if ($widgetData) {
+			// if no path is provided, then use the default path "php2go.gui"
+			if (preg_match('/\w+/', $widgetData['path']))
+				$widgetData['path'] = "php2go.gui.{$widgetData['path']}";
+			$widgets[$widgetData['path']] = TRUE;
 			$this->controlStack[] = array('START WIDGET', $controlBlock);
 			return $this->_compilePHPBlock(
 				'array_push($outputStack, array($widget)); ' .
-				'$widgetClass = classForPath("' . $widgetData['path'] . '"); ' .
-				'$widget = new $widgetClass(' . $widgetData['properties'] . '); ' .
+				'$widget =& Widget::getInstance("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
 				'ob_start();'
 			);
 		}
