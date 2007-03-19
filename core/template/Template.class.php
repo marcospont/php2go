@@ -631,6 +631,12 @@ class Template extends Component
 	function onPreRender() {
 		if (!$this->preRendered) {
 			parent::onPreRender();
+			// preload widgets
+			$keys = array_keys($this->Parser->tplWidgets);
+			foreach ($keys as $key) {
+				Widget::preload($key);
+			}
+			// preload components
 			$keys = array_keys($this->tplComponents);
 			foreach ($keys as $key) {
 				$component =& $this->tplComponents[$key];
