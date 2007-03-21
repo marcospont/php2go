@@ -1339,11 +1339,14 @@ class TemplateParser extends PHP2Go
 		if ($widgetData) {
 			// if no path is provided, then use the default path "php2go.gui"
 			if (preg_match('/\w+/', $widgetData['path']))
-				$widgetData['path'] = "php2go.gui.{$widgetData['path']}";
+				$widgetData['path'] = "php2go.gui.widget.{$widgetData['path']}";
 			$widgets[$widgetData['path']] = TRUE;
 			return $this->_compilePHPBlock(
-				'$widget =& Widget::getInstance("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
-				'print "\n"; $widget->display();'
+				'$newWidget =& Widget::getInstance("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'if ($widget) { ' .
+					'$newWidget->setParent($widget); ' .
+				'} ' .
+				'$newWidget->display();'
 			);
 		}
 		return FALSE;
@@ -1363,12 +1366,16 @@ class TemplateParser extends PHP2Go
 		if ($widgetData) {
 			// if no path is provided, then use the default path "php2go.gui"
 			if (preg_match('/\w+/', $widgetData['path']))
-				$widgetData['path'] = "php2go.gui.{$widgetData['path']}";
+				$widgetData['path'] = "php2go.gui.widget.{$widgetData['path']}";
 			$widgets[$widgetData['path']] = TRUE;
 			$this->controlStack[] = array('START WIDGET', $controlBlock);
 			return $this->_compilePHPBlock(
 				'array_push($outputStack, array($widget)); ' .
+				'$lastIndex = sizeof($outputStack)-1; ' .
 				'$widget =& Widget::getInstance("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'if ($outputStack[$lastIndex][0]) { ' .
+					'$newWidget->setParent($outputStack[$lastIndex][0]); ' .
+				'} ' .
 				'ob_start();'
 			);
 		}
@@ -1384,7 +1391,7 @@ class TemplateParser extends PHP2Go
 	function _compileWidgetEnd() {
 		return $this->_compilePHPBlock(
 			'$widget->setContent(ob_get_clean()); ' .
-			'print "\n"; $widget->display(); ' .
+			'$widget->display(); ' .
 			'$last = array_pop($outputStack); ' .
 			'$widget = $last[0];'
 		);
