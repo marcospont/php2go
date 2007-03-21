@@ -61,11 +61,25 @@ class Widget extends Component
 	var $isContainer = FALSE;
 
 	/**
+	 * Whether this widget produces output or not
+	 *
+	 * @var bool
+	 */
+	var $hasOutput = TRUE;
+
+	/**
 	 * Set of mandatory attributes
 	 *
 	 * @var array
 	 */
 	var $mandatoryAttributes = array();
+
+	/**
+	 * Parent widget, when applicable
+	 *
+	 * @var object Widget
+	 */
+	var $Parent = NULL;
 
 	/**
 	 * Class constructor
@@ -75,7 +89,8 @@ class Widget extends Component
 	 */
 	function Widget($attrs=array()) {
 		parent::PHP2Go();
-		$this->loadAttributes((array)$attrs);
+		$attrs = array_merge($this->getDefaultAttributes(), (array)$attrs);
+		$this->loadAttributes($attrs);
 	}
 
 	/**
@@ -95,6 +110,7 @@ class Widget extends Component
 			$widgetClass = classForPath($path);
 			$instances[$path] = new $widgetClass($attrs);
 		} else {
+			$attrs = array_merge($instances[$path]->getDefaultAttributes(), (array)$attrs);
 			$instances[$path]->loadAttributes($attrs);
 		}
 		return $instances[$path];
@@ -123,6 +139,15 @@ class Widget extends Component
 	}
 
 	/**
+	 * Return the set of the default values for attributes
+	 *
+	 * @return array
+	 */
+	function getDefaultAttributes() {
+		return array();
+	}
+
+	/**
 	 * Load widget attributes
 	 *
 	 * This method can be overriden in the child classes in order
@@ -145,6 +170,15 @@ class Widget extends Component
 		if (!$this->isContainer)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_INCLUDE', parent::getClassName()), E_USER_ERROR, __FILE__, __LINE__);
 		$this->content = $content;
+	}
+
+	/**
+	 * Set parent widget
+	 *
+	 * @param Widget $parent
+	 */
+	function setParent(&$parent) {
+		$this->Parent =& $parent;
 	}
 
 	/**
@@ -172,7 +206,11 @@ class Widget extends Component
 	function display() {
 		$this->validate();
 		$this->onPreRender();
-		$this->render();
+		if ($this->hasOutput) {
+			print "\n";
+			$this->render();
+			print "\n";
+		}
 	}
 }
 ?>
