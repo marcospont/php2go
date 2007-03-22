@@ -56,6 +56,7 @@ class UploadValidator extends AbstractValidator
 	function UploadValidator($params=NULL) {
 		parent::AbstractValidator($params);
 		$this->Uploader =& FileUpload::getInstance();
+		$this->Uploader->resetDefaults();
 	}
 
 	/**

@@ -133,6 +133,18 @@ class FileUpload extends PHP2Go
 	}
 
 	/**
+	 * Reset class defaults
+	 *
+	 * Returns to the default settings for max file size,
+	 * allowed file types and overwrite files flag.
+	 */
+	function resetDefaults() {
+		$this->maxFileSize = FILE_UPLOAD_MAX_SIZE;
+		$this->allowedFileTypes = array();
+		$this->overwriteFiles = TRUE;
+	}
+
+	/**
 	 * Set allowed mime types
 	 *
 	 * @param string $type,... Expects a list of mime-types
