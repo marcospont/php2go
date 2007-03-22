@@ -204,30 +204,38 @@ class Template extends Component
 	/**
 	 * Set the tag delimiter type
 	 *
-	 * This template engine currently supports 2 types of tag delimiters:
+	 * This template engine currently supports 3 types of tag delimiters:
 	 * # {@link TEMPLATE_DELIM_COMMENT}: tags are surrounded by HTML comments.
 	 * <code>
 	 * <!-- if $var eq 1 -->
 	 * <!-- loop var=$data item="item" -->
+	 * <!-- end if -->
 	 * </code>
 	 * # {@link TEMPLATE_DELIM_BRACE}: tags are surrounded by curly braces
 	 * <code>
 	 * {if $var eq 1}
 	 * {loop var=$data item="item"}
 	 * </code>
+	 * # {@link TEMPLATE_DELIM_DIRECTIVE}: tags are surrounded by directive delimiters
+	 * <code>
+	 * <%if $var eq 1%>
+	 * <%loop var=$data item="item"%>
+	 * <%end if%>
+	 * </code>
 	 *
 	 * @param int $type Tag delimiter type
 	 */
 	function setTagDelimiter($type) {
-		if ($type == TEMPLATE_DELIM_COMMENT || $type == TEMPLATE_DELIM_BRACE) {
-			switch ($type) {
-				case TEMPLATE_DELIM_BRACE :
-					$this->Parser->tagDelimiters = array('{', '}');
-					break;
-				default :
-					$this->Parser->tagDelimiters = array('<!--', '-->');
-					break;
-			}
+		switch ($type) {
+			case TEMPLATE_DELIM_BRACE :
+				$this->Parser->tagDelimiters = array('{', '}');
+				break;
+			case TEMPLATE_DELIM_DIRECTIVE :
+				$this->Parser->tagDelimiters = array('<%', '%>');
+				break;
+			default :
+				$this->Parser->tagDelimiters = array('<!--', '-->');
+				break;
 		}
 	}
 
