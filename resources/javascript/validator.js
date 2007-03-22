@@ -464,10 +464,10 @@ RuleValidator = function(args) {
 	 */
 	this.peer = (args.peerField ? $FF(args.form, args.peerField) : args.peerValue);
 	/**
-	 * Peer type (FIELD_FIELD or FIELD_VALUE)
+	 * Peer type (PEER_FIELD or PEER_VALUE)
 	 * @type Number
 	 */
-	this.peerType = (args.peerField ? RuleValidator.FIELD_FIELD : RuleValidator.FIELD_VALUE);
+	this.peerType = (args.peerField ? RuleValidator.PEER_FIELD : RuleValidator.PEER_VALUE);
 	/**
 	 * Peer label
 	 * @type String
@@ -489,12 +489,12 @@ RuleValidator.extend(Validator, 'Validator');
  * Comparison rule between 2 form fields
  * @type Number
  */
-RuleValidator.FIELD_FIELD = 1;
+RuleValidator.PEER_FIELD = 1;
 /**
  * Comparison rule between a form field and a literal
  * @type Number
  */
-RuleValidator.FIELD_VALUE = 2;
+RuleValidator.PEER_VALUE = 2;
 
 /**
  * Retrieve the error message based on the instance params
@@ -504,7 +504,7 @@ RuleValidator.prototype.getErrorMessage = function() {
 	if (this.msg)
 		return this.msg;
 	var m = Lang.validator, lbl = this.fldLabel;
-	var v = (this.peerType == RuleValidator.FIELD_VALUE);
+	var v = (this.peerType == RuleValidator.PEER_VALUE);
 	switch (this.ruleType) {
 		case 'REGEX' : return m.invalidField.assignAll(lbl);
 		case 'JSFUNC' : return m.invalidField.assignAll(lbl);
@@ -526,7 +526,7 @@ RuleValidator.prototype.getErrorMessage = function() {
  */
 RuleValidator.prototype.compare = function(op) {
 	var trg, src = (this.fld.getValue() || '').toString();
-	if (this.peerType == RuleValidator.FIELD_FIELD) {
+	if (this.peerType == RuleValidator.PEER_FIELD) {
 		trg = (this.peer.getValue() || '').toString();
 		if (src.trim() == "" || trg.trim() == "")
 			return true;
@@ -539,7 +539,7 @@ RuleValidator.prototype.compare = function(op) {
 	try {
 		if (this.fld.getMask() == CurrencyMask)
 			src = src.replace(".", "").replace(",", ".");
-		if (this.peerType == RuleValidator.FIELD_FIELD && this.peer.getMask() == CurrencyMask)
+		if (this.peerType == RuleValidator.PEER_FIELD && this.peer.getMask() == CurrencyMask)
 			trg = trg.replace(".", "").replace(",", ".");
 	} catch(e) {}
 	return PHP2Go.compare(src, trg, op || this.ruleType, this.dataType);
