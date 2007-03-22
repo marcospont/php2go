@@ -52,7 +52,7 @@ define('TOOLBAR_MODE_LINKS', 3);
  * # class : toolbar CSS class
  * # horizontal : TRUE or FALSE (vertical)
  * # width : toolbar width
- * # items : toolbar items
+ * # items : toolbar items (mandatory)
  * # itemClass : CSS class for toolbar items
  * # itemHeight : height for the toolbar items
  * # descriptionAlign : align of the layer used to show the item's description when the mouse is over it
@@ -61,6 +61,7 @@ define('TOOLBAR_MODE_LINKS', 3);
  * # activeClass : CSS class for the active toolbar item
  *
  * @package gui
+ * @subpackage widget
  * @uses Template
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
