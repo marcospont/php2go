@@ -1234,6 +1234,41 @@ var Report = {
 };
 
 /**
+ * The Widget class is the base class of all widgets.
+ * @constructor
+ */
+Widget = function(attrs) {
+	/**
+	 * Widget attributes
+	 * @type Object
+	 */
+	this.attributes = {};
+	this.loadAttributes(attrs);
+};
+
+/**
+ * Initializes a widget, given its name and attributes
+ * @param {String} name Widget name
+ * @param {Object} attrs Widget attributes
+ */
+Widget.init = function(name, attrs) {
+	PHP2Go.include(PHP2Go.baseUrl + 'widgets/' + name.toLowerCase() + '.js');
+	Event.addLoadListener(function() {
+		new window[name](attrs);
+	});
+};
+
+/**
+ * Loads the widget's attributes
+ * @param {Object} attrs Widget attributes
+ */
+Widget.prototype.loadAttributes = function(attrs) {
+	for (var prop in attrs) {
+		this.attributes[prop] = attrs[prop];
+	}
+};
+
+/**
  * Finds one or more objects by their ids.
  * If one argument is passed, the function will return
  * an object or null if not found. If more than one argument
