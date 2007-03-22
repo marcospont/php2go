@@ -36,13 +36,18 @@ import('php2go.util.json.JSONEncoder');
  */
 define('TP_ROOTBLOCK', '_ROOT');
 /**
- * Tag delimiter based on HTML comments
+ * Tag delimiter based on HTML comments: &lt;!-- --&gt;
  */
 define('TEMPLATE_DELIM_COMMENT', 1);
 /**
- * Tag delimiter based on curly braces
+ * Tag delimiter based on curly braces: { }
  */
 define('TEMPLATE_DELIM_BRACE', 2);
+/**
+ * Tag delimiter based on directives: &lt;% %&gt;
+ *
+ */
+define('TEMPLATE_DELIM_DIRECTIVE', 3);
 /**
  * Quoted string pattern
  */
