@@ -41,9 +41,10 @@ import('php2go.template.Template');
  * where the widget was declared.
  *
  * Available attributes:
- * # tpl : template file
+ * # tpl : template file (mandatory)
  *
  * @package gui
+ * @subpackage widget
  * @uses Template
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
