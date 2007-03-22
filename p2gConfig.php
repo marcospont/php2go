@@ -70,7 +70,8 @@
 	/**
 	 * Framework's Javascript libraries path
 	 */
-	define('PHP2GO_JAVASCRIPT_PATH', PHP2GO_OFFSET_PATH . "resources/jsrun/");
+	$useCompressedJs = $Conf->getConfig('USE_COMPRESSED_JS', TRUE);
+	define('PHP2GO_JAVASCRIPT_PATH', PHP2GO_OFFSET_PATH . ($useCompressedJs ? "resources/jsrun/" : "resources/javascript/"));
 	/**
 	 * Framework's cache path
 	 */
@@ -130,12 +131,12 @@
 
 	/**
 	 * Set INI variables
-	 */	
+	 */
 	ini_set('short_open_tag', 'on');
 	ini_set('asp_tags', 'off');
 	ini_set('arg_separator.output', "&amp;");
 	ini_set('register_globals', 'off');
-	ini_set('register_argc_argv', 'on');	
+	ini_set('register_argc_argv', 'on');
 	ini_set('magic_quotes_gpc', 'off');
 	ini_set('magic_quotes_runtime', 'off');
 
