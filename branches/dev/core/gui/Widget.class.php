@@ -27,6 +27,8 @@
  * @version $Id$
  */
 
+import('php2go.util.json.JSONEncoder');
+
 /**
  * Interface control that can be included in page templates
  *
