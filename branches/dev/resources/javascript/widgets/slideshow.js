@@ -34,6 +34,8 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/slideshow.js']) {
  */
 
 /**
+ * The SlideShow widget implements a control that display a
+ * list of images sequentially, based on an interval.
  * @constructor
  */
 function SlideShow(attrs) {
@@ -59,10 +61,35 @@ function SlideShow(attrs) {
 	 */
 	this.background = 'image2';
 	/**
+	 * Toggle button
+	 * @type Object
+	 */
+	this.toggleBtn = $(this.attributes['id'] + '_toggle');
+	/**
+	 * Image count/total text
+	 * @type Object
+	 */
+	this.cnt = $(this.attributes['id'] + '_count');
+	/**
+	 * Image description
+	 * @type Object
+	 */
+	this.desc = $(this.attributes['id'] + '_description');
+	/**
+	 * Input used to change the delay amount
+	 * @type Object
+	 */
+	this.delayInput = $(this.attributes['id'] + '_delay');
+	/**
 	 * Current slide show index
 	 * @type Number
 	 */
 	this.index = 0;
+	/**
+	 * Number of images in the slide show
+	 * @type Number
+	 */
+	this.total = this.attributes['images'].length;
 	/**
 	 * Load timer
 	 * @type Object
@@ -82,7 +109,7 @@ function SlideShow(attrs) {
 	 * Indicates if the slide show is stopped
 	 * @type Boolean
 	 */
-	this.stopped = false;
+	this.stopped = (!this.attributes['play']);
 	this.setup();
 }
 SlideShow.extend(Widget, 'Widget');
@@ -91,14 +118,52 @@ SlideShow.extend(Widget, 'Widget');
  * Initializes the widget
  */
 SlideShow.prototype.setup = function() {
-	this[this.foreground].src = this.attributes['images'][this.index];
+	var first = this.attributes['images'][this.index];
+	this.desc.update(first.description || first.url);
 	this[this.foreground].setOpacity(0.9999);
 	this[this.background].setOpacity(0.9999);
-	if (this.attributes['images'].length > 1) {
+	if (this.total > 1) {
 		Event.addListener(this[this.foreground], 'load', this.onImageLoaded.bind(this), true);
 		Event.addListener(this[this.background], 'load', this.onImageLoaded.bind(this), true);
-		this.index++;
+		Event.addListener(this.toggleBtn, 'click', this.onToggle.bind(this));
+		Event.addListener(this.delayInput, 'blur', this.onSetDelay.bind(this));
+		this[this.foreground].src = first.url;
+		this.cnt.update((++this.index) + "/" + this.total);
+		if (!this.stopped)
+			this.loadNextImage();
+	} else {
+		this[this.foreground].src = img.url;
+		this.toggleBtn.disabled = true;
+	}
+};
+
+/**
+ * Handles the click event on the toggle status button
+ * @param {Event} evt Event
+ */
+SlideShow.prototype.onToggle = function(evt) {
+	if (this.stopped) {
+		this.stopped = false;
 		this.loadNextImage();
+		this.toggleBtn.update(this.attributes['pauseCaption']);
+	} else {
+		this.stopped = true;
+		this.toggleBtn.update(this.attributes['playCaption']);
+	}
+};
+
+/**
+ * Handles the onblur event on the delay input
+ * @type {Event} evt Event
+ */
+SlideShow.prototype.onSetDelay = function(evt) {
+	evt = evt || window.event;
+	var input = evt.target || evt.srcElement;
+	if (/^[0-9]+$/.test(input.value)) {
+		this.attributes['delay'] = input.value*1000;
+	} else {
+		alert(Lang.invalidValue);
+		input.value = (this.attributes['delay']/1000);
 	}
 };
 
@@ -110,7 +175,7 @@ SlideShow.prototype.loadNextImage = function() {
 	this.waiting = true;
 	this[this.background].setOpacity(1);
 	this.timer = setTimeout(this.onTimerEnd.bind(this), this.attributes['delay']);
-	this[this.background].src = this.attributes['images'][this.index];
+	this[this.background].src = this.attributes['images'][this.index].url;
 	if (this.index == (this.attributes['images'].length-1)) {
 		this.index = 0;
 	} else {
@@ -123,11 +188,19 @@ SlideShow.prototype.loadNextImage = function() {
  * @param {Event} evt Event
  */
 SlideShow.prototype.onImageLoaded = function(evt) {
+	// will enter here when current image index >= 1
 	if (this.loading) {
+		if (this.stopped)
+			return;
+		this.resizeImage(this[this.background]);
 		this.loading = false;
 		if (!this.waiting) {
 			this.switchImage();
 		}
+	}
+	// will enter here upon loading of first image
+	else {
+		this.resizeImage(this[this.foreground]);
 	}
 };
 
@@ -135,6 +208,8 @@ SlideShow.prototype.onImageLoaded = function(evt) {
  * Called when the slide show timer ends
  */
 SlideShow.prototype.onTimerEnd = function() {
+	if (this.stopped)
+		return;
 	if (this.waiting) {
 		clearTimeout(this.timer);
 		this.waiting = false;
@@ -145,12 +220,35 @@ SlideShow.prototype.onTimerEnd = function() {
 };
 
 /**
+ * Adjusts the size of an image based
+ * on the container dimensions
+ * @param {Object} img Image
+ */
+SlideShow.prototype.resizeImage = function(img) {
+	// resize using width as constraint
+	var w = img.naturalWidth||img.clientWidth;
+	var h = img.naturalHeight||img.clientHeight;
+	if (w != this.attributes['width']) {
+		h = Math.floor((h*this.attributes['width'])/w);
+		w = this.attributes['width'];
+		img.resizeTo(w, h);
+	}
+	img.style.visibility = 'visible';
+};
+
+/**
  * Switches the current displayed image
  */
 SlideShow.prototype.switchImage = function() {
 	// change z-indexes
-	this[this.background].style.zIndex = parseInt(this[this.background].style.zIndex, 10) + 1;
 	this[this.foreground].style.zIndex = parseInt(this[this.foreground].style.zIndex, 10) - 1;
+	this[this.foreground].style.visibility = 'hidden';
+	this[this.background].style.zIndex = parseInt(this[this.background].style.zIndex, 10) + 1;
+	// show description
+	var curIdx = (this.index == 0 ? this.total-1 : this.index-1);
+	var curImg = this.attributes['images'][curIdx];
+	this.cnt.update((curIdx+1) + "/" + this.total);
+	this.desc.update(curImg.description || curImg.url);
 	// switch images
 	var tmp = this.foreground;
 	this.foreground = this.background;
