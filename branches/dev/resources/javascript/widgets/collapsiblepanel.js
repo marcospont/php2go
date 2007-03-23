@@ -39,6 +39,7 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/collapsiblepanel.js']) {
  * on its header. This Javascript class contains the code
  * that implements this behaviour
  * @constructor
+ * @base Widget 
  */
 function CollapsiblePanel(attrs) {
 	this.Widget(attrs);
