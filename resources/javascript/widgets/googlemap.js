@@ -38,18 +38,39 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/googlemap.js']) {
  * by Google Maps. This class receives a set of locations and
  * configurations and apply them in a google map instance.
  * @constructor
+ * @base Widget 
  */
 function GoogleMap(attrs) {
 	this.Widget(attrs);
+	/**
+	 * Map container
+	 * @type Object
+	 */
 	this.container = $(this.attributes['id']);
-	this.center = new GLatLng(this.attributes['center']['lat'], this.attributes['center']['lng']);
+	/**
+	 * Center point
+	 * @type GLatLng
+	 */
+	this.center = new GLatLng(this.attributes['center'].lat, this.attributes['center'].lng);
+	/**
+	 * Bounds object composed by all locations
+	 * @type GLatLngBounds
+	 */
 	this.bounds = new GLatLngBounds();
+	/**
+	 * Map locations
+	 * @type Array
+	 */
 	this.locations = [];
 	for (var i=0; i<this.attributes['locations'].length; i++) {
 		var point = new GLatLng(this.attributes['locations'][i].lat, this.attributes['locations'][i].lng);
 		this.bounds.extend(point);
 		this.locations.push(point);
 	}
+	/**
+	 * Google Map instance
+	 * @type GMap2
+	 */
 	this.map = null;
 	this.setup();
 }
