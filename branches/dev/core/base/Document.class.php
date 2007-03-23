@@ -388,11 +388,12 @@ class Document extends PHP2Go
 	 *
 	 * @param string $path Relative or absolute path to the script
 	 * @param string $language Script language
+	 * @param string $type Script type
 	 * @param string $charset Script charset
 	 * @uses DocumentHead::addScript()
 	 */
-	function addScript($path, $language="Javascript", $charset=NULL) {
-		$this->Head->addScript($path, $language, $charset);
+	function addScript($path, $language="Javascript", $type='text/javascript', $charset=NULL) {
+		$this->Head->addScript($path, $language, $type, $charset);
 	}
 
 	/**
