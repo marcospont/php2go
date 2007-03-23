@@ -249,14 +249,21 @@ class DocumentHead
 	 *
 	 * @param string $path Relative or absolute path to the script
 	 * @param string $language Script language
+	 * @param string $type Script type
 	 * @param string $charset Script charset
 	 */
-	function addScript($path, $language='Javascript', $charset=NULL) {
+	function addScript($path, $language='Javascript', $type='text/javascript', $charset=NULL) {
 		$path = htmlentities($path);
 		if (!array_key_exists($path, $this->scriptFiles)) {
-			$this->scriptFiles[$path] = sprintf("<script language=\"%s\" src=\"%s\" type=\"text/%s\"%s></script>\n",
-				$language, $path, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), (!empty($charset) ? " charset=\"{$charset}\"" : '')
-			);
+			if (!empty($language)) {
+				$this->scriptFiles[$path] = sprintf("<script language=\"%s\" src=\"%s\" type=\"%s\"%s></script>\n",
+					$language, $path, $type, (!empty($charset) ? " charset=\"{$charset}\"" : '')
+				);
+			} else {
+				$this->scriptFiles[$path] = sprintf("<script src=\"%s\" type=\"%s\"%s></script>\n",
+					$path, $type, (!empty($charset) ? " charset=\"{$charset}\"" : '')
+				);
+			}
 		}
 	}
 
