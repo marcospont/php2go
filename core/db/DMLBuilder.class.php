@@ -202,10 +202,10 @@ class DMLBuilder extends PHP2Go
 			$mode = DML_BUILDER_INSERT;
 		$this->_mode = $mode;
 		$this->_table = $table;
-		$this->_values = TypeUtils::toArray($values);
+		$this->_values = (array)$values;
 		if (!empty($clause)) {
 			$this->_clause = $clause;
-			$this->_clauseBindVars = TypeUtils::toArray($clauseBindVars);
+			$this->_clauseBindVars = (array)$clauseBindVars;
 		} else {
 			unset($this->_clause);
 			$this->_clauseBindVars = array();
