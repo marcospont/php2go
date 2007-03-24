@@ -38,10 +38,10 @@
 	$db =& Db::getInstance();
 	$tables = $db->getTables();
 	if (!in_array('people', $tables)) {
-		PHP2Go::raiseError("The <i>people</i> table was not found! Please run <i>people.sql</i>, located at the <i>ROOT/examples/resources</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
+		PHP2Go::raiseError("The <i>people</i> table was not found! Please run <i>people.sql</i>, located at the <i>ROOT/examples/sql</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
 	}
 	if (!in_array('country', $tables)) {
-		PHP2Go::raiseError("The <i>country</i> table was not found! Please run <i>country.sql</i>, located at the <i>ROOT/examples/resources</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
+		PHP2Go::raiseError("The <i>country</i> table was not found! Please run <i>country.sql</i>, located at the <i>ROOT/examples/sql</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
 	}
 
 	/**
