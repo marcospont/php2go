@@ -151,6 +151,7 @@ class FormAjaxListener extends FormEventListener
 			$this->url = $Form->formAction;
 			$this->params['method'] = $Form->formMethod;
 			$this->params['form'] = $Form->formName;
+			$this->params['formValidate'] = 'true';
 		} elseif (empty($this->url)) {
 			$this->url = HttpRequest::uri(FALSE);
 		}
@@ -217,6 +218,7 @@ class FormAjaxListener extends FormEventListener
 				case 'params' :
 				case 'headers' :
 				case 'formFields' :
+				case 'formValidate' :
 					$value = trim($value);
 					$buf .= "\t\tparams.{$name} = {$value};\n";
 					break;
