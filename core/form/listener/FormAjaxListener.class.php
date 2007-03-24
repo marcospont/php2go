@@ -263,10 +263,19 @@ class FormAjaxListener extends FormEventListener
 	 */
 	function onDataBind() {
 		parent::onDataBind();
+		$Form =& $this->getOwnerForm();
 		// resolve variables and expressions on the URL attribute
 		if (preg_match("/~[^~]+~/", $this->url)) {
-			$Form =& $this->getOwnerForm();
 			$this->url = $Form->resolveVariables($this->url);
+		}
+		// resolve variables in the listener body
+		if (preg_match("/~[^~]+~/", $this->paramsFuncBody)) {
+			$this->paramsFuncBody = $Form->resolveVariables($this->paramsFuncBody);
+		}
+		// resolve variables inside listener params
+		foreach ($this->params as $name => $value) {
+			if (preg_match("/~[^~]+~/", $value))
+				$this->params[$name] = $Form->resolveVariables($value);
 		}
 	}
 
