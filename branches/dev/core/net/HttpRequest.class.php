@@ -289,6 +289,17 @@ class HttpRequest extends PHP2Go
 	}
 
 	/**
+	 * Check whether this is an AJAX request
+	 *
+	 * @return bool
+	 * @static
+	 */
+	function isAjax() {
+		$headers = HttpRequest::getHeaders();
+		return (array_key_exists('X-Requested-With', $headers));
+	}
+
+	/**
 	 * Get request protocol
 	 *
 	 * @return string
