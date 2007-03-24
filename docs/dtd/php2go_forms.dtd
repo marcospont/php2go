@@ -218,6 +218,8 @@
 	cellstyle %text; #IMPLIED
 	cellsizes %text; #IMPLIED
 	tablewidth %number; #IMPLIED
+	showcheckboxes %boolean; "F"
+	emptygridmessage %text; #IMPLIED
 >
 <!ELEMENT datepickerfield ( %rul.list.srch; )>
 <!ATTLIST datepickerfield
