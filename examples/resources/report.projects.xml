@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- PHP2Go Examples : report.projects.xml, used at crudcomponents.example.php -->
+<!DOCTYPE form SYSTEM "..\..\docs\dtd\php2go_reports.dtd">
+<report title="Projects List" baseuri="~PHP_SELF~?action=list">
+	<!-- layout settings -->
+	<layout grid="T" emptytemplate="F">
+		<!-- pagination settings: style, style parameters -->
+		<pagination style="REPORT_FIRSTPREVNEXTLAST">
+			<param name="useButtons" value="T"/>
+			<param name="useSymbols" value="F"/>
+			<param name="hideInvalid" value="F"/>
+		</pagination>
+		<!-- style settings: CSS class for links, filters, buttons and title -->
+		<style link="reportLinks" filter="reportInputs" button="reportInputs" title="reportTitle" header="reportHeader" altstyle="reportCellA,reportCellB"/>
+		<!-- columns configuration -->
+		<columns sizes="35,25,14,14,12">
+			<column name="name" alias="Name"/>
+			<column name="manager" alias="Manager"/>
+			<column name="start_date" alias="Start Date"/>
+			<column name="end_date" alias="End Date"/>
+			<column name="id_project" alias="Actions" sortable="F"/>
+		</columns>
+	</layout>
+	<!-- datasource -->
+	<datasource>
+		<fields>
+			pr.name,
+			pp.name manager,
+			pr.start_date,
+			pr.end_date,
+			pr.id_project
+		</fields>
+		<tables>
+			projects pr inner join
+			people pp on pr.id_manager = pp.id_people
+		</tables>
+		<clause/>
+		<groupby/>
+		<orderby>pr.name</orderby>
+	</datasource>
+</report>
