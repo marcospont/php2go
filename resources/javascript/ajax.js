@@ -204,6 +204,10 @@ AjaxRequest = function(url, args) {
 	 */
 	this.formFields = [];
 	/**
+	 * Indicates if the form associated with the request should be validated
+	 */
+	this.formValidate = true;
+	/**
 	 * Request body
 	 * @type String
 	 */
@@ -248,6 +252,8 @@ AjaxRequest.prototype.readArguments = function(args) {
 		this.form = args.form;
 	if (args.formFields)
 		this.formFields = args.formFields;
+	if (typeof(args.formValidate) != 'undefined')
+		this.formValidate = !!args.formValidate;
 	if (args.throbber) {
 		if ((args.throbber.constructor || $EF) == Throbber)
 			this.throbber = args.throbber;
@@ -279,7 +285,7 @@ AjaxRequest.prototype.addParam = function(param, val) {
  */
 AjaxRequest.prototype.send = function() {
 	this.form = $(this.form);
-	if (this.form) {
+	if (this.form && this.formValidate) {
 		if (this.form.validator && !this.form.validator.run())
 			return;
 	}
