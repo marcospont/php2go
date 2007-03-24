@@ -192,10 +192,12 @@ class LookupField extends DbField
 	 * @param int $size Visible options
 	 */
 	function setSize($size) {
-		if (TypeUtils::isInteger($size))
+		if (TypeUtils::isInteger($size)) {
+			$this->attributes['INTSIZE'] = $size;
 			$this->attributes['SIZE'] = " size=\"{$size}\"";
-		else
+		} else {
 			$this->attributes['SIZE'] = '';
+		}
 	}
 
 	/**
@@ -258,8 +260,10 @@ class LookupField extends DbField
 		if ($this->attributes['MULTIPLE'] && substr($this->validationName, -2) != '[]')
 			$this->validationName .= '[]';
 		parent::onPreRender();
-		if ($this->attributes['MULTIPLE'] && !$this->attributes['SIZE'])
+		if ($this->attributes['MULTIPLE'] && !$this->attributes['SIZE']) {
 			$this->attributes['SIZE'] = " size=\"2\"";
+			$this->attributes['INTSIZE'] = 2;
+		}
 	}
 }
 ?>
