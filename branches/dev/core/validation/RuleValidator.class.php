@@ -124,13 +124,13 @@ class RuleValidator extends AbstractValidator
 			} else {
 				// comparison between field x peer value
 				if ($peerType == RULE_PEER_VALUE) {
-					if ($this->_compareValues($srcValue, $comparisonValue, $matches[2], $comparisonType, RULE_PEER_VALUE)) {
+					if (!$this->_compareValues($srcValue, $comparisonValue, $matches[2], $comparisonType, RULE_PEER_VALUE)) {
 						$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_VALUE_' . $matches[2], array($Src->getLabel(), $comparisonType));
 						return FALSE;
 					}
 				// comparison between field x peer field
 				} elseif ($peerType == RULE_PEER_FIELD) {
-					if ($this->_compareValues($srcValue, $peerValue, $matches[2], $comparisonType, RULE_PEER_FIELD)) {
+					if (!$this->_compareValues($srcValue, $peerValue, $matches[2], $comparisonType, RULE_PEER_FIELD)) {
 						$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_' . $matches[2], array($Src->getLabel(), $Peer->getLabel()));
 						return FALSE;
 					}
