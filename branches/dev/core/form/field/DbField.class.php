@@ -116,6 +116,14 @@ class DbField extends FormField
 	}
 
 	/**
+	 * Moves the internal recordset to the first position
+	 */
+	function resetRecordSet() {
+		if (TypeUtils::isInstanceOf($this->_Rs, 'ADORecordSet'))
+			$this->_Rs->moveFirst();
+	}
+
+	/**
 	 * Processes attributes and child nodes loaded from the XML specification
 	 *
 	 * @uses FormField::parseDataSource()
@@ -147,6 +155,14 @@ class DbField extends FormField
 	}
 
 	/**
+	 * Prepares the component to be rendered
+	 */
+	function onPreRender() {
+		parent::onPreRender();
+		$this->resetRecordSet();
+	}
+
+	/**
 	 * Build component's result set based on the data source
 	 *
 	 * @param int $fetchMode Fetch mode
@@ -156,39 +172,35 @@ class DbField extends FormField
 	function processDbQuery($fetchMode=ADODB_FETCH_DEFAULT, $debug=FALSE) {
 		$this->_Db = Db::getInstance($this->dataSource['CONNECTIONID']);
 		$this->_Db->setDebug($debug);
-		if ($this->dataSourceLoaded) {
-			$this->_Rs->moveFirst();
+		$this->dataSourceLoaded = TRUE;
+		if (!isset($this->dataSource['KEYFIELD'])) {
+			$this->_Rs = $this->_Db->emptyRecordSet();
 		} else {
-			$this->dataSourceLoaded = TRUE;
-			if (!isset($this->dataSource['KEYFIELD'])) {
-				$this->_Rs = $this->_Db->emptyRecordSet();
+			$oldMode = $this->_Db->setFetchMode($fetchMode);
+			if (isset($this->dataSource['PROCEDURE'])) {
+				$this->_Rs =& $this->_Db->execute(
+					$this->_Db->getProcedureSql($this->dataSource['PROCEDURE']),
+					FALSE, @$this->dataSource['CURSORNAME']
+				);
+				if ($this->_Rs === FALSE)
+					$this->_Rs = $this->_Db->emptyRecordSet();
 			} else {
-				$oldMode = $this->_Db->setFetchMode($fetchMode);
-				if (isset($this->dataSource['PROCEDURE'])) {
-					$this->_Rs =& $this->_Db->execute(
-						$this->_Db->getProcedureSql($this->dataSource['PROCEDURE']),
-						FALSE, @$this->dataSource['CURSORNAME']
-					);
-					if ($this->_Rs === FALSE)
-						$this->_Rs = $this->_Db->emptyRecordSet();
-				} else {
-					$Query = new QueryBuilder(
-						$this->dataSource['KEYFIELD'] . ',' . $this->dataSource['DISPLAYFIELD'],
-						$this->dataSource['LOOKUPTABLE'], $this->dataSource['CLAUSE'],
-						$this->dataSource['GROUPBY'], $this->dataSource['ORDERBY']
-					);
-					if ($this->isGrouping) {
-						$Query->addFields($this->dataSource['GROUPFIELD']);
-						$Query->addFields($this->dataSource['GROUPDISPLAY']);
-						$Query->prefixOrder($this->dataSource['GROUPDISPLAY']);
-					}
-					if (isset($this->dataSource['LIMIT']) && preg_match("/([0-9]+)(,[0-9]+)?/", trim($this->dataSource['LIMIT']), $matches))
-						$this->_Rs =& $this->_Db->limitQuery($Query->getQuery(), intval($matches[1]), intval(@$matches[2]));
-					else
-						$this->_Rs =& $this->_Db->query($Query->getQuery());
+				$Query = new QueryBuilder(
+					$this->dataSource['KEYFIELD'] . ',' . $this->dataSource['DISPLAYFIELD'],
+					$this->dataSource['LOOKUPTABLE'], $this->dataSource['CLAUSE'],
+					$this->dataSource['GROUPBY'], $this->dataSource['ORDERBY']
+				);
+				if ($this->isGrouping) {
+					$Query->addFields($this->dataSource['GROUPFIELD']);
+					$Query->addFields($this->dataSource['GROUPDISPLAY']);
+					$Query->prefixOrder($this->dataSource['GROUPDISPLAY']);
 				}
-				$this->_Db->setFetchMode($oldMode);
+				if (isset($this->dataSource['LIMIT']) && preg_match("/([0-9]+)(,[0-9]+)?/", trim($this->dataSource['LIMIT']), $matches))
+					$this->_Rs =& $this->_Db->limitQuery($Query->getQuery(), intval($matches[1]), intval(@$matches[2]));
+				else
+					$this->_Rs =& $this->_Db->query($Query->getQuery());
 			}
+			$this->_Db->setFetchMode($oldMode);
 		}
 	}
 }
