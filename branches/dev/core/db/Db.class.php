@@ -1167,7 +1167,7 @@ class Db extends PHP2Go
 					'vars' => array()
 				);
 				$rs =& $this->query($sqlCode);
-				if (!$rs || $rs->RecordCount() == 0) {
+				if ($rs && $rs->recordCount() > 0) {
 					$ok = FALSE;
 					break;
 				}
@@ -1183,7 +1183,7 @@ class Db extends PHP2Go
 				'vars' => array()
 			);
 			$rs =& $this->query($sqlCode);
-			$ok = ($rs && $rs->RecordCount() > 0);
+			$ok = ($rs && $rs->RecordCount() == 0);
 		}
 		return $ok;
      }
