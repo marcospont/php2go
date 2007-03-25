@@ -199,9 +199,9 @@ var Form = {
 		}).join('&');
 	},
 	/**
-	 * Setup a given form to be submitted using AJAX. The second
-	 * parameter must be a valid AJAX instance (AjaxRequest,
-	 * AjaxUpdater, ...)
+	 * Setup a given form to be submitted using AJAX. The
+	 * second argument must be a function that returns
+	 * a valid instance of an AJAX request class.
 	 * @param {Object} form Form reference or id
 	 * @param {Function} Function that builds the AJAX handler
 	 */
@@ -210,11 +210,15 @@ var Form = {
 		if (form && typeof(ajax) == 'function') {
 			form.ajax = ajax;
 			Event.addListener(form, 'submit', function(e) {
-				var frm, evt = $EV(e);
-				var elm = $E(evt.element());
+				var evt = $EV(e), frm = null;
 				evt.stop();
-				if (frm = elm.getParentByTagName('form'))
-					frm.ajax();
+				frm = Element.getParentByTagName(evt.element(), 'form');
+				if (frm) {
+					var ajax = frm.ajax();
+					ajax.form = frm.id;
+					ajax.formValidate = true;
+					ajax.send();
+				}
 			}, true);
 		}
 	},

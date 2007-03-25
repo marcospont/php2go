@@ -162,8 +162,7 @@ class FormAjaxListener extends FormEventListener
 			$Form->Document->addScriptCode(
 				"\tForm.ajaxify($('{$Form->formName}'), function() {\n" .
 				$this->getParamsScript() .
-				"\t\tvar request = new {$this->class}('{$this->url}', params);\n" .
-				"\t\trequest.send();\n" .
+				"\t\treturn new {$this->class}('{$this->url}', params);\n" .
 				"\t});",
 			'Javascript', SCRIPT_END);
 			return NULL;
