@@ -30,6 +30,7 @@
 	require_once('config.example.php');
 	import('php2go.base.Document');
 	import('php2go.db.DMLBuilder');
+	import('php2go.datetime.Date');
 	import('php2go.data.Report');
 	import('php2go.form.FormTemplate');
 	import('php2go.net.HttpRequest');
@@ -93,9 +94,10 @@
 	/**
 	 * Builds the list of projects
 	 */
-	function listAction(&$doc) {
+	function listAction(&$doc, $msg='') {
 		$report = new Report('resources/report.projects.xml', 'resources/report.projects.tpl', $doc);
 		$report->setLineHandler('lineHandler');
+		$report->Template->assign('message', $msg);
 		$doc->assignByRef('main', $report);
 	}
 
@@ -104,7 +106,7 @@
 	 */
 	function lineHandler($line) {
 		$line['start_date'] = Date::fromSqlToEuroDate($line['start_date']);
-		$line['end_date'] = Date::fromEuroToSqlDate($line['end_date']);
+		$line['end_date'] = Date::fromSqlToEuroDate($line['end_date']);
 		$actions = array(
 			HtmlUtils::anchor(HttpRequest::basePath() . '?action=update&id_project=' . $line['id_project'], 'Edit', 'Edit', 'input_style'),
 			HtmlUtils::anchor(HttpRequest::basePath() . '?action=delete&id_project=' . $line['id_project'], 'Delete', 'Delete', 'input_style', array('onClick' => 'return confirm("Are you sure?")'))
@@ -162,6 +164,7 @@
 				/**
 				 * Create and configure the DML builder
 				 */
+				$error = FALSE;
 				$dml = new DMLBuilder($db);
 				$dml->ignoreEmptyValues = TRUE;
 				if ($action == 'create') {
@@ -170,7 +173,6 @@
 					 */
 					$dml->prepare(DML_BUILDER_INSERT, 'projects', $values);
 					if ($dml->execute()) {
-						$error = FALSE;
 						$id = $db->lastInsertId();
 						/**
 						 * Process added members
@@ -179,7 +181,7 @@
 						$stmt = $db->prepare("insert into projects_people values (?, ?)");
 						foreach ($members as $member) {
 							if (!@$db->execute($stmt, array($id, $member))) {
-								$error = TRUE;
+								$error = $db->getError();
 								break;
 							}
 						}
@@ -190,6 +192,8 @@
 							HttpResponse::redirect(new Url(HttpRequest::basePath() . '?action=list'));
 							exit;
 						}
+					} else {
+						$error = $db->getError();
 					}
 				} else {
 					/**
@@ -204,8 +208,19 @@
 						$removedMembers = $values['members']['removed_members'];
 						$removedStmt = $db->prepare("delete from projects_people where id_project = ? and id_people = ?");
 						foreach ($removedMembers as $member) {
-							if (!@$db->execute($removedStmt, array($id, $member))) {
-								$error = TRUE;
+							/**
+							 * A member that owns tasks in this project can't be removed
+							 */
+							$count = $db->getFirstCell("select count(*) from tasks where id_project = ? and id_owner = ?", array($id, $member));
+							if ($count > 0) {
+								$error = "This member can't be removed.";
+								break;
+							}
+							/**
+							 * Remove the member
+							 */
+							elseif (!@$db->execute($removedStmt, array($id, $member))) {
+								$error = $db->getError();
 								break;
 							}
 						}
@@ -217,7 +232,7 @@
 						if (!$error) {
 							foreach ($addedMembers as $member) {
 								if (!@$db->execute($addedStmt, array($id, $member))) {
-									$error = TRUE;
+									$error = $db->getError();
 									break;
 								}
 							}
@@ -232,7 +247,7 @@
 								$task['end_date'] = Date::fromEuroToSqlDate($task['end_date']);
 								$dml->prepare(DML_BUILDER_UPDATE, 'tasks', $task, 'id_task = ?', array($id));
 								if (!@$dml->execute()) {
-									$error = TRUE;
+									$error = $db->getError();
 									break;
 								}
 							}
@@ -243,12 +258,14 @@
 						if (!$error) {
 							HttpResponse::redirect(new Url(HttpRequest::basePath() . '?action=list'));
 						}
+					} else {
+						$error = $db->getError();
 					}
 				}
 				/**
 				 * Register database errors on the form
 				 */
-				$form->addErrors($db->getError());
+				$form->addErrors($error);
 			}
 		}
 		$doc->setFocus('project');
@@ -261,6 +278,27 @@
 	 */
 	function evalCondSection(&$section) {
 		return (HttpRequest::get('action') == 'update');
+	}
+
+	/**
+	 * Handles the delete action
+	 */
+	function deleteAction(&$doc) {
+		$db =& Db::getInstance();
+		$id = HttpRequest::get('id_project');
+		if (!TypeUtils::isInteger($id)) {
+			listAction($doc, "Invalid project ID!");
+			return;
+		}
+		$count = $db->getFirstCell("select count(*) from projects where id_project = ?", array($id));
+		if (!$count) {
+			listAction($doc, "Invalid project ID!");
+			return;
+		}
+		$db->delete('tasks', 'id_project = ?', array($id));
+		$db->delete('projects_people', 'id_project = ?', array($id));
+		$db->delete('projects', 'id_project = ?', array($id));
+		HttpResponse::redirect(new Url(HttpRequest::basePath() . '?action=list'));
 	}
 
 	/**
