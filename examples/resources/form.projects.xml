@@ -14,12 +14,12 @@
 	/>
 	<section id="project" name="Project Form">
 		<!-- project data -->
-		<editfield name="name" label="Name" size="60" length="40" required="T"/>
-		<editfield name="start_date" label="Start Date" size="10" length="12" mask="DATE" required="T"/>
-		<editfield name="end_date" label="End Date" size="10" length="12" mask="DATE" required="T">
+		<editfield name="name" label="Name" size="60" length="40" required="T" tabindex="1"/>
+		<editfield name="start_date" label="Start Date" size="10" length="12" mask="DATE" required="T" tabindex="2" default="TODAY"/>
+		<editfield name="end_date" label="End Date" size="10" length="12" mask="DATE" required="T" tabindex="3">
 			<rule type="GT" field="start_date"/>
 		</editfield>
-		<lookupfield name="id_manager" label="Manager" width="150" required="T">
+		<lookupfield name="id_manager" label="Manager" width="150" required="T" tabindex="4">
 			<datasource>
 				<keyfield>p.id_people</keyfield>
 				<displayfield>p.name</displayfield>
@@ -28,7 +28,7 @@
 			</datasource>
 		</lookupfield>
 		<lookupselectionfield name="members" label="Members" required="T" insfield="added_members" remfield="removed_members">
-			<lookupfield name="available" label="All People" width="150" size="5">
+			<lookupfield name="available" label="All People" width="150" size="5" tabindex="5">
 				<datasource>
 					<keyfield>id_people</keyfield>
 					<displayfield>name</displayfield>
@@ -36,7 +36,7 @@
 					<orderby>name</orderby>
 				</datasource>
 			</lookupfield>
-			<lookupfield name="selected" label="Selected" width="150" size="5">
+			<lookupfield name="selected" label="Selected" width="150" size="5" tabindex="6">
 				<datasource>
 					<keyfield>pp.id_people</keyfield>
 					<displayfield>p.name</displayfield>
@@ -51,9 +51,9 @@
 		</lookupselectionfield>
 		<condsection id="details" name="Details" evalfunction="evalCondSection">
 			<!-- new task -->
-			<editfield name="task_name" label="Name" size="10" length="20"/>
-			<editfield name="task_description" label="Description" size="25" length="200"/>
-			<lookupfield name="task_id_owner" label="Owner" nofirst="T">
+			<editfield name="task_name" label="Name" size="10" length="20" tabindex="7"/>
+			<editfield name="task_description" label="Description" size="25" length="200" tabindex="8"/>
+			<lookupfield name="task_id_owner" label="Owner" nofirst="T" tabindex="9">
 				<datasource>
 					<keyfield>pp.id_people</keyfield>
 					<displayfield>p.name</displayfield>
@@ -65,19 +65,19 @@
 					<orderby>p.name</orderby>
 				</datasource>
 			</lookupfield>
-			<combofield name="task_status" label="Status" nofirst="T">
+			<combofield name="task_status" label="Status" nofirst="T" tabindex="10">
 				<option value="O" caption="O"/>
 				<option value="A" caption="A"/>
 				<option value="C" caption="C"/>
 			</combofield>
-			<combofield name="task_priority" label="Priority" nofirst="T" default="N">
+			<combofield name="task_priority" label="Priority" nofirst="T" default="N" tabindex="11">
 				<option value="L" caption="L"/>
 				<option value="N" caption="N"/>
 				<option value="H" caption="H"/>
 			</combofield>
-			<editfield name="task_start_date" label="Start Date" size="8" length="10" mask="DATE"/>
-			<editfield name="task_end_date" label="End Date" size="8" length="10" mask="DATE"/>
-			<button name="add" value="Add" type="BUTTON">
+			<editfield name="task_start_date" label="Start Date" size="8" length="10" mask="DATE" tabindex="12" default="TODAY"/>
+			<editfield name="task_end_date" label="End Date" size="8" length="10" mask="DATE" tabindex="13"/>
+			<button name="add" value="Add" type="BUTTON" tabindex="14">
 				<listener type="AJAX" event="onclick">
 					<param name="method">POST</param>
 					<param name="params">{action:"add_task", id_project:~id_project~}</param>
@@ -96,7 +96,7 @@
 			<datagrid
 				name="tasks" label="Tasks" tablewidth="750" style="dataGrid"
 				headers="#,Name,Description,Owner,Status,Priority,Start Date,End Date"
-				emptygridmessage="This project has no tasks" showcheckboxes="T"
+				emptygridmessage="This project has no tasks" showcheckboxes="T" tabindex="15"
 			>
 				<datasource>
 					<keyfield>id_task</keyfield>
@@ -139,9 +139,9 @@
 				</fieldset>
 			</datagrid>
 		</condsection>
-		<button name="send" value="Send" type="SUBMIT"/>
-		<button name="back" value="Back" type="BACK"/>
-		<button name="delete" value="Delete Tasks" type="BUTTON">
+		<button name="send" value="Send" type="SUBMIT" tabindex="16"/>
+		<button name="back" value="Back" type="BACK" tabindex="17"/>
+		<button name="delete" value="Delete Tasks" type="BUTTON" tabindex="18">
 			<listener type="AJAX" event="onclick">
 				<param name="params">{action:"delete_tasks"}</param>
 				<param name="form">project</param>

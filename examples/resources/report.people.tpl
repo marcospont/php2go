@@ -3,6 +3,9 @@
   <div style="width:400px;float:left;">{$title}</div>
   <div style="width:205px;float:right;text-align:right;padding-right:3px;"><a href="{$p2g.server.PHP_SELF}?action=create" class="reportLinks">Insert People</a></div>
 </div>
+<!-- if $message is not empty -->
+<div class="error_style" style="width:615px;padding:5px;height:15px;margin-top:10px;text-align:center;">{$message}</div>
+<!-- end if -->
 <!-- if $report.total_rows gt 0 -->
 <div style="width:615px;padding:5px;margin-top:5px;">
   <div style="width:302px;float:left;" class="reportInputs">{$go_to_page}</div>
