@@ -151,6 +151,92 @@ Element.getParentByTagName = function(elm, tag) {
 };
 
 /**
+ * Recursively collects elements associated by the 'prop' property
+ *
+ * The property 'prop' must point to a single DOM element.
+ * Returns an array of extended elements.
+ * @param {Object} elm Base element
+ * @param {String} prop Property
+ * @type Array
+ */
+Element.recursivelyCollect = function(elm, prop) {
+	var res = [];
+	if (elm = $(elm)) {
+		while (elm = elm[prop]) {
+			if (elm.nodeType == 1)
+				res.push($E(elm));
+		}
+	}
+	return res;
+};
+
+/**
+ * Collects element's parent nodes
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getParentNodes = function(elm) {
+	if (elm = $(elm))
+		return elm.recursivelyCollect('parentNode');
+	return [];
+};
+
+/**
+ * Collects element's child nodes, skipping
+ * all text nodes. Extends and returns all
+ * child nodes in an array
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getChildNodes = function(elm) {
+	var res = [];
+	if (elm = $(elm) && (elm = elm.firstChild)) {
+		while (elm && elm.nodeType != 1)
+			elm = elm.nextSibling;
+		if (elm) {
+			elm = $E(elm);
+			return [elm].concat(elm.getNextSiblings());
+		}
+	}
+	return res;
+};
+
+/**
+ * Get element's previous siblings
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getPreviousSiblings = function(elm) {
+	if (elm = $(elm))
+		return elm.recursivelyCollect('previousSibling');
+	return [];
+};
+
+/**
+ * Get element's next siblings
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getNextSiblings = function(elm) {
+	if (elm = $(elm))
+		return elm.recursivelyCollect('nextSibling');
+	return [];
+};
+
+/**
+ * Get all element's siblings
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getSiblings = function(elm) {
+	if (elm = $(elm)) {
+		var rc = elm.recursivelyCollect;
+		return rc('previousSibling').reverse.concat(rc('nextSibling'));
+	}
+	return [];
+};
+
+/**
  * Checks if a given element has another as ancestor
  * @param {Object} elm Element
  * @param {Object} anc Ancestor element
@@ -535,9 +621,8 @@ Element.clear = function(elm, useDom) {
  * @type Boolean
  */
 Element.isEmpty = function(elm) {
-	if (elm = $(elm)) {
-		return elm.innerHTML.match(/^\s*$/);
-	}
+	if (elm = $(elm))
+		return elm.innerHTML.isEmpty();
 };
 
 /**
@@ -659,14 +744,13 @@ Element.remove = function(elm) {
  * Define HTMLElement if it's not a valid identifier,
  * and add all Element methods to its prototype
  */
-if (!HTMLElement && PHP2Go.browser.khtml) {
-	var HTMLElement = {};
-	HTMLElement.prototype = document.createElement('div').__proto__;
-}
-if (typeof(HTMLElement) != 'undefined') {
-	Element.extend(HTMLElement.prototype);
+if (!PHP2Go.nativeElementExtension && document.createElement('div').__proto__) {
+	window.HTMLElement = {};
+	window.HTMLElement.prototype = document.createElement('div').__proto__;
 	PHP2Go.nativeElementExtension = true;
 }
+if (PHP2Go.nativeElementExtension)
+	Element.extend(HTMLElement.prototype);
 
 /**
  * Document extensions
