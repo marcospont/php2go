@@ -34,80 +34,6 @@
  */
 
 /**
- * The UserAgent class provides information about
- * the user navigator and operating system
- * @constructor
- */
-function UserAgent() {
-	/**
-	 * @ignore
-	 */
-	var ua = navigator.userAgent.toLowerCase();
-	/**
-	 * Indicates if the user browser is Internet Explorer
-	 * @type Boolean
-	 */
-	this.ie = /msie/i.test(ua) && !/opera/i.test(ua);
-	/**
-	 * Indicates if the user browser is Internet Explorer 6
-	 * @type Boolean
-	 */
-	this.ie6 = this.ie && /msie 6/i.test(ua);
-	/**
-	 * Indicates if the user browser is Internet Explorer 5.0
-	 * @type Boolean
-	 */
-	this.ie5 = this.ie && /msie 5\.0/i.test(ua);
-	/**
-	 * Indicates if the user browser is Opera
-	 * @type Boolean
-	 */
-	this.opera = /opera/i.test(ua);
-	/**
-	 * Indicates if the user browser is one of the KHTML family browsers (Konqueror, Safari)
-	 * @type Boolean
-	 */
-	this.khtml = /konqueror|safari|khtml/i.test(ua);
-	/**
-	 * Indicates if the user browser is Mozilla (Netscape, Mozilla, Firebird, Firefox)
-	 * @type Boolean
-	 */
-	this.mozilla = !this.ie && !this.opera && !this.khtml && /mozilla/i.test(ua);
-	/**
-	 * Indicates if the browser uses the Gecko engine
-	 * @type Boolean
-	 */
-	this.gecko = /gecko/i.test(ua);
-	/**
-	 * Indicates if the user SO is windows
-	 * @type Boolean
-	 */
-	this.windows = false;
-	/**
-	 * Indicates if the user SO is linux
-	 * @type Boolean
-	 */
-	this.linux = false;
-	/**
-	 * Indicates if the user SO is macintosh
-	 * @type Boolean
-	 */
-	this.mac = false;
-	/**
-	 * Indicates if the user SO is unix
-	 * @type Boolean
-	 */
-	this.unix = false;
-	/**
-	 * Holds the name of the user SO
-	 * @type String
-	 */
-	this.os = (/windows/i.test(ua) ? 'windows' : (/linux/i.test(ua) ? 'linux' : (/mac/i.test(ua) ? 'mac' : (/unix/i.test(ua) ? 'unix' : 'unknown'))));
-	(this.os != 'unknown') && (this[this.os] = true);
-};
-
-
-/**
  * Main class of the framework. Contains utility methods
  * that might be used by all other classes and libraries
  * @class PHP2Go
@@ -136,10 +62,19 @@ var PHP2Go = {
 	 */
 	uidCache : [0,{}],
 	/**
-	 * Regular expression used to match script blocks
-	 * @type String
+	 * @ignore
 	 */
-	scriptRegExp : '(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)',
+	scriptRegExpAll : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'img'),
+	/**
+	 * @ignore
+	 */
+	scriptRegExpOne : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'im'),
+	/**
+	 * Indicates if it was possible to add
+	 * methods in the HTMLElement class prototype
+	 * @type Boolean
+	 */
+	nativeElementExtension : !!window.HTMLElement,
 	/**
 	 * Check all arguments to see if all of them
 	 * are defined. If one of the passed values
@@ -238,6 +173,32 @@ var PHP2Go = {
 		}
 	},
 	/**
+	 * Contains information about the user's navigator and OS
+	 *
+	 * <br>Properties:
+	 * <ul><li>ie (Boolean)</li><li>ie7 (Boolean)</li><li>ie6 (Boolean)</li><li>
+	 * ie5 (Boolean)</li><li>opera (Boolean)</li><li>khtml (Boolean)</li><li>mozilla
+	 * (Boolean)</li><li>gecko (Boolean)</li><li>windows (Boolean)</li><li>linux (Boolean)</li><li>
+	 * mac (Boolean)</li><li>unix (Boolean)</li><li>os (String)</li></ul>
+	 *
+	 * @type Object
+	 */
+	browser : function() {
+		var bw = {}, ua = navigator.userAgent.toLowerCase();
+		bw.ie = /msie/i.test(ua) && !/opera/i.test(ua);
+		bw.ie7 = bw.ie && /msie 7/i.test(ua);
+		bw.ie6 = bw.ie && /msie 6/i.test(ua);
+		bw.ie5 = bw.ie && /msie 5\.0/i.test(ua);
+		bw.opera = /opera/i.test(ua);
+		bw.khtml = /konqueror|safari|khtml/i.test(ua);
+		bw.mozilla = !bw.ie && !bw.opera && !bw.khtml && /mozilla/i.test(ua);
+		bw.gecko = /gecko/i.test(ua);
+		bw.windows = bw.linux = bw.mac = bw.unix = false;
+		bw.os = (/windows/i.test(ua) ? 'windows' : (/linux/i.test(ua) ? 'linux' : (/mac/i.test(ua) ? 'mac' : (/unix/i.test(ua) ? 'unix' : 'unknown'))));
+		(bw.os != 'unknown') && (bw[bw.os] = true);
+		return bw;
+	}(),
+	/**
 	 * Utility method to compare values using a given
 	 * operator and a given datatype. Both values must
 	 * be of the provided type
@@ -269,13 +230,6 @@ var PHP2Go = {
 
 /**
  * Indicates if it was possible to add
- * methods in the HTMLElement class prototype
- * @type Boolean
- */
-PHP2Go.nativeElementExtension = false;
-
-/**
- * Indicates if it was possible to add
  * methods in the Event native prototype
  * @type Boolean
  */
@@ -284,12 +238,6 @@ try {
 } catch(e) {
 	PHP2Go.nativeEventExtension = false;
 }
-
-/**
- * Holds an instance of the UserAgent class
- * @type UserAgent
- */
-PHP2Go.browser = new UserAgent();
 
 /**
  * Makes all properties and methods of src
@@ -315,28 +263,23 @@ Object.implement = function(dst, src) {
  * @type String
  */
 Object.serialize = function(obj) {
-	try {
-		if (typeof(obj) == 'undefined')
-			return 'undefined';
-		if (obj == null)
-			return 'null';
-		if (obj.serialize)
-			return obj.serialize();
-		var buf = "", isNode = (obj.nodeType && obj.nodeType == 1);
-		if (typeof(obj) == 'object' && !PHP2Go.browser.opera && !isNode) {
-			for (p in obj) {
-				// skip undefined, null, empty strings and functions
-				if (typeof(obj[p]) != 'undefined' && obj[p] !== null && obj[p] !== "" && obj[p].constructor != Function) {
-					(buf == "" ? buf = "{" : buf += ", ");
-					buf += p + ":" + Object.serialize(obj[p]);
-				}
-			}
-			if (buf != "")
-				return buf + "}";
-		}
-	} catch(e) {
+	if (typeof(obj) == 'undefined') return;
+	if (typeof(obj) == 'function') return;
+	if (typeof(obj) == 'boolean') return obj.toString();
+	if (obj === null) return 'null';
+	if (obj.serialize) return obj.serialize();
+	if (obj === window) return;
+	var buf = [];
+	for (var p in obj) {
+		if (obj[p] == '') continue;
+		if (obj[p] && obj[p].ownerDocument === document) continue;
+		try {
+			var v = Object.serialize(obj[p]);
+			if (typeof(v) != 'undefined')
+				buf.push(p + ":" + v);
+		} catch (e) { }
 	}
-	return (obj.toString ? obj.toString() : String(obj));
+	return '{' + buf.join(', ') + '}';
 };
 
 if (!Function.prototype.apply) {
@@ -404,6 +347,14 @@ Function.prototype.extend = function(parent, propName) {
  */
 String.prototype.trim = function() {
 	return this.replace(/^\s*/, "").replace(/\s*$/, "");
+};
+
+/**
+ * Checks if the string is empty
+ * @type Boolean
+ */
+String.prototype.empty = function() {
+	return /^\s*$/.test(this);
 };
 
 /**
@@ -576,7 +527,7 @@ String.prototype.stripTags = function() {
  */
 String.prototype.stripScripts = function() {
 	try {
-		return this.replace(new RegExp(PHP2Go.scriptRegExp, 'img'), '');
+		return this.replace(PHP2Go.scriptRegExpAll, '');
 	} catch(e) {
 		var self = this, sp = this.indexOf("<script"), ep = 0;
 		while (sp != -1) {
@@ -599,13 +550,17 @@ String.prototype.stripScripts = function() {
  */
 String.prototype.evalScripts = function() {
 	try {
-		var ra = new RegExp(PHP2Go.scriptRegExp, 'img');
-		var rs = new RegExp(PHP2Go.scriptRegExp, 'im');
+		var ra = PHP2Go.scriptRegExpAll;
+		var ro = PHP2Go.scriptRegExpOne;
 		var matches = this.match(ra) || [];
 		return $C(matches).map(function(item) {
-			var match = item.match(rs);
-			if (match)
-				eval(match[1]);
+			var match = item.match(ro);
+			if (match) {
+				if (window.execScript)
+					window.execScript(match[1]);
+				else
+					eval(match[1]);
+			}
 		});
 	} catch(e) {
 		var tmp, self = this, sp = this.indexOf("<script"), ep1 = 0, ep2 = 0;
@@ -748,6 +703,24 @@ if (typeof(window.isFinite) != 'function') {
 		return (!isNaN(number) && (number <= Math.POSITIVE_INFINITY || number >= Math.NEGATIVE_INFINITY));
 	}
 }
+
+/**
+ * Converts the number to a string with length 'len'
+ * @param {Number} len String length
+ * @param {Number} base Target base (defaults to 10)
+ * @type String
+ * @addon
+ */
+Number.prototype.toPaddedString = function(len, base) {
+    return this.toString(base||10).pad('0', len);
+};
+/**
+ * Builds the string representation of the number
+ * @type String
+ */
+Number.prototype.serialize = function() {
+	return (isFinite(this) ? this.toString() : 'null');
+};
 
 /**
  * The Cookie singleton contains function to deal with browser cookies.
@@ -1093,10 +1066,10 @@ var Window = {
 	 * @type Object
 	 */
 	size : function() {
-		var w = window, b = document.body;
+		var w = window, b = document.body, e = document.documentElement;
 		return {
-			width : (w.innerWidth || b.offsetWidth),
-			height : (w.innerHeight || b.offsetHeight)
+			width : (w.innerWidth || e.clientWidth || b.offsetWidth),
+			height : (w.innerHeight || e.clientHeight || b.offsetHeight)
 		};
 	},
 	/**
@@ -1121,8 +1094,8 @@ var Window = {
 	scroll : function() {
 		var w = window, e = document.documentElement, b = document.body;
 		return {
-			x : (w.pageXOffset || (b && b.scrollLeft ? b.scrollLeft : (e && e.scrollLeft ? e.scrollLeft : 0))),
-			y : (w.pageYOffset || (b && b.scrollTop ? b.scrollTop : (e && e.scrollTop ? e.scrollTop : 0)))
+			x : (w.pageXOffset || (e && e.scrollLeft ? e.scrollLeft : (b && b.scrollLeft ? b.scrollLeft : 0))),
+			y : (w.pageYOffset || (e && e.scrollTop ? e.scrollTop : (b && b.scrollTop ? b.scrollTop : 0)))
 		};
 	}
 };
@@ -1365,11 +1338,10 @@ $H = function(obj) {
  * @type Object
  */
 $E = function(elm) {
-	if (!elm || PHP2Go.nativeElementExtension || elm.nodeType == 3 || elm._extended)
+	if (!elm || !elm.tagName || elm.nodeType == 3 || elm._extended || elm == window || PHP2Go.nativeElementExtensions)
 		return elm;
-	if (elm.tagName && elm != window)
-		Element.extend(elm);
-	elm._extended = true;
+	Element.extend(elm);
+	elm._extended = $EF;
 	return elm;
 };
 
