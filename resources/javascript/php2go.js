@@ -318,25 +318,26 @@ Function.prototype.bind = function(obj) {
 
 /**
  * Creates an inheritance relationship with another function,
- * if both are class constructors. All prototypes of the
- * parent class will become available in the child class,
- * along with parent class constructor
+ * if both are class constructors. If propName is provided,
+ * a direct link to the parent's constructor will also be created.
  * @param {Function} parent Parent class constructor
  * @param {String} propName Prop name that should hold the reference to the parent ctor
  * @type void
  */
 Function.prototype.extend = function(parent, propName) {
 	if (typeof(parent) == 'function') {
-		if (!propName) {
-			var ctor = parent.toString();
-			var match = ctor.match(/\s*function\s*(\w+)\(/);
-			if (match != null)
-				this.prototype[match[1]] = parent;
-		} else {
-			this.prototype[propName] = parent;
-		}
-		for (var p in parent.prototype)
-			this.prototype[p] = parent.prototype[p];
+		// inheritance
+		var f = function() {};
+		f.prototype = parent.prototype;
+		this.prototype = new f();
+		this.prototype.constructor = this;
+		// parent class reference
+		this.superclass = parent.prototype;
+		// parent constructor reference
+		if (propName)
+			this.prototype[propName] = parent.prototype.constructor;
+		if (parent.prototype.constructor == Object.prototype.constructor)
+			parent.prototype.constructor = parent;
 	}
 };
 
