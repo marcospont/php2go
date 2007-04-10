@@ -284,7 +284,7 @@ class Init
 	function _initLocale() {
 		// language
 		$conf = $this->_Conf->getConfig('LANGUAGE');
-		$jsLangCode = (isset($_REQUEST['locale']) && preg_match("/resources\/javascript\/lang.php$/", @$_SERVER['PHP_SELF']) ? $_REQUEST['jslang'] : NULL);
+		$jsLangCode = (isset($_REQUEST['locale']) && preg_match("/resources\/javascript\/lang.php$/", @$_SERVER['PHP_SELF']) ? $_REQUEST['locale'] : NULL);
 		$userDefined = FALSE;
 		if (!empty($conf)) {
 			if (is_array($conf)) {
