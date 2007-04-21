@@ -91,11 +91,11 @@ define('TEMPLATE_INCLUDE', 'INCLUDE BLOCK : ([a-zA-Z0-9_\.\-\\\/\~\s]+)');
 /**
  * Ignore tags pattern
  */
-define('TEMPLATE_IGNORE', '(START|END) IGNORE');
+define('TEMPLATE_IGNORE', '(IGNORE|END IGNORE)');
 /**
  * Function call pattern
  */
-define('TEMPLATE_FUNCTION_CALL', '(START FUNCTION|END FUNCTION|FUNCTION)(?:\s+(.*))?');
+define('TEMPLATE_FUNCTION_CALL', '(CALL FUNCTION|FUNCTION|END FUNCTION)(?:\s+(.*))?');
 /**
  * Condition tags pattern
  */
@@ -111,7 +111,11 @@ define('TEMPLATE_COMMENT', '^\*.*\*$');
 /**
  * Widget tags pattern
  */
-define('TEMPLATE_WIDGET', '(START WIDGET|END WIDGET|WIDGET)(?:\s+(.*))?');
+define('TEMPLATE_WIDGET', '(INCLUDE WIDGET|WIDGET|END WIDGET)(?:\s+(.*))?');
+/**
+ * Widget event listeners pattern
+ */
+define('TEMPLATE_WIDGET_LISTENER', '(LISTENER|END LISTENER)(?:\s+(.*))?');
 /**
  * Assign pattern
  */
@@ -342,7 +346,10 @@ class TemplateParser extends PHP2Go
 		} else {
 			$cacheId = dechex(crc32($src));
 		}
+		// replace static 18n translations
 		$src = preg_replace_callback(PHP2GO_I18N_PATTERN, array($this, '_i18nPreFilter'), $src);
+		// replace "{ldelim} /{tag} {rdelim}" by "{ldelim} end {tag} {rdelim}"
+		$src = preg_replace("~({$this->tagDelimiters[0]}\s*)/(\w+\s*{$this->tagDelimiters[1]})~", "$1 END $2", $src);
 
 		// 2nd phase: compile template source
 		if ($this->_Template->cacheOptions['enabled']) {
@@ -478,7 +485,7 @@ class TemplateParser extends PHP2Go
 			// ignore block
 			if (preg_match('~' . TEMPLATE_IGNORE . '~i', $tag[1], $tagParts)) {
 				$operation = strtoupper($tagParts[1]);
-				if ($operation == 'START') {
+				if ($operation == 'IGNORE') {
 					if ($this->controlFlags['ignore']) {
 						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_UNBALANCED_TAG', "IGNORE (position {$tag[2]})"), E_USER_ERROR, __FILE__, __LINE__);
 						return FALSE;
@@ -503,18 +510,18 @@ class TemplateParser extends PHP2Go
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_FUNCTION_CALL . '$~i', $tag[1], $tagParts)) {
 				$operation = strtoupper($tagParts[1]);
 				switch ($operation) {
-					case 'FUNCTION' :
+					case 'CALL FUNCTION' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileFunctionCall(@$tagParts[2]);
 						break;
-					case 'START FUNCTION' :
+					case 'FUNCTION' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileFunctionCall($tagParts[2], TRUE, $controlBlock);
 						break;
 					case 'END FUNCTION' :
-						if (!$last = $this->_validateTag($operation, @$tagParts[2], FALSE, array('START FUNCTION'), $controlBlock))
+						if (!$last = $this->_validateTag($operation, @$tagParts[2], FALSE, array('FUNCTION'), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileFunctionEnd($last[2]);
 						break;
@@ -527,23 +534,41 @@ class TemplateParser extends PHP2Go
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_WIDGET . '$~is', $tag[1], $tagParts)) {
 				$operation = strtoupper($tagParts[1]);
 				switch ($operation) {
-					case 'WIDGET' :
+					case 'INCLUDE WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileWidgetInclude($tagParts[2], $widgets);
 						break;
-					case 'START WIDGET' :
+					case 'WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileWidgetStart($tagParts[2], $widgets, $controlBlock);
 						break;
 					case 'END WIDGET' :
-						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('START WIDGET'), $controlBlock))
+						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('START WIDGET', 'END LISTENER'), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileWidgetEnd();
 						break;
 					default :
 						$outputBlocks[] = $tag[0];
+						break;
+				}
+			}
+			// widget event listeners
+			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_WIDGET_LISTENER . '$~i', $tag[1], $tagParts)) {
+				$operation = strtoupper($tagParts[1]);
+				switch ($operation) {
+					case 'LISTENER' :
+						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array('START WIDGET', 'END LISTENER'), $controlBlock))
+							return FALSE;
+						$this->controlStack[] = array($operation, $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetListenerStart($tagParts[2], $controlBlock);
+						break;
+					case 'END LISTENER' :
+						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('LISTENER'), $controlBlock))
+							return FALSE;
+						$this->controlStack[] = array($operation, $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetListenerEnd();
 						break;
 				}
 			}
@@ -928,7 +953,7 @@ class TemplateParser extends PHP2Go
 	}
 
 	/**
-	 * Compiles a function call ("function" and "start function") tags
+	 * Compiles a function call ("call function" and "function") tags
 	 *
 	 * The "name" attribute is mandatory and should contain a function
 	 * name, a class::method pair or an object->method expression, where
@@ -936,14 +961,14 @@ class TemplateParser extends PHP2Go
 	 *
 	 * Examples:
 	 * <code>
-	 * <!-- start function name="obj->doThis" p1="string" p2=true -->
-	 * <!-- function name="obj->doThat" p1=$var p2=1 p3=yes -->
-	 * <!-- function name="procFunc" p1=$anotherVar -->
-	 * <!-- function name="Class::staticMethod" -->
+	 * <!-- function name="obj->doThis" p1="string" p2=true -->
+	 * <!-- call function name="obj->doThat" p1=$var p2=1 p3=yes -->
+	 * <!-- call function name="procFunc" p1=$anotherVar -->
+	 * <!-- call function name="Class::staticMethod" -->
 	 * </code>
 	 *
 	 * @param string $funcProperties Raw function arguments
-	 * @param bool $isBlockFunction Whether is a block function call (START FUNCTION)
+	 * @param bool $isBlockFunction Whether is a block function call (FUNCTION, END FUNCTION)
 	 * @param string $controlBlock Active dynamic block
 	 * @return string Compiled code
 	 * @access private
@@ -972,7 +997,7 @@ class TemplateParser extends PHP2Go
 				if ($key != 'name')
 					$funcParams[] = "'{$key}' => {$value}";
 			}
-			$this->controlStack[] = array('START FUNCTION', $controlBlock, array($funcName, $funcParams));
+			$this->controlStack[] = array('FUNCTION', $controlBlock, array($funcName, $funcParams));
 			$funcParams = '(array(' . join(', ', $funcParams) . '), NULL, $this)';
 			$output .= $funcName . $funcParams . ';';
 		} else {
@@ -1358,7 +1383,7 @@ class TemplateParser extends PHP2Go
 	}
 
 	/**
-	 * Compiles a "start widget" tag
+	 * Compiles a "widget" tag
 	 *
 	 * @param string $widgetProperties Raw widget properties
 	 * @param array &$widgets Widgets registry
@@ -1395,10 +1420,29 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileWidgetEnd() {
 		return $this->_compilePHPBlock(
+			'if ($widget->isContainer) { ' .
 			'$widget->setContent(ob_get_clean()); ' .
+			'} ' .
 			'$widget->display(); ' .
 			'$last = array_pop($outputStack); ' .
 			'$widget = $last[0];'
+		);
+	}
+
+	function _compileWidgetListenerStart($listenerProperties, $controlBlock) {
+		$props = $this->_parseProperties($listenerProperties);
+		if (!isset($props['event']))
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('event', 'LISTENER')), E_USER_ERROR, __FILE__, __LINE__);
+		$output = 'array_push($outputStack, array(' . $props['event'] . '));';
+		return $this->_compilePHPBlock("{$output} ob_start();");
+	}
+
+	function _compileWidgetListenerEnd() {
+		return $this->_compilePHPBlock(
+			'$last = array_pop($outputStack); ' .
+			'if (is_array($last) && is_object($widget)) { ' .
+				'$widget->addEventListener($last[0], ob_get_clean()); ' .
+			'}'
 		);
 	}
 
