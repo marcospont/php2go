@@ -1209,27 +1209,39 @@ var Report = {
 
 /**
  * The Widget class is the base class of all widgets.
+ * @param {Object} attrs Widget's attributes
+ * @param {Function} func Setup function
  * @constructor
  */
-Widget = function(attrs) {
+Widget = function(attrs, func) {
 	/**
-	 * Widget attributes
+	 * Widget's attributes
 	 * @type Object
 	 */
 	this.attributes = {};
+	/**
+	 * Widget's event listeners
+	 * @type Object
+	 */
+	this.listeners = {};
 	this.loadAttributes(attrs);
+	if (typeof(func) == 'function')
+		func(this);
 };
+
+/**
+ * @ignore
+ */
+Widget.widgets = [];
 
 /**
  * Initializes a widget, given its name and attributes
  * @param {String} name Widget name
  * @param {Object} attrs Widget attributes
  */
-Widget.init = function(name, attrs) {
+Widget.init = function(name, attrs, setupFunc) {
 	PHP2Go.include(PHP2Go.baseUrl + 'widgets/' + name.toLowerCase() + '.js');
-	Event.addLoadListener(function() {
-		new window[name](attrs);
-	});
+	this.widgets.push([name, attrs, setupFunc]);
 };
 
 /**
@@ -1239,6 +1251,31 @@ Widget.init = function(name, attrs) {
 Widget.prototype.loadAttributes = function(attrs) {
 	for (var prop in attrs) {
 		this.attributes[prop] = attrs[prop];
+	}
+};
+
+/**
+ * Register a new event listener in the widget
+ * @param {String} name Event name
+ * @param {Function} func Handler function
+ * @type void
+ */
+Widget.prototype.addEventListener = function(name, func) {
+	this.listeners[name] = this.listeners[name] || [];
+	this.listeners[name].push(func.bind(this));
+};
+
+/**
+ * Raises an event in the widget. Call all
+ * handlers bound to the event
+ * @param {String} name Event name
+ * @param {Array} args Event arguments
+ * @type void
+ */
+Widget.prototype.raiseEvent = function(name, args) {
+	var funcs = this.listeners[name] || [];
+	for (var i=0; i<funcs.length; i++) {
+		funcs[i](args);
 	}
 };
 
