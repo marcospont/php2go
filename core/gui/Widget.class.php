@@ -56,6 +56,13 @@ class Widget extends Component
 	var $content;
 
 	/**
+	 * Event listeners
+	 *
+	 * @var array
+	 */
+	var $listeners = array();
+
+	/**
 	 * Whether this is a container widget
 	 *
 	 * @var bool
@@ -164,13 +171,28 @@ class Widget extends Component
 	}
 
 	/**
+	 * Adds a Javascript event listener
+	 *
+	 * @param string $event Event
+	 * @param string $code Listener code
+	 */
+	function addEventListener($event, $code) {
+		$event = substr(strtolower($event), 2);
+		$matches = array();
+		$funcBody = rtrim(ltrim($code, "\r\n"));
+		if (preg_match("/^([\t]+)/", $funcBody, $matches))
+			$funcBody = preg_replace("/^\t{" . strlen($matches[1]) . "}/m", "\t\t", $funcBody);
+		if (!isset($this->listeners[$event]))
+			$this->listeners[$event] = array();
+		$this->listeners[$event][] = $funcBody;
+	}
+
+	/**
 	 * Set widget's internal content
 	 *
 	 * @param string $content Content
 	 */
 	function setContent($content) {
-		if (!$this->isContainer)
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_INCLUDE', parent::getClassName()), E_USER_ERROR, __FILE__, __LINE__);
 		$this->content = $content;
 	}
 
@@ -213,6 +235,29 @@ class Widget extends Component
 			$this->render();
 			print "\n";
 		}
+	}
+
+	/**
+	 * Render Javascript code to initialize the widget
+	 *
+	 * @param array $attrs Attributes
+	 * @access private
+	 */
+	function renderJS($attrs) {
+		print "\n<script type=\"text/javascript\">\n";
+		print sprintf("Widget.init(\"%s\", %s", parent::getClassName(), JSONEncoder::encode($attrs));
+		if (!empty($this->listeners)) {
+			print ", function(widget) {\n";
+			foreach ($this->listeners as $event => $listeners) {
+				for ($i=0; $i<sizeof($listeners); $i++) {
+					print sprintf("\twidget.addEventListener(\"%s\", function() {\n%s\n\t});\n", $event, $listeners[$i]);
+				}
+			}
+			print "});\n";
+		} else {
+			print ");\n";
+		}
+		print "</script>";
 	}
 }
 ?>
