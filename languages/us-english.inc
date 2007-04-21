@@ -116,7 +116,6 @@ $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_IS_EXPR'] = "Invalid operation for an 'is' o
 $P2G_LANGUAGE['ERR_TPLPARSE_MISSING_TAG_ARGS'] = "The tag <I>%s</I> requires arguments!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_TAG_ARGS'] = "The tag <I>%s</I> can't contain arguments!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_MODIFIER'] = "The modifier <I>%s</I> is invalid or inexistent!";
-$P2G_LANGUAGE['ERR_WIDGET_INCLUDE'] = "The widget <i>%s</i> can only be used in INCLUDE WIDGET tags!";
 $P2G_LANGUAGE['ERR_WIDGET_MANDATORY_PROPERTY'] = "The property <i>%s</i> is mandatory in the definition of the <i>%s</i> widget!";
 $P2G_LANGUAGE['ERR_EMPTY_DOC_LAYOUT'] = "There are no elements defined in the provided document layout.";
 $P2G_LANGUAGE['ERR_CANT_REPLICATE_ROOT_BLOCK'] = "The base block of a template can't be overwritten.";
