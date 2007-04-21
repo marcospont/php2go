@@ -961,7 +961,7 @@ ComponentField = function(fld, clsName) {
 	this.componentClass = clsName;
 	/**
 	 * Component's event listeners
-	 * @type Array
+	 * @type Object
 	 */
 	this.listeners = {};
 };
@@ -987,9 +987,9 @@ ComponentField.prototype.addEventListener = function(name, func) {
  */
 ComponentField.prototype.raiseEvent = function(name, args) {
 	var funcs = this.listeners[name] || [];
-	funcs.walk(function(item, index) {
-		item(args);
-	});
+	for (var i=0; i<funcs.length; i++) {
+		funcs[i](args);
+	}
 	if (this.fld && typeof(this.fld['on'+name]) == 'function')
 		this.fld['on'+name]();
 };
