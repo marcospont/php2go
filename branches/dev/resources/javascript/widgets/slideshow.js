@@ -36,21 +36,23 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/slideshow.js']) {
 /**
  * The SlideShow widget implements a control that display a
  * list of images sequentially, based on an interval.
+ * @param {Object} attrs Widget's attributes
+ * @param {Function} func Setup function
  * @constructor
- * @base Widget 
+ * @base Widget
  */
-function SlideShow(attrs) {
-	this.Widget(attrs);
+function SlideShow(attrs, func) {
+	this.Widget(attrs, func);
 	/**
 	 * First image
 	 * @type Object
 	 */
-	this.image1 = $(this.attributes['id'] + '_foreground');
+	this.image1 = null;
 	/**
 	 * Second image
 	 * @type Object
 	 */
-	this.image2 = $(this.attributes['id'] + '_background');
+	this.image2 = null;
 	/**
 	 * Current foreground image
 	 * @type Number
@@ -65,22 +67,22 @@ function SlideShow(attrs) {
 	 * Toggle button
 	 * @type Object
 	 */
-	this.toggleBtn = $(this.attributes['id'] + '_toggle');
+	this.toggleBtn = null;
 	/**
 	 * Image count/total text
 	 * @type Object
 	 */
-	this.cnt = $(this.attributes['id'] + '_count');
+	this.cnt = null;
 	/**
 	 * Image description
 	 * @type Object
 	 */
-	this.desc = $(this.attributes['id'] + '_description');
+	this.desc = null;
 	/**
 	 * Input used to change the delay amount
 	 * @type Object
 	 */
-	this.delayInput = $(this.attributes['id'] + '_delay');
+	this.delayInput = null;
 	/**
 	 * Current slide show index
 	 * @type Number
@@ -90,7 +92,7 @@ function SlideShow(attrs) {
 	 * Number of images in the slide show
 	 * @type Number
 	 */
-	this.total = this.attributes['images'].length;
+	this.total = 0;
 	/**
 	 * Load timer
 	 * @type Object
@@ -111,7 +113,6 @@ function SlideShow(attrs) {
 	 * @type Boolean
 	 */
 	this.stopped = (!this.attributes['play']);
-	this.setup();
 }
 SlideShow.extend(Widget, 'Widget');
 
@@ -119,6 +120,13 @@ SlideShow.extend(Widget, 'Widget');
  * Initializes the widget
  */
 SlideShow.prototype.setup = function() {
+	this.image1 = $(this.attributes['id'] + '_foreground');
+	this.image2 = $(this.attributes['id'] + '_background');
+	this.toggleBtn = $(this.attributes['id'] + '_toggle');
+	this.cnt = $(this.attributes['id'] + '_count');
+	this.desc = $(this.attributes['id'] + '_description');
+	this.delayInput = $(this.attributes['id'] + '_delay');
+	this.total = this.attributes['images'].length;
 	var first = this.attributes['images'][this.index];
 	this.desc.update(first.description || first.url);
 	this[this.foreground].setOpacity(0.9999);
