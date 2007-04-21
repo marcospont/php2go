@@ -1264,6 +1264,17 @@ Event.prototype.stop = function() {
 };
 
 /**
+ * @ignore
+ */
+Event.addLoadListener(function() {
+	for (var i=0; i<Widget.widgets.length; i++) {
+		var attrs = Widget.widgets[i];
+		var widget = new window[attrs[0]](attrs[1], attrs[2]);
+		widget.setup();
+	}
+});
+
+/**
  * Convert a native Event object to access all Event
  * extensions defined by the framework. That copy
  * will happen only in browsers that don't recognize
