@@ -126,15 +126,15 @@ class CollapsiblePanel extends Widget
 		$code .= $this->content;
 		$code .= "\n  </div>";
 		$code .= "\n</div>";
-		$code .= sprintf("\n<script type=\"text/javascript\">Widget.init(\"%s\", %s);</script>", 'CollapsiblePanel', JSONEncoder::encode(array(
+		print $code;
+		parent::renderJS(array(
 			'id' => $attrs['id'],
 			'collapsedTip' => $attrs['collapsedTip'],
 			'expandedTip' => $attrs['expandedTip'],
 			'collapseIcon' => $attrs['collapseIcon'],
 			'expandIcon' => $attrs['expandIcon'],
 			'class' => $attrs['class']
-		)));
-		print $code;
+		));
 	}
 }
 ?>

@@ -149,7 +149,8 @@ class SlideShow extends Widget
 		$code .= sprintf("\n    <td align=\"right\">%s<input id=\"%s_delay\" type=\"text\" size=\"4\" maxlength=\"2\" value=\"%s\" class=\"slideShowInput\"></td>", 'Delay', $attrs['id'], ($attrs['delay']/1000));
 		$code .= "\n  </tr></table>";
 		$code .= "\n</div>";
-		$code .= sprintf("\n<script type=\"text/javascript\">Widget.init(\"%s\", %s);</script>", 'SlideShow', JSONEncoder::encode(array(
+		print $code;
+		parent::renderJS(array(
 			'id' => $attrs['id'],
 			'width' => intval(preg_replace("/[^0-9]+/", "", $this->attributes['width'])),
 			'images' => $attrs['images'],
@@ -157,8 +158,7 @@ class SlideShow extends Widget
 			'play' => $attrs['play'],
 			'playCaption' => $attrs['playCaption'],
 			'pauseCaption' => $attrs['pauseCaption']
-		)));
-		print $code;
+		));
 	}
 }
 ?>

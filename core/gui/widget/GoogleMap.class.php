@@ -136,14 +136,14 @@ class GoogleMap extends Widget
 				'lng' => $location['lng']
 			);
 		}
-		$code .= sprintf("\n<script type=\"text/javascript\">Widget.init(\"%s\", %s);</script>", 'GoogleMap', JSONEncoder::encode(array(
+		print $code;
+		parent::renderJS(array(
 			'id' => $attrs['id'],
 			'center' => (is_array($attrs['center']) ? $attrs['center'] : $this->_calculateCenter($locations)),
 			'locations' => $locations,
 			'zoom' => $attrs['zoom'],
 			'draggable' => $attrs['draggable']
-		)));
-		print $code;
+		));
 	}
 
 	/**
