@@ -38,32 +38,33 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/collapsiblepanel.js']) {
  * whose content can be expanded and collapsed by clicking
  * on its header. This Javascript class contains the code
  * that implements this behaviour
+ * @param {Object} attrs Widget's attributes
+ * @param {Function} func Setup function
  * @constructor
- * @base Widget 
+ * @base Widget
  */
-function CollapsiblePanel(attrs) {
-	this.Widget(attrs);
+function CollapsiblePanel(attrs, func) {
+	this.Widget(attrs, func);
 	/**
 	 * Reference to the panel's header
 	 * @type Object
 	 */
-	this.header = $(this.attributes['id'] + '_header');
+	this.header = null;
 	/**
 	 * Reference to the panel's tip
 	 * @type Object
 	 */
-	this.tip = $(this.attributes['id'] + '_tip');
+	this.tip = null;
 	/**
 	 * Reference to the panel's icon (expand/collapse)
 	 * @type Object
 	 */
-	this.icon = $(this.attributes['id'] + '_icon');
+	this.icon = null;
 	/**
 	 * Reference to the panel's content container
 	 * @type Object
 	 */
-	this.content = $(this.attributes['id'] + '_content');
-	this.setup();
+	this.content = null;
 }
 CollapsiblePanel.extend(Widget, 'Widget');
 
@@ -71,6 +72,10 @@ CollapsiblePanel.extend(Widget, 'Widget');
  * Initializes the widget
  */
 CollapsiblePanel.prototype.setup = function() {
+	this.header = $(this.attributes['id'] + '_header');
+	this.tip = $(this.attributes['id'] + '_tip');
+	this.icon = $(this.attributes['id'] + '_icon');
+	this.content = $(this.attributes['id'] + '_content');
 	var self = this;
 	var exp = new Image();
 	exp.src = this.attributes['expandIcon'];
