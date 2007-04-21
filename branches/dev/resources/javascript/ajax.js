@@ -184,10 +184,10 @@ AjaxRequest = function(url, args) {
 	 */
 	this.contentType = 'application/x-www-form-urlencoded';
 	/**
-	 * Encoding. Defaults to 'iso-8859-1'
+	 * Character encoding
 	 * @type String
 	 */
-	this.encoding = 'iso-8859-1';
+	this.encoding = null;
 	/**
 	 * Hash of GET/POST parameters
 	 * @type Hash
@@ -308,14 +308,14 @@ AjaxRequest.prototype.send = function() {
 		this.conn.open(this.method, uri, this.async);
 		this.conn.onreadystatechange = this.onStateChange.bind(this);
 		// request headers
-		this.headers['Content-Type'] = this.contentType + '; charset=' + this.encoding;
 		this.headers['X-Requested-With'] = 'XMLHttpRequest';
 		if (this.method.equalsIgnoreCase('post')) {
+			this.headers['Content-Type'] = this.contentType + (this.encoding ? '; charset=' + this.encoding : '');
 			this.headers['Content-Length'] = body.length;
 			if (this.conn.overrideMimeType)
 				this.headers['Connection'] = 'close';
 		}
-		for (name in this.headers)
+		for (var name in this.headers)
 			this.conn.setRequestHeader(name, this.headers[name]);
 		this.conn.send(body);
 		if (!this.async && this.conn.overrideMimeType)
@@ -371,7 +371,7 @@ AjaxRequest.prototype.onStateChange = function() {
 				var resp = this.createResponse();
 				this.raise('onComplete', [resp]);
 				if (resp.success) {
-					if ((resp.headers['Content-type'] || '').match(/^text\/javascript/i)) {
+					if ((resp.headers['Content-type'] || '').match(/^(text|application)\/(x-)?(java|ecma)script(;.*)?$/i)) {
 						try {
 							eval(resp.responseText);
 							this.raise('onSuccess', [resp]);
