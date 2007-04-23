@@ -5,11 +5,11 @@
 <table id="{$id}_top" cellpadding="0" cellspacing="0" border="0">
   <tr><td valign="top" nowrap>
     {$filters}&nbsp;{$search}&nbsp;
-<!-- IF $btnImg neq '' -->
+<!-- if $btnImg neq '' -->
 	<a id="{$id}_button" name="{$id}_button" href="javascript:void(0)"{$labelStyle}><img src="{$btnImg}" alt="" border="0"></a>
-<!-- ELSE -->
+<!-- else -->
 	<button id="{$id}_button" name="{$id}_button" type="button"{$buttonStyle}{$tabIndex}{$disabled}>{$btnValue}</button>
-<!-- END IF -->
+<!-- end if -->
   </td></tr>
   <tr><td height="5" style="font-size:5px">&nbsp;</td></tr>
   <tr><td valign="top">{$results}</td></tr>
