@@ -206,8 +206,9 @@ $P2G_USER_CFG['USER'] = array(
 
 /**
  * PHP2Go template global configuration settings
- *
+ */
 $P2G_USER_CFG['TEMPLATES'] = array(
+/*
 	// global cache settings
 	'CACHE' => array(
 		// cached templates folder
@@ -226,14 +227,24 @@ $P2G_USER_CFG['TEMPLATES'] = array(
 	'MODIFIERS' => array(
 		'myMod' => 'myModifierFunction'
 	)
+*/
 );
 
+/**
+ * PHP2Go widgets configuration settings
  */
+$P2G_USER_CFG['WIDGETS'] = array(
+/*
+	// GoogleMaps key, needed by php2go.gui.widget.GoogleMap
+	'GOOGLE_MAPS_KEY' => 'key_value'
+*/
+);
 
 /**
  * PHP2Go forms global configuration settings
- *
+ */
 $P2G_USER_CFG['FORMS'] = array(
+/*
 	// Text to indicate that a field is mandatory
 	'SECTION_REQUIRED_TEXT' => '*',
 	// Color to the text described above
@@ -285,13 +296,14 @@ $P2G_USER_CFG['FORMS'] = array(
 		// Label align
 		'LABEL_ALIGN' => 'left|right|center'
 	)
-);
 */
+);
 
 /**
  * PHP2Go reports global configuration settings
- *
+ */
 $P2G_USER_CFG['REPORTS'] = array(
+/*
 	// Enable/disable external templates for empty data sets => bool
 	'EMPTYTEMPLATE' => FALSE,
 	// Template block that must be used to generate empty cells
@@ -339,8 +351,18 @@ $P2G_USER_CFG['REPORTS'] = array(
 	'MASKFUNCTIONS' => array(
 		'DATE' => 'Date::fromEuroToSqlDate'
 	)
-);
 */
+);
+
+/**
+ * This config key tells PHP2Go if it needs load its
+ * Javascript libraries from the jsrun folder (compressed)
+ * or from the javascript folder (uncompressed).
+ *
+ * Set it to FALSE when you need to track problems with
+ * framework's JS libraries (patches are always welcome!).
+ */
+$P2G_USER_CFG['USE_COMPRESSED_JS'] = TRUE;
 
 /**
  * Through this configuration entry, you'll be able to register include keys that
