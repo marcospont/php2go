@@ -103,26 +103,17 @@ class Widget extends Component
 	}
 
 	/**
-	 * Returns the singleton of a given widget,
-	 * configured with a given set of properties
+	 * Builds a new widget, given its path and attributes
 	 *
-	 * @param string $path Widget dot path
+	 * @param string $path Widget's dot path
 	 * @param array $attrs Widget's attributes
 	 * @return Widget
 	 * @static
 	 */
-	function &getInstance($path, $attrs=array()) {
-		static $instances;
-		if (!isset($instances))
-			$instances = array();
-		if (!isset($instances[$path])) {
-			$widgetClass = classForPath($path);
-			$instances[$path] = new $widgetClass($attrs);
-		} else {
-			$attrs = array_merge($instances[$path]->getDefaultAttributes(), (array)$attrs);
-			$instances[$path]->loadAttributes($attrs);
-		}
-		return $instances[$path];
+	function factory($path, $attrs=array()) {
+		$widgetClass = classForPath($path);
+		$widget = new $widgetClass($attrs);
+		return $widget;
 	}
 
 	/**
@@ -177,7 +168,7 @@ class Widget extends Component
 	 * @param string $code Listener code
 	 */
 	function addEventListener($event, $code) {
-		$event = substr(strtolower($event), 2);
+		$event = preg_replace('/^on/i', '', strtolower($event));
 		$matches = array();
 		$funcBody = rtrim(ltrim($code, "\r\n"));
 		if (preg_match("/^([\t]+)/", $funcBody, $matches))
@@ -250,7 +241,7 @@ class Widget extends Component
 			print ", function(widget) {\n";
 			foreach ($this->listeners as $event => $listeners) {
 				for ($i=0; $i<sizeof($listeners); $i++) {
-					print sprintf("\twidget.addEventListener(\"%s\", function() {\n%s\n\t});\n", $event, $listeners[$i]);
+					print sprintf("\twidget.addEventListener(\"%s\", function(args) {\n%s\n\t});\n", $event, $listeners[$i]);
 				}
 			}
 			print "});\n";
