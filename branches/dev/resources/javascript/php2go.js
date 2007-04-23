@@ -1245,6 +1245,18 @@ Widget.init = function(name, attrs, setupFunc) {
 };
 
 /**
+ * Check if the widget has a given list of attributes
+ * @type Boolean
+ */
+Widget.prototype.hasAttributes = function() {
+	for (var i=0; i<arguments.length; i++) {
+		if (typeof(this.attributes[arguments[i]]) == 'undefined')
+			return false;
+	}
+	return true;
+};
+
+/**
  * Loads the widget's attributes
  * @param {Object} attrs Widget attributes
  */
@@ -1275,8 +1287,10 @@ Widget.prototype.addEventListener = function(name, func) {
 Widget.prototype.raiseEvent = function(name, args) {
 	var funcs = this.listeners[name] || [];
 	for (var i=0; i<funcs.length; i++) {
-		funcs[i](args);
+		if (funcs[i](args) === false)
+			return false;
 	}
+	return true;
 };
 
 /**
