@@ -719,6 +719,8 @@ class TemplateParser extends PHP2Go
 					$compiled = $this->_compileTemplate(substr($tag[0], 1), $controlBlock);
 					$includes = array_merge($includes, $compiled['includes']);
 					$outputBlocks[] = '{' . $compiled['output'];
+				} elseif (empty($tag[1])) {
+					$outputBlocks[] = $tag[0];
 				} else {
 					$pos = strpos($tag[0], $tag[1]);
 					$startCode = substr($tag[0], 0, $pos);
@@ -1401,10 +1403,10 @@ class TemplateParser extends PHP2Go
 			$this->controlStack[] = array('START WIDGET', $controlBlock);
 			return $this->_compilePHPBlock(
 				'array_push($outputStack, array($widget)); ' .
-				'$lastIndex = sizeof($outputStack)-1; ' .
-				'$widget =& Widget::getInstance("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'$lastIndex = sizeof($outputStack) - 1; ' .
+				'$widget = Widget::factory("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
 				'if ($outputStack[$lastIndex][0]) { ' .
-					'$newWidget->setParent($outputStack[$lastIndex][0]); ' .
+				'$widget->setParent($outputStack[$lastIndex][0]); ' .
 				'} ' .
 				'ob_start();'
 			);
@@ -1425,7 +1427,7 @@ class TemplateParser extends PHP2Go
 			'} ' .
 			'$widget->display(); ' .
 			'$last = array_pop($outputStack); ' .
-			'$widget = $last[0];'
+			'$widget = $last[0]; '
 		);
 	}
 
