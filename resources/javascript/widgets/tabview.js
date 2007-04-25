@@ -50,6 +50,11 @@ function TabView(attrs, func) {
 	 */
 	this.root = null;
 	/**
+	 * Layer that surrounds the navigation container element
+	 * @type Object
+	 */
+	this.navScroll = null;
+	/**
 	 * Navigation bar's container element
 	 * @type Object
 	 */
@@ -83,21 +88,26 @@ TabView.instances = {};
  * Initializes the widget
  */
 TabView.prototype.setup = function() {
-	this.root = $(this.attributes['id']);
-	this.navContainer = this.root.getElementsByTagName('ul')[0];
+	this.root = $(this.attributes.id);
+	this.navScroll = this.root.getElementsByClassName('tabNavigationContainer')[0];
+	this.navContainer = this.root.getElementsByClassName('tabNavigation')[0];
 	this.contentContainer = this.root.getElementsByClassName('tabContainer')[0];
 	// initialize tabs
 	var navItems = this.navContainer.getElementsByTagName('li');
-	for (var i=0; i<this.attributes['tabs'].length; i++) {
-		var panel = new TabPanel(this.attributes['tabs'][i]);
+	for (var i=0; i<this.attributes.tabs.length; i++) {
+		var panel = new TabPanel(this.attributes.tabs[i]);
 		panel.labelEl = $E(navItems[i]);
 		panel.parent = this;
 		panel.setup();
 		this.tabs.push(panel);
 		Event.addListener(navItems[i], 'click', this._clickHandler.bind(this));
 	}
-	this.setActiveIndex(this.attributes['activeIndex']);
-	TabView.instances[this.attributes['id']] = this;
+	// adjust navigation height
+	if (PHP2Go.browser.gecko && (this.attributes.orientation == 'left' || this.attributes.orientation == 'right'))
+		this.navScroll.style.height = this.navContainer.style.height = $E(this.contentContainer.getElementsByTagName('div')[0]).getDimensions().height;
+	this._initArrows();
+	this.setActiveIndex(this.attributes.activeIndex);
+	TabView.instances[this.attributes.id] = this;
 	this.raiseEvent('init');
 };
 
@@ -119,10 +129,10 @@ TabView.prototype.addTab = function(tab, idx) {
 		if (!tab.isEnabled())
 			a.setAttribute('disabled', true);
 		var span = $N('em', a);
-		span.innerHTML = tab.attributes['caption'];
+		span.innerHTML = tab.attributes.caption;
 		// create tab container
 		var div = $N('div');
-		div.id = tab.attributes['id'];
+		div.id = tab.attributes.id;
 		// insert before or append
 		if (before) {
 			nav.insertBefore(li, before.labelEl);
@@ -136,6 +146,8 @@ TabView.prototype.addTab = function(tab, idx) {
 		tab.setup();
 		if (tab.isActive())
 			this.setActiveTab(tab);
+		else
+			this._updateArrows();
 		Event.addListener(li, 'click', this._clickHandler.bind(this));
 	}
 };
@@ -182,6 +194,7 @@ TabView.prototype.removeTab = function(tab) {
 		this.contentContainer.removeChild(tab.contentEl);
 		this.tabs.splice(idx-1, 1);
 		this.raiseEvent('afterremove', [tab]);
+		this._updateArrows();
 	}
 };
 
@@ -215,7 +228,7 @@ TabView.prototype.getTabByIndex = function(idx) {
  */
 TabView.prototype.getTabById = function(id) {
 	for (var i=0; i<this.tabs.length; i++) {
-		if (this.tabs[i].attributes['id'] == id)
+		if (this.tabs[i].attributes.id == id)
 			return this.tabs[i];
 	}
 	return null;
@@ -259,6 +272,7 @@ TabView.prototype.setActiveTab = function(tab) {
 		this.raiseEvent('afterchange', [this.activeTab, tab]);
 		this.activeIndex = this.getTabIndex(tab);
 		this.activeTab = tab;
+		this._updateArrows();
 	}
 };
 
@@ -281,7 +295,7 @@ TabView.prototype._changeActiveState = function(tab, state) {
 		ec.remove('tabViewVisible');
 		tab.raiseEvent('deactivate');
 	}
-	tab.attributes['active'] = state;
+	tab.attributes.active = state;
 };
 
 /**
@@ -299,6 +313,55 @@ TabView.prototype._clickHandler = function(e) {
 		}
 	}
 };
+
+/**
+ * Initializes scroll arrows
+ * @access private
+ */
+TabView.prototype._initArrows = function() {
+	var ac = this.root.getElementsByClassName('tabScrollContainer')[0];
+	var ar = this.arrows = ac.getElementsByClassName('tabScrollArrow');
+	var self = this, ns = this.navScroll, dim = ns.getDimensions(), al = Event.addListener;
+	var functions = {
+		left : function() { (ns.scrollLeft > 0) && (ns.scrollLeft -= 5); self._updateArrows(); (ns.scrollLeft > 0) && (self.timeout = setTimeout(functions.left, 10)); },
+		right : function() { ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (ns.scrollLeft += 5); self._updateArrows(); ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (self.timeout = setTimeout(functions.right, 10)); },
+		top : function() { (ns.scrollTop > 0) && (ns.scrollTop -= 5); self._updateArrows(); (ns.scrollTop > 0) && (setTimeout(functions.top, 10)); },
+		bottom : function() { ((ns.scrollTop+dim.height) < ns.scrollHeight) && (ns.scrollTop += 5); self._updateArrows(); ((ns.scrollTop+dim.height) < ns.scrollHeight) && (setTimeout(functions.bottom, 10)); }
+	};
+	if (this.attributes.orientation == 'top' || this.attributes.orientation == 'bottom') {
+		ar[0].style.height = ar[1].style.height = ns.offsetHeight;
+		ar[1].style.left = dim.width - 12;
+		al(ar[0], 'mousedown', functions.left);
+		al(ar[0], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+		al(ar[1], 'mousedown', functions.right);
+		al(ar[1], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+	} else {
+		ar[0].style.width = ar[1].style.width = ns.offsetWidth;
+		ar[1].style.top = dim.height - 12;
+		al(ar[0], 'mousedown', functions.top);
+		al(ar[0], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+		al(ar[1], 'mousedown', functions.bottom);
+		al(ar[1], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+	}
+};
+
+/**
+ * Updates scroll arrows visibility state
+ * @access private
+ */
+TabView.prototype._updateArrows = function() {
+	var ar = this.arrows, ns = this.navScroll;
+	var dim = this.navScroll.getDimensions();
+	if (this.attributes.orientation == 'top' || this.attributes.orientation == 'bottom') {
+		ar[0].style.visibility = (ns.scrollLeft > 0 ? 'visible' : 'hidden');
+		ar[1].style.visibility = (ns.scrollWidth > (dim.width+ns.scrollLeft) ? 'visible' : 'hidden');
+	} else {
+		ar[0].style.display = (ns.scrollTop > 0 ? 'visible' : 'hidden');
+		ar[1].style.display = (ns.scrollHeight > (dim.height+ns.scrollTop) ? 'visible' : 'hidden');
+	}
+};
+
+
 
 /**
  * The TabPanel class represents a tabbed view,
@@ -322,8 +385,8 @@ function TabPanel(attrs) {
 	 * Parent tab view
 	 */
 	this.parent = null;
-	this.attributes['disabled'] = !!this.attributes['disabled'];
-	this.attributes['active'] = !!this.attributes['active'];
+	this.attributes.disabled = !!this.attributes.disabled;
+	this.attributes.active = !!this.attributes.active;
 }
 TabPanel.extend(Widget, 'Widget');
 
@@ -331,7 +394,7 @@ TabPanel.extend(Widget, 'Widget');
  * Initializes the widget
  */
 TabPanel.prototype.setup = function() {
-	this.contentEl = $(this.attributes['id']);
+	this.contentEl = $(this.attributes.id);
 	this.contentEl.tab = this;
 };
 
@@ -355,14 +418,14 @@ TabPanel.prototype.activate = function() {
  * @type Boolean
  */
 TabPanel.prototype.isActive = function() {
-	return (this.attributes['active'] && this.parent.activeTab == this);
+	return (this.attributes.active && this.parent.activeTab == this);
 };
 
 /**
  * Enables the tab
  */
 TabPanel.prototype.enable = function() {
-	this.attributes['disabled'] = false;
+	this.attributes.disabled = false;
 	this.labelEl.firstChild.removeAttribute('disabled');
 };
 
@@ -370,7 +433,7 @@ TabPanel.prototype.enable = function() {
  * Disables the tab
  */
 TabPanel.prototype.disable = function() {
-	this.attributes['disabled'] = true;
+	this.attributes.disabled = true;
 	this.labelEl.firstChild.setAttribute('disabled', true);
 };
 
@@ -379,7 +442,7 @@ TabPanel.prototype.disable = function() {
  * @type Boolean
  */
 TabPanel.prototype.isEnabled = function() {
-	return (this.attributes['disabled'] == false);
+	return (this.attributes.disabled == false);
 };
 
 /**

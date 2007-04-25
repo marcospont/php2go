@@ -29,6 +29,22 @@
 	font-style: normal;
 	display: block;
 }
+.tabScrollContainer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 2;
+}
+.tabScrollArrow {
+	position: absolute;
+	visibility: hidden;
+	background-color: Scrollbar;
+	outline-style: none;
+	border: 1px solid;
+	border-color: ThreeDLightShadow ThreeDDarkShadow ThreeDDarkShadow ThreeDLightShadow;
+	margin: 0;
+	padding: 0;
+}
 .tabContainer {
 	background-color: #fff;
 	border: 1px solid #000;
@@ -42,6 +58,10 @@
 	display: block;
 }
 /* top and bottom orientation */
+.tabView .tabScrollArrow, .tabViewBottom .tabScrollArrow {
+	width: 12px;
+	vertical-align: middle;
+}
 .tabView .tabNavigationContainer, .tabViewBottom .tabNavigationContainer {
 	position: relative;
 	overflow-x: hidden;
@@ -78,6 +98,10 @@
 	margin: 0 0 -1px;
 }
 /* left and right orientations */
+.tabViewLeft .tabScrollArrow, .tabViewRight .tabScrollArrow {
+	height: 12px;
+	text-align: center;
+}
 .tabViewLeft .tabNavigationContainer, .tabViewRight .tabNavigationContainer {
 	position: absolute;
 	overflow-y: hidden;

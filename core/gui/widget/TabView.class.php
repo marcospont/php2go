@@ -163,14 +163,16 @@ class TabView extends Widget
 		$attrs =& $this->attributes;
 		$code = "\n<style type=\"text/css\">";
 		$code .= sprintf("\n#%s .tabContainer div { height: %s; }", $attrs['id'], $attrs['contentHeight']);
-		if ($attrs['orientation'] == TABVIEW_ORIENTATION_LEFT) {
-			$code .= sprintf("\n#%s.tabViewLeft .tabNavigationContainer { width: %s; height: %s; }", $attrs['id'], $attrs['navigationWidth'], $attrs['contentHeight']);
+		if ($attrs['orientation'] == TABVIEW_ORIENTATION_TOP || $attrs['orientation'] == TABVIEW_ORIENTATION_BOTTOM) {
+			$code .= sprintf("\n#%s .tabScrollContainer { width: %s; }", $attrs['id'], $attrs['width']);
+		} else {
+			$code .= sprintf("\n#%s.tabViewLeft .tabNavigationContainer, #%s.tabViewRight .tabNavigationContainer { width: %s; height: %s; }", $attrs['id'], $attrs['id'], $attrs['navigationWidth'], $attrs['contentHeight']);
+			$code .= sprintf("\n#%s .tabScrollContainer { height: %s; }", $attrs['id'], $attrs['contentHeight']);
+		}
+		if ($attrs['orientation'] == TABVIEW_ORIENTATION_LEFT)
 			$code .= sprintf("\n#%s.tabViewLeft { padding-left: %s; }", $attrs['id'], $attrs['navigationWidth']);
-		}
-		if ($attrs['orientation'] == TABVIEW_ORIENTATION_RIGHT) {
-			$code .= sprintf("\n#%s.tabViewRight .tabNavigationContainer { width: %s; height: %s; }", $attrs['id'], $attrs['navigationWidth'], $attrs['contentHeight']);
+		if ($attrs['orientation'] == TABVIEW_ORIENTATION_RIGHT)
 			$code .= sprintf("\n#%s.tabViewRight { padding-right: %s; }", $attrs['id'], $attrs['navigationWidth']);
-		}
 		$code .= sprintf("\n#%s { width: %s; }", $attrs['id'], $attrs['width']);
 		$code .= "\n</style>";
 		$code .= sprintf("\n<div id=\"%s\" class=\"%s%s\">", $attrs['id'], $orientationClasses[$attrs['orientation']], (!empty($attrs['class']) ? " {$attrs['class']}" : ""));
@@ -191,6 +193,7 @@ class TabView extends Widget
 		parent::renderJS(array(
 			'id' => $attrs['id'],
 			'activeIndex' => $attrs['activeIndex'],
+			'orientation' => $attrs['orientation'],
 			'tabs' => $tabs
 		));
 	}
@@ -203,6 +206,17 @@ class TabView extends Widget
 	 */
 	function renderNavigation(&$code) {
 		$attrs =& $this->attributes;
+		$code .= "\n  <div class=\"tabScrollContainer\">";
+		if ($attrs['orientation'] == TABVIEW_ORIENTATION_TOP || $attrs['orientation'] == TABVIEW_ORIENTATION_BOTTOM) {
+			$img1 = 'tabview_sleft.gif';
+			$img2 = 'tabview_sright.gif';
+		} else {
+			$img1 = 'tabview_stop.gif';
+			$img2 = 'tabview_sbottom.gif';
+		}
+		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\"></button>", PHP2GO_ICON_PATH, $img1);
+		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\"></button>", PHP2GO_ICON_PATH, $img2);
+		$code .= "\n  </div>";
 		$code .= sprintf("\n  <div class=\"tabNavigationContainer\">");
 		$code .= sprintf("\n    <ul class=\"tabNavigation%s\">", (!empty($attrs['navigationClass']) ? " {$attrs['navigationClass']}" : ""));
 		foreach ($this->panels as $idx => $panel) {
