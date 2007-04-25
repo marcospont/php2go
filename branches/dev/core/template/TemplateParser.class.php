@@ -1374,7 +1374,7 @@ class TemplateParser extends PHP2Go
 				$widgetData['path'] = "php2go.gui.widget.{$widgetData['path']}";
 			$widgets[$widgetData['path']] = TRUE;
 			return $this->_compilePHPBlock(
-				'$newWidget =& Widget::getInstance("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'$newWidget = Widget::factory("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
 				'if ($widget) { ' .
 					'$newWidget->setParent($widget); ' .
 				'} ' .
