@@ -19,7 +19,7 @@
 </span>
 <br><br>
 
-<!-- START BLOCK : modifiers_block -->
+<!-- start block : modifiers_block -->
 
 <div>
 <table width="100%" border="0">
@@ -64,18 +64,18 @@
 <!-- html table rendering, using HtmlUtils::table -->
 {$data|table:true:"width=\"100%\"":"style=\"background-color:#b2b2b2\"":"style=\"background-color:#f2f2f2\"":"style=\"background-color:#000000;color:#ffffff\""|scroll_area:779:200}<br>
 
-<!-- END BLOCK : modifiers_block -->
+<!-- end block : modifiers_block -->
 
 <table width="779" cellpadding="0" cellspacing="0" border="0">
 
-	<!-- START BLOCK : example_block -->
+	<!-- start block : example_block -->
 	<tr>
 		<td align="left" width="30%">{$foo|surround:"[ ":" ]"}</td>
 		<td align="left" width="50%">{$bar}</td>
-		<!-- START BLOCK : inner_block -->
+		<!-- start block : inner_block -->
 		<td align="right" width="20%">{$baz}</td>
-		<!-- END BLOCK : inner_block -->
+		<!-- end block : inner_block -->
 	</tr>
-	<!-- END BLOCK : example_block -->
+	<!-- end block : example_block -->
 
 </table>

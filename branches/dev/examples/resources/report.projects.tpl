@@ -14,16 +14,16 @@
 </div>
 <div style="width:770px;padding:5px;border:1px solid #999;margin-top:5px;">
   <table width="100%" cellpadding="0" cellspacing="1" border="0">
-	<!-- START BLOCK : loop_line -->
+	<!-- start block : loop_line -->
 	<tr>
-	  <!-- START BLOCK : loop_header_cell -->
+	  <!-- start block : loop_header_cell -->
 	  <td width="{$col_wid}" valign="top" class="{$report.style.header}">{$col_name}{$col_order}</td>
-	  <!-- END BLOCK : loop_header_cell -->
-	  <!-- START BLOCK : loop_cell -->
+	  <!-- end block : loop_header_cell -->
+	  <!-- start block : loop_cell -->
 	  <td bgcolor="#f2f2f2" width="{$col_wid}" valign="top" class="{$alt_style}">{$col_data}</td>
-	  <!-- END BLOCK : loop_cell -->
+	  <!-- end block : loop_cell -->
 	</tr>
-	<!-- END BLOCK : loop_line -->
+	<!-- end block : loop_line -->
   </table>
 </div>
 <div style="width:770px;padding:5px;margin-top:5px;">

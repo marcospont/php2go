@@ -1,5 +1,5 @@
-    <!-- IF sizeof($cart->items) gt 0 -->
-    <!-- FUNCTION name="cart->sort" -->
+    <!-- if sizeof($cart->items) gt 0 -->
+    <!-- call function="cart->sort" -->
     <table class="sample_list_item" width="100%">
       <tr>
         <th>&nbsp;</th>
@@ -7,7 +7,7 @@
         <th>Unit</th>
         <th>Units</th>
       </tr>
-      <!-- LOOP var=$cart->items item="item" key="id" -->
+      <!-- loop var=$cart->items item="item" key="id" -->
       <tr>
         <td><a href="javascript:;" onClick="removeFromCart({$id})"><img src="resources/icon_remove.gif" border="0" alt=""></a></td>
         <td>{$item.desc}</td>
@@ -17,8 +17,8 @@
           <script type="text/javascript">InputMask.setup($('units_{$id}'), DigitMask);</script>
         </td>
       </tr>
-      <!-- END LOOP -->
-      <!-- FUNCTION name="cart->getTotal" assign="total" -->
+      <!-- end loop -->
+      <!-- call function="cart->getTotal" assign="total" -->
       <tr>
         <td colspan="4" align="right">
           Total: <b>{$total|decimal_currency}</b><br>
@@ -26,6 +26,6 @@
         </td>
       </tr>
     </table>
-    <!-- ELSE -->
+    <!-- else -->
     <div class="sample_list_item">The cart is empty</div>
-    <!-- END IF -->    
+    <!-- end if -->
