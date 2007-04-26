@@ -95,7 +95,7 @@ define('TEMPLATE_IGNORE', '(IGNORE|END IGNORE)');
 /**
  * Function call pattern
  */
-define('TEMPLATE_FUNCTION_CALL', '(CALL FUNCTION|FUNCTION|END FUNCTION)(?:\s+(.*))?');
+define('TEMPLATE_FUNCTION_CALL', '(CALL|FUNCTION|END FUNCTION)(?:\s+(.*))?');
 /**
  * Condition tags pattern
  */
@@ -510,7 +510,7 @@ class TemplateParser extends PHP2Go
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_FUNCTION_CALL . '$~i', $tag[1], $tagParts)) {
 				$operation = strtoupper($tagParts[1]);
 				switch ($operation) {
-					case 'CALL FUNCTION' :
+					case 'CALL' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileFunctionCall(@$tagParts[2]);
@@ -955,7 +955,7 @@ class TemplateParser extends PHP2Go
 	}
 
 	/**
-	 * Compiles a function call ("call function" and "function") tags
+	 * Compiles a function call ("call" and "function") tags
 	 *
 	 * The "name" attribute is mandatory and should contain a function
 	 * name, a class::method pair or an object->method expression, where
@@ -963,10 +963,10 @@ class TemplateParser extends PHP2Go
 	 *
 	 * Examples:
 	 * <code>
-	 * <!-- function name="obj->doThis" p1="string" p2=true -->
-	 * <!-- call function name="obj->doThat" p1=$var p2=1 p3=yes -->
-	 * <!-- call function name="procFunc" p1=$anotherVar -->
-	 * <!-- call function name="Class::staticMethod" -->
+	 * <!-- function name="obj->doThis" p1="string" p2=true --> ... <!-- end function -->
+	 * <!-- call function="obj->doThat" p1=$var p2=1 p3=yes -->
+	 * <!-- call function="procFunc" p1=$anotherVar -->
+	 * <!-- call function="Class::staticMethod" -->
 	 * </code>
 	 *
 	 * @param string $funcProperties Raw function arguments
@@ -977,15 +977,16 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileFunctionCall($funcProperties, $isBlockFunction=FALSE, $controlBlock=NULL) {
 		$props = $this->_parseProperties($funcProperties);
-		if (!isset($props['name'])) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('name', 'FUNCTION')), E_USER_ERROR, __FILE__, __LINE__);
+		$nameProp = ($isBlockFunction ? 'name' : 'function');
+		if (!isset($props[$nameProp])) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('function', 'CALL')), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 		$output = "";
 		$nameMatches = array();
-		if (preg_match('~^(?:\'|")' . TEMPLATE_FUNCTION . '(?:\'|")$~', $props['name'])) {
-			$funcName = substr($props['name'], 1, -1);
-		} elseif (preg_match('~^(?:\'|")(' . TEMPLATE_VARIABLE . ')->([a-zA-Z_]\w*)(?:\'|")$~', $props['name'], $nameMatches)) {
+		if (preg_match('~^(?:\'|")' . TEMPLATE_FUNCTION . '(?:\'|")$~', $props[$nameProp])) {
+			$funcName = substr($props[$nameProp], 1, -1);
+		} elseif (preg_match('~^(?:\'|")(' . TEMPLATE_VARIABLE . ')->([a-zA-Z_]\w*)(?:\'|")$~', $props[$nameProp], $nameMatches)) {
 			$output .= '$obj =& ' . $this->_compileVariableName($nameMatches[1]) . '; ';
 			$output .= 'if (is_object($obj)) ';
 			$funcName = '$obj->' . $nameMatches[2];
@@ -996,7 +997,7 @@ class TemplateParser extends PHP2Go
 		$funcParams = array();
 		if ($isBlockFunction) {
 			foreach ($props as $key => $value) {
-				if ($key != 'name')
+				if ($key != $nameProp)
 					$funcParams[] = "'{$key}' => {$value}";
 			}
 			$this->controlStack[] = array('FUNCTION', $controlBlock, array($funcName, $funcParams));
