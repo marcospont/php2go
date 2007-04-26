@@ -800,6 +800,28 @@ class Template extends Component
 	}
 
 	/**
+	 * Calculate the total iterations of a given loop
+	 *
+	 * @param array|object &$loop
+	 * @access private
+	 * @return int
+	 */
+	function _getLoopTotal(&$loop) {
+		if (is_array($loop)) {
+			reset($loop);
+			return sizeof($loop);
+		} elseif (TypeUtils::isInstanceOf($loop, 'DataSet')) {
+			$loop->moveFirst();
+			return $loop->getRecordCount();
+		} elseif (TypeUtils::isInstanceOf($loop, 'ADORecordSet')) {
+			$loop->moveFirst();
+			return $loop->recordCount();
+		} else {
+			return 0;
+		}
+	}
+
+	/**
 	 * Get the next item of a given loop
 	 *
 	 * The loop can be an array, a hashmap, a DataSet instance
@@ -830,25 +852,6 @@ class Template extends Component
 			return ($returnKey ? array($key, $value) : $value);
 		}
 		return FALSE;
-	}
-
-	/**
-	 * Calculate the total iterations of a given loop
-	 *
-	 * @param array|object $loop
-	 * @access private
-	 * @return int
-	 */
-	function _getLoopTotal($loop) {
-		if (is_array($loop)) {
-			return sizeof($loop);
-		} elseif (TypeUtils::isInstanceOf($loop, 'DataSet')) {
-			return $loop->getRecordCount();
-		} elseif (TypeUtils::isInstanceOf($loop, 'ADORecordSet')) {
-			return $loop->recordCount();
-		} else {
-			return 0;
-		}
 	}
 
 	/**
