@@ -30,6 +30,7 @@
 	require_once('config.example.php');
 	import('php2go.auth.User');
 	import('php2go.base.Document');
+	import('php2go.net.HttpRequest');
 	import('php2go.session.SessionObject');
 	import('php2go.template.Template');
 
