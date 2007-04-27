@@ -1,7 +1,4 @@
-USE test;
-
 DROP TABLE IF EXISTS tasks;
-
 CREATE TABLE tasks (
   id_task int(11) unsigned NOT NULL auto_increment,
   id_owner int(11) NOT NULL default '0',
