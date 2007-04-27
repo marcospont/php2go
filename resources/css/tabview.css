@@ -57,6 +57,9 @@
 .tabContainer div.tabViewVisible {
 	display: block;
 }
+.tabContainer div.tabViewLoading {
+	visibility: hidden;
+}
 /* top and bottom orientation */
 .tabView .tabScrollArrow, .tabViewBottom .tabScrollArrow {
 	width: 12px;

@@ -41,6 +41,9 @@
  * # disabled : whether the tab is disabled or enabled
  * # labelClass : CSS class for the tab label
  * # contentClass : CSS class for the tab content element
+ * # loadUri : URI to load tab contents from
+ * # loadMethod : load method (get or post)
+ * # loadParams : load parameters
  *
  * @package gui
  * @subpackage widget
@@ -74,7 +77,10 @@ class TabPanel extends Widget
 			'id' => $id,
 			'disabled' => FALSE,
 			'labelClass' => '',
-			'contentClass' => ''
+			'contentClass' => '',
+			'loadUri' => '',
+			'loadMethod' => 'get',
+			'loadParams' => NULL
 		);
 	}
 
