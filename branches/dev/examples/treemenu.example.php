@@ -130,7 +130,7 @@
 	     * >> the attributes CAPTION (caption of the node) and LINK (link of the node) are mandatory
 	     * >> any other attributes in the XML nodes will be ignored
 	     */
-	    $treeMenu->loadFromXmlFile('resources/layer_menu.example.xml');
+	    $treeMenu->loadFromXmlFile('resources/menu.example.xml');
 
     } else {
 
