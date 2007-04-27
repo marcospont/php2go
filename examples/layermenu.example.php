@@ -35,8 +35,8 @@
 	/**
 	 * switch the following two lines to change the generation type of the menu: XML file or database query
 	 */
-	//define('MENU_GENERATION_TYPE', 1); // XML
-	define('MENU_GENERATION_TYPE', 2); // DATABASE
+	define('MENU_GENERATION_TYPE', 1); // XML
+	//define('MENU_GENERATION_TYPE', 2); // DATABASE
 
 	/**
 	 * Catch calls to the IFRAME
