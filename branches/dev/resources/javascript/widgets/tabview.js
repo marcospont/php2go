@@ -26,12 +26,14 @@
  * @version $Id$
  */
 
-if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/tabview.js']) {
-
 /**
  * @fileoverview
  * Contains TabView and TabPanel classes
  */
+
+if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/tabview.js']) {
+
+PHP2Go.include(PHP2Go.baseUrl + 'ajax.js');
 
 /**
  * TabView provides control over a set of tab panels
@@ -74,6 +76,10 @@ function TabView(attrs, func) {
 	 * @type Array
 	 */
 	this.tabs = [];
+	/**
+	 * @ignore
+	 */
+	this.busy = false;
 }
 TabView.extend(Widget, 'Widget');
 
@@ -266,13 +272,18 @@ TabView.prototype.setActiveTab = function(tab) {
 	if (tab instanceof TabPanel && tab.isEnabled() && tab != this.activeTab) {
 		if (!this.raiseEvent('beforechange', [this.activeTab, tab]))
 			return;
-		if (this.activeTab)
+		if (this.activeTab) {
 			this._changeActiveState(this.activeTab, false);
-		this._changeActiveState(tab, true);
-		this.raiseEvent('afterchange', [this.activeTab, tab]);
-		this.activeIndex = this.getTabIndex(tab);
-		this.activeTab = tab;
-		this._updateArrows();
+		}
+		if (tab.attributes.loadUri && (!tab.attributes.loaded || !this.attributes.loadCache)) {
+			this._loadContents(tab);
+		} else {
+			this._changeActiveState(tab, true);
+			this.raiseEvent('afterchange', [this.activeTab, tab]);
+			this.activeIndex = this.getTabIndex(tab);
+			this.activeTab = tab;
+			this._updateArrows();
+		}
 	}
 };
 
@@ -286,8 +297,8 @@ TabView.prototype._changeActiveState = function(tab, state) {
 	var nc = tab.labelEl.classNames();
 	var ec = tab.contentEl.classNames();
 	if (state) {
-		nc.add('tabViewSelected');
-		ec.add('tabViewVisible');
+		(!nc.has('tabViewSelected')) && (nc.add('tabViewSelected'));
+		(!ec.has('tabViewVisible')) && (ec.add('tabViewVisible'));
 		tab.labelEl.scrollIntoView(false);
 		tab.raiseEvent('activate');
 	} else {
@@ -299,17 +310,50 @@ TabView.prototype._changeActiveState = function(tab, state) {
 };
 
 /**
+ * Loads content into a tab using AJAX
+ * @param {TabPanel} tab Tab panel
+ * @access private
+ */
+TabView.prototype._loadContents = function(tab) {
+	var self = this;
+	var request = new AjaxUpdater(tab.attributes.loadUri, {
+		method: tab.attributes.loadMethod,
+		params: tab.attributes.loadParams,
+		container: tab.contentEl,
+		async: true
+	});
+	tab.attributes.loaded = false;
+	tab.contentEl.classNames().add('tabViewLoading');
+	self.busy = true;
+	self._changeActiveState(tab, true);
+	self.raiseEvent('beforeload', [tab, request]);
+	request.bind('onUpdate', function() {
+		tab.contentEl.classNames().remove('tabViewLoading');
+		tab.attributes.loaded = true;
+		self.raiseEvent('afterload', [tab]);
+		self.raiseEvent('afterchange', [self.activeTab, tab]);
+		self.activeIndex = self.getTabIndex(tab);
+		self.activeTab = tab;
+		self._updateArrows();
+		self.busy = false;
+	});
+	request.send();
+};
+
+/**
  * Handles click event on tab labels
  * @param {Event} e Event
  * @access private
  */
 TabView.prototype._clickHandler = function(e) {
-	var elm = this.root, e = $EV(e);
-	var trg = e.element(), tabs = this.tabs;
-	for (var i=0; i<tabs.length; i++) {
-		if (Element.isChildOf(trg, tabs[i].labelEl)) {
-			this.setActiveTab(tabs[i]);
-			break;
+	if (!this.busy) {
+		var elm = this.root, e = $EV(e);
+		var trg = e.element(), tabs = this.tabs;
+		for (var i=0; i<tabs.length; i++) {
+			if (Element.isChildOf(trg, tabs[i].labelEl)) {
+				this.setActiveTab(tabs[i]);
+				break;
+			}
 		}
 	}
 };
@@ -387,6 +431,7 @@ function TabPanel(attrs) {
 	this.parent = null;
 	this.attributes.disabled = !!this.attributes.disabled;
 	this.attributes.active = !!this.attributes.active;
+	this.attributes.loaded = false;
 }
 TabPanel.extend(Widget, 'Widget');
 

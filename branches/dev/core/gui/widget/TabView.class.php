@@ -60,6 +60,7 @@ define('TABVIEW_ORIENTATION_RIGHT', 'right');
  * # navigationWidth : navigation bar width (applies to left and right orientations only)
  * # containerClass : CSS class of the tabs container
  * # contentHeight : height of the tab contents
+ * # loadCache : enable/disable caching tab content caching, when loaded through AJAX calls
  *
  * @package gui
  * @subpackage widget
@@ -113,7 +114,8 @@ class TabView extends Widget
 			'navigationClass' => '',
 			'navigationWidth' => '100px',
 			'containerClass' => '',
-			'contentHeight' => '250px'
+			'contentHeight' => '250px',
+			'loadCache' => TRUE
 		);
 	}
 
@@ -187,14 +189,18 @@ class TabView extends Widget
 		foreach ($this->panels as $panel) {
 			$tabs[] = array(
 				'id' => $panel->getAttribute('id'),
-				'disabled' => $panel->getAttribute('disabled')
+				'disabled' => $panel->getAttribute('disabled'),
+				'loadUri' => $panel->getAttribute('loadUri'),
+				'loadMethod' => $panel->getAttribute('loadMethod'),
+				'loadParams' => $panel->getAttribute('loadParams')
 			);
 		}
 		parent::renderJS(array(
 			'id' => $attrs['id'],
 			'activeIndex' => $attrs['activeIndex'],
 			'orientation' => $attrs['orientation'],
-			'tabs' => $tabs
+			'tabs' => $tabs,
+			'loadCache' => $attrs['loadCache']
 		));
 	}
 
