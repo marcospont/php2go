@@ -48,14 +48,13 @@
 	 */
 	$doc = new Document('resources/layout2_menu.example.tpl');
 
-
 	/**
 	 * HTML document configuration
 	 */
-	$doc->setTitle('TREE MENU EXAMPLE');						// title of the page
+	$doc->setTitle('PHP2Go Examples - php2go.gui.TreeMenu');	// page title
 	$doc->setCache(TRUE);										// use or not use browser cache
 	$doc->addStyle("resources/css.example.css");				// add a css stylesheet
-	$doc->addStyle("resources/layer_menu.example.css");			// menu CSS styles
+	$doc->addStyle("resources/layer_menu.example.css");			// add menu CSS file
 	$doc->addBodyCfg(array('style'=>'margin: 0em'));			// add BODY settings
 
 	/**
@@ -67,14 +66,14 @@
 	/**
 	 * Define the prefix of all tree node's links
 	 */
-	$treeMenu->setAddressPrefix('http://' . $_SERVER['SERVER_NAME'] . '/');
+	$treeMenu->setAddressPrefix('treemenu.example.php');
 
 	/**
 	 * The TreeMenu class generates a DIV element whose attribute "position" is
 	 * always "absolute". So, we must define an absolute position in order to
 	 * place the menu contents
 	 */
-	$treeMenu->setStartPoint(5, 55);
+	$treeMenu->setStartPoint(10, 50);
 
 	/**
 	 * Set the default CSS class for the tree nodes
@@ -156,16 +155,6 @@
     }
 
     $doc->assignByRef('menu', $treeMenu);
-
-	/**
-	 * Load some content in the main slot
-	 */
-	$main = new DocumentElement();
-	$main->put('resources/main1.example.tpl', T_BYFILE);
-	$main->parse();
-	$rs =& $db->query("select code as 'Code', short_desc as 'Short Desc' from products");
-	$main->assign('data', $rs->getArray());
-	$doc->elements['main'] =& $main;
 
 	$doc->display();
 

@@ -39,6 +39,16 @@
 	define('MENU_GENERATION_TYPE', 2); // DATABASE
 
 	/**
+	 * Catch calls to the IFRAME
+	 */
+	if (isset($_GET['op'])) {
+		print "<div style='width:100%;text-align:center;font-family:Verdana;font-size:14px;'>";
+		print "You've choosen option " . urldecode($_GET['op']) . "!";
+		print "</div>";
+		exit;
+	}
+
+	/**
 	 * HTML document creation
 	 */
 	$doc = new Document('resources/layout_menu.example.tpl');
@@ -47,10 +57,9 @@
 	/**
 	 * HTML document configuration
 	 */
-	$doc->setTitle('LAYER MENU EXAMPLE');						// title of the page
+	$doc->setTitle('PHP2Go Examples - php2go.gui.LayerMenu');	// page title
 	$doc->setCache(TRUE);										// use or not use browser cache
-	$doc->addStyle("resources/css.example.css");				// add a css stylesheet
-	$doc->addStyle("resources/layer_menu.example.css");			// menu CSS styles
+	$doc->addStyle("resources/layer_menu.example.css");			// add menu CSS file
 	$doc->addBodyCfg(array('style'=>'margin: 0em'));			// add BODY settings
 
     /**
@@ -61,7 +70,7 @@
 	/**
 	 * define the prefix for every link in the menu tree
 	 */
-    $layerMenu->setAddressPrefix('http://' . $_SERVER['SERVER_NAME'] . '/');
+    $layerMenu->setAddressPrefix('layermenu.example.php');
 
     /**
      * define the size of the menu (root level, if horizontal; entire menu, if vertical)
@@ -69,14 +78,14 @@
     $layerMenu->setSize(500, 15);
 
     /**
-     * the absolute X,Y start point of the main menu layer
+     * set menu positioning
+     * LAYER_MENU_ABSOLUTE (default)
+     *   - the absolute position should be set using the setStartPoint($x, $y) method
+     * LAYER_MENU_RELATIVE
+     *   - to enable relative positioning, call setPositioning(LAYER_MENU_RELATIVE)
      */
-    $layerMenu->setStartPoint(25, 5);
-
-    /**
-     * set the CSS style for the root level of the menu (main style and "onMouseOver" style)
-     */
-	$layerMenu->setRootStyles('menu', 'menuOver');
+    //$layerMenu->setStartPoint(15, 43);
+    $layerMenu->setPositioning(MENU_RELATIVE);
 
 	/**
 	 * sets the disposition of the root level
@@ -85,6 +94,11 @@
 	 * PS: horizontal menus only
 	 */
     $layerMenu->setRootDisposition(LAYER_MENU_EQUAL);
+
+    /**
+     * set the CSS style for the menu's root level (main style and "onMouseOver" style)
+     */
+	$layerMenu->setRootStyles('menu', 'menuOver');
 
     /**
      * set the CSS styles for the nested levels (main style, "onMouseOver" style and border style
@@ -100,7 +114,7 @@
     /**
      * the time in miliseconds that the child level keeps visible after it loses the focus of the mouse
      */
-    $layerMenu->setChildrenTimeout(500);
+    $layerMenu->setChildrenTimeout(200);
 
     /**
      * sets the minimum width of a menu child (in pixels)
@@ -160,27 +174,8 @@
      */
     $doc->assignByRef('menu', $layerMenu);
 
-    /**
-     * insert some content in the main slot
-     */
-    $main = new DocumentElement();
-
-    ob_start();
-    echo "
-    <p class='sample_style'>
-    	<b>PHP2Go Examples: php2go.gui.LayerMenu</b><br>
-    	Current Date: {date}<br>
-    	API Version: {version}
-    </p>
-    ";
-    $main->put(ob_get_clean(), T_BYVAR);
-    $main->parse();
-    $main->assign('date', Date::localDate());
-    $main->assign('version', PHP2GO_VERSION);
-    $doc->elements['main'] =& $main;
-
 	/**
-	 * output the content buffer
+	 * display the page
 	 */
     $doc->display();
 
