@@ -28,6 +28,15 @@
  */
 
 /**
+ * Absolute positioning
+ */
+define('MENU_ABSOLUTE', 1);
+/**
+ * Relative positioning
+ */
+define('MENU_RELATIVE', 2);
+
+/**
  * Base class to build tree based menus
  *
  * Menu items can be loaded either from the database or from a
