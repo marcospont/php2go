@@ -799,11 +799,11 @@ class Document extends PHP2Go
 		foreach($this->bodyEvents as $event => $actions)
 			print sprintf(" %s=\"%s\"", $event, $actions);
 		print ">\n<a id=\"php2go_top\" name=\"php2go_top\"></a>\n";
-		if (!empty($this->extraBodyContent[BODY_START]))
-			print $this->extraBodyContent[BODY_START];
+		if (!empty($this->extraContent[BODY_START]))
+			print $this->extraContent[BODY_START];
 		$this->Template->display();
-		if (!empty($this->extraBodyContent[BODY_END]))
-			print "\n" . $this->extraBodyContent[BODY_END];
+		if (!empty($this->extraContent[BODY_END]))
+			print "\n" . $this->extraContent[BODY_END];
 		// scripts located in the end of the document's body
 		if (isset($this->scriptBlocks)) {
 			foreach($this->scriptBlocks as $language => $scripts) {
