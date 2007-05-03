@@ -204,7 +204,7 @@ EditSelectionField.prototype.setDisabled = function(b) {
  * @type void
  */
 EditSelectionField.prototype.focus = function() {
-	if (!this.edit.disabled) {
+	if (this.beforeFocus() && !this.edit.disabled) {
 		this.edit.focus();
 		return true;
 	}

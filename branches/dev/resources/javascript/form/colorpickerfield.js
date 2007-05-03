@@ -161,7 +161,7 @@ ColorPickerField.prototype.disable = function() {
  * @type void
  */
 ColorPickerField.prototype.focus = function() {
-	if (!this.fld.disabled) {
+	if (this.beforeFocus() && !this.fld.disabled) {
 		if (this.mode == 'flat')
 			this.picker.text.select();
 		else

@@ -283,7 +283,7 @@ MultiColumnLookupField.prototype.setDisabled = function(b) {
  * @type void
  */
 MultiColumnLookupField.prototype.focus = function() {
-	if (!this.btn.disabled) {
+	if (this.beforeFocus() && !this.btn.disabled) {
 		this.btn.focus();
 		this.raiseEvent('focus');
 		return true;

@@ -106,7 +106,7 @@ TabView.prototype.setup = function() {
 		panel.parent = this;
 		panel.setup();
 		this.tabs.push(panel);
-		Event.addListener(navItems[i], 'click', this._clickHandler.bind(this));
+		Event.addListener(navItems[i].firstChild, 'click', this._clickHandler.bind(this));
 	}
 	// adjust navigation height
 	if (PHP2Go.browser.gecko && (this.attributes.orientation == 'left' || this.attributes.orientation == 'right'))
@@ -154,7 +154,7 @@ TabView.prototype.addTab = function(tab, idx) {
 			this.setActiveTab(tab);
 		else
 			this._updateArrows();
-		Event.addListener(li, 'click', this._clickHandler.bind(this));
+		Event.addListener(a, 'click', this._clickHandler.bind(this));
 	}
 };
 
@@ -440,7 +440,7 @@ TabPanel.extend(Widget, 'Widget');
  */
 TabPanel.prototype.setup = function() {
 	this.contentEl = $(this.attributes.id);
-	this.contentEl.tab = this;
+	this.contentEl.tabPanel = this;
 };
 
 /**

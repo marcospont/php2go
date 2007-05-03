@@ -209,15 +209,17 @@ EditSearchField.prototype.disable = function() {
  * @type void
  */
 EditSearchField.prototype.focus = function() {
-	if (this.results.options.length > this.loadIdx) {
-		if (!this.results.disabled) {
-			this.results.focus();
-			return true;
-		}
-	} else {
-		if (!this.filters.disabled) {
-			this.filters.focus();
-			return true;
+	if (this.beforeFocus()) {
+		if (this.results.options.length > this.loadIdx) {
+			if (!this.results.disabled) {
+				this.results.focus();
+				return true;
+			}
+		} else {
+			if (!this.filters.disabled) {
+				this.filters.focus();
+				return true;
+			}
 		}
 	}
 	return false;
