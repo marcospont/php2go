@@ -45,6 +45,10 @@
  * # loadMethod : load method (get or post)
  * # loadParams : load parameters
  *
+ * Available client events:
+ * # onActivate
+ * # onDeactivate
+ *
  * @package gui
  * @subpackage widget
  * @author Marcos Pont <mpont@users.sourceforge.net>

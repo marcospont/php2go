@@ -62,6 +62,15 @@ define('TABVIEW_ORIENTATION_RIGHT', 'right');
  * # contentHeight : height of the tab contents
  * # loadCache : enable/disable caching tab content caching, when loaded through AJAX calls
  *
+ * Available client events:
+ * # onInit
+ * # onBeforeChange
+ * # onAfterChange
+ * # onBeforeLoad
+ * # onAfterLoad
+ * # onBeforeRemove
+ * # onAfterRemove
+ *
  * @package gui
  * @subpackage widget
  * @author Marcos Pont <mpont@users.sourceforge.net>
