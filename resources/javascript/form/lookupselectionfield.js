@@ -203,7 +203,7 @@ LookupSelectionField.prototype.setDisabled = function(b) {
  * @type void
  */
 LookupSelectionField.prototype.focus = function() {
-	if (!this.available.disabled) {
+	if (this.beforeFocus() && !this.available.disabled) {
 		this.available.focus();
 		return true;
 	}

@@ -404,11 +404,29 @@ Field.prototype.disable = function() {
  * won't execute on disabled inputs
  */
 Field.prototype.focus = function() {
-	if (!this.fld.disabled) {
+	if (this.beforeFocus() && !this.fld.disabled) {
 		this.fld.focus();
 		return true;
 	}
 	return false;
+};
+
+/**
+ * Perform tasks and run validations
+ * before activating the field
+ * @param {Object} Field element
+ * @type Bool
+ */
+Field.prototype.beforeFocus = function() {
+	var elm = (this instanceof GroupField ? this.grp[0] : this.fld);
+	while (elm = elm.parentNode) {
+		if (elm.tabPanel && !elm.tabPanel.isActive()) {
+			if (!elm.tabPanel.isEnabled())
+				return false;
+			elm.tabPanel.activate();
+		}
+	}
+	return true;
 };
 
 /**
@@ -912,6 +930,8 @@ GroupField.prototype.disable = function() {
  * @type void
  */
 GroupField.prototype.focus = function() {
+	if (!this.beforeFocus())
+		return false;
 	var found = false;
 	this.grp.walk(function(el, idx) {
 		if (!el.disabled) {

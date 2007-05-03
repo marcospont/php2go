@@ -441,7 +441,7 @@ EditorField.prototype.setDisabled = function(b) {
  * @type Boolean
  */
 EditorField.prototype.focus = function() {
-	if (!this.config.readOnly) {
+	if (this.beforeFocus() && !this.config.readOnly) {
 		if (this.textMode) {
 			this.textarea.focus();
 		} else if (PHP2Go.browser.ie) {
