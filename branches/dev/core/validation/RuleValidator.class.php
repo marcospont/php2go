@@ -173,7 +173,7 @@ class RuleValidator extends AbstractValidator
 	 */
 	function _compareValues($source, $target, $operator, $dataType, $peerType) {
 		if ($peerType == RULE_PEER_FIELD) {
-			if ($this->_isEmpty($source) || $this->_isEmpty($target))
+			if ($this->_isEmpty($source) && $this->_isEmpty($target))
 				return TRUE;
 		} else {
 			if ($this->_isEmpty($source))

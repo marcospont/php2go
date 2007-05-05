@@ -528,7 +528,7 @@ RuleValidator.prototype.compare = function(op) {
 	var trg, src = (this.fld.getValue() || '').toString();
 	if (this.peerType == RuleValidator.PEER_FIELD) {
 		trg = (this.peer.getValue() || '').toString();
-		if (src.trim() == "" || trg.trim() == "")
+		if (src.trim() == "" && trg.trim() == "")
 			return true;
 	} else {
 		trg = this.peer;
@@ -555,14 +555,14 @@ RuleValidator.prototype.validate = function() {
 		case 'REGEX' :
 			return (f.isEmpty() || p.test(f.getValue()));
 		case 'JSFUNC' :
-			return (this.func(f.fld || f.grp));
+			return this.func(f.fld || f.grp);
 		case 'EQ' :
 		case 'NEQ' :
 		case 'GT' :
 		case 'GOET' :
 		case 'LT' :
 		case 'LOET' :
-			return (f.isEmpty() || this.compare());
+			return this.compare();
 		case 'REQIF' :
 			return (!f.isEmpty() || p.isEmpty());
 		case 'REQIFEQ' :
@@ -571,7 +571,7 @@ RuleValidator.prototype.validate = function() {
 		case 'REQIFGOET' :
 		case 'REQIFLT' :
 		case 'REQIFLOET' :
-			return (!f.isEmpty() || p.isEmpty() || !PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
+			return ((f.isEmpty() && p.isEmpty()) || PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
 	}
 };
 
