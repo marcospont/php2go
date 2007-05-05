@@ -128,9 +128,8 @@ class AuthDb extends Auth
 	 * @see setDbFields
 	 * @see setExtraClause
 	 */
-	function setTableName($tableName) {
-		if (trim($tableName) != '')
-			$this->tableName = $tableName;
+	function setTableName($name) {
+		$this->tableName = $name;
 	}
 
 	/**
@@ -146,15 +145,15 @@ class AuthDb extends Auth
 	 * @see setTableName
 	 * @see setExtraClause
 	 */
-	function setDbFields($dbFields) {
-		if (TypeUtils::isArray($dbFields)) {
-			$dbFields = array_unique($dbFields);
-			$this->dbFields = implode(', ', $dbFields);
+	function setDbFields($fields) {
+		if (is_array($fields)) {
+			$fields = array_unique($fields);
+			$this->dbFields = implode(', ', $fields);
 		} else {
-			$dbFields = trim($dbFields);
-			if ($dbFields[0] == ',')
-				$dbFields = substr($dbFields, 1);
-			$this->dbFields = $dbFields;
+			$fields = trim($fields);
+			if ($fields[0] == ',')
+				$fields = substr($fields, 1);
+			$this->dbFields = $fields;
 		}
 	}
 
@@ -164,15 +163,21 @@ class AuthDb extends Auth
 	 * <code>
 	 * $auth->setTableName('users');
 	 * $auth->setDbFields('cod_user,name,role');
+	 * // without bind params
 	 * $auth->setExtraClause('active = 1');
+	 * // with bind params
+	 * $auth->setExtraClause('active = ?', array(1));
 	 * </code>
 	 *
 	 * @param string $extraClause Extra clause
 	 * @see setTableName
 	 * @see setDbFields
 	 */
-	function setExtraClause($extraClause) {
-		$this->extraClause = $extraClause;
+	function setExtraClause($clause, $params=array()) {
+		$this->extraClause = array(
+			'clause' => $clause,
+			'params' => $params
+		);
 	}
 
 	/**
@@ -227,6 +232,8 @@ class AuthDb extends Auth
 	 */
 	function authenticate() {
 		$Db =& Db::getInstance($this->connectionId);
+		$Db->setDebug();
+		$queryParams = array();
 		$Query = new QueryBuilder();
 		$Query->addTable($this->tableName);
 		if ($this->dbFields == '*') {
@@ -236,21 +243,29 @@ class AuthDb extends Auth
 			if (!empty($this->dbFields))
 				$Query->addFields($this->dbFields);
 		}
-		$Query->setClause($this->loginFieldName . " = " . $Db->quoteString($this->_login, get_magic_quotes_gpc()));
+		$Query->setClause("{$this->loginFieldName} = ?");
+		$queryParams[] = $this->_login;
 		if (is_array($this->cryptFunction)) {
 			if ($this->cryptFunction['type'] == 'db') {
-				$Query->addClause($this->passwordFieldName . " = " . $this->cryptFunction['func'] . "(" . $Db->quoteString($this->_password, get_magic_quotes_gpc()) . ")");
+				$Query->addClause("{$this->passwordFieldName} = {$this->cryptFunction['func']}(?)");
+				$queryParams[] = $this->_password;
 			} else {
-				$password = call_user_func($this->cryptFunction['func'], $this->_password);
-				$Query->addClause($this->passwordFieldName . " = " . $Db->quoteString($password, get_magic_quotes_gpc()));
+				$Query->addClause("{$this->passwordFieldName} = ?");
+				$queryParams[] = call_user_func($this->cryptFunction['func'], $this->_password);
 			}
 		} else {
-			$Db->addClause($this->passwordFieldName . " = " . $Db->quoteString($this->_password, get_magic_quotes_gpc()));
+			$Query->addClause("{$this->passwordFieldName} = ?");
+			$queryParams[] = $this->_password;
 		}
-		if (!empty($this->extraClause))
-			$Query->addClause($this->extraClause);
+		if (!empty($this->extraClause)) {
+			$Query->addClause($this->extraClause['clause']);
+			if (!empty($this->extraClause['params'])) {
+				for ($i=0; $i<sizeof($this->extraClause['params']); $i++)
+					$queryParams[] = $this->extraClause['params'][$i];
+			}
+		}
 		$oldMode = $Db->setFetchMode(ADODB_FETCH_ASSOC);
-		$Rs =& $Db->query($Query->getQuery());
+		$Rs =& $Db->query($Query->getQuery(), TRUE, $queryParams);
 		$Db->setFetchMode($oldMode);
 		if ($Rs->recordCount() == 0)
 			return FALSE;
