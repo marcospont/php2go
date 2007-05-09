@@ -361,7 +361,7 @@ class Init
 		if (!$uri = $this->_Conf->getConfig('ABSOLUTE_URI')) {
 			setupError($this->_Lang->getLanguageValue('ERR_ABSOLUTE_URI_NOT_FOUND'));
 		} else {
-			$pattern = "/^https?\:\/\/[a-zA-Z0-9\-\.\/\:~]+$/";
+			$pattern = "/^https?\:\/\/[a-zA-Z0-9_\-\.\/\:~]+$/";
 			if (!preg_match($pattern, $uri)) {
 				setupError(sprintf($this->_Lang->getLanguageValue('ERR_URL_MALFORMED'), "'ABSOLUTE_URI'"));
 			} else {
