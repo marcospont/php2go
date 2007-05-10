@@ -268,7 +268,7 @@ Object.serialize = function(obj) {
 	if (typeof(obj) == 'boolean') return obj.toString();
 	if (obj === null) return 'null';
 	if (obj.serialize) return obj.serialize();
-	if (obj === window) return;
+	if (obj === window || obj === document) return;
 	var buf = [];
 	for (var p in obj) {
 		if (obj[p] == '') continue;
