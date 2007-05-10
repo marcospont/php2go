@@ -31,6 +31,7 @@
 	import('php2go.base.Document');
 	import('php2go.db.QueryBuilder');
 	import('php2go.form.SearchForm');
+	import('php2go.net.HttpRequest');
 
 	$db =& Db::getInstance();
 	$tables = $db->getTables();
