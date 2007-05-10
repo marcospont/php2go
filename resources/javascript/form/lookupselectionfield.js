@@ -166,29 +166,9 @@ LookupSelectionField.prototype.clear = function() {
 };
 
 /**
- * Enable the component
- * @type void
- */
-LookupSelectionField.prototype.enable = function() {
-	this.setDisabled(false);
-	this.updateButtons();
-};
-
-/**
- * Disable the component
- * @type void
- */
-LookupSelectionField.prototype.disable = function() {
-	this.setDisabled(true);
-};
-
-/**
- * Internal method to disable/enable the component.
- * Is called from {@link LookupSelectionField#enable}
- * and {@link LookupSelectionField#disable}
+ * Disables/enables the component
  * @param {Boolean} b Flag value
  * @type void
- * @private
  */
 LookupSelectionField.prototype.setDisabled = function(b) {
 	this.available.disabled = b;

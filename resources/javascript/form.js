@@ -389,14 +389,24 @@ Field.prototype.isEmpty = function() {
  * @type void
  */
 Field.prototype.enable = function() {
-	this.fld.disabled = false;
+	this.setDisabled(false);
 };
 
 /**
  * Disables the field
  */
 Field.prototype.disable = function() {
-	this.fld.disabled = true;
+	this.setDisabled(true);
+};
+
+/**
+ * Internal method to disable/enable the field
+ * @param {Boolean} b Flag value
+ * @type void
+ * @private
+ */
+Field.prototype.setDisabled = function(b) {
+	this.fld.disabled = b;
 };
 
 /**
@@ -805,6 +815,7 @@ GroupField = function(grp) {
 	 */
 	this.multiple = (this.type == 'checkbox');
 };
+GroupField.extend(Field, 'Field');
 
 /**
  * Return the current value of the group. For multiple
@@ -906,22 +917,12 @@ GroupField.prototype.isEmpty = function() {
 };
 
 /**
- * Enable all elements in the group
+ * Enables/disables all elements in the group
  * @type void
  */
-GroupField.prototype.enable = function() {
+GroupField.prototype.setDisabled = function(b) {
 	this.grp.walk(function(el, idx) {
-		el.disabled = false;
-	});
-};
-
-/**
- * Disable all elements in the group
- * @type void
- */
-GroupField.prototype.disable = function() {
-	this.grp.walk(function(el, idx) {
-		el.disabled = true;
+		el.disabled = b;
 	});
 };
 
