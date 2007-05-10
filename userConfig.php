@@ -262,20 +262,22 @@ $P2G_USER_CFG['FORMS'] = array(
 	// Display options of the help tips
 	'HELP_OPTIONS' => array(),
 	'ERRORS' => array(
-		// CSS class to the form validation errors
+		// Error message(s) CSS class
 		'STYLE' => 'css_class_name',
-		// Header of the error summary
-		'HEADER_TEXT' => 'Header text',
-		// CSS class of the header
-		'HEADER_STYLE' => 'css_class_name',
-		// Display mode of the validation error summary
-		'LIST_MODE' => 'FORM_ERROR_BULLET_LIST|FORM_ERROR_FLOW',
 		// Display mode of the form validation in the client side (JavaScript)
 		'CLIENT_MODE' => 'FORM_CLIENT_ERROR_ALERT|FORM_CLIENT_ERROR_DHTML',
 		// ID of the DIV container used to display errors (only if mode=FORM_CLIENT_ERROR_DHTML)
 		'CLIENT_CONTAINER' => 'div_id',
 		// Template placeholder (variable) used to display the server validation errors
-		'TEMPLATE_PLACEHOLDER' => 'placeholder_name'
+		'TEMPLATE_PLACEHOLDER' => 'placeholder_name',
+		// Whether all errors must be shown or just the first one
+		'SHOW_ALL' => bool,
+		// Validation errors header
+		'HEADER_TEXT' => 'Header text',
+		// Header's CSS class
+		'HEADER_STYLE' => 'css_class_name',
+		// Validation errors summary display mode
+		'LIST_MODE' => 'FORM_ERROR_BULLET_LIST|FORM_ERROR_FLOW'
 	),
 	// Presentation settings for instances of the FormBasic class
 	'BASIC' => array(

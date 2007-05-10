@@ -246,12 +246,6 @@ PHP2Go Web Development Framework - CONFIGURATION
 			'ERRORS' hash array
 				'STYLE' string
 					CSS class to the form validation errors;
-				'LIST_MODE' string
-					Display mode of the validation error summary. Accepts the values FORM_ERROR_BULLET_LIST or FORM_ERROR_FLOW (case-sensitive);
-				'HEADER_TEXT' string
-					Header of the error summary. To disable error summary header, provide an empty string;
-				'HEADER_STYLE' string
-					CSS class to the error summary header;
 				'CLIENT_MODE' string
 					Display mode to the client side validation error summary.
 					Accepts 2 values (case-sensitive): FORM_CLIENT_ERROR_ALERT (use alerts) or FORM_CLIENT_ERROR_DHTML (dinamically populate a <DIV> element);
@@ -259,6 +253,14 @@ PHP2Go Web Development Framework - CONFIGURATION
 					ID of the DIV container used to display errors (only if mode=FORM_CLIENT_ERROR_DHTML);
 				'TEMPLATE_PLACEHOLDER' string
 					Template placeholder (variable) used to display the server validation errors;
+				'SHOW_ALL' bool
+					Whether all errors must be shown or just the first one
+				'HEADER_TEXT' string
+					Validation errors header. To disable errors header, provide an empty string;
+				'HEADER_STYLE' string
+					Header's CSS class;
+				'LIST_MODE' string
+					Display mode of the validation error summary. Accepts the values FORM_ERROR_BULLET_LIST or FORM_ERROR_FLOW (case-sensitive);
 			'BASIC' hash array
 				Presentation settings for instances of the FormBasic class
 				'FIELDSET_STYLE' string
