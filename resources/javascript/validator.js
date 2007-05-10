@@ -84,7 +84,7 @@ Validator.isMask = function(v, mask) {
 		default :
 			var m = [];
 			if (m = /FLOAT(\-([1-9][0-9]*)\:([1-9][0-9]*))?/.exec(mask))
-				return (m[1] ? Validator.isFloat(m[2], m[3]) : Validator.isFloat());
+				return (m[1] ? Validator.isFloat(v, m[2], m[3]) : Validator.isFloat(v));
 			else if (m = /ZIP\-?([1-9])\:?([1-9])/.exec(mask))
 				return Validator.isZIP(v, m[1], m[2]);
 			else
