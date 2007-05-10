@@ -88,7 +88,13 @@
 	$obj->inner->arr = array(1, 2, 3);
 	print('<pre>' . $encoder->encodeValue($obj) . '</pre>');
 
-	println('<br><b>Decoder</b>');
+	// Encoding Javascript special types
+	print('<pre>');
+	println($encoder->encodeValue(JSONEncoder::jsIdentifier('identifier')), "\n");
+	println($encoder->encodeValue(JSONEncoder::jsFunction('return true;', array('obj', 'event'))), "\n");
+	print('</pre>');
+
+	println('<b>Decoder</b>');
 
 	/**
 	 * Decoding scalar values
