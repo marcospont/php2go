@@ -491,6 +491,28 @@ TabPanel.prototype.isEnabled = function() {
 };
 
 /**
+ * Load contents into the tab panel using AJAX
+ * @param {String} Target URI
+ * @param {String} Method
+ * @param {Object} Parameters (when using POST)
+ */
+TabPanel.prototype.loadContent = function(uri, method, params, activate) {
+	this.attributes.loaded = false;
+	this.attributes.loadUri = uri;
+	if (method)
+		this.attributes.loadMethod = method;
+	if (params)
+		this.attributes.loadParams = params;
+	this.attributes.loaded = false;
+	activate = !!activate;
+	if (this.parent.activeTab == this) {
+		this.parent._loadContents(this);
+	} else if (activate) {
+		this.parent.setActiveTab(this);
+	}
+};
+
+/**
  * Set tab contents
  * @param {String} code Contents
  * @param {Boolean} evalScripts Eval script blocks or not
