@@ -189,19 +189,15 @@ EditSearchField.prototype.clear = function() {
 };
 
 /**
- * Enable the component
+ * Disables/enables the component
+ * @param {Boolean} b Flag value
  * @type void
  */
-EditSearchField.prototype.enable = function() {
-	this.setDisabled(false);
-};
-
-/**
- * Disable the component
- * @type void
- */
-EditSearchField.prototype.disable = function() {
-	this.setDisabled(true);
+EditSearchField.prototype.setDisabled = function(b) {
+	this.filters.disabled = b;
+	this.search.disabled = b;
+	this.button.disabled = b;
+	this.results.disabled = b;
 };
 
 /**
@@ -223,21 +219,6 @@ EditSearchField.prototype.focus = function() {
 		}
 	}
 	return false;
-};
-
-/**
- * Internal method to disable/enable the component.
- * Is called from {@link EditSearchField#enable}
- * and {@link EditSearchField#disable}
- * @param {Boolean} b Flag value
- * @type void
- * @private
- */
-EditSearchField.prototype.setDisabled = function(b) {
-	this.filters.disabled = b;
-	this.search.disabled = b;
-	this.button.disabled = b;
-	this.results.disabled = b;
 };
 
 /**

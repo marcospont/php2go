@@ -246,31 +246,11 @@ MultiColumnLookupField.prototype.importOptions = function(str, lsep, csep, pos) 
 };
 
 /**
- * Enable the component
- * @type void
- */
-MultiColumnLookupField.prototype.enable = function() {
-	this.setDisabled(false);
-};
-
-/**
- * Disable the component
- * @type void
- */
-MultiColumnLookupField.prototype.disable = function() {
-	this.setDisabled(true);
-};
-
-/**
- * Internal method to disable/enable the component.
- * Is called from {@link MultiColumnLookupField#enable}
- * and {@link MultiColumnLookupField#disable}
+ * Disables/enables the component
  * @param {Boolean} b Flag value
  * @type void
- * @private
  */
 MultiColumnLookupField.prototype.setDisabled = function(b) {
-	b = !!b;
 	b && this.hide();
 	this.fld.disabled = b;
 	this.text.disabled = b;

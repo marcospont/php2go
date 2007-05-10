@@ -399,28 +399,9 @@ EditorField.prototype.isEmpty = function() {
 };
 
 /**
- * Enables the editor component
- * @type void
- */
-EditorField.prototype.enable = function() {
-	this.setDisabled(false);
-};
-
-/**
- * Disables the editor component
- * @type void
- */
-EditorField.prototype.disable = function() {
-	this.setDisabled(true);
-};
-
-/**
- * Internal method to disable/enable the editor.
- * Is called from {@link EditorField#enable} and
- * {@link EditorField#disable}
+ * Disables/enables the component
  * @param {Boolean} b Flag value
  * @type void
- * @private
  */
 EditorField.prototype.setDisabled = function(b) {
 	this.fld.disabled = b;
