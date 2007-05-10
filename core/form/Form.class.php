@@ -345,7 +345,8 @@ class Form extends Component
 			$this->formAction = HttpRequest::basePath();
 			$this->formMethod = "POST";
 			$this->clientErrorOptions = array(
-				'mode' => FORM_CLIENT_ERROR_ALERT
+				'mode' => FORM_CLIENT_ERROR_ALERT,
+				'showAll' => TRUE
 			);
 			$this->helpOptions = array(
 				'mode' => FORM_HELP_POPUP,
@@ -890,13 +891,14 @@ class Form extends Component
 			$instance = $this->formName . '_validator';
 			$script = "\t{$instance} = new FormValidator('{$this->formName}');\n";
 			// error summary settings
-			$summaryOptions = sprintf("%s, %s, %s, \"%s\"",
+			$summaryOptions = sprintf("%s, %s, %s, %s, \"%s\"",
 				$this->clientErrorOptions['mode'],
 				(isset($this->clientErrorOptions['placeholder']) ? "\$('{$this->clientErrorOptions['placeholder']}')" : 'null'),
+				($this->clientErrorOptions['showAll'] ? 'true' : 'false'),
 				(isset($this->errorStyle['list_mode']) ? $this->errorStyle['list_mode'] : FORM_ERROR_FLOW),
 				(isset($this->errorStyle['header_text']) ? $this->errorStyle['header_text'] : PHP2Go::getLangVal('ERR_FORM_ERRORS_SUMMARY'))
 			);
-			$script .= "\t{$instance}.setSummaryOptions({$summaryOptions});\n";
+			$script .= "\t{$instance}.setErrorDisplayOptions({$summaryOptions});\n";
 			// validators
 			if (!empty($this->validatorCode))
 				$script .= $this->validatorCode;

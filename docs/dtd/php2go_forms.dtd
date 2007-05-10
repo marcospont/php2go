@@ -118,12 +118,13 @@
 <!ELEMENT errors EMPTY>
 <!ATTLIST errors
 	style %text; #IMPLIED
-	headertext %text; #IMPLIED
-	headerstyle %text; #IMPLIED
-	listmode %identifier; #IMPLIED
 	clientmode %identifier; #IMPLIED
 	clientcontainer %identifier; #IMPLIED
 	tplplaceholder %identifier; #IMPLIED
+	showall %boolean; "T"
+	headertext %text; #IMPLIED
+	headerstyle %text; #IMPLIED
+	listmode %identifier; #IMPLIED
 >
 <!ELEMENT help EMPTY>
 <!ATTLIST help
