@@ -255,7 +255,7 @@ MultiColumnLookupField.prototype.setDisabled = function(b) {
 	this.fld.disabled = b;
 	this.text.disabled = b;
 	this.btn.disabled = b;
-	this.btn.setOpacity(b?0.6:0);
+	this.btn.setOpacity(b?0.6:1);
 };
 
 /**
