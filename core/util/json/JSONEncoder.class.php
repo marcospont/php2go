@@ -116,7 +116,7 @@ class JSONEncoder extends PHP2Go
 		if (is_array($inputArgs)) {
 			$encoder = new JSONEncoder();
 			foreach ($inputArgs as $arg)
-				$tmp[] = $encoder->encodeValue($arg);
+				$tmp[] = $encoder->encodeValue(JSONEncoder::jsIdentifier($arg));
 		}
 		$obj->__json__ = "function(" . join(',', $tmp) . ") { " . $body . " }";
 		return $obj;
