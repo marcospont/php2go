@@ -280,20 +280,7 @@ Validator.isZIP = function(val, left, right) {
  * @type Boolean
  */
 Validator.prototype.isMandatory = function() {
-	var t = this.getType();
-	return (t == 'RequiredValidator' || (t == 'RuleValidator' && !this.msg && (/^REQIF/.test(this.ruleType))));
-};
-
-/**
- * Get validator type, based on its constructor's name
- * @type String
- */
-Validator.prototype.getType = function() {
-	try {
-		return this.constructor.toString().match(new RegExp("^function ([^\(]+)"))[1];
-	} catch(e) {
-		return 'Validator';
-	}
+	return (this instanceof RequiredValidator || (this instanceof RuleValidator && !this.msg && (/^REQIF/.test(this.ruleType))));
 };
 
 /**
@@ -335,6 +322,14 @@ RequiredValidator.extend(Validator, 'Validator');
  */
 RequiredValidator.prototype.validate = function() {
 	return (!this.fld.isEmpty());
+};
+
+/**
+ * Builds validator's error message using the language table
+ * @type String
+ */
+RequiredValidator.prototype.getErrorMessage = function() {
+	return Lang.validator.requiredField.assignAll(this.fldLabel);
 };
 
 /**
@@ -457,7 +452,7 @@ RuleValidator = function(args) {
 	 * Holds the target comparison value, in REQIFXX rules
 	 * @type Field
 	 */
-	this.peerValue = args.peerValue || "";
+	this.peerValue = args.peerValue || '';
 	/**
 	 * Comparison peer
 	 * @type Object
@@ -571,7 +566,7 @@ RuleValidator.prototype.validate = function() {
 		case 'REQIFGOET' :
 		case 'REQIFLT' :
 		case 'REQIFLOET' :
-			return ((f.isEmpty() && p.isEmpty()) || PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
+			return (!f.isEmpty() || p.isEmpty() || !PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
 	}
 };
 
@@ -607,10 +602,11 @@ FormValidator = function(frm) {
 	 * Error summary properties
 	 * @type Object
 	 */
-	this.summary = {
+	this.errorDisplayOptions = {
 		header: Lang.validator.invalidFields,
 		mode: FormValidator.MODE_ALERT,
 		list: FormValidator.LIST_FLOW,
+		showAll: true,
 		target: null,
 		nl: "\n",
 		ls: "---------------------------------------------------------------------------------\n"
@@ -639,35 +635,37 @@ FormValidator.LIST_FLOW = 1;
 FormValidator.LIST_BULLET = 2;
 
 /**
- * Set error summary options
+ * Configures how validation error(s) must be displayed
  * @param {Number} mode Display mode (MODE_ALERT or MODE_DHTML)
  * @param {Object} target Container node (id or reference)
+ * @param {Boolean} showAll Show all errors or just the first one
  * @param {Number} list List mode (LIST_FLOW or LIST_BULLET)
  * @param {String} header Summary header
  * @type void
  */
-FormValidator.prototype.setSummaryOptions = function(mode, target, list, header) {
+FormValidator.prototype.setErrorDisplayOptions = function(mode, target, showAll, list, header) {
 	// using a container node (DHTML)
-	var s = this.summary;
+	var opt = this.errorDisplayOptions;
+	opt.showAll = !!showAll;
 	if (mode == FormValidator.MODE_DHTML) {
 		var trg = $(target);
 		if (trg) {
-			s.mode = mode;
-			s.ls = "";
-			s.nl = "<br>";
-			s.target = trg;
+			opt.mode = mode;
+			opt.ls = "";
+			opt.nl = "<br>";
+			opt.target = trg;
 			if (list == FormValidator.LIST_FLOW || list == FormValidator.LIST_BULLET)
-				s.list = list;
+				opt.list = list;
 		}
 	}
 	// using an alert box
 	else if (mode == FormValidator.MODE_ALERT) {
-		s.mode = mode;
-		s.ls = "----------------------------------------------------------------------------\n";
-		s.nl = "\n";
+		opt.mode = mode;
+		opt.ls = "----------------------------------------------------------------------------\n";
+		opt.nl = "\n";
 	}
 	if (header != null)
-		s.header = header;
+		opt.header = header;
 };
 
 /**
@@ -706,7 +704,7 @@ FormValidator.prototype.setup = function() {
 	}
 	// register onreset event listener
 	Event.addListener(frm, 'reset', function(e) {
-		frm.validator.clearSummary();
+		frm.validator.clearErrors();
 	});
 
 };
@@ -756,15 +754,18 @@ FormValidator.prototype.run = function(e) {
 		res = res && valid;
 		if (!valid) {
 			this.messages.push(items[i].getErrorMessage());
-			// register empty field, and first empty field
-			if (items[i].isMandatory()) {
-				this.emptyLabels.push(items[i].fldLabel);
-				(!ept) && (ept = items[i].fld);
-			}
 			// register first invalid field and cancel event
 			if (!inv) {
 				inv = items[i].fld;
 				(e && e.preventDefault());
+			}
+			// if only the first error must be displayed
+			if (!this.errorDisplayOptions.showAll)
+				break;
+			// register empty field, and first empty field
+			if (items[i].isMandatory()) {
+				this.emptyLabels.push(items[i].fldLabel);
+				(!ept) && (ept = items[i].fld);
 			}
 		}
 	}
@@ -774,30 +775,33 @@ FormValidator.prototype.run = function(e) {
 		(e && e.preventDefault());
 	}
 	if (!res) {
-		(!this.emptyLabels.empty() || !this.messages.empty()) && (this.showSummary());
+		(!this.emptyLabels.empty() || !this.messages.empty()) && (this.showErrors());
 		(ept || inv) && ((ept || inv).focus());
 		return false;
 	} else {
-		this.clearSummary();
+		this.clearErrors();
 	}
 	return true;
 };
 
 /**
- * Builds a string buffer containing the errors summary
+ * Builds a string buffer containing the error message(s)
  * @type String
  */
-FormValidator.prototype.buildSummary = function() {
-	var buf = "", m = Lang.validator, s = this.summary;
-	var bullets = (s.list == FormValidator.LIST_BULLET);
-	var dhtml = (s.mode == FormValidator.MODE_DHTML);
+FormValidator.prototype.buildErrors = function() {
+	var buf = "", m = Lang.validator, opt = this.errorDisplayOptions;
+	var bullets = (opt.list == FormValidator.LIST_BULLET);
+	var dhtml = (opt.mode == FormValidator.MODE_DHTML);
+	// if we must display only the first error message
+	if (!opt.showAll)
+		return this.messages[0];
 	// if there are any empty required fields, display them first
 	if (this.emptyLabels.length > 0) {
 		if (dhtml) {
-			if (s.header != "") {
-				buf += s.header;
+			if (opt.header != "") {
+				buf += opt.header;
 				if (!bullets)
-					buf += s.nl;
+					buf += opt.nl;
 			}
 			if (bullets)
 				buf += "<ul>";
@@ -805,24 +809,24 @@ FormValidator.prototype.buildSummary = function() {
 				if (bullets)
 					buf += "<li>" + m.requiredField.assignAll(item) + "</li>";
 				else
-					buf += m.requiredField.assignAll(item) + s.nl;
+					buf += m.requiredField.assignAll(item) + opt.nl;
 			});
 			if (bullets)
 				buf += "</ul>";
-			buf += s.ls;
+			buf += opt.ls;
 		} else {
-			buf += m.requiredFields + s.nl + s.ls;
+			buf += m.requiredFields + opt.nl + opt.ls;
 			this.emptyLabels.walk(function(item, idx) {
-				buf += item + s.nl;
+				buf += item + opt.nl;
 			});
-			buf += s.ls + m.completeFields;
+			buf += opt.ls + m.completeFields;
 		}
 	} else {
 		if (dhtml) {
-			if (s.header != "") {
-				buf += s.header;
+			if (opt.header != "") {
+				buf += opt.header;
 				if (!bullets)
-					buf += s.nl;
+					buf += opt.nl;
 			}
 			if (bullets)
 				buf += "<ul>";
@@ -830,35 +834,36 @@ FormValidator.prototype.buildSummary = function() {
 				if (bullets)
 					buf += "<li>" + item + "</li>";
 				else
-					buf += item + s.nl;
+					buf += item + opt.nl;
 			});
 			if (bullets)
 				buf += "</ul>";
-			buf += s.ls;
+			buf += opt.ls;
 		} else {
-			if (s.header != "")
-				buf += s.header.stripTags() + s.nl + s.ls;
+			if (opt.header != "")
+				buf += opt.header.stripTags() + opt.nl + opt.ls;
 			this.messages.walk(function(item, idx) {
-				buf += item + s.nl;
+				buf += item + opt.nl;
 			});
-			buf += s.ls + m.fixFields;
+			buf += opt.ls + m.fixFields;
 		}
 	}
 	return buf;
 };
 
 /**
- * Show the errors summary using an alert box (MODE_ALERT)
+ * Shows the error message(s) using an alert box (MODE_ALERT)
  * or a given target node (MODE_DHTML)
  * @type void
  */
-FormValidator.prototype.showSummary = function() {
-	if (this.summary.mode == FormValidator.MODE_ALERT) {
-		alert(this.buildSummary());
+FormValidator.prototype.showErrors = function() {
+	var opt = this.errorDisplayOptions;
+	if (opt.mode == FormValidator.MODE_ALERT) {
+		alert(this.buildErrors());
 	} else {
-		var trg = $(this.summary.target);
+		var trg = $(opt.target);
 		if (trg) {
-			trg.update(this.buildSummary());
+			trg.update(this.buildErrors());
 			trg.show();
 			window.scrollTo(0, trg.getPosition().y);
 		}
@@ -866,12 +871,13 @@ FormValidator.prototype.showSummary = function() {
 };
 
 /**
- * Clears the target node used to display the errors summary
+ * Clears the target node used to display the error message(s)
  * @type void
  */
-FormValidator.prototype.clearSummary = function() {
-	if (this.summary.mode == FormValidator.MODE_DHTML) {
-		var trg = $(this.summary.target);
+FormValidator.prototype.clearErrors = function() {
+	var opt = this.errorDisplayOptions;
+	if (opt.mode == FormValidator.MODE_DHTML) {
+		var trg = $(opt.target);
 		if (trg) {
 			trg.clear();
 			trg.hide();
