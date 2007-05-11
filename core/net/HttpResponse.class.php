@@ -65,9 +65,9 @@ class HttpResponse extends PHP2Go
 	 */
 	function addHeader($name, $value='', $replace=TRUE) {
 		if (empty($value) && strlen($value) == 0)
-			@header("$name", TypeUtils::toBoolean($replace));
+			@header("$name", (bool)$replace);
 		else
-			@header("$name: $value", TypeUtils::toBoolean($replace));
+			@header("$name: $value", (bool)$replace);
 	}
 
 	/**

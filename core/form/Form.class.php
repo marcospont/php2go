@@ -521,7 +521,7 @@ class Form extends Component
 		if ($listMode != FORM_ERROR_FLOW && $listMode != FORM_ERROR_BULLET_LIST)
 			$listMode = FORM_ERROR_FLOW;
 		// custom header text
-		if (!TypeUtils::isNull($headerText, TRUE)) {
+		if ($headerText !== NULL) {
 			if (!empty($headerText))
 				$headerText = (!empty($headerStyle) ? sprintf("<div class='%s'>%s</div>", $headerStyle, $headerText) : $headerText . '<br>');
 		}
@@ -679,7 +679,7 @@ class Form extends Component
 			// get inner subsections
 			for ($i=1,$s=sizeof($fieldSplitted)-1; $i<$s; $i++) {
 				$section = $section->getSubSection($fieldSplitted[$i]);
-				if (TypeUtils::isNull($section))
+				if (is_null($section))
 					return $result;
 			}
 			// get the field
@@ -729,7 +729,7 @@ class Form extends Component
 	function getFormErrors($glue=NULL) {
 		if (empty($this->formErrors))
 			return FALSE;
-		if (!TypeUtils::isNull($glue))
+		if (!is_null($glue))
 			return implode($glue, $this->formErrors);
 		return $this->formErrors;
 	}
@@ -740,7 +740,7 @@ class Form extends Component
 	 * @param string|array $errors Error(s)
 	 */
 	function addErrors($errors) {
-		if (TypeUtils::isArray($errors))
+		if (is_array($errors))
 			$this->formErrors = array_merge($this->formErrors, $errors);
 		else
 			$this->formErrors[] = $errors;
@@ -784,7 +784,7 @@ class Form extends Component
 				$Field =& $this->fields[$name];
 				$result &= $Field->isValid();
 			}
-			$result = TypeUtils::toBoolean($result);
+			$result = (bool)$result;
 			if ($result === FALSE) {
 				$this->addErrors(Validator::getErrors());
 				Validator::clearErrors();
@@ -1126,7 +1126,7 @@ class Form extends Component
 				case 'TEXTFIELD' : $fieldClassName = 'TextField'; break;
 				default : PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FORM_INVALID_FIELDTYPE', $field->getTag()), E_USER_ERROR, __FILE__, __LINE__); break;
 			}
-			if (!TypeUtils::isNull($fieldClassName)) {
+			if (!is_null($fieldClassName)) {
 				import("php2go.form.field.{$fieldClassName}");
 				$obj = new $fieldClassName($this);
 				$obj->onLoadNode($field->getAttributes(), $field->getChildrenTagsArray());
@@ -1158,7 +1158,7 @@ class Form extends Component
 		(array_key_exists('ACCESSKEY_HIGHLIGHT', $settings)) && $this->accessKeyHighlight = (bool)$settings['ACCESSKEY_HIGHLIGHT'];
 		if (isset($settings['HELP_MODE'])) {
 			$mode = @constant($settings['HELP_MODE']);
-			if (!TypeUtils::isNull($mode))
+			if (!is_null($mode))
 				$this->setHelpDisplayOptions($mode, TypeUtils::toArray(@$settings['HELP_OPTIONS']));
 		}
 		if (isset($settings['ERRORS'])) {

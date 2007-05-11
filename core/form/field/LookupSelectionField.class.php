@@ -224,7 +224,7 @@ class LookupSelectionField extends FormField
 	 */
 	function onLoadNode($attrs, $children) {
 		parent::onLoadNode($attrs, $children);
-		if (isset($children['LOOKUPFIELD']) && TypeUtils::isArray($children['LOOKUPFIELD']) &&
+		if (isset($children['LOOKUPFIELD']) && is_array($children['LOOKUPFIELD']) &&
 			TypeUtils::isInstanceOf($children['LOOKUPFIELD'][0], 'XmlNode') &&
 			TypeUtils::isInstanceOf($children['LOOKUPFIELD'][1], 'XmlNode')) {
 			$srcLookupChildren = $children['LOOKUPFIELD'][0]->getChildrenTagsArray();

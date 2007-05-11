@@ -60,7 +60,7 @@ class RuleValidator extends AbstractValidator
 	 */
 	function RuleValidator($params = NULL) {
 		parent::AbstractValidator($params);
-		if (TypeUtils::isArray($params)) {
+		if (is_array($params)) {
 			if (isset($params['rule']))
 				$this->Rule =& $params['rule'];
 		}

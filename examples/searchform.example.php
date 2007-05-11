@@ -61,7 +61,7 @@
 	 * this routine is just illustrative, you can implement it in a great variety of ways...
 	 */
 	$action = HttpRequest::get('action');
-	if ($keepSearchVisible || TypeUtils::isNull($action) || $action != 'list') {
+	if ($keepSearchVisible || is_null($action) || $action != 'list') {
 
 		/**
 		 * create an instance of SearchForm

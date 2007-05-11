@@ -256,8 +256,8 @@ class LayerMenu extends Menu
 	 * @param int $top Upper Y coordinate
 	 */
 	function setStartPoint($left, $top) {
-		$this->offsetX = TypeUtils::parseIntegerPositive($left);
-		$this->offsetY = TypeUtils::parseIntegerPositive($top);
+		$this->offsetX = abs(intval($left));
+		$this->offsetY = abs(intval($top));
 		$this->positioning = MENU_ABSOLUTE;
 	}
 
@@ -291,7 +291,7 @@ class LayerMenu extends Menu
 	 * @param int $width Char width
 	 */
 	function setCharWidth($width) {
-		$this->charWidth = TypeUtils::parseIntegerPositive($width);
+		$this->charWidth = abs(intval($width));
 	}
 
 	/**
@@ -300,7 +300,7 @@ class LayerMenu extends Menu
 	 * @param int $itemSpacing Spacing, in pixels
 	 */
 	function setItemSpacing($itemSpacing) {
-		$this->itemSpacing = TypeUtils::parseIntegerPositive($itemSpacing);
+		$this->itemSpacing = abs(intval($itemSpacing));
 	}
 
 	/**
@@ -365,7 +365,7 @@ class LayerMenu extends Menu
 	 * @param int $height Item height
 	 */
 	function setChildrenHeight($height) {
-		$this->childrenHeight = TypeUtils::parseIntegerPositive($height);
+		$this->childrenHeight = abs(intval($height));
 	}
 
 	/**
@@ -377,7 +377,7 @@ class LayerMenu extends Menu
 	 * @param int $timeout Timeout
 	 */
 	function setChildrenTimeout($timeout) {
-		$this->childrenTimeout = TypeUtils::parseIntegerPositive($timeout);
+		$this->childrenTimeout = abs(intval($timeout));
 	}
 
 	/**

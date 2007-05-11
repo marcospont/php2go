@@ -336,7 +336,7 @@ class EditableField extends FormField
 		foreach ($validators as $validator) {
 			$result &= Validator::validateField($this, $validator[0], $validator[1], $validator[2]);
 		}
-		return TypeUtils::toBoolean($result);
+		return (bool)$result;
 	}
 
 	/**

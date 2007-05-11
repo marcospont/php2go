@@ -84,7 +84,7 @@ class FileField extends FormField
 	 * @param int $size Input size
 	 */
 	function setSize($size) {
-		$this->attributes['SIZE'] = TypeUtils::parseInteger($size);
+		$this->attributes['SIZE'] = intval($size);
 	}
 
 	/**
@@ -106,7 +106,7 @@ class FileField extends FormField
 	 */
 	function setAllowedTypes($types) {
 		if (!empty($types)) {
-			$types = explode(',', TypeUtils::parseString($types));
+			$types = explode(',', strval($types));
 			$this->attributes['ALLOWEDTYPES'] = $types;
 		}
 	}
@@ -155,7 +155,7 @@ class FileField extends FormField
 	 */
 	function setSaveMode($mode) {
 		if (!empty($mode)) {
-			$mode = ereg_replace("[^0-9]+", "", TypeUtils::parseString($mode));
+			$mode = ereg_replace("[^0-9]+", "", strval($mode));
 			eval("\$this->attributes['SAVEMODE'] = {$mode};");
 		}
 	}
@@ -166,7 +166,7 @@ class FileField extends FormField
 	 * @param bool $overwrite Enable/disable
 	 */
 	function setOverwrite($overwrite) {
-		$this->attributes['OVERWRITE'] = TypeUtils::toBoolean($overwrite);
+		$this->attributes['OVERWRITE'] = (bool)$overwrite;
 	}
 
 	/**
@@ -189,7 +189,7 @@ class FileField extends FormField
 			if ($handler = $Uploader->getHandlerByName($this->getName()))
 				parent::setSubmittedValue($handler);
 		}
-		return TypeUtils::toBoolean($result);
+		return (bool)$result;
 	}
 
 	/**

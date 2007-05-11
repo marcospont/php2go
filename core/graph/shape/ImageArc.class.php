@@ -154,7 +154,7 @@ class ImageArc extends Drawable
 	 */
 	function draw(&$Img) {
 		if ($this->shadow > 0) {
-			$sc = (TypeUtils::isNull($this->shadowColor) ? $Img->currentColor : $Img->allocateColor($this->shadowColor));
+			$sc = (is_null($this->shadowColor) ? $Img->currentColor : $Img->allocateColor($this->shadowColor));
 			for ($i=0; $i<$this->shadow; $i++) {
 				$cy = $this->cy + $i;
 				if ($this->fill)

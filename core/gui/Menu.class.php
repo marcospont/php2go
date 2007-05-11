@@ -172,7 +172,7 @@ class Menu extends Component
 		$this->_Db = Db::getInstance($connectionId);
 		$this->rootSql = $rootSql;
 		$this->childSql = ereg_replace("~([^~])~", "~".strtoupper("\\1")."~", $childSql);
-		$this->limit = TypeUtils::parseIntegerPositive($limit);
+		$this->limit = abs(intval($limit));
 	}
 
 	/**

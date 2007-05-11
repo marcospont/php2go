@@ -108,10 +108,10 @@ class DateValidator extends AbstractValidator
 		}
 		if ($result) {
 			// validates day ( > 0 && <= 31 )
-			if (TypeUtils::parseInteger($day) < 1 || TypeUtils::parseInteger($day) > 31)
+			if (intval($day) < 1 || intval($day) > 31)
 				$result = FALSE;
 			// validates month ( > 0 && <= 12 )
-			if (TypeUtils::parseInteger($month) < 1 || TypeUtils::parseInteger($month)  > 12)
+			if (intval($month) < 1 || intval($month)  > 12)
 				$result = FALSE;
 			// validates day against month and year
 			$daysInMonth = Date::daysInMonth($month, $year);
@@ -119,13 +119,13 @@ class DateValidator extends AbstractValidator
 				$result = FALSE;
 			} else {
 				// validates hour ( >= 0 && <= 24 )
-				if ($hours && (TypeUtils::parseInteger($hours) < 0 || TypeUtils::parseInteger($hours) > 24))
+				if ($hours && (intval($hours) < 0 || intval($hours) > 24))
 					$result = FALSE;
 				// validates minutes ( >= 0 && <= 59 )
-				if ($minutes && (TypeUtils::parseInteger($minutes) < 0 || TypeUtils::parseInteger($minutes) > 59))
+				if ($minutes && (intval($minutes) < 0 || intval($minutes) > 59))
 					$result = FALSE;
 				// validates seconds ( >= 0 && <= 59 )
-				if ($seconds && (TypeUtils::parseInteger($seconds) < 0 || TypeUtils::parseInteger($seconds) > 59))
+				if ($seconds && (intval($seconds) < 0 || intval($seconds) > 59))
 					$result = FALSE;
 			}
 		}

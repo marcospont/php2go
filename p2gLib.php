@@ -402,7 +402,7 @@ function highlightPHP($code, $type=T_BYVAR) {
  * @return bool|NULL
  */
 function resolveBooleanChoice($value=NULL) {
-	if (TypeUtils::isNull($value))
+	if (is_null($value))
 		return NULL;
 	elseif (trim($value) == "T")
 		return TRUE;

@@ -201,7 +201,7 @@ class SocketClient extends PHP2Go
 	 */
 	function setTimeout($timeout) {
 		if ($this->isConnected()) {
-			$seconds = TypeUtils::parseInteger($timeout);
+			$seconds = intval($timeout);
 			$microseconds = $timeout % $seconds;
 			return @socket_set_timeout($this->stream, $seconds, $microseconds);
 		} else {
@@ -253,7 +253,9 @@ class SocketClient extends PHP2Go
 	 * @param int $bufferSize Buffer size
 	 */
 	function setBufferSize($bufferSize) {
-		$this->bufferSize = TypeUtils::parseIntegerPositive($bufferSize);
+		$bufferSize = abs(intval($bufferSize));
+		if ($bufferSize >= 1)
+			$this->bufferSize = $bufferSize;
 	}
 
 	/**
@@ -281,7 +283,7 @@ class SocketClient extends PHP2Go
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_HOST_INVALID', $host), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
-		$this->port = TypeUtils::parseIntegerPositive($port % 65536);
+		$this->port = abs(intval($port % 65536));
 		$this->persistent = (bool)$persistent;
 		$this->timeout = TypeUtils::ifNull($timeout, FALSE);
 		if ($this->isConnected())

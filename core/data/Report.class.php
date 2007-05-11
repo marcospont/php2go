@@ -1441,9 +1441,9 @@ class Report extends PagedDataSet
 		$basePage = (parent::getCurrentPage() > parent::getPageCount() ? parent::getPageCount() : parent::getCurrentPage());
 		// define first visible page link
 		if (($basePage % $this->pagination['visiblePages']) == 0) {
-			$this->pagination['firstVisiblePage'] = ((TypeUtils::parseInteger($basePage / $this->pagination['visiblePages']) - 1) * $this->pagination['visiblePages']) + 1;
+			$this->pagination['firstVisiblePage'] = ((intval($basePage / $this->pagination['visiblePages']) - 1) * $this->pagination['visiblePages']) + 1;
 		} else {
-			$this->pagination['firstVisiblePage'] = (TypeUtils::parseInteger($basePage / $this->pagination['visiblePages']) * $this->pagination['visiblePages']) + 1;
+			$this->pagination['firstVisiblePage'] = (intval($basePage / $this->pagination['visiblePages']) * $this->pagination['visiblePages']) + 1;
 		}
 		// calculate last visible page link
 		if (($this->pagination['firstVisiblePage'] + $this->pagination['visiblePages'] - 1) <= parent::getPageCount()) {
@@ -1704,7 +1704,7 @@ class Report extends PagedDataSet
 			$colConfig =& $this->columns[$colName];
 			$colAlias = (isset($colConfig['alias']) ? $colConfig['alias'] : $colName);
 			if (!in_array($colName, $this->groupDisplay) && !in_array($colName, $this->hidden)) {
-				$colWidth = ($this->colSizesMode == REPORT_COLUMN_SIZES_CUSTOM && isset($this->colSizes) ? $this->colSizes[$c] . '%' : ($this->colSizesMode == REPORT_COLUMN_SIZES_FIXED ? TypeUtils::parseInteger(100 / $visibleCols) . '%' : ''));
+				$colWidth = ($this->colSizesMode == REPORT_COLUMN_SIZES_CUSTOM && isset($this->colSizes) ? $this->colSizes[$c] . '%' : ($this->colSizesMode == REPORT_COLUMN_SIZES_FIXED ? intval(100 / $visibleCols) . '%' : ''));
 				$this->Template->createBlock('loop_header_cell');
 				$this->Template->assign('col_id', $colName);
 				$this->Template->assign('col_wid', $colWidth);

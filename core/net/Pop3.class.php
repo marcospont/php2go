@@ -335,7 +335,7 @@ class Pop3 extends SocketClient
 		$deleted = 0;
 		if ($list = $this->mList())
 			foreach($list as $values)
-				$deleted += TypeUtils::parseInteger($this->dele($values[0]));
+				$deleted += intval($this->dele($values[0]));
 		return $deleted;
 	}
 
@@ -439,8 +439,8 @@ class Pop3 extends SocketClient
 			return FALSE;
 		} else {
 			if (ereg("([0-9]+)[ ]([0-9]+)", $responseMessage, $matches)) {
-				$this->msgCount = TypeUtils::parseIntegerPositive($matches[1]);
-				$this->boxSize = TypeUtils::parseIntegerPositive($matches[2]);
+				$this->msgCount = abs(intval($matches[1]));
+				$this->boxSize = abs(intval($matches[2]));
 			}
 			return TRUE;
 		}
@@ -485,7 +485,7 @@ class Pop3 extends SocketClient
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		$responseMessage = NULL;
-		$data = sprintf("TOP %s %d%s", $msgId, TypeUtils::parseIntegerPositive($numLines), POP3_CRLF);
+		$data = sprintf("TOP %s %d%s", $msgId, abs(intval($numLines)), POP3_CRLF);
 		if (!$this->_sendData($data, $responseMessage)) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_POP3_COMMAND', array('TOP', $responseMessage));
 			return FALSE;
@@ -531,7 +531,7 @@ class Pop3 extends SocketClient
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		$responseMessage = NULL;
-		if (TypeUtils::isNull($msgId)) {
+		if (is_null($msgId)) {
 			$data = sprintf("LIST%s", POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
 				$lines = explode(POP3_CRLF, $this->_readAll());
@@ -570,7 +570,7 @@ class Pop3 extends SocketClient
 		if ($this->state != POP3_TRANS_STATE)
 			return FALSE;
 		$responseMessage = NULL;
-		if (TypeUtils::isNull($msgId)) {
+		if (is_null($msgId)) {
 			$data = sprintf("UIDL%s", POP3_CRLF);
 			if ($this->_sendData($data, $responseMessage)) {
 				$lines = explode(POP3_CRLF, $this->_readAll());

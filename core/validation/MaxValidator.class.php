@@ -31,7 +31,6 @@
  * Validates values against a maximum value
  *
  * @package validation
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -69,7 +68,7 @@ class MaxValidator extends AbstractValidator
 	 * @return bool
 	 */
 	function execute($value) {
-		$value = TypeUtils::parseFloat($value);
+		$value = floatval($value);
 		if (!isset($this->max)) {
 			$result = TRUE;
 		} else {
