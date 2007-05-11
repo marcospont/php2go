@@ -171,7 +171,7 @@ class Db extends PHP2Go
   		if (!isset($instances))
   			$instances = array();
   		$Conf =& Conf::getInstance();
-  		if (!TypeUtils::isNull($id)) {
+  		if (!is_null($id)) {
   			$key = $id;
   		} else {
   			$default = $Conf->getConfig('DATABASE.DEFAULT_CONNECTION');
@@ -179,7 +179,7 @@ class Db extends PHP2Go
   				$key = $default;
   			} else {
   				$connections = $Conf->getConfig('DATABASE.CONNECTIONS');
-  				if (TypeUtils::isArray($connections)) {
+  				if (is_array($connections)) {
 					reset($connections);
   					list($key, $value) = each($connections);
   				} else {
@@ -219,12 +219,10 @@ class Db extends PHP2Go
 	 * @param int $seconds Cache lifetime, in seconds
 	 */
 	function setCache($flag, $seconds=0) {
-		$flag = !!$flag;
-		$seconds = abs(intval($seconds));
-		$seconds = TypeUtils::parseIntegerPositive($seconds);
+		$flag = (bool)$flag;
 		if ($flag) {
 			$this->makeCache = TRUE;
-			$this->cacheSecs = $seconds;
+			$this->cacheSecs = abs(intval($seconds));
 		} else {
 			$this->makeCache = FALSE;
 		}
@@ -601,7 +599,7 @@ class Db extends PHP2Go
 	function getCount($stmt, $bindVars=FALSE, $optimize=TRUE) {
 		$count = 0;
 		$matches = array();
-		$sql = (TypeUtils::isArray($stmt) ? $stmt[0] : $stmt);
+		$sql = (is_array($stmt) ? $stmt[0] : $stmt);
 		// drivers that support nested SQL, queries that use DISTINCT or GROUP BY
 		if (!empty($this->AdoDb->_nestedSQL) || preg_match("/^\s*SELECT\s+DISTINCT/is", $sql) || preg_match('/\s+GROUP\s+BY\s+/is',$sql) || preg_match('/\s+UNION\s+/is',$sql)) {
 			$rewriteSql = $sql;
@@ -617,7 +615,7 @@ class Db extends PHP2Go
 			// mysql and mysqli
 			elseif (strncmp($this->AdoDb->databaseType, 'mysql', 5) == 0) {
 				$info = $this->AdoDb->ServerInfo();
-				$version = TypeUtils::parseFloat($info['version']);
+				$version = (float)$info['version'];
 				if ($version >= 4.1) {
 					if ($optimize) {
 						$rewriteSql = preg_replace("/(\sORDER\s+BY\s[^(]*)(LIMIT)/Uis", "\\2", $rewriteSql);
@@ -753,7 +751,8 @@ class Db extends PHP2Go
 	 * @return bool Returns TRUE when a commit was executed
 	 */
 	function completeTransaction($forceRollback=FALSE) {
-		return $this->AdoDb->CompleteTrans(!TypeUtils::toBoolean($forceRollback));
+		$forceRollback = (bool)$forceRollback;
+		return $this->AdoDb->CompleteTrans(!$forceRollback);
 	}
 
 	/**
@@ -764,7 +763,7 @@ class Db extends PHP2Go
 	 * @return bool
 	 */
 	function commit($flag=TRUE) {
-		return $this->AdoDb->CommitTrans(TypeUtils::toBoolean($flag));
+		return $this->AdoDb->CommitTrans((bool)$flag);
 	}
 
 	/**
@@ -785,7 +784,7 @@ class Db extends PHP2Go
 	 * @return bool
 	 */
 	function prepare($stmtCode, $cursor=FALSE) {
-		return $this->AdoDb->Prepare($stmtCode, TypeUtils::toBoolean($cursor));
+		return $this->AdoDb->Prepare($stmtCode, (bool)$cursor);
 	}
 
 	/**
@@ -868,7 +867,7 @@ class Db extends PHP2Go
 			'statement' => $statement,
 			'vars' => ($bindVars ? $bindVars : array())
 		);
-		if (!TypeUtils::isNull($cursorName) && $this->AdoDb->dataProvider == 'oci8')
+		if (!is_null($cursorName) && $this->AdoDb->dataProvider == 'oci8')
 			$rs =& $this->AdoDb->ExecuteCursor($statement, $cursorName, $bindVars);
 		elseif ($this->makeCache)
 			$rs =& $this->AdoDb->CacheExecute($this->cacheSecs, $statement, $bindVars);
@@ -1245,7 +1244,7 @@ class Db extends PHP2Go
 	 * @return bool
 	 */
 	function isDbDesign($sql) {
-		if (TypeUtils::isArray($sql))
+		if (is_array($sql))
 			$sql = $sql[0];
 		$resWords = 'INSERT|UPDATE|DELETE|' . 'REPLACE|CREATE|DROP|' .
 					'ALTER|GRANT|REVOKE|' . 'LOCK|UNLOCK';
@@ -1263,7 +1262,7 @@ class Db extends PHP2Go
 	 * @return bool
 	 */
 	function isDbQuery($sql) {
-		if (TypeUtils::isArray($sql))
+		if (is_array($sql))
 			$sql = $sql[0];
 		$resWord = 'SELECT';
 		if (preg_match('/^\s*"?(' . $resWord . ')\s+/i', $sql)) {
@@ -1279,7 +1278,7 @@ class Db extends PHP2Go
 	 * @return bool
 	 */
 	function close() {
-		if (isset($this->AdoDb->_connectionID) && TypeUtils::isResource($this->AdoDb->_connectionID)) {
+		if (isset($this->AdoDb->_connectionID) && is_resource($this->AdoDb->_connectionID)) {
 			$this->onBeforeClose();
 			$this->connected = $this->AdoDb->Close();
 		} else {
