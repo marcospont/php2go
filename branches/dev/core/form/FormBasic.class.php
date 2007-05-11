@@ -221,7 +221,8 @@ class FormBasic extends Form
 	 * @param float $width Labels width
 	 */
 	function setLabelWidth($width) 	{
-		if (TypeUtils::parseFloatPositive($width) > 1 || TypeUtils::parseFloatPositive($width) <= 0) {
+		$width = abs(floatval($width));
+		if ($width <= 0 || $width > 1) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_VALUE_OUT_OF_BOUNDS', array("width (FormBasic::setLabelWidth)", 0, 1)), E_USER_ERROR, __FILE__, __LINE__);
 		} else {
 			$this->labelW = $width;
@@ -244,8 +245,8 @@ class FormBasic extends Form
 	 * @param int $cellspacing Cell spacing
 	 */
 	function setFormTableProperties($cellpadding, $cellspacing) {
-		$this->tblCPadding = TypeUtils::parseIntegerPositive($cellpadding);
-		$this->tblCSpacing = TypeUtils::parseIntegerPositive($cellspacing);
+		$this->tblCPadding = abs(intval($cellpadding));
+		$this->tblCSpacing = abs(intval($cellspacing));
 	}
 
 	/**

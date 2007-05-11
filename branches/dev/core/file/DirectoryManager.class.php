@@ -39,7 +39,6 @@ import('php2go.file.DirectoryEntry');
  * @package file
  * @uses FileSystem
  * @uses Number
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -93,7 +92,7 @@ class DirectoryManager extends PHP2Go
 		$handles = $this->getHandles();
 		if (!empty($handles)) {
 			foreach($handles as $path => $handle) {
-				if (TypeUtils::isResource($handle))
+				if (is_resource($handle))
 					@closedir($handle);
 			}
 		}
@@ -120,7 +119,7 @@ class DirectoryManager extends PHP2Go
 	 * @return resource|bool
 	 */
 	function getCurrentHandle() {
-		return isset($this->currentHandle) && TypeUtils::isResource($this->currentHandle) ? $this->currentHandle : FALSE;
+		return isset($this->currentHandle) && is_resource($this->currentHandle) ? $this->currentHandle : FALSE;
 	}
 
 	/**

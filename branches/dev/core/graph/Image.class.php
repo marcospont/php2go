@@ -282,7 +282,7 @@ class Image extends PHP2Go
 	 */
 	function allocateColor($color, $alpha=FALSE) {
 		// hex representation
-		if (TypeUtils::isString($color) && $color[0] == '#') {
+		if (is_string($color) && $color[0] == '#') {
 			$color = ImageUtils::fromHexToRGB($color);
 		}
 		// array representation

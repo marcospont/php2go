@@ -105,7 +105,7 @@ class EditSearchField extends DbField
 		$comboValue = $this->_LookupField->getValue();
 		$Tpl->assign('value', (!StringUtils::isEmpty($comboValue) ? "'{$comboValue}'" : 'null'));
 		$masks = array();
-		$requestFilter = TypeUtils::parseString(HttpRequest::getVar($this->name . '_filters'));
+		$requestFilter = strval(HttpRequest::getVar($this->name . '_filters'));
 		$filters = sprintf("<select id=\"%s_filters\" name=\"%s_filters\" title=\"%s\"%s%s%s%s>",
 			$this->id, $this->name, $this->label, $this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['STYLE'], $this->attributes['DISABLED']
 		);
@@ -216,9 +216,9 @@ class EditSearchField extends DbField
 	 * @param bool $setting Enable/disable
 	 */
 	function setAutoComplete($setting) {
-		if (TypeUtils::isTrue($setting))
+		if ($setting === TRUE)
 			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"ON\"";
-		else if (TypeUtils::isFalse($setting))
+		elseif ($setting === FALSE)
 			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"OFF\"";
 		else
 			$this->attributes['AUTOCOMPLETE'] = "";
@@ -232,7 +232,7 @@ class EditSearchField extends DbField
 	 * @param bool $setting Enable/disable
 	 */
 	function setAutoTrim($setting=TRUE) {
-		$this->attributes['AUTOTRIM'] = TypeUtils::toBoolean($setting);
+		$this->attributes['AUTOTRIM'] = (bool)$setting;
 	}
 
 	/**
@@ -243,7 +243,7 @@ class EditSearchField extends DbField
 	 * @param bool $setting Enable/disable
 	 */
 	function setAutoDispatch($setting=TRUE) {
-		$this->attributes['AUTODISPATCH'] = TypeUtils::toBoolean($setting);
+		$this->attributes['AUTODISPATCH'] = (bool)$setting;
 	}
 
 	/**
@@ -280,7 +280,7 @@ class EditSearchField extends DbField
 	 * @param bool $setting Enable/disable
 	 */
 	function setDebug($setting) {
-		$this->attributes['DEBUG'] = TypeUtils::toBoolean($setting);
+		$this->attributes['DEBUG'] = (bool)$setting;
 	}
 
 	/**

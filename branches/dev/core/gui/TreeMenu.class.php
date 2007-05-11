@@ -234,8 +234,8 @@ class TreeMenu extends Menu
 	 * @param int $top Upper Y coordinate
 	 */
 	function setStartPoint($left, $top) {
-		$this->offsetX = TypeUtils::parseIntegerPositive($left);
-		$this->offsetY = TypeUtils::parseIntegerPositive($top);
+		$this->offsetX = abs(intval($left));
+		$this->offsetY = abs(intval($top));
 	}
 
 	/**
@@ -304,7 +304,7 @@ class TreeMenu extends Menu
 	 * @param int $ident Indentation
 	 */
 	function setLevelIdent($ident) {
-		$this->levelIdent = TypeUtils::parseIntegerPositive($ident);
+		$this->levelIdent = abs(intval($ident));
 	}
 
 	/**
@@ -322,7 +322,7 @@ class TreeMenu extends Menu
 	 * @param int $padding Padding
 	 */
 	function setItemPadding($padding) {
-    	$this->itemPadding = TypeUtils::parseIntegerPositive($padding);
+		$this->itemPadding = abs(intval($padding));
 	}
 
 	/**
@@ -331,7 +331,7 @@ class TreeMenu extends Menu
 	 * @param int $spacing Spacing
 	 */
 	function setItemSpacing($spacing) {
-    	$this->itemSpacing = TypeUtils::parseIntegerPositive($spacing);
+		$this->itemSpacing = abs(intval($spacing));
 	}
 
 	/**
@@ -355,8 +355,8 @@ class TreeMenu extends Menu
 	 * @param int $height Icons height
 	 */
 	function setImageSize($width, $height) {
-		$this->iconWidth = TypeUtils::parseIntegerPositive($width);
-		$this->iconHeight = TypeUtils::parseIntegerPositive($height);
+		$this->iconWidth = abs(intval($width));
+		$this->iconHeight = abs(intval($height));
 	}
 
 	/**
@@ -442,7 +442,7 @@ class TreeMenu extends Menu
 	 * @access private
 	 */
 	function _buildChildrenCode($children) {
-		$childrenSize = TypeUtils::isArray($children) ? sizeof($children) : 0;
+		$childrenSize = (is_array($children) ? sizeof($children) : 0);
     	if (!$childrenSize) {
         	return '';
  		} else {

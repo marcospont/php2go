@@ -435,11 +435,11 @@ class Feed extends FeedNode
 					}
 					// ATOM link: attributes, can be multiple
 					elseif ($element == 'link' && $this->isATOM()) {
-						if (TypeUtils::isArray($value)) {
+						if (is_array($value)) {
 							// link set
 							if (!TypeUtils::isHashArray($value) && !empty($value)) {
 								foreach ($value as $key=>$link) {
-									if (TypeUtils::isArray($link))
+									if (is_array($link))
 										$value[$key] = array('_attrs' => $link);
 									else
 										$value[$key] = array('_attrs' => array('href' => htmlspecialchars($link)));
@@ -494,10 +494,10 @@ class Feed extends FeedNode
 	 */
 	function _formatElementValue($value) {
 		// composite or multiple elements (image, textinput, author, contributor)
-		if (TypeUtils::isArray($value)) {
+		if (is_array($value)) {
 			foreach ($value as $k=>$v) {
 				// multiple AND composite elements (ex: contributor)
-				if (TypeUtils::isArray($value[$k])) {
+				if (is_array($value[$k])) {
 					foreach ($value[$k] as $_k => $_v)
 						$value[$k][$_k] = htmlspecialchars($_v);
 				} else {

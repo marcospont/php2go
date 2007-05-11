@@ -189,7 +189,7 @@ class PHP2GoError extends PHP2Go
 	 * @param int $lineNumber Error line number
 	 */
 	function setLine($lineNumber=NULL) {
-		if (!TypeUtils::isNull($lineNumber))
+		if (!is_null($lineNumber))
 			$this->line = $lineNumber;
 	}
 
@@ -200,7 +200,7 @@ class PHP2GoError extends PHP2Go
 	 * @return bool
 	 */
 	function captureErrors() {
-		return (TypeUtils::isTrue(PHP2Go::getConfigVal('CAPTURE_ERRORS', FALSE)));
+		return (PHP2Go::getConfigVal('CAPTURE_ERRORS', FALSE) === TRUE);
 	}
 
 	/**
@@ -210,7 +210,7 @@ class PHP2GoError extends PHP2Go
 	 * @return bool
 	 */
 	function logErrors() {
-		return (TypeUtils::isTrue(PHP2Go::getConfigVal('LOG_ERRORS', FALSE)));
+		return (PHP2Go::getConfigVal('LOG_ERRORS', FALSE) === TRUE);
 	}
 
 	/**
@@ -220,7 +220,7 @@ class PHP2GoError extends PHP2Go
 	 * @return bool
 	 */
 	function showErrors() {
-		return (TypeUtils::isTrue(PHP2Go::getConfigVal('SHOW_ERRORS', FALSE)));
+		return (PHP2Go::getConfigVal('SHOW_ERRORS', FALSE) === TRUE);
 	}
 
 	/**
@@ -230,7 +230,7 @@ class PHP2GoError extends PHP2Go
 	 * @return bool
 	 */
 	function debugTrace() {
-		return (TypeUtils::isTrue(PHP2Go::getConfigVal('DEBUG_TRACE', FALSE)));
+		return (PHP2Go::getConfigVal('DEBUG_TRACE', FALSE) === TRUE);
 	}
 
 	/**
@@ -241,7 +241,7 @@ class PHP2GoError extends PHP2Go
 	 */
 	function isIgnoreError($errorMessage) {
 		$userIgnoreErrors = PHP2Go::getConfigVal('IGNORE_ERRORS', FALSE);
-		$ignoreErrors = (!TypeUtils::isArray($userIgnoreErrors) ? $this->ignoreErrors : array_merge($this->ignoreErrors, $userIgnoreErrors));
+		$ignoreErrors = (!is_array($userIgnoreErrors) ? $this->ignoreErrors : array_merge($this->ignoreErrors, $userIgnoreErrors));
 		for ($i = 0; $i < sizeof($ignoreErrors); $i++) {
 			if (eregi($ignoreErrors[$i], $errorMessage) !== FALSE)
 				return TRUE;

@@ -36,7 +36,6 @@ import('php2go.util.HtmlUtils');
  * @package net
  * @uses HtmlUtils
  * @uses HttpRequest
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -433,7 +432,7 @@ class Url extends PHP2Go
 				}
 				$portPos = strrpos($matches[4], ':');
 				if ($portPos !== FALSE) {
-					$this->port = TypeUtils::parseIntegerPositive(substr($matches[4], $portPos+1));
+					$this->port = abs(intval(substr($matches[4], $portPos+1)));
 					if (!$this->port) {
 						$this->port = NULL;
 					}

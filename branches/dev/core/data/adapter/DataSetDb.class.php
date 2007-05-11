@@ -150,7 +150,7 @@ class DataSetDb extends DataAdapter
 		// open connection and prepare statement, if not prepared
 		$Db =& Db::getInstance(@$this->params['connectionId']);
 		$Db->setDebug(@$this->params['debug']);
-		if (TypeUtils::isString($stmt))
+		if (is_string($stmt))
 			$stmt = $Db->prepare(($isProcedure ? $Db->getProcedureSQL($stmt) : $stmt), $isProcedure);
 		// execute statement
 		$oldMode = $Db->setFetchMode(ADODB_FETCH_ASSOC);
@@ -162,7 +162,7 @@ class DataSetDb extends DataAdapter
 		} else {
 			$optimize = (isset($this->params['optimizeCount']) ? (bool)$this->params['optimizeCount'] : TRUE);
 			$this->totalRecordCount = $Db->getCount($stmt, $bindVars, $optimize);
-			$this->RecordSet =& $Db->limitQuery((TypeUtils::isArray($stmt) ? $stmt[0] : $stmt), $size, $offset, TRUE, $bindVars);
+			$this->RecordSet =& $Db->limitQuery((is_array($stmt) ? $stmt[0] : $stmt), $size, $offset, TRUE, $bindVars);
 		}
 		$Db->setFetchMode($oldMode);
 		// set class properties

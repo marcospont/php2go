@@ -169,7 +169,7 @@ class FileUpload extends PHP2Go
 	function setMaxFileSize($maxSize) {
 		$maxPHP = str_replace(array('g', 'G', 'm', 'M', 'k', 'K'), array('000000000', '000000000', '000000', '000000', '000', '000'), System::getIni('upload_max_filesize'));
 		$maxUser = str_replace(array('g', 'G', 'm', 'M', 'k', 'K'), array('000000000', '000000000', '000000', '000000', '000', '000'), $maxSize);
-		$this->maxFileSize = min(TypeUtils::parseInteger($maxPHP), TypeUtils::parseIntegerPositive($maxUser));
+		$this->maxFileSize = min(intval($maxPHP), abs(intval($maxUser)));
 	}
 
 	/**
@@ -245,7 +245,7 @@ class FileUpload extends PHP2Go
 			'save_callback' => NULL,
 			'error' => ''
 		);
-		if (!TypeUtils::isNull($callback))
+		if (!is_null($callback))
 			$newHandler['save_callback'] = new Callback($callback);
 		$this->uploadHandlers[] =& $newHandler;
 		return sizeof($this->uploadHandlers) - 1;

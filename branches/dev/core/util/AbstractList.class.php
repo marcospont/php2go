@@ -130,10 +130,10 @@ class AbstractList extends PHP2Go
 			if ($index != -1 && TypeUtils::isInteger($index)) {
 				$initial = $index;
 				foreach($collection as $element)
-					$added += TypeUtils::parseInteger($this->add($element, $initial++));
+					$added += intval($this->add($element, $initial++));
 			} else if ($index == -1) {
 				foreach($collection as $element)
-					$added += TypeUtils::parseInteger($this->add($element));
+					$added += intval($this->add($element));
 			}
 		}
 		return $added;
@@ -190,7 +190,7 @@ class AbstractList extends PHP2Go
 	 * @return bool
 	 */
 	function containsAll($collection) {
-		if (TypeUtils::isArray($collection) && !empty($collection)) {
+		if (is_array($collection) && !empty($collection)) {
 			foreach($collection as $element) {
 				if (!$this->contains($element)) return FALSE;
 			}

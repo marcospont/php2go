@@ -98,7 +98,7 @@ class MailTransport extends PHP2Go
 	 */
 	function MailTransport(&$MailMessage) {
 		parent::PHP2Go();
-		if (!TypeUtils::isObject($MailMessage) || !is_a($MailMessage, 'mailmessage'))
+		if (!TypeUtils::isInstanceOf($MailMessage, 'MailMessage'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_OBJECT', 'MailMessage'), E_USER_ERROR, __FILE__, __LINE__);
 		$this->errors = array();
 		$this->_Message = $MailMessage;
@@ -173,7 +173,7 @@ class MailTransport extends PHP2Go
 	 * @param MailMessage &$MailMessage Mail message
 	 */
 	function setMessage(&$MailMessage) {
-		if (!TypeUtils::isObject($MailMessage) || !is_a($MailMessage, 'mailmessage'))
+		if (!TypeUtils::isInstanceOf($MailMessage, 'MailMessage'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_OBJECT', 'MailMessage'), E_USER_ERROR, __FILE__, __LINE__);
 		$this->_Message =& $MailMessage;
 	}
@@ -267,7 +267,7 @@ class MailTransport extends PHP2Go
 		$result = TRUE;
 		if (!is_object($this->_Smtp)) {
 			$this->_Smtp = new Smtp();
-			$this->_Smtp->debug = (isset($this->params['debug']) ? TypeUtils::toBoolean($this->params['debug']) : FALSE);
+			$this->_Smtp->debug = (array_key_exists('debug', $this->params) ? (bool)$this->params['debug'] : FALSE);
 		}
 		// open connection
 		if (!$this->_Smtp->isConnected()) {

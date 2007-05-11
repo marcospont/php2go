@@ -113,9 +113,9 @@ class XmlParser extends PHP2Go
 			}
 		}
 		if ($namespace)
-			$parser = (TypeUtils::isNull($srcEncoding, TRUE) ? xml_parser_create_ns() : xml_parser_create_ns($srcEncoding));
+			$parser = ($srcEncoding === NULL ? xml_parser_create_ns() : xml_parser_create_ns($srcEncoding));
 		else
-			$parser = (TypeUtils::isNull($srcEncoding, TRUE) ? xml_parser_create() : xml_parser_create($srcEncoding));
+			$parser = ($srcEncoding === NULL ? xml_parser_create() : xml_parser_create($srcEncoding));
 		foreach ($optionFlags as $code => $value)
 			xml_parser_set_option($parser, $code, $value);
 		return $parser;

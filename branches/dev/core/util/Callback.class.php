@@ -103,7 +103,7 @@ class Callback extends PHP2Go
 	 */
 	function Callback($function=NULL) {
 		parent::PHP2Go();
-		if (!TypeUtils::isNull($function)) {
+		if (!is_null($function)) {
 			$this->function = $function;
 			$this->_parseFunction();
 		}
@@ -183,7 +183,7 @@ class Callback extends PHP2Go
 	 */
 	function invoke($args=NULL, $nargs=FALSE) {
 		if ($this->isValid())
-			return (TypeUtils::isNull($args) ? call_user_func($this->function) : ($nargs && TypeUtils::isArray($args) ? call_user_func_array($this->function, $args) : call_user_func($this->function, $args)));
+			return (is_null($args) ? call_user_func($this->function) : ($nargs && is_array($args) ? call_user_func_array($this->function, $args) : call_user_func($this->function, $args)));
 		return NULL;
 	}
 
@@ -219,8 +219,8 @@ class Callback extends PHP2Go
 	 * @access private
 	 */
 	function _parseFunction() {
-		if (TypeUtils::isArray($this->function) && sizeof($this->function) == 2) {
-			if (TypeUtils::isObject($this->function[0])) {
+		if (is_array($this->function) && sizeof($this->function) == 2) {
+			if (is_object($this->function[0])) {
 				$this->type = CALLBACK_DYNAMIC_METHOD;
 				$this->valid = (method_exists($this->function[0], $this->function[1]));
 			} else {

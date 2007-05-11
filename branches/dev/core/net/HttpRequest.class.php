@@ -40,7 +40,6 @@ import('php2go.session.SessionManager');
  * @uses Environment
  * @uses Registry
  * @uses SessionManager
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -165,37 +164,37 @@ class HttpRequest extends PHP2Go
                 switch ($searchOrder{$i}) {
 					case 'E' :
 						$value = Environment::get($variableName);
-						if (!TypeUtils::isNull($value, TRUE))
+						if ($value !== NULL)
 							return $value;
 						break;
 					case 'G' :
 						$value = HttpRequest::fetchVar($variableName, 'GET');
-						if (!TypeUtils::isNull($value, TRUE))
+						if ($value !== NULL)
 							return $value;
 						break;
 					case 'P' :
 						$value = HttpRequest::fetchVar($variableName, 'POST');
-						if (!TypeUtils::isNull($value, TRUE))
+						if ($value !== NULL)
 							return $value;
 						break;
 					case 'C' :
 						$value = HttpRequest::fetchVar($variableName, 'COOKIE');
-						if (!TypeUtils::isNull($value, TRUE))
+						if ($value !== NULL)
 							return $value;
 						break;
 					case 'S' :
 						$value = HttpRequest::fetchVar($variableName, 'SESSION');
-						if (!TypeUtils::isNull($value, TRUE))
+						if ($value !== NULL)
 							return $value;
 						break;
 					case 'O' :
 						$value = SessionManager::getObjectProperty($variableName);
-						if (!TypeUtils::isNull($value, TRUE))
+						if ($value !== NULL)
 							return $value;
 						break;
 					case 'R' :
 						$value = Registry::get($variableName);
-						if (!TypeUtils::isNull($value, TRUE))
+						if ($value !== NULL)
 							return $value;
 						break;
 				}

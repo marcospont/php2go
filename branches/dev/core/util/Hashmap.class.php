@@ -83,7 +83,7 @@ class Hashmap extends PHP2Go
 	 * @return bool
 	 */
 	function putRef($key, &$value) {
-		$key = TypeUtils::parseString($key);
+		$key = strval($key);
 		if (!empty($key)) {
 			$this->elements[$key] =& $value;
 			return TRUE;
@@ -123,7 +123,7 @@ class Hashmap extends PHP2Go
 	 * @return mixed
 	 */
 	function get($key, $fallback=NULL) {
-		$key = TypeUtils::parseString($key);
+		$key = strval($key);
 		return (array_key_exists($key, $this->elements) ? $this->elements[$key] : $fallback);
 	}
 
