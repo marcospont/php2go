@@ -45,7 +45,7 @@
 	/**
 	 * add the contents of a file (string parameter)
 	 */
-	$zip->addData(FileSystem::getContents('reports.example.xml'), 'reports.example.xml', array('time' => filemtime('reports.example.xml')));
+	$zip->addData(file_get_contents('reports.example.xml'), 'reports.example.xml', array('time' => filemtime('reports.example.xml')));
 
 	/**
 	 * save the file
@@ -55,6 +55,6 @@
 	/**
 	 * extract the archived & compressed data
 	 */
-	$zip->saveExtractedFiles($zip->extractFile('tmp/test.zip'), 0777, 'tmp');
+	$zip->extractFileTo('tmp/test.zip', 'tmp', 0777);
 
 ?>
