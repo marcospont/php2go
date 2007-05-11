@@ -277,29 +277,6 @@ class FileCompress extends PHP2Go
 	}
 
 	/**
-	 * Opens and extracts a file
-	 *
-	 * Returns an array of extract files or FALSE in case of error.
-	 *
-	 * @see TarFile::extractData()
-	 * @see GzFile::extractData()
-	 * @see ZipFile::extractData()
-	 * @param string $fileName File path
-	 * @return array|bool
-	 */
-	function extractFile($fileName) {
-		$Mgr =& FileCompress::getFileManager();
-		if (!$Mgr->open($fileName, FILE_MANAGER_READ_BINARY)) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
-		} else {
-			$result = $this->extractData($Mgr->readFile());
-			$Mgr->close();
-			return $result;
-		}
-		return FALSE;
-	}
-
-	/**
 	 * Must be implemented by child classes
 	 *
 	 * @return string
@@ -327,20 +304,50 @@ class FileCompress extends PHP2Go
 	 * @return bool
 	 */
 	function saveFile($fileName, $mode=NULL) {
-		$Mgr =& FileCompress::getFileManager();
-		if (!$this->isOverwriteEnabled() && file_exists($fileName))
+		$exists = file_exists($fileName);
+		if ($exists && !$this->overwriteFile)
 			return FALSE;
-		elseif (file_exists($fileName))
-			@unlink($fileName);
-		if (!$Mgr->open($fileName, FILE_MANAGER_WRITE_BINARY)) {
+		$fp = @fopen($fileName, 'wb');
+		if ($fp === FALSE) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_WRITE_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
-		} else {
-			$Mgr->write($this->getData());
-			$Mgr->changeMode(($mode == NULL ? $this->defaultMode : $mode));
-			$Mgr->close();
-			return TRUE;
 		}
+		fwrite($fp, $this->getData());
+		fclose($fp);
+		@chmod($fileName, TypeUtils::ifNull($mode, $this->defaultMode));
+		return TRUE;
+	}
+
+	/**
+	 * Opens and extracts a file
+	 *
+	 * Returns an array of extract files or FALSE in case of error.
+	 *
+	 * @see TarFile::extractData()
+	 * @see GzFile::extractData()
+	 * @see ZipFile::extractData()
+	 * @param string $fileName File path
+	 * @return array|bool
+	 */
+	function extractFile($fileName) {
+		$contents = @file_get_contents($fileName);
+		if ($contents === FALSE) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $fileName), E_USER_ERROR, __FILE__, __LINE__);
+			return FALSE;
+		}
+		return $this->extractData($contents);
+	}
+
+	/**
+	 * Opens, extracts a file and save the extracted files in a given location
+	 *
+	 * @param string $fileName File path
+	 * @param string $target Target directory
+	 * @param int $createMode Optional create mode
+	 * @return array|bool List of saved files or FALSE in case of error
+	 */
+	function extractFileTo($fileName, $target, $createMode=0755) {
+		return $this->saveExtractedFiles($this->extractFile($fileName), $createMode, $target);
 	}
 
 	/**
@@ -353,11 +360,11 @@ class FileCompress extends PHP2Go
 	 * </code>
 	 *
 	 * @param array $files List of files
-	 * @param int $createMode Create mode
+	 * @param int $createMode Optional create mode
 	 * @param string $target Target directory
 	 * @return array|bool List of saved files or FALSE in case of error
 	 */
-	function saveExtractedFiles($files, $createMode, $target=NULL) {
+	function saveExtractedFiles($files, $createMode=0755, $target=NULL) {
 		$cwd = getcwd();
 		$fileSet = array();
 		$lastDir = NULL;
@@ -436,7 +443,7 @@ class FileCompress extends PHP2Go
 	 * @access protected
 	 */
 	function debug($str) {
-		$type = strtoupper($this->getObjectName());
+		$type = strtoupper($this->getClassName());
 		if ($this->debug) {
 			print $type . ' DEBUG : ' . $str . '<br>';
 			flush();
