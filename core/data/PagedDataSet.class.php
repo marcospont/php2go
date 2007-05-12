@@ -37,15 +37,15 @@ define('PDS_DEFAULT_PAGE_SIZE', 30);
 
 /**
  * Handles data sets split into pages
- * 
+ *
  * The PagedDataSet class applies pagination on data sets. Data pages
  * are built by calling loadSubSet method on data adapters, using
- * current page and page size as arguments. The page number is 
+ * current page and page size as arguments. The page number is
  * automatically loaded from the "page" get parameter
- * 
+ *
  * The total record count (total records in all pages) can be retrieved
  * by calling {@link getTotalRecordCount}.
- * 
+ *
  * Example:
  * <code>
  * /**
@@ -54,20 +54,20 @@ define('PDS_DEFAULT_PAGE_SIZE', 30);
  * {@*}
  * $pds =& PagedDataSet::factory('db');
  * $pds->load("select * from users");
- * 
+ *
  * /* build navigation links {@*}
  * if ($prev = $pds->getPreviousPage())
  *   print HtmlUtils::anchor(HttpRequest::basePath() . '?page=' . $prev, 'Previous');
  * if ($next = $pds->getNextPage())
  *   print HtmlUtils::anchor(HttpRequest::basePath() . '?page=' . $next, 'Next');
- * 
+ *
  * /* browse page contents {@*}
  * while (!$pds->eof()) {
  *   print $pds->getField('username') . '<br />';
  *   $pds->moveNext();
  * }
  * </code>
- * 
+ *
  * @package data
  * @uses HttpRequest
  * @uses TypeUtils
@@ -83,7 +83,7 @@ class PagedDataSet extends DataSet
 	 * @access private
 	 */
 	var $_currentPage;
-	
+
 	/**
 	 * Total page count
 	 *
@@ -91,17 +91,17 @@ class PagedDataSet extends DataSet
 	 * @access private
 	 */
 	var $_pageCount = 0;
-	
+
 	/**
 	 * Current starting offset
-	 * 
+	 *
 	 * Index of the first record of the current page.
 	 *
 	 * @var int
 	 * @access private
 	 */
 	var $_offset;
-	
+
 	/**
 	 * Page size
 	 *
@@ -109,11 +109,11 @@ class PagedDataSet extends DataSet
 	 * @access private
 	 */
 	var $_pageSize;
-	
+
 	/**
 	 * Class constructor
-	 * 
-	 * Shouldn't be called directly. Prefer calling static method 
+	 *
+	 * Shouldn't be called directly. Prefer calling static method
 	 * {@link getInstance} and {@link factory}
 	 *
 	 * @param string $type Adapter type
@@ -127,15 +127,15 @@ class PagedDataSet extends DataSet
 			$this->_currentPage = 1;
 		$this->_offset = (($this->_currentPage - 1) * $this->_pageSize);
 	}
-	
-	
+
+
 	/**
 	 * Creates a new paged data set of type $type, using a
 	 * given set of configuration $params
 	 *
 	 * The argument $type is mandatory and must be one of
 	 * the supported adapter types: db, xml, csv or array.
-	 * 
+	 *
 	 * The set of parameters accepted by data adapters are:
 	 * # db : debug (bool), connectionId (string), optimizeCount (bool)
 	 * # xml : none
@@ -153,7 +153,7 @@ class PagedDataSet extends DataSet
 		$instance =& new PagedDataSet($type, $params);
 		return $instance;
 	}
-	
+
 	/**
 	 * Get the singleton of a given paged data set type
 	 *
@@ -182,7 +182,7 @@ class PagedDataSet extends DataSet
 			$instances[$hash] = new PagedDataSet($type, $params);
 		return $instances[$hash];
 	}
-	
+
 	/**
 	 * Get page size
 	 *
@@ -191,10 +191,10 @@ class PagedDataSet extends DataSet
 	function getPageSize() {
 		return $this->_pageSize;
 	}
-	
+
 	/**
 	 * Set page size
-	 * 
+	 *
 	 * Doesn't take effect if called after calling {@link load()}.
 	 *
 	 * @param int $pageSize New page size
@@ -203,7 +203,7 @@ class PagedDataSet extends DataSet
 		$this->_pageSize = max(1, $pageSize);
 		$this->_offset = (($this->_currentPage - 1) * $this->_pageSize);
 	}
-	
+
 	/**
 	 * Get current page number
 	 *
@@ -212,10 +212,10 @@ class PagedDataSet extends DataSet
 	function getCurrentPage() {
 		return $this->_currentPage;
 	}
-	
+
 	/**
 	 * Set page number to be loaded
-	 * 
+	 *
 	 * Page number is fetched from the request inside the class constructor.
 	 * However, you can manually load a given page number by calling this
 	 * method. Don't forget to call it before calling {@link load()}.
@@ -228,10 +228,10 @@ class PagedDataSet extends DataSet
 			$this->_offset = (($this->_currentPage - 1) * $this->_pageSize);
 		}
 	}
-	
+
 	/**
 	 * Get previous page number
-	 * 
+	 *
 	 * Returns FALSE if we're at the first page.
 	 *
 	 * @return int|FALSE
@@ -239,10 +239,10 @@ class PagedDataSet extends DataSet
 	function getPreviousPage() {
 		return ($this->atFirstPage() ? FALSE : $this->_currentPage - 1);
 	}
-	
+
 	/**
 	 * Get next page number
-	 * 
+	 *
 	 * Returns FALSE if we're at the last page.
 	 *
 	 * @return int|FALSE
@@ -250,7 +250,7 @@ class PagedDataSet extends DataSet
 	function getNextPage() {
 		return ($this->atLastPage() ? FALSE : $this->_currentPage + 1);
 	}
-	
+
 	/**
 	 * Check if we're at the first page
 	 *
@@ -259,7 +259,7 @@ class PagedDataSet extends DataSet
 	function atFirstPage() {
 		return $this->_currentPage == 1;
 	}
-	
+
 	/**
 	 * Check if we're at the last page
 	 *
@@ -268,7 +268,7 @@ class PagedDataSet extends DataSet
 	function atLastPage() {
 		return $this->_currentPage == $this->_pageCount;
 	}
-	
+
 	/**
 	 * Get total of pages
 	 *
@@ -277,10 +277,10 @@ class PagedDataSet extends DataSet
 	function getPageCount() {
 		return $this->_pageCount;
 	}
-	
+
 	/**
 	 * Get total record count
-	 * 
+	 *
 	 * This is the total of records in all data set pages
 	 *
 	 * @return int
@@ -288,12 +288,12 @@ class PagedDataSet extends DataSet
 	function getTotalRecordCount() {
 		return $this->adapter->totalRecordCount;
 	}
-	
+
 	/**
 	 * Loads a data subset onto the data adapter, using
 	 * requested page number and desired page size as
 	 * "offset" and "size"
-	 * 
+	 *
 	 * This method receives a variable number of arguments,
 	 * depending on the active data adapter. Internally
 	 * calls loadSubSet() method of the data adapter.
@@ -309,13 +309,13 @@ class PagedDataSet extends DataSet
 		if (call_user_func_array(array(&$this->adapter, 'loadSubSet'), $args))
 			$this->_calculatePages();
 	}
-	
+
 	/**
 	 * Anulls parent class implementation
 	 */
 	function loadSubSet() {
 	}
-	
+
 	/**
 	 * Calculate page count based on total record count and page size
 	 *
@@ -325,7 +325,7 @@ class PagedDataSet extends DataSet
 		if (($this->adapter->totalRecordCount % $this->_pageSize) == 0)
 			$this->_pageCount = ($this->adapter->totalRecordCount / $this->_pageSize);
 		else
-			$this->_pageCount = TypeUtils::parseInteger(($this->adapter->totalRecordCount / $this->_pageSize) + 1);
-	}	
+			$this->_pageCount = intval(($this->adapter->totalRecordCount / $this->_pageSize) + 1);
+	}
 }
 ?>

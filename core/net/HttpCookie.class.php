@@ -145,7 +145,7 @@ class HttpCookie extends PHP2Go
 				$path = rtrim($matches[8]);
 			else
 				$path = '/';
-			$secure = TypeUtils::toBoolean($matches[9]);
+			$secure = (bool)$matches[9];
 			$this->set($name, $value, $domain, $path, $expires, $secure);
 			return TRUE;
 		}

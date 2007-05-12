@@ -155,18 +155,6 @@ class DataGrid extends DbField
 	}
 
 	/**
-	 * Set width of the grid table
-	 *
-	 * @param int $tableWidth Table width in pixels
-	 */
-	function setTableWidth($tableWidth) {
-		if ($tableWidth)
-			$this->attributes['TABLEWIDTH'] = " width=\"{$tableWidth}\"";
-		else
-			$this->attributes['TABLEWIDTH'] = "";
-	}
-
-	/**
 	 * Set cell sizes
 	 *
 	 * The $sizes argument must be an array of integers whose sum is 100.
@@ -180,6 +168,37 @@ class DataGrid extends DbField
 			array_walk($sizes, 'trim');
 			$this->cellSizes = $sizes;
 		}
+	}
+
+	/**
+	 * Set width of the grid table
+	 *
+	 * @param int $tableWidth Table width in pixels
+	 */
+	function setTableWidth($tableWidth) {
+		if ($tableWidth)
+			$this->attributes['TABLEWIDTH'] = " width=\"{$tableWidth}\"";
+		else
+			$this->attributes['TABLEWIDTH'] = "";
+	}
+
+	/**
+	 * Enable/disable rendering of identifier column as a checkbox
+	 *
+	 * @param bool $setting Setting
+	 */
+	function setShowCheckboxes($setting) {
+		$this->attributes['SHOWCHECKBOXES'] = (bool)$setting;
+	}
+
+	/**
+	 * Set the message that should be displayed when the data grid is empty
+	 *
+	 * @param string $msg Message
+	 */
+	function setEmptyGridMessage($msg) {
+		if ($msg)
+			$this->attributes['EMPTYGRIDMESSAGE'] = resolveI18nEntry($msg);
 	}
 
 	/**
@@ -216,7 +235,12 @@ class DataGrid extends DbField
 				}
 				import("php2go.form.field.{$fieldClassName}");
 				$Field = new $fieldClassName($this->_Form, TRUE);
-				$Field->onLoadNode($Child->getAttributes(), $Child->getChildrenTagsArray());
+				// change field name and id
+				$childAttrs = $Child->getAttributes();
+				$childAttrs['ID'] = sprintf("%s_%%s_%s", $this->name, (isset($childAttrs['ID']) ? $childAttrs['ID'] : (isset($childAttrs['NAME']) ? $childAttrs['NAME'] : $i)));
+				$childAttrs['NAME'] = sprintf("%s[%%s][%s]", $this->name, (isset($childAttrs['NAME']) ? $childAttrs['NAME'] : $i));
+				$childAttrs['LABEL'] = (isset($childAttrs['LABEL']) ? $childAttrs['LABEL'] : '');
+				$Field->onLoadNode($childAttrs, $Child->getChildrenTagsArray());
 				// disabled flag propagates to the fieldset members
 				if ($globalDisabled)
 					$Field->setDisabled(TRUE);
@@ -235,11 +259,15 @@ class DataGrid extends DbField
 			$this->setHeaderStyle(@$attrs['HEADERSTYLE']);
 			// cells CSS class
 			$this->setCellStyle(@$attrs['CELLSTYLE']);
-			// table width
-			$this->setTableWidth(@$attrs['TABLEWIDTH']);
 			// cell sizes
 			if (isset($attrs['CELLSIZES']))
 				$this->setCellSizes(explode(',', $attrs['CELLSIZES']));
+			// table width
+			$this->setTableWidth(@$attrs['TABLEWIDTH']);
+			// render the identifier column as a checkbox input?
+			$this->setShowCheckboxes(resolveBooleanChoice(@$attrs['SHOWCHECKBOXES']));
+			// empty grid message
+			$this->setEmptyGridMessage(@$attrs['EMPTYGRIDMESSAGE']);
 		} else {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_DATAGRID_STRUCTURE', $this->name), E_USER_ERROR, __FILE__, __LINE__);
 		}
@@ -262,40 +290,65 @@ class DataGrid extends DbField
 	 */
 	function onPreRender() {
 		parent::onPreRender();
+		// create and configure datagrid's template
 		$this->Template = new Template(PHP2GO_TEMPLATE_PATH . 'datagrid.tpl');
 		$this->Template->parse();
 		$this->Template->globalAssign('id', $this->id);
 		$this->Template->assign('style', $this->attributes['USERSTYLE']);
+		$this->Template->assign('labelStyle', $this->_Form->getLabelStyle());
 		$this->Template->assign('width', $this->attributes['TABLEWIDTH']);
+		$this->Template->assign('total', $this->_Rs->recordCount());
+		$this->Template->assign('message', $this->attributes['EMPTYGRIDMESSAGE']);
+		$this->Template->assign('span', $this->_Rs->fieldCount()-1);
+		// render headers
 		if ($this->attributes['SHOWHEADER']) {
 			$headers = TypeUtils::toArray(@$this->attributes['HEADERS']);
 			$this->Template->createBlock('loop_line');
 			$this->Template->assign('row_id', 'header');
 			for ($i=1,$s=$this->_Rs->fieldCount(); $i<$s; $i++) {
-				$Field =& $this->_Rs->fetchField($i);
+				$Column =& $this->_Rs->fetchField($i);
 				$this->Template->createAndAssign('loop_header_cell', array(
 					'style' => $this->attributes['HEADERSTYLE'],
 					'width' => (isset($this->cellSizes[$i-1]) ? " WIDTH=\"{$this->cellSizes[$i-1]}%\"" : ''),
-					'col_name' => (isset($headers[$i-1]) ? $headers[$i-1] : $Field->name)
+					'col_name' => (isset($headers[$i-1]) ? $headers[$i-1] : $Column->name)
 				));
+				// fix field label
+				if ($i > 1) {
+					$Field =& $this->fieldSet[$i-2];
+					if ($Field->getLabel() == $Field->getName())
+						$Field->setLabel(isset($headers[$i-1]) ? $headers[$i-1] : $Column->name);
+				}
 			}
 		}
+		// render fields
+		$baseIds = array();
+		$baseNames = array();
 		$isPosted = ($this->_Form->isPosted() && !empty($this->value));
 		while ($dataRow = $this->_Rs->fetchRow()) {
 			$submittedRow = ($isPosted ? @$this->value[$dataRow[0]] : NULL);
 			$this->Template->createBlock('loop_line');
 			$this->Template->assign('row_id', 'row_' . $dataRow[0]);
+			// identifier column
+			if ($this->attributes['SHOWCHECKBOXES'])
+				$identifier = sprintf("<input id=\"%s_%s_checked\" name=\"%s[%s][checked]\" type=\"checkbox\"%s>", $this->name, $dataRow[0], $this->name, $dataRow[0], $this->_Form->getInputStyle());
+			else
+				$identifier = sprintf("<span%s>%s</span>", $this->_Form->getLabelStyle(), $dataRow[1]);
 			$this->Template->createAndAssign('loop_cell', array(
 				'align' => 'left',
 				'style' => $this->attributes['CELLSTYLE'],
 				'width' => (isset($this->cellSizes[0]) ? " width=\"{$this->cellSizes[0]}%\"" : ''),
-				'col_data' => $dataRow[1]
+				'col_data' => $identifier
 			));
+			// fieldset members
 			for ($i=0, $s=sizeof($this->fieldSet); $i<$s; $i++) {
-				$Field = $this->fieldSet[$i];
+				$Field =& $this->fieldSet[$i];
 				$Field->preRendered = FALSE;
-				$Field->setId("{$this->name}_{$dataRow[0]}_{$this->fieldNames[$i]}");
-				$Field->setName("{$this->name}[{$dataRow[0]}][{$this->fieldNames[$i]}]");
+				if (!isset($baseIds[$i])) {
+					$baseIds[$i] = $Field->getId();
+					$baseNames[$i] = $Field->getName();
+				}
+				$Field->setId(sprintf($baseIds[$i], $dataRow[0]));
+				$Field->setName(sprintf($baseNames[$i], $dataRow[0]));
 				if ($isPosted) {
 					// special fix for checkbox inputs
 					if ($Field->getFieldTag() == 'CHECKFIELD') {

@@ -198,7 +198,7 @@ class FormSection extends PHP2Go
 	 * @param bool $setting Enable/disable
 	 */
 	function setRequiredFlag($setting=TRUE) {
-		$this->attributes['REQUIRED_FLAG'] = TypeUtils::toBoolean($setting);
+		$this->attributes['REQUIRED_FLAG'] = (bool)$setting;
 	}
 
 	/**

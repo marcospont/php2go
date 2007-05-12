@@ -48,51 +48,51 @@
   current microtime : {$p2g.microtime}<br>
   php version (constant) : {$p2g.const.PHP_VERSION}
   </p>
-  <b>IF, ELSE IF, ELSE, END IF:</b>
+  <b>Condition tags: if, else if, else, end if:</b>
   <p>
-  <!-- IF $p2g.user->registered -->
+  <!-- if $p2g.user->registered -->
   User is logged in!<br>
-  <!-- END IF -->
-  <!-- IF $ifVariable loet 5 -->
+  <!-- end if -->
+  <!-- if $ifVariable loet 5 -->
   Less or equal than 5
-  <!-- ELSE IF $ifVariable lt 10 -->
+  <!-- else if $ifVariable lt 10 -->
   Less than 10
-  <!-- ELSE IF $ifVariable eq 10 -->
+  <!-- else if $ifVariable eq 10 -->
   Ten
-  <!-- ELSE -->
+  <!-- else -->
   Other numbers
-  <!-- END IF -->
+  <!-- end if -->
   </p>
-  <b>LOOP, ELSE LOOP, END LOOP:</b>
+  <b>Iteration tags: loop, else loop, end loop:</b>
   <p>
-  <!-- LOOP var=$object->rs item="product" name="products" -->
-  <!-- FUNCTION name="$object->sum" p1=$product -->
-  <!-- IF $p2g.loop.products.first -->
+  <!-- loop var=$object->rs item="product" name="products" -->
+  <!-- call function="$object->sum" p1=$product -->
+  <!-- if $p2g.loop.products.first -->
   --- List of products ---<br>
-  <!-- END IF -->
+  <!-- end if -->
   #{$p2g.loop.products.rownum}: {$product.code} - {$product.price|decimal_currency}<br>
-  <!-- IF $p2g.loop.products.last -->
+  <!-- if $p2g.loop.products.last -->
   --- Total: {$object->total|decimal_currency} ---<br>
-  <!-- END IF -->
-  <!-- END LOOP -->
+  <!-- end if -->
+  <!-- end loop -->
   </p>
-  <b>ASSIGN command:</b>
-  <!-- ASSIGN currentTime=$p2g.time -->
+  <b>assign command:</b>
+  <!-- assign currentTime=$p2g.time -->
   <p>{$currentTime|format_time}</p>
-  <b>CAPTURE Blocks:</b>
-  <!-- CAPTURE -->
+  <b>Capture blocks:</b>
+  <!-- capture -->
   this code was captured and printed out later
-  <!-- END CAPTURE -->
+  <!-- end capture -->
   <p>{$p2g.capture.default}</p>
   <b>Calling functions and/or methods:</b>
   <p>
-  simple:&nbsp;<!-- FUNCTION name="strlen" p1="PHP2Go Framework" --><br>
-  static method:&nbsp;<!-- FUNCTION name="HttpRequest::uri" --><br>
-  dynamic method:&nbsp;<!-- FUNCTION name="$p2g.user->getElapsedTime" --><br>
-  <!-- FUNCTION name="ucfirst" p1="php2go framework" assign="output" -->
+  procedural function:&nbsp;<!-- call function="strlen" p1="PHP2Go Framework" --><br>
+  static class method:&nbsp;<!-- call function="HttpRequest::uri" --><br>
+  object method:&nbsp;<!-- call function="$p2g.user->getElapsedTime" --><br>
+  <!-- call function="ucfirst" p1="php2go framework" assign="output" -->
   assigning result to a variable: {$output}<br>
-  <!-- START FUNCTION name="parseEntities" -->
+  <!-- function name="parseEntities" -->
   container func: this is <html> entities & special chars<br>
-  <!-- END FUNCTION -->
+  <!-- end function -->
   </p>
 </div>

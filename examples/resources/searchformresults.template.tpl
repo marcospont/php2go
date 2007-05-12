@@ -8,26 +8,26 @@
           <strong>Query debug:</strong><br>{$filter}
       </div>
       <table cellpadding="2" cellspacing="2" style="border:1px solid #000000" width="100%" align="center">
-<!-- LOOP name="results" var=$results item="result" -->
-	<!-- IF $p2g.loop.results.first -->
+<!-- loop name="results" var=$results item="result" -->
+	<!-- if $p2g.loop.results.first -->
         <tr>
           <th class="blue_style">Code</th>
           <th class="blue_style">Description</th>
           <th class="blue_style">Price</th>
           <th class="blue_style">Amount</th>
         </tr>
-	<!-- END IF -->
+	<!-- end if -->
         <tr>
           <td class="input_style">{$result.code}</td>
           <td class="input_style">{$result.short_desc}</td>
           <td class="input_style">{$result.price|decimal_currency}</td>
           <td class="input_style">{$result.amount}</td>
         </tr>
-<!-- ELSE LOOP -->
+<!-- else loop -->
         <tr>
           <td colspan="3" class="error_style" style="padding:10px">The submitted search returned an empty result set!</td>
         </tr>
-<!-- END LOOP -->
+<!-- end loop -->
       </table>
     </fieldset><br>
   </td></tr>

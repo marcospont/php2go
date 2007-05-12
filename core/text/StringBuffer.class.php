@@ -70,7 +70,7 @@ class StringBuffer extends PHP2Go
 	 */
 	function StringBuffer($initStr="", $initCapacity=NULL) {
 		parent::PHP2Go();
-		$this->capacity = (TypeUtils::parseInteger($initCapacity) > 0) ? $initCapacity : 16;
+		$this->capacity = (intval($initCapacity) > 0) ? $initCapacity : 16;
 		if (!empty($initStr)) {
 			$this->string = $initStr;
 			if (strlen($this->string) > $this->capacity) {
@@ -143,7 +143,7 @@ class StringBuffer extends PHP2Go
 	 * @return int
 	 */
 	function indexOf($str, $fromIndex=NULL) {
-		if (!TypeUtils::isNull($fromIndex)) {
+		if (!is_null($fromIndex)) {
 			if (TypeUtils::isInteger($fromIndex) && $fromIndex >= 0 && $fromIndex < $this->length()) {
 				$searchBase = $this->subString($fromIndex);
 				$offset = $fromIndex;
@@ -171,7 +171,7 @@ class StringBuffer extends PHP2Go
 	 * @return int
 	 */
 	function lastIndexOf($str, $fromIndex=NULL) {
-		if (!TypeUtils::isNull($fromIndex)) {
+		if (!is_null($fromIndex)) {
 			if (TypeUtils::isInteger($fromIndex) && $fromIndex >= 0 && $fromIndex < $this->length()) {
 				$searchBase = $this->subString($fromIndex);
 				$offset = $fromIndex;

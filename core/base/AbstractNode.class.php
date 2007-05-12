@@ -366,7 +366,7 @@ class AbstractNode extends PHP2Go
 	function getNodeIndex($Node) {
 		if ($this->childrenCount > 0) {
 			$result = array_search($Node->getId(), $this->hashIndex);
-			if (!TypeUtils::isFalse($result))
+			if ($result !== FALSE)
 				return $result;
 		}
 		return -1;
@@ -390,7 +390,7 @@ class AbstractNode extends PHP2Go
 				$this->hashIndex[0] = $childNode->getId();
 			} else {
 				$index = $this->getNodeIndex($childNode);
-				if (!TypeUtils::isNull($index) && $index != -1)
+				if (!is_null($index) && $index != -1)
 					$this->removeChild($index);
 				$this->children[$this->childrenCount] =& $childNode;
 				$this->childrenCount++;

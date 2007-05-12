@@ -67,7 +67,7 @@ class ZipFile extends FileCompress
 	 * @var int
 	 * @access private
 	 */
-	var $level;
+	var $level = 9;
 
 	/**
 	 * ZIP contents
@@ -91,7 +91,7 @@ class ZipFile extends FileCompress
 	 * @var string
 	 * @access private
 	 */
-	var $centralDataEof;
+	var $centralDataEof = "\x50\x4b\x05\x06\x00\x00\x00\x00";
 
 	/**
 	 * Use to bookmark a position inside the central directory
@@ -99,7 +99,7 @@ class ZipFile extends FileCompress
 	 * @var int
 	 * @access private
 	 */
-	var $lastOffset;
+	var $lastOffset = 0;
 
 	/**
 	 * Class constructor
@@ -112,9 +112,6 @@ class ZipFile extends FileCompress
 		if (!System::loadExtension('zlib'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_UNSUPPORTED_EXTENSION', 'zlib'), E_USER_ERROR, __FILE__, __LINE__);
 		$this->defaultTime = time();
-		$this->centralDataEof = "\x50\x4b\x05\x06\x00\x00\x00\x00";
-		$this->lastOffset = 0;
-		$this->level = 9;
 	}
 
 	/**
@@ -147,7 +144,9 @@ class ZipFile extends FileCompress
 	 * @param int $level
 	 */
 	function setCompressionLevel($level) {
-		$this->level = $level <= 9 ? max(1, TypeUtils::parseIntegerPositive($level)): 9;
+		$level = abs(intval($level));
+		if ($level >= 1 && $level <= 9)
+			$this->level = $level;
 	}
 
 	/**

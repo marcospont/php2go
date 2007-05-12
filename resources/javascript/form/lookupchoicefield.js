@@ -139,21 +139,13 @@ LookupChoiceField.prototype.clear = function() {
 };
 
 /**
- * Enables the component
+ * Disables/enables the component
+ * @param {Boolean} b Flag value
  * @type void
  */
-LookupChoiceField.prototype.enable = function() {
-	this.filter.disabled = false;
-	this.fld.disabled = false;
-};
-
-/**
- * Disables the component
- * @type void
- */
-LookupChoiceField.prototype.disable = function() {
-	this.filter.disabled = true;
-	this.fld.disabled = true;
+LookupChoiceField.prototype.setDisabled = function(b) {
+	this.filter.disabled = b;
+	this.fld.disabled = b;
 };
 
 /**

@@ -215,7 +215,7 @@ class CurlClient extends PHP2Go
 	 * @param array $dataArray Parameters
 	 */
 	function setPostData($dataArray) {
-		if (TypeUtils::isArray($dataArray) && !empty($dataArray)) {
+		if (is_array($dataArray) && !empty($dataArray)) {
 			foreach($dataArray as $key => $value)
 				$request[] = "$key=" . urlencode($value);
 			$postFields = implode('&', $request);

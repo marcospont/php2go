@@ -118,12 +118,13 @@
 <!ELEMENT errors EMPTY>
 <!ATTLIST errors
 	style %text; #IMPLIED
-	headertext %text; #IMPLIED
-	headerstyle %text; #IMPLIED
-	listmode %identifier; #IMPLIED
 	clientmode %identifier; #IMPLIED
 	clientcontainer %identifier; #IMPLIED
 	tplplaceholder %identifier; #IMPLIED
+	showall %boolean; "T"
+	headertext %text; #IMPLIED
+	headerstyle %text; #IMPLIED
+	listmode %identifier; #IMPLIED
 >
 <!ELEMENT help EMPTY>
 <!ATTLIST help
@@ -218,6 +219,8 @@
 	cellstyle %text; #IMPLIED
 	cellsizes %text; #IMPLIED
 	tablewidth %number; #IMPLIED
+	showcheckboxes %boolean; "F"
+	emptygridmessage %text; #IMPLIED
 >
 <!ELEMENT datepickerfield ( %rul.list.srch; )>
 <!ATTLIST datepickerfield

@@ -147,7 +147,7 @@ class MemoField extends EditableField
 	 * @param int $maxLength Maxlength
 	 */
 	function charCount($setting, $maxLength=NULL) {
-		$this->charCountControl = TypeUtils::toBoolean($setting);
+		$this->charCountControl = (bool)$setting;
 		if (TypeUtils::isInteger($maxLength))
 			parent::setMaxLength($maxLength);
 	}

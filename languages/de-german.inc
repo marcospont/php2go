@@ -116,7 +116,6 @@ $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_IS_EXPR'] = "Keine korrekte Operation für ei
 $P2G_LANGUAGE['ERR_TPLPARSE_MISSING_TAG_ARGS'] = "Das Tag <I>%s</I> benötigt Argumente!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_TAG_ARGS'] = "Das Tag <I>%s</I> darf keine Argumente beinhalten!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_MODIFIER'] = "Der Modifikator %s ist falsch oder existiert nicht!";
-$P2G_LANGUAGE['ERR_WIDGET_INCLUDE'] = "Das Widget <i>%s</i> kann nur im INLCUDE WIDGET- Tag genutzt werden!";
 $P2G_LANGUAGE['ERR_WIDGET_MANDATORY_PROPERTY'] = "Die Eigenschaft <i>%s</i> ist vorgeschrieben bei der Definition des Widgets <i>%s</i>!";
 $P2G_LANGUAGE['ERR_EMPTY_DOC_LAYOUT'] = "Es sind leider keine Elemente im aktuellen Dokumenten Layout  definiert.";
 $P2G_LANGUAGE['ERR_CANT_REPLICATE_ROOT_BLOCK'] = "Der Hauptblock eines Templates darf leider nicht überschrieben werden.";

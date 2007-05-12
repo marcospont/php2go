@@ -80,7 +80,7 @@
 			/**
 			 * define an extra condition clause (the initial "AND" must not be included)
 			 */
-			parent::setExtraClause('active = 1');
+			parent::setExtraClause('active = ?', array(1));
 			/**
 			 * set the name of the request parameteres that will contain username and
 			 * password (login credentials)

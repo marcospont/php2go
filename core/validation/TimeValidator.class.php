@@ -49,10 +49,10 @@ class TimeValidator extends AbstractValidator
 			$result = FALSE;
 		} else {
 			$result = TRUE;
-			$h = TypeUtils::parseInteger(substr($value, 0, 2));
-			$m = TypeUtils::parseInteger(substr($value, 3, 2));
+			$h = intval(substr($value, 0, 2));
+			$m = intval(substr($value, 3, 2));
 			if (strlen($value) == 8) {
-				$s = TypeUtils::parseInteger(substr($value, 6, 2));
+				$s = intval(substr($value, 6, 2));
 				if ($s < 0 || $s > 59)
 					$result = FALSE;
 			}

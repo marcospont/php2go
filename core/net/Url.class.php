@@ -36,7 +36,6 @@ import('php2go.util.HtmlUtils');
  * @package net
  * @uses HtmlUtils
  * @uses HttpRequest
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -258,6 +257,15 @@ class Url extends PHP2Go
 	}
 
 	/**
+	 * Set the URL parameters
+	 *
+	 * @param string $params Parameters
+	 */
+	function setParameters($params) {
+		$this->parameters = $params;
+	}
+
+	/**
 	 * Adds a parameter in the URL
 	 *
 	 * @param string $name Name
@@ -360,7 +368,7 @@ class Url extends PHP2Go
 		$matches = array();
 		if (preg_match("/([^?#]+\??)?([^#]+)?(.*)/", $url, $matches)) {
 			if ($matches[2] !== FALSE) {
-				$paramString = base64_encode(urlencode($matches[2]));
+				$paramString = base64_encode(rawurlencode($matches[2]));
 				$returnUrl = strval($matches[1]) . $varName . '=' . $paramString . strval($matches[3]);
 			} else {
 				$returnUrl = $url;
@@ -384,7 +392,8 @@ class Url extends PHP2Go
 		if ($matches[2] !== FALSE) {
 			parse_str($matches[2], $vars);
 			if (list(, $value) = each($vars)) {
-				$paramString = urldecode(base64_decode($value));
+				$paramString = rawurldecode(base64_decode($value));
+				dumpVariable($paramString);
 				if ($returnAsArray) {
 					parse_str($paramString, $varsArray);
 					return $varsArray;
@@ -423,7 +432,7 @@ class Url extends PHP2Go
 				}
 				$portPos = strrpos($matches[4], ':');
 				if ($portPos !== FALSE) {
-					$this->port = TypeUtils::parseIntegerPositive(substr($matches[4], $portPos+1));
+					$this->port = abs(intval(substr($matches[4], $portPos+1)));
 					if (!$this->port) {
 						$this->port = NULL;
 					}

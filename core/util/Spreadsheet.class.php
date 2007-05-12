@@ -484,11 +484,11 @@ class Spreadsheet extends PHP2Go
 		if (TypeUtils::isInteger($rowStart) && TypeUtils::isInteger($rowEnd) && $rowEnd > $rowStart && $rowStart >= 0) {
         	for ($i=$rowStart; $i<=$rowEnd; $i++) {
 				if (!in_array($i, $this->rowInfo)) {
-                	$this->rowInfo[$i] = max(1, TypeUtils::parseInteger($height));
+                	$this->rowInfo[$i] = max(1, intval($height));
 				}
 			}
 		} else if (TypeUtils::isInteger($rowStart) && $rowStart >= 0 && !in_array($rowStart, $this->rowInfo)) {
-				$this->rowInfo[$rowStart] = max(1, TypeUtils::parseInteger($height));
+				$this->rowInfo[$rowStart] = max(1, intval($height));
 		}
 	}
 
@@ -503,11 +503,11 @@ class Spreadsheet extends PHP2Go
 		if (TypeUtils::isInteger($colStart) && TypeUtils::isInteger($colEnd) && $colEnd > $colStart && $colStart >= 0) {
         	for ($i=$colStart; $i<=$colEnd; $i++) {
 				if (!in_array($i, $this->colInfo)) {
-					$this->colInfo[$i] = max(1, TypeUtils::parseInteger($width));
+					$this->colInfo[$i] = max(1, intval($width));
                 }
 			}
 		} else if (TypeUtils::isInteger($colStart) && $colStart >= 0 && !in_array($colStart, $this->colInfo)) {
-        	$this->colInfo[$colStart] = max(1, TypeUtils::parseInteger($width));
+        	$this->colInfo[$colStart] = max(1, intval($width));
 		}
 	}
 
@@ -539,7 +539,7 @@ class Spreadsheet extends PHP2Go
 	 */
 	function setHeader($header, $margin=0.50) {
 		$this->header = $header;
-		$this->headerMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
+		$this->headerMargin = abs(floatval(str_replace(',', '.', $margin)));
 	}
 
 	/**
@@ -550,9 +550,9 @@ class Spreadsheet extends PHP2Go
 	 * @param string $header Text
 	 * @param float $margin Margin
 	 */
-	function setFooter($footer, $margin = 0.50) {
+	function setFooter($footer, $margin=0.50) {
     	$this->footer = $footer;
-		$this->footerMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
+		$this->footerMargin = abs(floatval(str_replace(',', '.', $margin)));
 	}
 
 	/**
@@ -575,7 +575,7 @@ class Spreadsheet extends PHP2Go
 	 * @param float $margin Left margin
 	 */
 	function setLeftMargin($margin) {
-		$this->leftMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
+		$this->leftMargin = abs(floatval(str_replace(',', '.', $margin)));
 	}
 
 	/**
@@ -584,7 +584,7 @@ class Spreadsheet extends PHP2Go
 	 * @param float $margin Right margin
 	 */
 	function setRightMargin($margin) {
-		$this->rightMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
+		$this->rightMargin = abs(floatval(str_replace(',', '.', $margin)));
 	}
 
 	/**
@@ -593,7 +593,7 @@ class Spreadsheet extends PHP2Go
 	 * @param float $margin Top margin
 	 */
 	function setTopMargin($margin) {
-		$this->topMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
+		$this->topMargin = abs(floatval(str_replace(',', '.', $margin)));
 	}
 
 	/**
@@ -602,7 +602,7 @@ class Spreadsheet extends PHP2Go
 	 * @param float $margin Bottom margin
 	 */
 	function setBottomMargin($margin) {
-		$this->bottomMargin = TypeUtils::parseFloatPositive(str_replace(',', '.', $margin));
+		$this->bottomMargin = abs(floatval(str_replace(',', '.', $margin)));
 	}
 
 	/**
@@ -682,7 +682,6 @@ class Spreadsheet extends PHP2Go
 		} else if ( preg_match("/^(f|ht)tps?:\/\/.+$/", $value) ) {
         	//$this->writeUrl($row, $col, $value, $columnWidth, $picture, $font, $format);
         	return $this->writeString($row, $col, $value, $columnWidth, $picture, $font, $format);
-        	return FALSE;
 		} else if ( preg_match("/^mailto:.+$/", $value) ) {
         	//$this->writeUrl($row, $col, $value, $columnWidth, $picture, $font, $format);
         	return $this->writeString($row, $col, $value, $columnWidth, $picture, $font, $format);
@@ -715,7 +714,7 @@ class Spreadsheet extends PHP2Go
 		} else {
 			$id = 0x0003;
 			$length = 0x000F;
-			$len = strlen(TypeUtils::parseString($value));
+			$len = strlen(strval($value));
 			$this->_adjustColWidth($col, $columnWidth, $len);
 			$number = ($this->byteOrder == SPRSH_BIG_ENDIAN) ? strrev(pack('d', $value)) : pack('d', $value);
 			$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
@@ -754,7 +753,7 @@ class Spreadsheet extends PHP2Go
 			$id = 0x0003;
 			$length = 0x000F;
 			$value = $this->_transformDate($value);
-			$len = strlen(TypeUtils::parseString($value));
+			$len = strlen(strval($value));
 			$this->_adjustColWidth($col, $columnWidth, $len);
 			$value = ($this->byteOrder == SPRSH_BIG_ENDIAN) ? strrev(pack('d', $value)) : pack('d', $value);
 			$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
@@ -792,7 +791,7 @@ class Spreadsheet extends PHP2Go
 		} else {
 			$id = 0x0004;
 			$length = 0x0008;
-			$len = strlen(TypeUtils::parseString($value));
+			$len = strlen(strval($value));
 			$this->_adjustColWidth($col, $columnWidth, $len);
 			$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
 			if (isset($this->cellFormats[$format])) {
@@ -823,7 +822,7 @@ class Spreadsheet extends PHP2Go
             	PHP2Go::raiseError(PHP2Go::getLangVal('ERR_SPRSH_OUT_OF_BOUNDS', array(SPRSH_MAX_ROWS, SPRSH_MAX_COLS)), E_USER_ERROR, __FILE__, __LINE__);
 			}
 			return FALSE;
-		} else if ($format > 0) {
+		} elseif ($format > 0) {
 			$id = 0x0001;
 			$length = 0x0007;
 			$this->_adjustColWidth($col, $columnWidth, $len);
@@ -1120,11 +1119,11 @@ class Spreadsheet extends PHP2Go
 			$dtVal = juliantojd($dateParts[2], $dateParts[3], $dateParts[1]) - SPRSH_DATE + 1;
 		}
 		if (isset($dateParts[5]))
-			$dtVal += ( TypeUtils::parseInteger($dateParts[5]) / 24 );
+			$dtVal += ( intval($dateParts[5]) / 24 );
 		if (isset($dateParts[6]))
-			$dtVal += ( TypeUtils::parseInteger($dateParts[6]) / 1440 );
+			$dtVal += ( intval($dateParts[6]) / 1440 );
 		if (isset($dateParts[7]))
-			$dtVal += ( TypeUtils::parseInteger($dateParts[7]) / 86400 );
+			$dtVal += ( intval($dateParts[7]) / 86400 );
 		return $dtVal;
 	}
 
@@ -1201,7 +1200,7 @@ class Spreadsheet extends PHP2Go
 	function _writePrintHeaders() {
 		$id = 0x002A;
 		$length = 0x0002;
-		$this->_appendStream(pack('vvv', $id, $length, TypeUtils::parseInteger($this->printHeaders)));
+		$this->_appendStream(pack('vvv', $id, $length, intval($this->printHeaders)));
 	}
 
 	/**
@@ -1212,7 +1211,7 @@ class Spreadsheet extends PHP2Go
 	function _writePrintGridLines() {
 		$id = 0x002B;
 		$length = 0x0002;
-		$this->_appendStream(pack('vvv', $id, $length, TypeUtils::parseInteger($this->printGridLines)));
+		$this->_appendStream(pack('vvv', $id, $length, intval($this->printGridLines)));
 	}
 
 	/**

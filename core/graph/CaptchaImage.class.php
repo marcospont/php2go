@@ -43,7 +43,6 @@ import('php2go.util.HtmlUtils');
  * @uses HtmlUtils
  * @uses Image
  * @uses StringUtils
- * @uses TypeUtils
  * @link http://en.wikipedia.org/wiki/CAPTCHA
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
@@ -148,7 +147,7 @@ class CaptchaImage extends PHP2Go
 	 * @param int $width Width, in pixels
 	 */
 	function setWidth($width) {
-		$width = TypeUtils::parseInteger($width);
+		$width = intval($width);
 		if ($width > 0)
 			$this->width = $width;
 	}
@@ -159,7 +158,7 @@ class CaptchaImage extends PHP2Go
 	 * @param int $height Height, in pixels
 	 */
 	function setHeight($height) {
-		$height = TypeUtils::parseInteger($height);
+		$height = intval($height);
 		if ($height > 0)
 			$this->height = $height;
 	}
@@ -174,7 +173,7 @@ class CaptchaImage extends PHP2Go
 	 * @param int $level Noise level
 	 */
 	function setNoiseLevel($level) {
-		$level = TypeUtils::parseInteger($level);
+		$level = intval($level);
 		if ($level > 0)
 			$this->noiseLevel = $level;
 	}
@@ -187,7 +186,7 @@ class CaptchaImage extends PHP2Go
 	 * @param int $size Average font size
 	 */
 	function setFontSize($size) {
-		$size = TypeUtils::parseInteger($size);
+		$size = intval($size);
 		if ($size > 0)
 			$this->fontSize = $size;
 	}
@@ -198,7 +197,7 @@ class CaptchaImage extends PHP2Go
 	 * @param int $shadow Shadow size, in pixels
 	 */
 	function setFontShadow($shadow) {
-		$this->fontShadow = TypeUtils::parseIntegerPositive($shadow);
+		$this->fontShadow = intval($shadow);
 	}
 
 	/**

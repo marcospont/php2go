@@ -362,7 +362,7 @@ class Auth extends PHP2Go
 	 * @param int $seconds
 	 */
 	function setExpiryTime($seconds) {
-		$this->expiryTime = TypeUtils::parseIntegerPositive($seconds);
+		$this->expiryTime = abs(intval($seconds));
 	}
 
 	/**
@@ -396,7 +396,7 @@ class Auth extends PHP2Go
 	 * @param int $seconds
 	 */
 	function setIdleTime($seconds) {
-		$this->idleTime = TypeUtils::parseIntegerPositive($seconds);
+		$this->idleTime = abs(intval($seconds));
 	}
 
 	/**

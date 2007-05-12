@@ -57,8 +57,8 @@ class IntegerValidator extends AbstractValidator
 	function IntegerValidator($params=NULL) {
 		parent::AbstractValidator($params);
 		if (is_array($params)) {
-			if (isset($params['unsigned']))
-				$this->unsigned = TypeUtils::toBoolean($params['unsigned']);
+			if (array_key_exists('unsigned', $params))
+				$this->unsigned = (bool)$params['unsigned'];
 		}
 	}
 
@@ -70,7 +70,7 @@ class IntegerValidator extends AbstractValidator
 	 */
 	function execute($value) {
 		$result = TypeUtils::isInteger($value);
-		if ($this->unsigned && TypeUtils::parseInteger($value) < 0)
+		if ($this->unsigned && intval($value) < 0)
 			$result = FALSE;
 		if ($result === FALSE && isset($this->fieldLabel)) {
 			$maskLabels = PHP2Go::getLangVal('FORM_MASKS');

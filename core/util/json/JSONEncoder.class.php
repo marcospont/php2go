@@ -90,6 +90,39 @@ class JSONEncoder extends PHP2Go
 	}
 
 	/**
+	 * Prepares a Javascript identifier (variable, constant or function) to be encoded
+	 *
+	 * @param string $name Variable name
+	 * @return object
+	 * @static
+	 */
+	function jsIdentifier($name) {
+		$obj = new stdclass;
+		$obj->__json__ = $name;
+		return $obj;
+	}
+
+	/**
+	 * Prepares a Javascript function body to be encoded
+	 *
+	 * @param string $body Function body
+	 * @param array $inputArgs Function input arguments
+	 * @return object
+	 * @static
+	 */
+	function jsFunction($body, $inputArgs=array()) {
+		$obj = new stdclass;
+		$tmp = array();
+		if (is_array($inputArgs)) {
+			$encoder = new JSONEncoder();
+			foreach ($inputArgs as $arg)
+				$tmp[] = $encoder->encodeValue(JSONEncoder::jsIdentifier($arg));
+		}
+		$obj->__json__ = "function(" . join(',', $tmp) . ") { " . $body . " }";
+		return $obj;
+	}
+
+	/**
 	 * Encodes a given value using JSON syntax
 	 *
 	 * Values that can't be encoded will produce a
@@ -134,14 +167,18 @@ class JSONEncoder extends PHP2Go
 	 * @access private
 	 */
 	function _encodeObject(&$obj) {
-		$vars = get_object_vars($obj);
-		$items = array();
-		foreach ($vars as $name => $value) {
-			$encoded = $this->encodeValue($value);
-			if ($encoded !== NULL)
-				$items[] = '"' . strval($name) . '":' . $encoded;
+		if (isset($obj->__json__)) {
+			return $obj->__json__;
+		} else {
+			$vars = get_object_vars($obj);
+			$items = array();
+			foreach ($vars as $name => $value) {
+				$encoded = $this->encodeValue($value);
+				if ($encoded !== NULL)
+					$items[] = '"' . strval($name) . '":' . $encoded;
+			}
+			return '{' . join(',', $items) . '}';
 		}
-		return '{' . join(',', $items) . '}';
 	}
 
 	/**

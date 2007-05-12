@@ -36,13 +36,18 @@ import('php2go.util.json.JSONEncoder');
  */
 define('TP_ROOTBLOCK', '_ROOT');
 /**
- * Tag delimiter based on HTML comments
+ * Tag delimiter based on HTML comments: &lt;!-- --&gt;
  */
 define('TEMPLATE_DELIM_COMMENT', 1);
 /**
- * Tag delimiter based on curly braces
+ * Tag delimiter based on curly braces: { }
  */
 define('TEMPLATE_DELIM_BRACE', 2);
+/**
+ * Tag delimiter based on directives: &lt;% %&gt;
+ *
+ */
+define('TEMPLATE_DELIM_DIRECTIVE', 3);
 /**
  * Quoted string pattern
  */
@@ -86,11 +91,11 @@ define('TEMPLATE_INCLUDE', 'INCLUDE BLOCK : ([a-zA-Z0-9_\.\-\\\/\~\s]+)');
 /**
  * Ignore tags pattern
  */
-define('TEMPLATE_IGNORE', '(START|END) IGNORE');
+define('TEMPLATE_IGNORE', '(IGNORE|END IGNORE)');
 /**
  * Function call pattern
  */
-define('TEMPLATE_FUNCTION_CALL', '(START FUNCTION|END FUNCTION|FUNCTION)(?:\s+(.*))?');
+define('TEMPLATE_FUNCTION_CALL', '(CALL|FUNCTION|END FUNCTION)(?:\s+(.*))?');
 /**
  * Condition tags pattern
  */
@@ -106,7 +111,15 @@ define('TEMPLATE_COMMENT', '^\*.*\*$');
 /**
  * Widget tags pattern
  */
-define('TEMPLATE_WIDGET', '(START WIDGET|END WIDGET|WIDGET)(?:\s+(.*))?');
+define('TEMPLATE_WIDGET', '(INCLUDE WIDGET|WIDGET|END WIDGET)(?:\s+(.*))?');
+/**
+ * Widget attributes pattern
+ */
+define('TEMPLATE_WIDGET_ATTRIBUTE', '(ATTRIBUTE|END ATTRIBUTE)(?:\s+(.*))?');
+/**
+ * Widget event listeners pattern
+ */
+define('TEMPLATE_WIDGET_LISTENER', '(LISTENER|END LISTENER)(?:\s+(.*))?');
 /**
  * Assign pattern
  */
@@ -302,7 +315,8 @@ class TemplateParser extends PHP2Go
 				TP_ROOTBLOCK, TP_ROOTBLOCK
 			));
 			// compilation
-			$this->_parseTemplate($this->tplBase['source'], $this->tplBase['type'], $this->tplBase['compiled'], $controlBlock);
+			$this->_parseTemplate($this->tplBase['source'], $this->tplBase['type'], $this->tplBase['compiled'], $this->tplWidgets, $controlBlock);
+			// post process source
 			$this->tplBase['compiled'] = preg_replace("~\?>\s*<\?(php)?~", '', $this->tplBase['compiled']);
 			$this->tplBase['compiled'] = rtrim($this->tplBase['compiled'], "\n");
 			$this->prepared = TRUE;
@@ -317,9 +331,10 @@ class TemplateParser extends PHP2Go
 	 * @param string $src Template source (string contents or file path)
 	 * @param int $type Source type ({@link T_BYFILE} or {@link T_BYVAR})
 	 * @param string &$output Used to return compiled contents
+	 * @param array &$widgets Widgets registry
 	 * @param string &$controlBlock Active dynamic block
 	 */
-	function _parseTemplate($src, $type, &$output, &$controlBlock)
+	function _parseTemplate($src, $type, &$output, &$widgets, &$controlBlock)
 	{
 		// 1st phase: prepare template source
 		if ($type == T_BYFILE) {
@@ -333,7 +348,10 @@ class TemplateParser extends PHP2Go
 		} else {
 			$cacheId = dechex(crc32($src));
 		}
+		// replace static 18n translations
 		$src = preg_replace_callback(PHP2GO_I18N_PATTERN, array($this, '_i18nPreFilter'), $src);
+		// replace "{ldelim} /{tag} {rdelim}" by "{ldelim} end {tag} {rdelim}"
+		$src = preg_replace("~({$this->tagDelimiters[0]}\s*)/(\w+\s*{$this->tagDelimiters[1]})~", "$1 END $2", $src);
 
 		// 2nd phase: compile template source
 		if ($this->_Template->cacheOptions['enabled']) {
@@ -351,6 +369,7 @@ class TemplateParser extends PHP2Go
 			if ($cached) {
 				$output .= $cached['output'];
 				$includes = $cached['includes'];
+				$widgets = $cached['widgets'];
 				foreach ($cached['def'] as $block => $def) {
 					if ($block != $controlBlock && array_key_exists($block, $this->tplDef))
 						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_DEFINED_BLOCK', $block), E_USER_ERROR, __FILE__, __LINE__);
@@ -372,6 +391,7 @@ class TemplateParser extends PHP2Go
 				$compiled = $this->_compileTemplate($src, $controlBlock);
 				$output .= $compiled['output'];
 				$includes = $compiled['includes'];
+				$widgets = $compiled['widgets'];
 				// repetition blocks balancing
 				if (!empty($this->blockStack)) {
 					$last = array_pop($this->blockStack);
@@ -386,6 +406,7 @@ class TemplateParser extends PHP2Go
 				$this->_Cache->save(array(
 					'output' => $output,
 					'includes' => $includes,
+					'widgets' => $widgets,
 					'def' => $this->tplDef,
 				), $cacheId, $this->_Template->cacheOptions['group']);
 				// restore control variables
@@ -405,6 +426,7 @@ class TemplateParser extends PHP2Go
 			$compiled = $this->_compileTemplate($src, $controlBlock);
 			$output .= $compiled['output'];
 			$includes = $compiled['includes'];
+			$widgets = $compiled['widgets'];
 			// repetition blocks balancing
 			if (!empty($this->blockStack)) {
 				$last = array_pop($this->blockStack);
@@ -446,6 +468,7 @@ class TemplateParser extends PHP2Go
 		$tagBlocks = array();
 		$outputBlocks = array();
 		$includes = array();
+		$widgets = array();
 		// gather all tags and code blocks
 		$matches = array();
 		preg_match_all("~(\r?\n?[\s]*){$this->tagDelimiters[0]}\s*(.*?)\s*{$this->tagDelimiters[1]}|{([^}]+)}~s", $src, $matches, PREG_OFFSET_CAPTURE);
@@ -464,7 +487,7 @@ class TemplateParser extends PHP2Go
 			// ignore block
 			if (preg_match('~' . TEMPLATE_IGNORE . '~i', $tag[1], $tagParts)) {
 				$operation = strtoupper($tagParts[1]);
-				if ($operation == 'START') {
+				if ($operation == 'IGNORE') {
 					if ($this->controlFlags['ignore']) {
 						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_UNBALANCED_TAG', "IGNORE (position {$tag[2]})"), E_USER_ERROR, __FILE__, __LINE__);
 						return FALSE;
@@ -489,18 +512,18 @@ class TemplateParser extends PHP2Go
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_FUNCTION_CALL . '$~i', $tag[1], $tagParts)) {
 				$operation = strtoupper($tagParts[1]);
 				switch ($operation) {
-					case 'FUNCTION' :
+					case 'CALL' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileFunctionCall(@$tagParts[2]);
 						break;
-					case 'START FUNCTION' :
+					case 'FUNCTION' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileFunctionCall($tagParts[2], TRUE, $controlBlock);
 						break;
 					case 'END FUNCTION' :
-						if (!$last = $this->_validateTag($operation, @$tagParts[2], FALSE, array('START FUNCTION'), $controlBlock))
+						if (!$last = $this->_validateTag($operation, @$tagParts[2], FALSE, array('FUNCTION'), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileFunctionEnd($last[2]);
 						break;
@@ -513,23 +536,59 @@ class TemplateParser extends PHP2Go
 			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_WIDGET . '$~is', $tag[1], $tagParts)) {
 				$operation = strtoupper($tagParts[1]);
 				switch ($operation) {
+					case 'INCLUDE WIDGET' :
+						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
+							return FALSE;
+						$outputBlocks[] = $this->_compileWidgetInclude($tagParts[2], $widgets);
+						break;
 					case 'WIDGET' :
 						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
 							return FALSE;
-						$outputBlocks[] = $this->_compileWidgetInclude($tagParts[2]);
-						break;
-					case 'START WIDGET' :
-						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array(), $controlBlock))
-							return FALSE;
-						$outputBlocks[] = $this->_compileWidgetStart($tagParts[2], $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetStart($tagParts[2], $widgets, $controlBlock);
 						break;
 					case 'END WIDGET' :
-						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('START WIDGET'), $controlBlock))
+						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('START WIDGET', 'END LISTENER', 'END ATTRIBUTE'), $controlBlock))
 							return FALSE;
 						$outputBlocks[] = $this->_compileWidgetEnd();
 						break;
 					default :
 						$outputBlocks[] = $tag[0];
+						break;
+				}
+			}
+			// widget attributes
+			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_WIDGET_ATTRIBUTE . '$~i', $tag[1], $tagParts)) {
+				$operation = strtoupper($tagParts[1]);
+				switch ($operation) {
+					case 'ATTRIBUTE' :
+						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array('START WIDGET', 'END LISTENER', 'END ATTRIBUTE'), $controlBlock))
+							return FALSE;
+						$this->controlStack[] = array($operation, $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetAttributeStart($tagParts[2]);
+						break;
+					case 'END ATTRIBUTE' :
+						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('ATTRIBUTE'), $controlBlock))
+							return FALSE;
+						$this->controlStack[] = array($operation, $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetAttributeEnd();
+						break;
+				}
+			}
+			// widget event listeners
+			elseif (!$this->controlFlags['ignore'] && preg_match('~^' . TEMPLATE_WIDGET_LISTENER . '$~i', $tag[1], $tagParts)) {
+				$operation = strtoupper($tagParts[1]);
+				switch ($operation) {
+					case 'LISTENER' :
+						if (!$this->_validateTag($operation, @$tagParts[2], TRUE, array('START WIDGET', 'END LISTENER', 'END ATTRIBUTE'), $controlBlock))
+							return FALSE;
+						$this->controlStack[] = array($operation, $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetListenerStart($tagParts[2], $controlBlock);
+						break;
+					case 'END LISTENER' :
+						if (!$this->_validateTag($operation, @$tagParts[2], FALSE, array('LISTENER'), $controlBlock))
+							return FALSE;
+						$this->controlStack[] = array($operation, $controlBlock);
+						$outputBlocks[] = $this->_compileWidgetListenerEnd();
 						break;
 				}
 			}
@@ -680,6 +739,8 @@ class TemplateParser extends PHP2Go
 					$compiled = $this->_compileTemplate(substr($tag[0], 1), $controlBlock);
 					$includes = array_merge($includes, $compiled['includes']);
 					$outputBlocks[] = '{' . $compiled['output'];
+				} elseif (empty($tag[1])) {
+					$outputBlocks[] = $tag[0];
 				} else {
 					$pos = strpos($tag[0], $tag[1]);
 					$startCode = substr($tag[0], 0, $pos);
@@ -700,7 +761,8 @@ class TemplateParser extends PHP2Go
 		$output .= $codeBlocks[$i];
 		return array(
 			'output' => $output,
-			'includes' => $includes
+			'includes' => $includes,
+			'widgets' => $widgets
 		);
 	}
 
@@ -913,7 +975,7 @@ class TemplateParser extends PHP2Go
 	}
 
 	/**
-	 * Compiles a function call ("function" and "start function") tags
+	 * Compiles a function call ("call" and "function") tags
 	 *
 	 * The "name" attribute is mandatory and should contain a function
 	 * name, a class::method pair or an object->method expression, where
@@ -921,29 +983,30 @@ class TemplateParser extends PHP2Go
 	 *
 	 * Examples:
 	 * <code>
-	 * <!-- start function name="obj->doThis" p1="string" p2=true -->
-	 * <!-- function name="obj->doThat" p1=$var p2=1 p3=yes -->
-	 * <!-- function name="procFunc" p1=$anotherVar -->
-	 * <!-- function name="Class::staticMethod" -->
+	 * <!-- function name="obj->doThis" p1="string" p2=true --> ... <!-- end function -->
+	 * <!-- call function="obj->doThat" p1=$var p2=1 p3=yes -->
+	 * <!-- call function="procFunc" p1=$anotherVar -->
+	 * <!-- call function="Class::staticMethod" -->
 	 * </code>
 	 *
 	 * @param string $funcProperties Raw function arguments
-	 * @param bool $isBlockFunction Whether is a block function call (START FUNCTION)
+	 * @param bool $isBlockFunction Whether is a block function call (FUNCTION, END FUNCTION)
 	 * @param string $controlBlock Active dynamic block
 	 * @return string Compiled code
 	 * @access private
 	 */
 	function _compileFunctionCall($funcProperties, $isBlockFunction=FALSE, $controlBlock=NULL) {
 		$props = $this->_parseProperties($funcProperties);
-		if (!isset($props['name'])) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('name', 'FUNCTION')), E_USER_ERROR, __FILE__, __LINE__);
+		$nameProp = ($isBlockFunction ? 'name' : 'function');
+		if (!isset($props[$nameProp])) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('function', 'CALL')), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 		$output = "";
 		$nameMatches = array();
-		if (preg_match('~^(?:\'|")' . TEMPLATE_FUNCTION . '(?:\'|")$~', $props['name'])) {
-			$funcName = substr($props['name'], 1, -1);
-		} elseif (preg_match('~^(?:\'|")(' . TEMPLATE_VARIABLE . ')->([a-zA-Z_]\w*)(?:\'|")$~', $props['name'], $nameMatches)) {
+		if (preg_match('~^(?:\'|")' . TEMPLATE_FUNCTION . '(?:\'|")$~', $props[$nameProp])) {
+			$funcName = substr($props[$nameProp], 1, -1);
+		} elseif (preg_match('~^(?:\'|")(' . TEMPLATE_VARIABLE . ')->([a-zA-Z_]\w*)(?:\'|")$~', $props[$nameProp], $nameMatches)) {
 			$output .= '$obj =& ' . $this->_compileVariableName($nameMatches[1]) . '; ';
 			$output .= 'if (is_object($obj)) ';
 			$funcName = '$obj->' . $nameMatches[2];
@@ -954,10 +1017,10 @@ class TemplateParser extends PHP2Go
 		$funcParams = array();
 		if ($isBlockFunction) {
 			foreach ($props as $key => $value) {
-				if ($key != 'name')
+				if ($key != $nameProp)
 					$funcParams[] = "'{$key}' => {$value}";
 			}
-			$this->controlStack[] = array('START FUNCTION', $controlBlock, array($funcName, $funcParams));
+			$this->controlStack[] = array('FUNCTION', $controlBlock, array($funcName, $funcParams));
 			$funcParams = '(array(' . join(', ', $funcParams) . '), NULL, $this)';
 			$output .= $funcName . $funcParams . ';';
 		} else {
@@ -1039,7 +1102,7 @@ class TemplateParser extends PHP2Go
 		}
 		$this->includeDepth++;
 		$output = $this->_compilePHPBlock('array_unshift(\$this->tplConfigVars, \$this->tplConfigVars[0]);');
-		$this->_parseTemplate($src, $type, $output, $controlBlock);
+		$this->_parseTemplate($src, $type, $output, $widgets, $controlBlock);
 		$output .= $this->_compilePHPBlock('array_shift(\$this->tplConfigVars);');
 		$this->includeDepth--;
 		return $output;
@@ -1320,40 +1383,52 @@ class TemplateParser extends PHP2Go
 	 * Compiles an "include widget" tag
 	 *
 	 * @param string $widgetProperties Raw widget properties
+	 * @param array &$widgets Widgets registry
 	 * @return string Compiled code
 	 * @access private
 	 */
-	function _compileWidgetInclude($widgetProperties) {
+	function _compileWidgetInclude($widgetProperties, &$widgets) {
 		$widgetData = $this->_parseWidgetProperties($widgetProperties);
 		if ($widgetData) {
 			// if no path is provided, then use the default path "php2go.gui"
 			if (preg_match('/\w+/', $widgetData['path']))
-				$widgetData['path'] = "php2go.gui.{$widgetData['path']}";
+				$widgetData['path'] = "php2go.gui.widget.{$widgetData['path']}";
+			$widgets[$widgetData['path']] = TRUE;
 			return $this->_compilePHPBlock(
-				'$widgetClass = classForPath("' . $widgetData['path'] . '"); ' .
-				'$widget = new $widgetClass(' . $widgetData['properties'] . '); ' .
-				'print "\n"; $widget->display();'
+				'$newWidget = Widget::factory("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'if ($widget) { ' .
+					'$newWidget->setParent($widget); ' .
+				'} ' .
+				'$newWidget->display();'
 			);
 		}
 		return FALSE;
 	}
 
 	/**
-	 * Compiles a "start widget" tag
+	 * Compiles a "widget" tag
 	 *
 	 * @param string $widgetProperties Raw widget properties
+	 * @param array &$widgets Widgets registry
 	 * @param string $controlBlock Active dynamic block
 	 * @return string Compiled code
 	 * @access private
 	 */
-	function _compileWidgetStart($widgetProperties, $controlBlock) {
+	function _compileWidgetStart($widgetProperties, &$widgets, $controlBlock) {
 		$widgetData = $this->_parseWidgetProperties($widgetProperties);
 		if ($widgetData) {
+			// if no path is provided, then use the default path "php2go.gui"
+			if (preg_match('/\w+/', $widgetData['path']))
+				$widgetData['path'] = "php2go.gui.widget.{$widgetData['path']}";
+			$widgets[$widgetData['path']] = TRUE;
 			$this->controlStack[] = array('START WIDGET', $controlBlock);
 			return $this->_compilePHPBlock(
 				'array_push($outputStack, array($widget)); ' .
-				'$widgetClass = classForPath("' . $widgetData['path'] . '"); ' .
-				'$widget = new $widgetClass(' . $widgetData['properties'] . '); ' .
+				'$lastIndex = sizeof($outputStack) - 1; ' .
+				'$widget = Widget::factory("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'if ($outputStack[$lastIndex][0]) { ' .
+				'$widget->setParent($outputStack[$lastIndex][0]); ' .
+				'} ' .
 				'ob_start();'
 			);
 		}
@@ -1368,10 +1443,72 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileWidgetEnd() {
 		return $this->_compilePHPBlock(
+			'if ($widget->isContainer) { ' .
 			'$widget->setContent(ob_get_clean()); ' .
-			'print "\n"; $widget->display(); ' .
+			'} ' .
+			'$widget->display(); ' .
 			'$last = array_pop($outputStack); ' .
-			'$widget = $last[0];'
+			'$widget = $last[0]; '
+		);
+	}
+
+	/**
+	 * Compiles a "attribute" tag
+	 *
+	 * @param string $attrProperties Raw attribute properties
+	 * @return string Compiled code
+	 * @access private
+	 */
+	function _compileWidgetAttributeStart($attrProperties) {
+		$props = $this->_parseProperties($attrProperties);
+		if (!isset($props['name']))
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('name', 'ATTRIBUTE')), E_USER_ERROR, __FILE__, __LINE__);
+		$output = 'array_push($outputStack, array(' . $props['name'] . '));';
+		return $this->_compilePHPBlock("{$output} ob_start();");
+	}
+
+	/**
+	 * Compiles a "end attribute" tag
+	 *
+	 * @return string Compiled code
+	 * @access private
+	 */
+	function _compileWidgetAttributeEnd() {
+		return $this->_compilePHPBlock(
+			'$last = array_pop($outputStack); ' .
+			'if (is_array($last) && is_object($widget)) { ' .
+				'$widget->setAttribute($last[0], ob_get_clean()); ' .
+			'}'
+		);
+	}
+
+	/**
+	 * Compiles a "listener" tag
+	 *
+	 * @param string $listenerProperties Raw listener properties
+	 * @return string Compiled code
+	 * @access private
+	 */
+	function _compileWidgetListenerStart($listenerProperties) {
+		$props = $this->_parseProperties($listenerProperties);
+		if (!isset($props['event']))
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_REQUIRED_ATTRIBUTE', array('event', 'LISTENER')), E_USER_ERROR, __FILE__, __LINE__);
+		$output = 'array_push($outputStack, array(' . $props['event'] . '));';
+		return $this->_compilePHPBlock("{$output} ob_start();");
+	}
+
+	/**
+	 * Compiles an "end listener" tag
+	 *
+	 * @return string Compiled code
+	 * @access private
+	 */
+	function _compileWidgetListenerEnd() {
+		return $this->_compilePHPBlock(
+			'$last = array_pop($outputStack); ' .
+			'if (is_array($last) && is_object($widget)) { ' .
+				'$widget->addEventListener($last[0], ob_get_clean()); ' .
+			'}'
 		);
 	}
 

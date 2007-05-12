@@ -183,7 +183,7 @@
 			 */
 			case "elements_by_class" :
 				elm.clear();
-				elm.update(document.getElementsByClassName('test').serialize());
+				elm.update(document.getElementsByClassName('test'));
 				break;
 			/**
 			 * find a parent element by tag name

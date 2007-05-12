@@ -31,7 +31,6 @@
  * Validates values against an interval
  *
  * @package validation
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -80,7 +79,7 @@ class IntervalValidator extends AbstractValidator
 	 * @return bool
 	 */
 	function execute($value) {
-		$value = TypeUtils::parseFloat($value);
+		$value = floatval($value);
 		if (!isset($this->max) || !isset($this->min)) {
 			$result = TRUE;
 		} else {

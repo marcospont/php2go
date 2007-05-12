@@ -631,7 +631,7 @@ class MailMessage extends PHP2Go
 	 * @param bool $setting Enable/disable
 	 */
 	function useMicrosoftHeaders($setting=TRUE) {
-		$this->msHeaders = TypeUtils::toBoolean($setting);
+		$this->msHeaders = (bool)$setting;
 	}
 
 	/**
@@ -773,7 +773,7 @@ class MailMessage extends PHP2Go
 			}
 		}
 		$Template->parse();
-		if (TypeUtils::isArray($templateVars) && !empty($templateVars)) {
+		if (is_array($templateVars) && !empty($templateVars)) {
 			$Template->assign($templateVars);
 		}
 		$this->setHtmlBody($Template->getContent());

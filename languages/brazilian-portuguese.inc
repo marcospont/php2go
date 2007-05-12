@@ -116,7 +116,6 @@ $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_IS_EXPR'] = "Operação inválida para uma expr
 $P2G_LANGUAGE['ERR_TPLPARSE_MISSING_TAG_ARGS'] = "A tag <I>%s</I> necessita de argumentos!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_TAG_ARGS'] = "A tag <I>%s</I> não pode conter argumentos!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_MODIFIER'] = "O modificador <I>%s</I> é inválido ou inexistente.";
-$P2G_LANGUAGE['ERR_WIDGET_INCLUDE'] = "O widget <i>%s</i> deve ser utilizado somente com a tag INCLUDE WIDGET!";
 $P2G_LANGUAGE['ERR_WIDGET_MANDATORY_PROPERTY'] = "A propriedade <i>%s</i> é obrigatória na definição do widget <i>%s</i>!";
 $P2G_LANGUAGE['ERR_EMPTY_DOC_LAYOUT'] = "Não foi possível encontrar nenhum elemento no layout de documento fornecido.";
 $P2G_LANGUAGE['ERR_CANT_REPLICATE_ROOT_BLOCK'] = "O bloco base de um template não pode ser replicado.";

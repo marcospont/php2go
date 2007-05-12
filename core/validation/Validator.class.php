@@ -119,7 +119,7 @@ class Validator extends PHP2Go
 		$result = (bool)$Validator->execute($value);
 		if ($result === FALSE) {
 			// custom message
-			if (!$userMessage !== NULL) {
+			if ($userMessage !== NULL) {
 				Validator::addError($userMessage);
 			// getError method
 			} elseif (method_exists($Validator, 'getError')) {

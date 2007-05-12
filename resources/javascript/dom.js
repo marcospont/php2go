@@ -151,6 +151,92 @@ Element.getParentByTagName = function(elm, tag) {
 };
 
 /**
+ * Recursively collects elements associated by the 'prop' property
+ *
+ * The property 'prop' must point to a single DOM element.
+ * Returns an array of extended elements.
+ * @param {Object} elm Base element
+ * @param {String} prop Property
+ * @type Array
+ */
+Element.recursivelyCollect = function(elm, prop) {
+	var res = [];
+	if (elm = $(elm)) {
+		while (elm = elm[prop]) {
+			if (elm.nodeType == 1)
+				res.push($E(elm));
+		}
+	}
+	return res;
+};
+
+/**
+ * Collects element's parent nodes
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getParentNodes = function(elm) {
+	if (elm = $(elm))
+		return elm.recursivelyCollect('parentNode');
+	return [];
+};
+
+/**
+ * Collects element's child nodes, skipping
+ * all text nodes. Extends and returns all
+ * child nodes in an array
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getChildNodes = function(elm) {
+	var res = [];
+	if (elm = $(elm) && (elm = elm.firstChild)) {
+		while (elm && elm.nodeType != 1)
+			elm = elm.nextSibling;
+		if (elm) {
+			elm = $E(elm);
+			return [elm].concat(elm.getNextSiblings());
+		}
+	}
+	return res;
+};
+
+/**
+ * Get element's previous siblings
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getPreviousSiblings = function(elm) {
+	if (elm = $(elm))
+		return elm.recursivelyCollect('previousSibling');
+	return [];
+};
+
+/**
+ * Get element's next siblings
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getNextSiblings = function(elm) {
+	if (elm = $(elm))
+		return elm.recursivelyCollect('nextSibling');
+	return [];
+};
+
+/**
+ * Get all element's siblings
+ * @param {Object} elm Base element
+ * @type Array
+ */
+Element.getSiblings = function(elm) {
+	if (elm = $(elm)) {
+		var rc = elm.recursivelyCollect;
+		return rc('previousSibling').reverse.concat(rc('nextSibling'));
+	}
+	return [];
+};
+
+/**
  * Checks if a given element has another as ancestor
  * @param {Object} elm Element
  * @param {Object} anc Ancestor element
@@ -197,6 +283,22 @@ Element.setParentNode = function(elm, par) {
 		elm = par.appendChild(elm);
 	}
 	return elm;
+};
+
+/**
+ * Checks if an element has a given attribute
+ * @param {Object} elm Element
+ * @param {String} attr Attribute name
+ * @type Boolean
+ */
+Element.hasAttribute = function(elm, attr) {
+	if (elm = $(elm)) {
+		if (elm.hasAttribute)
+			return elm.hasAttribute(attr);
+		var node = elm.getAttributeNode(attr);
+		return (node && node.specified);
+	}
+	return false;
 };
 
 /**
@@ -313,25 +415,30 @@ Element.isWithin = function(elm, p1, p2) {
  * name using CSS property declaration style, e.g.:
  * background-color, border-left-width, font-family
  * @param {Object} elm Element
- * @param {String} property Property name
+ * @param {String} prop Property name
  * @type Object
  */
-Element.getStyle = function(elm, property) {
-	elm = $(elm), d = document, val = null;
+Element.getStyle = function(elm, prop) {
+	elm = $(elm);	
 	if (elm && elm.style) {
-		var camel = property.camelize();
+		var d = document, camel = prop.camelize(), val = null;
+		if (PHP2Go.browser.ie && (prop == 'float' || prop == 'cssFloat'))
+			camel = 'styleFloat';
+		else if (prop == 'float')
+			camel = 'cssFloat';
 		val = elm.style[camel];
 		if (!val) {
 			if (d.defaultView && d.defaultView.getComputedStyle) {
 				var cs = d.defaultView.getComputedStyle(elm, null);
-				(cs) && (val = cs.getPropertyValue(property));
+				(cs) && (val = cs.getPropertyValue(prop));
 			} else if (elm.currentStyle) {
 				val = elm.currentStyle[camel];
 			}
 		}
-		if (PHP2Go.browser.opera && ['left', 'top', 'right', 'bottom'].contains(property) && Element.getStyle(elm, 'position') == 'static')
+		if (PHP2Go.browser.opera && ['left', 'top', 'right', 'bottom'].contains(prop) && Element.getStyle(elm, 'position') == 'static')
 			val = null;
 		(val == 'auto') && (val = null);
+		(prop == 'opacity' && val) && (val = parseFloat(val, 10));
 	}
 	return val;
 };
@@ -348,7 +455,7 @@ Element.setStyle = function(elm, prop, value) {
 	if (elm) {
 		switch (prop) {
 			case 'opacity' :
-				Element.setOpacity(elm, value);
+				elm.setOpacity(value);
 				break;
 			default :
 				elm.style[prop] = value;
@@ -364,9 +471,10 @@ Element.setStyle = function(elm, prop, value) {
  */
 Element.getOpacity = function(elm) {
 	if (elm = $(elm)) {
-		var op, re = new RegExp("alpha\(opacity=(.*)\)");
-		if (op = elm.getStyle('opacity'))
+		var op = elm.getStyle('opacity');
+		if (op) 
 			return parseFloat(op, 10);
+		var re = new RegExp("alpha\(opacity=(.*)\)");
 		if (op = re.exec(elm.getStyle('filter') || '') && op[1])
 			return (parseFloat(op[1], 10) / 100);
 		return 1.0;
@@ -534,10 +642,9 @@ Element.clear = function(elm, useDom) {
  * @param {Object} elm Element
  * @type Boolean
  */
-Element.isEmpty = function(elm) {
-	if (elm = $(elm)) {
-		return elm.innerHTML.match(/^\s*$/);
-	}
+Element.empty = function(elm) {
+	if (elm = $(elm))
+		return elm.innerHTML.empty();
 };
 
 /**
@@ -553,18 +660,53 @@ Element.isEmpty = function(elm) {
 Element.update = function(elm, code, evalScripts, useDom) {
 	elm = $(elm), code = String(code), evalScripts = !!evalScripts, useDom = !!useDom;
 	if (elm) {
-		if (useDom) {
-			var div = document.createElement('div');
-			div.innerHTML = code.stripScripts();
-			while (elm.firstChild)
-				elm.removeChild(elm.firstChild);
-			while (div.firstChild)
-				elm.appendChild(div.removeChild(div.firstChild));
-			delete div;
+		if (code.empty()) {
+			elm.clear(useDom);
 		} else {
-			elm.innerHTML = code.stripScripts();
+			var stripped = code.stripScripts();
+			// special handling of table-related elements on IE
+			if (PHP2Go.browser.ie && elm.tagName.match(/^(table|tbody|tr|td)$/i)) {
+				var depth, div = $N('div');
+				switch (elm.tagName.toLowerCase()) {
+					case 'table' :
+						div.innerHTML = '<table>' + stripped + '</table>';
+						depth = 1;
+						break;
+					case 'tbody' :
+						div.innerHTML = '<table><tbody>' + stripped + '</tbody></table>';
+						depth = 2;
+						break;
+					case 'tr' :
+						div.innerHTML = '<table><tbody><tr>' + stripped + '</tr></tbody></table>';
+						depth = 3;
+						break;
+					case 'td' :
+						div.innerHTML = '<table><tbody><tr><td>' + stripped + '</td></tr></tbody></table>';
+						depth = 4;
+						break;
+				}
+				while (elm.firstChild)
+					elm.removeChild(elm.firstChild);
+				for (var i=0; i<depth; i++)
+					div = div.firstChild;
+				for (var i=0; i<div.childNodes.length; i++)
+					elm.appendChild(div.childNodes[i]);
+			}
+			// update contents using DOM
+			else if (useDom) {
+				var div = $N('div', null, {}, stripped);
+				while (elm.firstChild)
+					elm.removeChild(elm.firstChild);
+				while (div.firstChild)
+					elm.appendChild(div.removeChild(div.firstChild));
+				delete div;
+			} 
+			// default behaviour
+			else {
+				elm.innerHTML = stripped;
+			}
+			(evalScripts) && (code.evalScriptsDelayed());
 		}
-		(evalScripts) && (code.evalScriptsDelayed());
 	}
 };
 
@@ -659,14 +801,13 @@ Element.remove = function(elm) {
  * Define HTMLElement if it's not a valid identifier,
  * and add all Element methods to its prototype
  */
-if (!HTMLElement && PHP2Go.browser.khtml) {
-	var HTMLElement = {};
-	HTMLElement.prototype = document.createElement('div').__proto__;
-}
-if (typeof(HTMLElement) != 'undefined') {
-	Element.extend(HTMLElement.prototype);
+if (!PHP2Go.nativeElementExtension && document.createElement('div').__proto__) {
+	window.HTMLElement = {};
+	window.HTMLElement.prototype = document.createElement('div').__proto__;
 	PHP2Go.nativeElementExtension = true;
 }
+if (PHP2Go.nativeElementExtension)
+	Element.extend(HTMLElement.prototype);
 
 /**
  * Document extensions
@@ -1121,6 +1262,17 @@ Event.prototype.stop = function() {
 	this.preventDefault();
 	this.stopPropagation();
 };
+
+/**
+ * @ignore
+ */
+Event.addLoadListener(function() {
+	for (var i=0; i<Widget.widgets.length; i++) {
+		var attrs = Widget.widgets[i];
+		var widget = new window[attrs[0]](attrs[1], attrs[2]);
+		widget.setup();
+	}
+});
 
 /**
  * Convert a native Event object to access all Event

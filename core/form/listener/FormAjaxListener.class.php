@@ -151,6 +151,7 @@ class FormAjaxListener extends FormEventListener
 			$this->url = $Form->formAction;
 			$this->params['method'] = $Form->formMethod;
 			$this->params['form'] = $Form->formName;
+			$this->params['formValidate'] = 'true';
 		} elseif (empty($this->url)) {
 			$this->url = HttpRequest::uri(FALSE);
 		}
@@ -161,8 +162,7 @@ class FormAjaxListener extends FormEventListener
 			$Form->Document->addScriptCode(
 				"\tForm.ajaxify($('{$Form->formName}'), function() {\n" .
 				$this->getParamsScript() .
-				"\t\tvar request = new {$this->class}('{$this->url}', params);\n" .
-				"\t\trequest.send();\n" .
+				"\t\treturn new {$this->class}('{$this->url}', params);\n" .
 				"\t});",
 			'Javascript', SCRIPT_END);
 			return NULL;
@@ -217,6 +217,7 @@ class FormAjaxListener extends FormEventListener
 				case 'params' :
 				case 'headers' :
 				case 'formFields' :
+				case 'formValidate' :
 					$value = trim($value);
 					$buf .= "\t\tparams.{$name} = {$value};\n";
 					break;
@@ -263,10 +264,19 @@ class FormAjaxListener extends FormEventListener
 	 */
 	function onDataBind() {
 		parent::onDataBind();
+		$Form =& $this->getOwnerForm();
 		// resolve variables and expressions on the URL attribute
 		if (preg_match("/~[^~]+~/", $this->url)) {
-			$Form =& $this->getOwnerForm();
 			$this->url = $Form->resolveVariables($this->url);
+		}
+		// resolve variables in the listener body
+		if (preg_match("/~[^~]+~/", $this->paramsFuncBody)) {
+			$this->paramsFuncBody = $Form->resolveVariables($this->paramsFuncBody);
+		}
+		// resolve variables inside listener params
+		foreach ($this->params as $name => $value) {
+			if (preg_match("/~[^~]+~/", $value))
+				$this->params[$name] = $Form->resolveVariables($value);
 		}
 	}
 

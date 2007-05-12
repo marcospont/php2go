@@ -37,9 +37,9 @@
 					<form id="reports" name="reports" action="{$p2g.server.PHP_SELF}" method="GET" style="display:inline">
 						<div style="padding:4px">Choose a report type:</div>
 						<select id="rep" name="rep" onChange="this.form.submit()">
-<!-- LOOP var=$options item="caption" key="value" -->
+<!-- loop var=$options item="caption" key="value" -->
 							<option value="{$value}"<!-- IF $p2g.get.rep eq $value --> selected<!-- END IF -->>{$caption}</option>
-<!-- END LOOP -->
+<!-- end loop -->
 						</select>
 					</form>
 				</td>
@@ -47,7 +47,7 @@
 		</table>
 	</div>
 	<div style="background-color:#dfdfe9;border:1px solid #999;padding:4px;">{$simple_search}</div>
-<!-- IF $report.total_rows gt 0 -->
+<!-- if $report.total_rows gt 0 -->
 	<div style="padding:4px;">
 		<table width="100%" cellpadding="4" cellspacing="0" border="0">
 			<tr>
@@ -61,12 +61,12 @@
 		</table>
 	</div>
 	<table width="625" cellpadding="4" cellspacing="1" align="center" style="border:1px solid #999">
-<!-- START BLOCK : loop_line -->
+<!-- start block : loop_line -->
 		<tr>
-<!-- START BLOCK : loop_group -->
+<!-- start block : loop_group -->
 			<td width="100%" colspan="{$group_span}" valign="top" class="{$report.style.title}"><b>{$group_display}</b></td>
-<!-- END BLOCK : loop_group -->
-<!-- START BLOCK : loop_cell -->
+<!-- end block : loop_group -->
+<!-- start block : loop_cell -->
 			<td width="{$col_wid}" valign="top" class="{$alt_style}">
 				<table width="100%" cellpadding="0" cellspacing="0" border="0">
 					<tr>
@@ -79,12 +79,12 @@
 					</tr>
 				</table>
 			</td>
-<!-- END BLOCK : loop_cell -->
-<!-- START BLOCK : empty_cell -->
+<!-- end block : loop_cell -->
+<!-- start block : empty_cell -->
 			<td width="{$col_wid}" valign="top" class="{$alt_style}">&nbsp;</td>
 		</tr>
-<!-- END BLOCK : empty_cell -->
-<!-- END BLOCK : loop_line -->
+<!-- end block : empty_cell -->
+<!-- end block : loop_line -->
 	</table>
 	<div style="padding:4px;">
 		<table width="100%" cellpadding="4" cellspacing="0" border="0">
@@ -98,8 +98,8 @@
 			</tr>
 		</table>
 	</div>
-<!-- ELSE -->
+<!-- else -->
 	<div style="padding:20px;font-size:14px;">No records found.</div>
-<!-- END IF -->
+<!-- end if -->
 </div>
 </center>

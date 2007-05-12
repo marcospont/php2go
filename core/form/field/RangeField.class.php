@@ -231,7 +231,7 @@ class RangeField extends FormField
 		if (!empty($children)) {
 			foreach ($children as $key => $value) {
 				if (in_array($key, $fieldNames)) {
-					if (!TypeUtils::isArray($value) || sizeof($value) != 2) {
+					if (!is_array($value) || sizeof($value) != 2) {
 						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_RANGEFIELD_CHILDREN', $this->name), E_USER_ERROR, __FILE__, __LINE__);
 					} else {
 						$start = @$attrs['STARTNAME'];
