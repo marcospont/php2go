@@ -1,7 +1,7 @@
 PHP2Go Web Development Framework - CONFIGURATION
 =================================================
 
-	Version 0.5.5 - March 2007
+	Version 0.5.6 - May 2007
 	--------------------------------
 	http://www.php2go.com.br
 
