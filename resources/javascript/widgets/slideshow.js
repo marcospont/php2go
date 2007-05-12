@@ -163,7 +163,7 @@ SlideShow.prototype.onToggle = function(evt) {
 
 /**
  * Handles the onblur event on the delay input
- * @type {Event} evt Event
+ * @param {Event} evt Event
  */
 SlideShow.prototype.onSetDelay = function(evt) {
 	evt = evt || window.event;
