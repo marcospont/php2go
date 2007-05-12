@@ -221,7 +221,8 @@ class FormBasic extends Form
 	 * @param float $width Labels width
 	 */
 	function setLabelWidth($width) 	{
-		if (TypeUtils::parseFloatPositive($width) > 1 || TypeUtils::parseFloatPositive($width) <= 0) {
+		$width = abs(floatval($width));
+		if ($width <= 0 || $width > 1) {
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_VALUE_OUT_OF_BOUNDS', array("width (FormBasic::setLabelWidth)", 0, 1)), E_USER_ERROR, __FILE__, __LINE__);
 		} else {
 			$this->labelW = $width;
@@ -244,19 +245,20 @@ class FormBasic extends Form
 	 * @param int $cellspacing Cell spacing
 	 */
 	function setFormTableProperties($cellpadding, $cellspacing) {
-		$this->tblCPadding = TypeUtils::parseIntegerPositive($cellpadding);
-		$this->tblCSpacing = TypeUtils::parseIntegerPositive($cellspacing);
+		$this->tblCPadding = abs(intval($cellpadding));
+		$this->tblCSpacing = abs(intval($cellspacing));
 	}
 
 	/**
-	 * Set the display settings of the validation errors summary
+	 * Configures how validation error(s) should be displayed
 	 *
 	 * @param int $mode Display mode ({@link FORM_CLIENT_ERROR_ALERT} or {@link FORM_CLIENT_ERROR_DHTML})
+	 * @param bool $showAll Show all errors or just the first one
 	 */
-	function setErrorDisplayOptions($mode) {
-		if (in_array($mode, array(FORM_CLIENT_ERROR_ALERT, FORM_CLIENT_ERROR_DHTML))) {
+	function setErrorDisplayOptions($mode=NULL, $showAll=TRUE) {
+		if (in_array($mode, array(FORM_CLIENT_ERROR_ALERT, FORM_CLIENT_ERROR_DHTML)))
 			$this->clientErrorOptions['mode'] = $mode;
-		}
+		$this->clientErrorOptions['showAll'] = (bool)$showAll;
 	}
 
 	/**
@@ -300,13 +302,17 @@ class FormBasic extends Form
 		$this->_Template->assign('_ROOT.formWidth', (isset($this->formWidth) ? " width=\"{$this->formWidth}\"" : ''));
 		$this->_Template->assign('_ROOT.formAlign', TypeUtils::ifNull($this->formAlign, 'left'));
 		$this->_Template->assign('_ROOT.errorStyle', parent::getErrorStyle());
-		$this->_Template->assign('_ROOT.errorTitle', @$this->errorStyle['header_text']);
 		// display validation errors
 		if ($errors = parent::getFormErrors()) {
-			$mode = @$this->errorStyle['list_mode'];
-			$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br>", $errors));
 			$this->_Template->assign('_ROOT.errorDisplay', " style=\"display:block\"");
-			$this->_Template->assign('_ROOT.errorMessages', $errors);
+			if ($this->clientErrorOptions['showAll']) {
+				$mode = @$this->errorStyle['list_mode'];
+				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br>", $errors));
+				$this->_Template->assign('_ROOT.errorTitle', @$this->errorStyle['header_text']);
+				$this->_Template->assign('_ROOT.errorMessages', $errors);
+			} else {
+				$this->_Template->assign('_ROOT.errorMessages', $errors[0]);
+			}
 		} else {
 			$this->_Template->assign('_ROOT.errorDisplay', " style=\"display:none\"");
 		}
@@ -452,12 +458,11 @@ class FormBasic extends Form
 	 */
 	function _loadGlobalSettings($settings) {
 		parent::_loadGlobalSettings($settings);
-		if (isset($settings['ERRORS']['CLIENT_MODE'])) {
-			$mode = @constant($settings['ERRORS']['CLIENT_MODE']);
-			if ($mode)
-				$this->setErrorDisplayOptions($mode);
+		if (is_array(@$settings['ERRORS'])) {
+			$showAll = (array_key_exists('SHOW_ALL', $settings['ERRORS']) ? (bool)$settings['ERRORS']['SHOW_ALL'] : TRUE);
+			$this->setErrorDisplayOptions(@constant($settings['ERRORS']['CLIENT_MODE']), $showAll);
 		}
-		if (isset($settings['BASIC'])) {
+		if (is_array(@$settings['BASIC'])) {
 			$basic = $settings['BASIC'];
 			(isset($basic['FIELDSET_STYLE'])) && $this->setFieldsetStyle($basic['FIELDSET_STYLE']);
 			(isset($basic['SECTION_TITLE_STYLE'])) && $this->setSectionTitleStyle($basic['SECTION_TITLE_STYLE']);
@@ -492,8 +497,10 @@ class FormBasic extends Form
 			(isset($attrs['LABELALIGN']) && in_array(strtoupper($attrs['LABELALIGN']), array('LEFT', 'CENTER', 'RIGHT'))) && ($this->labelAlign = strtolower($attrs['LABELALIGN']));
 		} elseif ($tag == 'ERRORS') {
 			$mode = @constant($attrs['CLIENTMODE']);
-			if ($mode)
-				$this->setErrorDisplayOptions($mode);
+			if ($mode) {
+				$showAll = (isset($attrs['SHOWALL']) ? resolveBooleanChoice($attrs['SHOWALL']) : TRUE);
+				$this->setErrorDisplayOptions($mode, $showAll);
+			}
 		}
 	}
 }

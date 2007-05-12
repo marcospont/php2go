@@ -65,7 +65,7 @@ class DbCheckGroup extends DbGroupField
 		$group = array();
 		$groupName = (substr($this->name, -2) != '[]' ? $this->name . '[]' : $this->name);
 		$hasValue = (!empty($this->value) || strlen($this->value) > 0);
-		$arrayValue = (TypeUtils::isArray($this->value));
+		$arrayValue = (is_array($this->value));
 		if ($this->attributes['SHORTCUTS']) {
 			$msgs = PHP2Go::getLangVal('CHECKGROUP_SHORTCUTS');
 			$id = preg_replace("/\[\]$/", '', $this->name);
@@ -84,7 +84,7 @@ class DbCheckGroup extends DbGroupField
 			$append = sprintf(
 				"\n<script type=\"text/javascript\">new CheckboxController(\"%s\", \"%s\", {all:\"%s_all\", none:\"%s_none\", invert:\"%s_invert\"});</script>",
 				$this->_Form->formName, $groupName,
-				$id, $id, $id, $id
+				$id, $id, $id
 			);
 		} else {
 			$prepend = '';

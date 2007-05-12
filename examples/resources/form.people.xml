@@ -10,7 +10,6 @@
 	<!-- error summary settings -->
 	<errors
 		style="error_style" listmode="FORM_ERROR_BULLET_LIST"
-		headertext="Some error(s) occurred while processing the form:"
 		headerstyle="error_header" clientmode="FORM_CLIENT_ERROR_DHTML"
 	/>
 	<section id="people" name="People Form">

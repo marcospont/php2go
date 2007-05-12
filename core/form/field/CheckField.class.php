@@ -172,7 +172,7 @@ class CheckField extends FormField
 	 */
 	function setCaption($caption) {
 		if ($caption)
-			$this->attributes['CAPTION'] = $caption;
+			$this->attributes['CAPTION'] = resolveI18nEntry($caption);
 	}
 
 	/**

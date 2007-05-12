@@ -400,7 +400,10 @@ function cm_resized(){
       cmpage = page2;
       this.isresized = 1;
       if(this.onresize) {
-        eval(this.onresize);
+        if (typeof this.onresize == 'function')
+          this.onresize();
+        else
+      	  eval(this.onresize);
       }
       this.construct(1);
       if(this.onafterresize) {
@@ -443,7 +446,12 @@ makeCM.prototype.onclck=function(m){
     else if(targ=="_top" || targ=="window") top.location.href=lnk
     else if(top[targ]) top[targ].location.href=lnk
     else if(parent[targ]) parent[targ].location.href=lnk
-
+    else if(typeof window.frames == 'function' && window.frames(targ)) window.frames(targ).location.replace(lnk)
+    else {
+      var tobj = document.getElementById(targ);
+      if (tobj && tobj.contentDocument)
+        tobj.setAttribute('src', lnk);
+    }
   }else return false
 }
 

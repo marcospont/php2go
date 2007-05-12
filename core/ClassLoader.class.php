@@ -115,17 +115,24 @@ class ClassLoader
 	function importPath($path, $extension='class.php', $isClass=TRUE) {
 		if (isset($this->importCache[$path]))
 			return TRUE;
-		$Lang =& LanguageBase::getInstance();
 		if ($translated = $this->_translateDotPath($path)) {
-			$this->_registerIncludePath($translated['path']);
-			$result = ($isClass && IS_PHP5 ? TRUE : ($translated['file'] == '*' ? $this->loadDirectory($translated['path']) : $this->loadFile($translated['file'] . '.' . $extension)));
-			if ($result) {
-				$this->importCache[$path] = TRUE;
-				if ($translated['file'] != '*')
-					$this->importClassCache[$translated['file']] = $translated['file'] . '.' . $extension;
-				return TRUE;
+			// validate path
+			if ($this->_validatePath($translated['path'], $translated['file'], $extension)) {
+				// register directory path in the include_path
+				$this->_registerIncludePath($translated['path']);
+				 // under PHP5, classes are loaded on demand through the autoload interceptor
+				$result = ($isClass && IS_PHP5 ? TRUE : ($translated['file'] == '*' ? $this->loadDirectory($translated['path']) : $this->loadFile($translated['file'] . '.' . $extension)));
+				if ($result) {
+					// save path in the cache
+					$this->importCache[$path] = TRUE;
+					// save file/class extension, so that __autoload can use the correct extension
+					if ($translated['file'] != '*')
+						$this->importClassCache[$translated['file']] = $translated['file'] . '.' . $extension;
+					return TRUE;
+				}
 			}
 		}
+		$Lang =& LanguageBase::getInstance();
 		trigger_error(sprintf($Lang->getLanguageValue('ERR_CANT_LOAD_MODULE'), $path), E_USER_ERROR);
 		return FALSE;
 	}
@@ -149,7 +156,6 @@ class ClassLoader
 	 * @return bool Operation result
 	 */
 	function loadDirectory($directoryPath) {
-		$Lang =& LanguageBase::getInstance();
 		$directoryPath = rtrim($directoryPath, "\\/");
 		$handle = @dir($directoryPath);
 		if ($handle) {
@@ -157,10 +163,29 @@ class ClassLoader
 				if ($file == '.' || $file == '..' || is_dir($directoryPath . PHP2GO_DIRECTORY_SEPARATOR . $file))
 					continue;
 				if (!include_once($directoryPath . PHP2GO_DIRECTORY_SEPARATOR . $file)) {
+					$Lang =& LanguageBase::getInstance();
 					trigger_error(sprintf($Lang->getLanguageValue('ERR_CANT_LOAD_DIR_MODULE'), $file, $directoryPath), E_USER_ERROR);
 					return FALSE;
 				}
 			}
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Checks if a directory or file path is valid
+	 *
+	 * @param string $path Path
+	 * @param string $file File
+	 * @param string $extension Extension
+	 * @access private
+	 * @return bool
+	 */
+	function _validatePath($path, $file, $extension) {
+		if (file_exists($path)) {
+			if ($file != '*')
+				return file_exists($path . $file . '.' . $extension);
 			return TRUE;
 		}
 		return FALSE;

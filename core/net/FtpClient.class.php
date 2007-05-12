@@ -185,7 +185,7 @@ class FtpClient extends PHP2Go
 	function setServer($host, $port=FTP_DEFAULT_PORT) {
 		if (!$this->isConnected()) {
 			$this->host = $host;
-			$this->port = TypeUtils::parseInteger($port);
+			$this->port = intval($port);
 		}
 	}
 
@@ -240,7 +240,7 @@ class FtpClient extends PHP2Go
 		if (!isset($this->host))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FTP_MISSING_HOST'), E_USER_ERROR, __FILE__, __LINE__);
 		$this->connectionId = ftp_connect($this->host, $this->port, $this->timeout);
-		if (!TypeUtils::isResource($this->connectionId))
+		if (!is_resource($this->connectionId))
 			return FALSE;
 		$this->connected = TRUE;
 		// define connection timeout
@@ -521,7 +521,7 @@ class FtpClient extends PHP2Go
 	function fileGet($filePointer, $remoteFile, $mode=NULL, $resume=FALSE) {
 		if (!$this->isConnected())
 			return FALSE;
-		if (!TypeUtils::isResource($filePointer))
+		if (!is_resource($filePointer))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_RESOURCE', array('$filePointer', '$FtpClient->fileGet')), E_USER_ERROR, __FILE__, __LINE__);
 		if (empty($mode) || ($mode != FTP_ASCII && $mode != FTP_BINARY))
 			$mode = $this->transferMode;
@@ -591,7 +591,7 @@ class FtpClient extends PHP2Go
 	function filePut($filePointer, $remoteFile, $mode=NULL) {
 		if (!$this->isConnected())
 			return FALSE;
-		if (!TypeUtils::isResource($filePointer))
+		if (!is_resource($filePointer))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_RESOURCE', array('$filePointer', 'FtpClient::filePut')), E_USER_ERROR, __FILE__, __LINE__);
 		// change to the target folder, if any
 		list($changeDir, $remoteFile) = $this->_parseDir($remoteFile);
@@ -772,11 +772,11 @@ class FtpClient extends PHP2Go
 					$month = $element[5];
 					$day = (strlen($element[6]) == 2 ? $element[6] : '0' . $element[6]);
 					$fileInfo['name'] = $element[8];
-					$fileInfo['size'] = TypeUtils::parseInteger($element[4]);
+					$fileInfo['size'] = intval($element[4]);
 					$fileInfo['date'] = ($dateF == 'Y/m/d') ? $year . '/' . $month . '/' . $day : $day . '/' . $month . '/' . $year;
 					$fileInfo['attr'] = $element[0];
 					$fileInfo['type'] = ($element[0][0] == '-') ? 'file' : 'dir';
-					$fileInfo['dirno'] = TypeUtils::parseInteger($element[1]);
+					$fileInfo['dirno'] = intval($element[1]);
 					$fileInfo['user'] = $element[2];
 					$fileInfo['group'] = $element[3];
 					$newList[] = $fileInfo;

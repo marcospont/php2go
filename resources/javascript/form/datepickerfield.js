@@ -174,28 +174,9 @@ DatePickerField.prototype.clear = function() {
 };
 
 /**
- * Enable the component
- * @type void
- */
-DatePickerField.prototype.enable = function() {
-	this.setDisabled(false);
-};
-
-/**
- * Disable the component
- * @type void
- */
-DatePickerField.prototype.disable = function() {
-	this.setDisabled(true);
-};
-
-/**
- * Internal method to disable/enable the component.
- * Called from {@link DatePickerField#enable}
- * and {@link DatePickerField#disable}
+ * Disables/enables the component
  * @param {Boolean} b Flag value
  * @type void
- * @private
  */
 DatePickerField.prototype.setDisabled = function(b) {
 	this.fld.disabled = b;

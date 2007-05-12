@@ -170,7 +170,7 @@
 			$db->failTransaction();
 		}
 	}
-	$db->delete('people', 'id_people > 20');
+	$db->delete('people', 'id_people > 9999');
 	$db->completeTransaction();
 	print('<br>');
 

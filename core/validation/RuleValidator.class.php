@@ -60,7 +60,7 @@ class RuleValidator extends AbstractValidator
 	 */
 	function RuleValidator($params = NULL) {
 		parent::AbstractValidator($params);
-		if (TypeUtils::isArray($params)) {
+		if (is_array($params)) {
 			if (isset($params['rule']))
 				$this->Rule =& $params['rule'];
 		}
@@ -75,76 +75,71 @@ class RuleValidator extends AbstractValidator
 	function execute($srcName) {
 		if (!isset($this->Rule))
 			return FALSE;
-		// validates the field
-		$Form =& $this->Rule->getOwnerForm();
-		if (TypeUtils::isNull($Form))
-			return FALSE;
+		// gets the src value
 		$Src =& $this->Rule->getOwnerField();
-		if (TypeUtils::isNull($Src)) {
+		if ($Src == NULL)
 			return FALSE;
-		} else {
-			$srcValue = $Src->getValue();
-			if ($Src->isA('CheckField') && $srcValue == 'F')
-				$srcValue = '';
-		}
-		// validates the peer field
-		$trgName = $this->Rule->getTargetField();
-		if (!empty($trgName)) {
-			$Trg =& $Form->getField($trgName);
-			if (TypeUtils::isNull($Trg)) {
+		$srcValue = $this->Rule->getOwnerValue();
+		if ($srcValue === FALSE)
+			return FALSE;
+		// gets the peer type
+		$peerType = $this->Rule->getPeerType();
+		// gets the peer value
+		if ($peerType == RULE_PEER_FIELD) {
+			$Peer =& $this->Rule->getPeerField();
+			if ($Peer == NULL)
 				return FALSE;
-			} else {
-				$trgValue = $Trg->getValue();
-				if ($Trg->isA('CheckField') && $trgValue == 'F')
-					$trgValue = '';
-			}
+			$peerValue = $this->Rule->getPeerValue();
+			if ($peerValue === FALSE)
+				return FALSE;
 		}
+		// gets comparison value and type
+		$comparisonValue = $this->Rule->getComparisonValue();
+		$comparisonType = $this->Rule->getComparisonType();
 		$matches = array();
-		if ($this->Rule->getType() == 'REQIF') {
+		$type = $this->Rule->getType();
+		if ($type == 'REQIF') {
 			// conditional obligatoriness (when the peer field isn't empty)
-			if ($this->_isEmpty($srcValue) && !$this->_isEmpty($trgValue)) {
+			if ($this->_isEmpty($srcValue) && !$this->_isEmpty($peerValue)) {
 				$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_REQUIRED', $Src->getLabel());
 				return FALSE;
 			} else {
 				return TRUE;
 			}
-		} elseif ($this->Rule->getType() == 'REGEX') {
+		} elseif ($type == 'REGEX') {
 			// field value must match a pattern
-			$pattern = $this->Rule->getValueArgument();
-			if (!$this->_isEmpty($srcValue) && !preg_match("{$pattern}", $srcValue)) {
+			if (!$this->_isEmpty($srcValue) && !preg_match("{$comparisonValue}", $srcValue)) {
 				$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_INVALID', $Src->getLabel());
 				return FALSE;
 			} else {
 				return TRUE;
 			}
-		} elseif (ereg("^(REQIF)?(EQ|NEQ|GT|LT|GOET|LOET)$", $this->Rule->getType(), $matches)) {
-			$mask = $this->Rule->getCompareType();
-			$value = $this->Rule->getValueArgument();
+		} elseif (ereg("^(REQIF)?(EQ|NEQ|GT|LT|GOET|LOET)$", $type, $matches)) {
 			if ($matches[1] != NULL) {
-				// conditional obligatoriness based on an expression
-				if ($this->_isEmpty($srcValue) && !$this->_isEmpty($trgValue) && $this->_compareValues($trgValue, $value, $matches[2], $mask, 'value')) {
-					$result = FALSE;
-					$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_REQUIRED', $Trg->getLabel());
-				} else {
-					$result = TRUE;
+				// conditional obligatoriness based on the value of another field
+				if ($this->_isEmpty($srcValue) && !$this->_isEmpty($peerValue) && $this->_compareValues($peerValue, $comparisonValue, $matches[2], $comparisonType, RULE_PEER_VALUE)) {
+					$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_REQUIRED', $Src->getLabel());
+					return FALSE;
 				}
 			} else {
 				// comparison between field x peer value
-				if (!$this->_isEmpty($value)) {
-					$result = $this->_compareValues($srcValue, $value, $matches[2], $mask, 'value');
-					if (!$result)
-						$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_VALUE_' . $matches[2], array($Src->getLabel(), $value));
+				if ($peerType == RULE_PEER_VALUE) {
+					if (!$this->_compareValues($srcValue, $comparisonValue, $matches[2], $comparisonType, RULE_PEER_VALUE)) {
+						$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_VALUE_' . $matches[2], array($Src->getLabel(), $comparisonType));
+						return FALSE;
+					}
 				// comparison between field x peer field
-				} else {
-					$result = $this->_compareValues($srcValue, $trgValue, $matches[2], $mask, 'field');
-					if (!$result)
-						$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_' . $matches[2], array($Src->getLabel(), $Trg->getLabel()));
+				} elseif ($peerType == RULE_PEER_FIELD) {
+					if (!$this->_compareValues($srcValue, $peerValue, $matches[2], $comparisonType, RULE_PEER_FIELD)) {
+						$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_' . $matches[2], array($Src->getLabel(), $Peer->getLabel()));
+						return FALSE;
+					}
 				}
 			}
-			return $result;
+			return TRUE;
 		}
 		// JSFUNC rules run at client-side only
-		elseif ($this->Rule->getType() == 'JSFUNC') {
+		elseif ($type == 'JSFUNC') {
 			return TRUE;
 		}
 		$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_INVALID', $Src->getLabel());
@@ -176,9 +171,9 @@ class RuleValidator extends AbstractValidator
 	 * @access private
 	 * @return bool
 	 */
-	function _compareValues($source, $target, $operator, $dataType, $targetType) {
-		if ($targetType == 'field') {
-			if ($this->_isEmpty($source) || $this->_isEmpty($target))
+	function _compareValues($source, $target, $operator, $dataType, $peerType) {
+		if ($peerType == RULE_PEER_FIELD) {
+			if ($this->_isEmpty($source) && $this->_isEmpty($target))
 				return TRUE;
 		} else {
 			if ($this->_isEmpty($source))
@@ -189,7 +184,7 @@ class RuleValidator extends AbstractValidator
 			switch ($dataType) {
 				case 'DATE' :
 					$src = Date::dateToDays($source);
-					if ($targetType == 'value')
+					if ($peerType == RULE_PEER_VALUE)
 						$target = Date::parseFieldExpression($target);
 					$trg = Date::dateToDays($target);
 					break;

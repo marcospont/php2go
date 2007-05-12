@@ -228,7 +228,7 @@ class FormButton extends Component
 	 * @param string $swpImg Swap image URL
 	 */
 	function setImage($img, $swpImg='') {
-		$this->attributes['IMG'] = trim(TypeUtils::parseString($img));
+		$this->attributes['IMG'] = trim(strval($img));
 		if ($swpImg && trim($swpImg) != '')
 			$this->attributes['SWPIMG'] = $swpImg;
 		else
@@ -301,7 +301,7 @@ class FormButton extends Component
 	 * @param bool $setting Disable/enable
 	 */
 	function setDisabled($setting=TRUE) {
-		if (TypeUtils::isTrue($setting)) {
+		if ($setting) {
 			$this->attributes['DISABLED'] = " disabled";
 			$this->disabled = TRUE;
 		} else {
@@ -366,11 +366,11 @@ class FormButton extends Component
 			if ($this->attributes['TYPE'] == 'SUBMIT' && $this->attributes['IMG'] != '') {
 				$x = HttpRequest::getVar($this->name . '_x', $this->_Form->formMethod);
 				$y = HttpRequest::getVar($this->name . '_y', $this->_Form->formMethod);
-				if (!TypeUtils::isNull($x) && !TypeUtils::isNull($y))
+				if (!is_null($x) && !is_null($y))
 					$this->_Form->submittedValues[$this->name] = array('x' => $x, 'y' => $y);
 			} else {
 				$submittedValue = HttpRequest::getVar($this->name, $this->_Form->formMethod);
-				if (!TypeUtils::isNull($submittedValue))
+				if (!is_null($submittedValue))
 					$this->_Form->submittedValues[$this->name] = $submittedValue;
 			}
 		}
@@ -400,15 +400,6 @@ class FormButton extends Component
 			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onMouseOver', sprintf("this.src='%s'", $this->attributes['SWPIMG'])));
 			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onMouseOut', sprintf("this.src='%s'", $this->attributes['IMG'])));
 		}
-		// register an event listener when type=BACK
-		if ($this->attributes['TYPE'] == 'BACK') {
-			$this->attributes['TYPE'] = 'BUTTON';
-			if (empty($this->_Form->backUrl))
-				$action = "history.back()";
-			else
-				$action = sprintf("window.location.href='%s'", $this->_Form->backUrl);
-			$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onClick', $action));
-		}
 		if (isset($children['LISTENER'])) {
 			$listeners = TypeUtils::toArray($children['LISTENER']);
 			foreach ($listeners as $listenerNode)
@@ -437,6 +428,16 @@ class FormButton extends Component
 			parent::onPreRender();
 			if (!$this->dataBind)
 				$this->onDataBind();
+			// register an event listener when type=BACK
+			if ($this->attributes['TYPE'] == 'BACK') {
+				$this->attributes['TYPE'] = 'BUTTON';
+				if (empty($this->_Form->backUrl))
+					$action = "history.back()";
+				else
+					$action = sprintf("window.location.href='%s'", $this->_Form->backUrl);
+				$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onClick', $action), TRUE);
+			}
+			// normalized disable state
 			if ($this->disabled === NULL) {
 				if ($this->_Form->readonly)
 					$this->setDisabled();

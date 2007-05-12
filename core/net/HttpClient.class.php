@@ -332,7 +332,7 @@ class HttpClient extends SocketClient
 	 * @param string $password Proxy password
 	 * @return bool
 	 */
-	function setProxy($host, $port, $userName = '', $password = '') {
+	function setProxy($host, $port, $userName='', $password='') {
 		if (trim($host) != '' && TypeUtils::isInteger($port)) {
 			$this->keepAlive = FALSE;
 			$this->useProxy = TRUE;
@@ -353,9 +353,9 @@ class HttpClient extends SocketClient
 	 *
 	 * @param bool $setting Enable/disable
 	 */
-	function setKeepAlive($setting = TRUE) {
+	function setKeepAlive($setting=TRUE) {
 		if (!$this->useProxy)
-			$this->keepAlive = TypeUtils::toBoolean($setting);
+			$this->keepAlive = (bool)$setting;
 	}
 
 	/**
@@ -363,8 +363,8 @@ class HttpClient extends SocketClient
 	 *
 	 * @param bool $setting Enable/disable
 	 */
-	function setFollowRedirects($setting = TRUE) {
-		$this->followRedirects = TypeUtils::toBoolean($setting);
+	function setFollowRedirects($setting=TRUE) {
+		$this->followRedirects = (bool)$setting;
 	}
 
 	/**
@@ -418,8 +418,8 @@ class HttpClient extends SocketClient
 	 */
 	function getStatus() {
 		$status = $this->getResponseHeader('Status');
-		if (!TypeUtils::isNull($status))
-			return TypeUtils::parseInteger($status);
+		if (!is_null($status))
+			return intval($status);
 		else
 			return NULL;
 	}
@@ -480,7 +480,7 @@ class HttpClient extends SocketClient
 	 * @return int Response status
 	 */
 	function doHead($uri) {
-		if (TypeUtils::isNull($uri) || empty($uri))
+		if (is_null($uri) || empty($uri))
 			$uri = '/';
 		// reopen connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
@@ -507,7 +507,7 @@ class HttpClient extends SocketClient
 	 * @return int Response status
 	 */
 	function doGet($uri) {
-		if (TypeUtils::isNull($uri) || empty($uri))
+		if (is_null($uri) || empty($uri))
 			$uri = '/';
 		// reopen connection if necessary
 		if (($this->keepAlive && !parent::isConnected()) || !$this->keepAlive)
@@ -678,7 +678,7 @@ class HttpClient extends SocketClient
 	 * @param string $uri Target URI
 	 */
 	function _sendPost($uri) {
-		if (TypeUtils::isNull($uri) || empty($uri))
+		if (is_null($uri) || empty($uri))
 			$uri = '/';
 		$this->currentMethod = 'POST';
 		$data = sprintf("%s %s HTTP/%s%s%s%s", $this->currentMethod, $uri, $this->httpVersion, HTTP_CRLF, $this->_assembleRequestHeaders(), HTTP_CRLF);
@@ -828,16 +828,16 @@ class HttpClient extends SocketClient
 			$body = '';
 			if (strtolower($this->getResponseHeader('Transfer-Encoding')) != 'chunked' && !$this->keepAlive)
 				$body = parent::readAllContents();
-			else if (!TypeUtils::isNull($this->getResponseHeader('Content-Length'))) {
-				$contentLength = TypeUtils::parseInteger($this->getResponseHeader('Content-Length'));
+			else if (!is_null($this->getResponseHeader('Content-Length'))) {
+				$contentLength = intval($this->getResponseHeader('Content-Length'));
 				$body = parent::read($contentLength);
-			} else if (!TypeUtils::isNull($this->getResponseHeader('Transfer-Encoding')))
+			} else if (!is_null($this->getResponseHeader('Transfer-Encoding')))
 				if ($this->getResponseHeader('Transfer-Encoding') == 'chunked') {
-					$chunkSize = TypeUtils::parseInteger(hexdec(parent::readLine()));
+					$chunkSize = intval(hexdec(parent::readLine()));
 					while ($chunkSize > 0) {
 						$body .= parent::read($chunkSize);
 						parent::read(strlen(HTTP_CRLF));
-						$chunkSize = TypeUtils::parseInteger(hexdec(parent::readLine()));
+						$chunkSize = intval(hexdec(parent::readLine()));
 					}
 				}
 			$this->responseBody = $body;
@@ -920,7 +920,7 @@ class HttpClient extends SocketClient
 		if (parent::isConnected() && !$this->keepAlive)
 			parent::close();
 		// closes the connection if Connection header is equal to 'close'
-		if (!TypeUtils::isNull($this->getResponseHeader('Connection')))
+		if (!is_null($this->getResponseHeader('Connection')))
 			if ($this->keepAlive && strtolower($this->getResponseHeader('Connection')) == 'close') {
 				$this->keepAlive = FALSE;
 				parent::close();
@@ -939,7 +939,7 @@ class HttpClient extends SocketClient
 		if ($this->followRedirects && in_array($this->getStatus(), array(HTTP_STATUS_MOVED_PERMANENTLY, HTTP_STATUS_FOUND, HTTP_STATUS_SEE_OTHER))) {
 			// get the Location response header
 			$uri = $this->getResponseHeader('Location');
-			if (!TypeUtils::isNull($uri) && !empty($uri)) {
+			if (!is_null($uri) && !empty($uri)) {
 				$Url = new Url($uri);
 				$redirectHost = $Url->getHost();
 				$redirectPort = TypeUtils::ifNull($Url->getPort(), HTTP_DEFAULT_PORT);

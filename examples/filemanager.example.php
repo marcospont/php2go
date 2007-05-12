@@ -43,7 +43,7 @@
 	 * open using READ_BINARY mode ("rb")
 	 */
 	println('<b>Display the contents of a file, line by line</b>');
-	$mgr->open('resources/menu.sql', FILE_MANAGER_READ_BINARY);
+	$mgr->open('sql/menu.sql', FILE_MANAGER_READ_BINARY);
 	print('<pre>');
 	while ($line = $mgr->readLine()) {
 		print($line);

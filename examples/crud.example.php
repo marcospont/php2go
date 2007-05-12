@@ -38,10 +38,10 @@
 	$db =& Db::getInstance();
 	$tables = $db->getTables();
 	if (!in_array('people', $tables)) {
-		PHP2Go::raiseError("The <i>people</i> table was not found! Please run <i>people.sql</i>, located at the <i>ROOT/examples/resources</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
+		PHP2Go::raiseError("The <i>people</i> table was not found! Please run <i>people.sql</i>, located at the <i>ROOT/examples/sql</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
 	}
 	if (!in_array('country', $tables)) {
-		PHP2Go::raiseError("The <i>country</i> table was not found! Please run <i>country.sql</i>, located at the <i>ROOT/examples/resources</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
+		PHP2Go::raiseError("The <i>country</i> table was not found! Please run <i>country.sql</i>, located at the <i>ROOT/examples/sql</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
 	}
 
 	/**
@@ -206,12 +206,13 @@
 	/**
 	 * This action is used to list the records currently stored in the "people" table
 	 */
-	function listAction(&$doc) {
+	function listAction(&$doc, $msg='') {
 		/**
 		 * Create and configure an instance of the Report class
 		 */
 		$report = new Report('resources/report.people.xml',  'resources/report.people.tpl', $doc);
 		$report->setLineHandler('lineHandler');
+		$report->Template->assign('message', $msg);
 		$doc->assignByRef('main', $report);
 	}
 
@@ -240,11 +241,30 @@
 			listAction($doc);
 			return;
 		}
-		/**
-		 * Pick up a database connection, and perform a delete operation in the
-		 * "people" table, based on the provided record id.
-		 */
 		$db =& Db::getInstance();
+		/**
+		 * Check integrity against other
+		 * example tables that reference
+		 * this record
+		 */
+		$ref = array();
+		$tables = $db->getTables();
+		if (in_array('projects', $tables))
+			$ref['projects'] = 'id_manager';
+		if (in_array('projects_people', $tables))
+			$ref['projects_people'] = 'id_people';
+		if (!empty($ref)) {
+			$res = @$db->checkIntegrity('people', 'id_people', $id, $ref);
+			if (!$res) {
+				listAction($doc, "This record can't be deleted!");
+				return;
+			}
+		}
+		/**
+		 * Perform a delete operation in the
+		 * "people" table, based on the provided record id.
+		 * @var $db Db
+		 */
 		$db->delete('people', 'id_people = ' . $id);
 		/**
 		 * Redirect after the execution of the delete operation, preventing

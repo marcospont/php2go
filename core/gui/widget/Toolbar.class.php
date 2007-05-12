@@ -52,7 +52,7 @@ define('TOOLBAR_MODE_LINKS', 3);
  * # class : toolbar CSS class
  * # horizontal : TRUE or FALSE (vertical)
  * # width : toolbar width
- * # items : toolbar items
+ * # items : toolbar items (mandatory)
  * # itemClass : CSS class for toolbar items
  * # itemHeight : height for the toolbar items
  * # descriptionAlign : align of the layer used to show the item's description when the mouse is over it
@@ -61,6 +61,7 @@ define('TOOLBAR_MODE_LINKS', 3);
  * # activeClass : CSS class for the active toolbar item
  *
  * @package gui
+ * @subpackage widget
  * @uses Template
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
@@ -89,12 +90,13 @@ class Toolbar extends Widget
 	}
 
 	/**
-	 * Merges user defined attributes with default ones
+	 * Returns the default values for
+	 * the toolbar's attributes
 	 *
-	 * @param array $attrs Toolbar attributes
+	 * @return array Default attributes
 	 */
-	function loadAttributes($attrs) {
-		$defaults = array(
+	function getDefaultAttributes() {
+		return array(
 			'id' => PHP2Go::generateUniqueId(parent::getClassName()),
 			'mode' => TOOLBAR_MODE_LINKS,
 			'align' => 'center',
@@ -103,7 +105,15 @@ class Toolbar extends Widget
 			'descriptionAlign' => 'center',
 			'activeIndex' => NULL
 		);
-		$attrs = array_merge($defaults, $attrs);
+	}
+
+	/**
+	 * Applies the necessary transformation on
+	 * attributes before loading them
+	 *
+	 * @param array $attrs Toolbar attributes
+	 */
+	function loadAttributes($attrs) {
 		if (TypeUtils::isInteger($attrs['width']))
 			$attrs['width'] .= 'px';
 		if (TypeUtils::isInteger($attrs['itemHeight']))

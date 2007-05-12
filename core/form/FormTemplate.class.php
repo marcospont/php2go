@@ -98,27 +98,22 @@ class FormTemplate extends Form
 	}
 
 	/**
-	 * Set the display settings of the validation errors summary
+	 * Configures how validation error(s) should be displayed
 	 *
 	 * The {@link FORM_CLIENT_ERROR_DHTML} mode will only be enabled
 	 * if the $clientContainerId argument is not empty.
 	 *
-	 * @param string $serverPlaceHolder Template placeholder to display server-side errors
-	 * @param int $clientMode Display mode to the client validation errors ({@link FORM_CLIENT_ERROR_ALERT} or {@link FORM_CLIENT_ERROR_DHTML})
-	 * @param string $clientContainerId Element ID used to display client validation errors (when $mode=={@link FORM_CLIENT_ERROR_DHTML})
+	 * @param string $serverPlaceHolder Template placeholder to display server-side error(s)
+	 * @param int $clientMode Display mode to the client validation error(s) ({@link FORM_CLIENT_ERROR_ALERT} or {@link FORM_CLIENT_ERROR_DHTML})
+	 * @param string $clientContainerId Element ID used to display client validation error(s) (when $mode=={@link FORM_CLIENT_ERROR_DHTML})
+	 * @param bool $showAll Show all errors or just the first one
 	 */
-	function setErrorDisplayOptions($serverPlaceHolder, $clientMode, $clientContainerId='') {
+	function setErrorDisplayOptions($serverPlaceHolder, $clientMode=NULL, $clientContainerId='', $showAll=TRUE) {
 		$this->errorPlaceHolder = $serverPlaceHolder;
-		if ($clientMode == FORM_CLIENT_ERROR_DHTML && !empty($clientContainerId)) {
-			$this->clientErrorOptions = array(
-				'mode' => FORM_CLIENT_ERROR_DHTML,
-				'placeholder' => $clientContainerId
-			);
-		} else {
-			$this->clientErrorOptions = array(
-				'mode' => FORM_CLIENT_ERROR_ALERT
-			);
-		}
+		if (in_array($clientMode, array(FORM_CLIENT_ERROR_ALERT, FORM_CLIENT_ERROR_DHTML)))
+			$this->clientErrorOptions['mode'] = $clientMode;
+		$this->clientErrorOptions['placeholder'] = $clientContainerId;
+		$this->clientErrorOptions['showAll'] = (bool)$showAll;
 	}
 
 	/**
@@ -167,10 +162,14 @@ class FormTemplate extends Form
 		$this->Template->setCurrentBlock(TP_ROOTBLOCK);
 		$this->Template->assign('errorStyle', parent::getErrorStyle());
 		if (isset($this->errorPlaceHolder) && ($errors = parent::getFormErrors())) {
-			$mode = @$this->errorStyle['list_mode'];
-			$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br>", $errors));
-			$this->Template->assign('errorDisplay', " style=\"display:block\"");
-			$this->Template->assign($this->errorPlaceHolder, @$this->errorStyle['header_text'] . $errors);
+			if ($this->clientErrorOptions['showAll']) {
+				$mode = @$this->errorStyle['list_mode'];
+				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br>", $errors));
+				$this->Template->assign('errorDisplay', " style=\"display:block\"");
+				$this->Template->assign($this->errorPlaceHolder, @$this->errorStyle['header_text'] . $errors);
+			} else {
+				$this->Template->assign($this->errorPlaceHolder, $errors[0]);
+			}
 		} else {
 			$this->Template->assign('errorDisplay', " style=\"display:none\"");
 		}
@@ -256,10 +255,9 @@ class FormTemplate extends Form
 	 */
 	function _loadGlobalSettings($settings) {
 		parent::_loadGlobalSettings($settings);
-		if (isset($settings['ERRORS']['CLIENT_MODE']) && isset($settings['ERRORS']['TEMPLATE_PLACEHOLDER'])) {
-			$mode = @constant($settings['ERRORS']['CLIENT_MODE']);
-			if ($mode)
-				$this->setErrorDisplayOptions($settings['ERRORS']['TEMPLATE_PLACEHOLDER'], $mode, @$settings['ERRORS']['CLIENT_CONTAINER']);
+		if (is_array(@$settings['ERRORS'])) {
+			$showAll = (array_key_exists('SHOW_ALL', $settings['ERRORS']) ? (bool)$settings['ERRORS']['SHOW_ALL'] : TRUE);
+			$this->setErrorDisplayOptions(@$settings['ERRORS']['TEMPLATE_PLACEHOLDER'], @constant($settings['ERRORS']['CLIENT_MODE']), @$settings['ERRORS']['CLIENT_CONTAINER'], $showAll);
 		}
 	}
 
@@ -275,8 +273,10 @@ class FormTemplate extends Form
 	 */
 	function _loadXmlSettings($tag, $attrs) {
 		parent::_loadXmlSettings($tag, $attrs);
-		if ($tag == 'ERRORS')
-			$this->setErrorDisplayOptions(@$attrs['TPLPLACEHOLDER'], @constant($attrs['CLIENTMODE']), @$attrs['CLIENTCONTAINER']);
+		if ($tag == 'ERRORS') {
+			$showAll = (isset($attrs['SHOWALL']) ? resolveBooleanChoice($attrs['SHOWALL']) : TRUE);
+			$this->setErrorDisplayOptions(@$attrs['TPLPLACEHOLDER'], @constant($attrs['CLIENTMODE']), @$attrs['CLIENTCONTAINER'], $showAll);
+		}
 	}
 }
 ?>

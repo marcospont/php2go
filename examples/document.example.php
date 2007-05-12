@@ -43,14 +43,15 @@
 	 */
 
 	// title of the page
-	$doc->setTitle('DOCUMENT EXAMPLE PAGE');
-	// use or not use browser cache
-	$doc->setCache(TRUE);
-	// page charset. defaults to charset from the main config
-	$doc->setCharset('iso-8859-1');
+	$doc->setTitle('Document Example Page');
+	$doc->appendTitle(date('d/m/Y H:i:s'), TRUE, '»');
 	// set language. defaults to language from the main config
 	$doc->setLanguage('en-us');
-	// set HTTP compression using gzip
+	// page charset. defaults to charset from the main config
+	$doc->setCharset('iso-8859-1');
+	// enable or not the browser cache
+	$doc->setCache(TRUE);
+	// enable or not output compression
 	$doc->setCompression(TRUE, 9);
 	// add a javascript file
 	$doc->addScript("resources/javascript.example.js");
@@ -64,13 +65,16 @@
 	$doc->addStyle("resources/cssprint.example.css", 'print');
 	// associate this document to an RSS feed
 	$doc->addAlternateLink('application/rss+xml', "feedcreator.example.php", "Feed Creator example");
+	// append HTML content in the end of the HEAD tag
+	$doc->appendHeaderContent("<!-- extra head content -->");
 	// configure BODY tag attributes
-	$doc->addBodyCfg(array('topmargin'=>0, 'leftmargin'=>0));
+	$doc->addBodyCfg(array('style' => 'margin:0'));
 	// attach body events
-	$doc->attachBodyEvent('onLoad', "testFunction()");
-	$doc->attachBodyEvent('onBeforeUnload', "return confirm(\"Click OK to unload this window...\")");
+	$doc->attachBodyEvent('onload', "testFunction()");
+	$doc->attachBodyEvent('onbeforeunload', "return confirm(\"Click OK to unload this window...\")");
+	$doc->attachBodyEvent('oncontextmenu', "return false;");
 	// append HTML content in the start of the BODY tag
-	$doc->appendBodyContent("<!-- extra body content -->", BODY_START);
+	$doc->appendBodyContent("<!-- extra body content -->", BODY_END);
 
 	/**
 	 * create a new DocumentElement instance to build the header slot

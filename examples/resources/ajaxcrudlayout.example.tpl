@@ -110,7 +110,7 @@
 	/**
 	 * Routine used to request the deletion of a given person
 	 */
-	function deletePerson(id) {		
+	function deletePerson(id) {
 		// display confirmation dialog
 		if (!confirm("Are you sure?"))
 			return;
@@ -134,7 +134,7 @@
 		});
 		request.send();
 	}
-	
+
     /**
      * Used to verify if at least one checkbox is checked
      */
@@ -151,10 +151,10 @@
     	// reset form if we're deleting the record being edited
     	if (val.indexOf($('id_people').value) != -1) {
 			$('id_people').value = '';
-			Form.reset($('form'));    		
+			Form.reset($('form'));
     	}
     	return true;
-    }	
+    }
 
 </script>
 
@@ -177,7 +177,7 @@
       <div id="add"><button id="btnAdd" name="add" type="button" onClick="prepareAddPerson()">New</button>&nbsp;</div>
       <div id="operations">
         <select id="operation" name="operation">
-          <option value="delete">Delete selected</option>
+          <option value="delete" selected>Delete selected</option>
         </select>&nbsp;<button id="btnOperate" name="operate" type="submit" onClick="return verifyPersonBoxes();">Ok</button>
       </div><br style="clear:both;">
       <div id="people_list" style="border:1px solid #bfbfc9;height:310px;overflow:auto;">
@@ -192,13 +192,13 @@
 				throbber: 'throbber_save',
 				params: {action: 'multiple'},
 				method: 'POST',
-				onJSONResult: function(response) { 
+				onJSONResult: function(response) {
 					var msg = $('msg');
 					msg.update(response.json);
 					msg.show();
 				}
 			});
-			ajax.send();
+			return ajax;
 		});
     </script>
   </div>

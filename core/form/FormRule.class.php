@@ -28,7 +28,19 @@
  */
 
 import('php2go.datetime.Date');
-import('php2go.util.Statement');
+
+/**
+ * When a field is used as comparison peer
+ */
+define('RULE_PEER_FIELD', 'field');
+/**
+ * When a literal value is used as comparison peer
+ */
+define('RULE_PEER_VALUE', 'value');
+/**
+ * When the rule doesn't rely on a peer to execute
+ */
+define('RULE_PEER_NONE', 'none');
 
 /**
  * Validation rule associated with a form field
@@ -53,7 +65,6 @@ import('php2go.util.Statement');
  *
  * @package form
  * @uses Date
- * @uses Statement
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
@@ -132,7 +143,7 @@ class FormRule extends PHP2Go
 		$this->type = strtoupper($type);
 		if (!empty($field))
 			$this->field = $field;
-		if (!TypeUtils::isNull($value, TRUE))
+		if ($value !== NULL)
 			$this->value = $value;
 		if (!empty($compareType))
 			$this->compareType = strtoupper($compareType);
@@ -169,66 +180,12 @@ class FormRule extends PHP2Go
 	}
 
 	/**
-	 * Set the rule's owner field
-	 *
-	 * @param FormField &$Field Owner field
-	 */
-	function setOwnerField(&$Field) {
-		$this->_Field =& $Field;
-	}
-
-	/**
 	 * Get the type of the rule
 	 *
 	 * @return string
 	 */
 	function getType() {
 		return $this->type;
-	}
-
-	/**
-	 * Get the name of the peer field
-	 *
-	 * @return string
-	 */
-	function getTargetField() {
-		return $this->field;
-	}
-
-	/**
-	 * Get the peer value
-	 *
-	 * @return mixed
-	 */
-	function getValueArgument() {
-		return $this->value;
-	}
-
-	/**
-	 * Get comparison data type
-	 *
-	 * @return string
-	 */
-	function getCompareType() {
-		return $this->compareType;
-	}
-
-	/**
-	 * Get error message
-	 *
-	 * @return string
-	 */
-	function getMessage() {
-		return $this->message;
-	}
-
-	/**
-	 * Get the rule's owner field
-	 *
-	 * @return FormField
-	 */
-	function &getOwnerField() {
-		return $this->_Field;
 	}
 
 	/**
@@ -241,6 +198,127 @@ class FormRule extends PHP2Go
 		if (TypeUtils::isInstanceOf($this->_Field, 'FormField'))
 			$result =& $this->_Field->getOwnerForm();
 		return $result;
+	}
+
+	/**
+	 * Get the rule's owner field
+	 *
+	 * @return FormField
+	 */
+	function &getOwnerField() {
+		return $this->_Field;
+	}
+
+	/**
+	 * Set the rule's owner field
+	 *
+	 * @param FormField &$Field Owner field
+	 */
+	function setOwnerField(&$Field) {
+		$this->_Field =& $Field;
+	}
+
+	/**
+	 * Gets the value of the owner field
+	 *
+	 * Returns FALSE when the owner field is invalid.
+	 *
+	 * @return mixed
+	 */
+	function getOwnerValue() {
+		$Owner =& $this->getOwnerField();
+		if (is_null($Owner))
+			return FALSE;
+		$value = $Owner->getValue();
+		if ($Owner->isA('CheckField') && $value == 'F')
+			$value = '';
+		return $value;
+	}
+
+	/**
+	 * Gets the type of the peer associated with this rule
+	 *
+	 * Rules of type REQIF doesn't have a peer. So, they'll
+	 * return {@link RULE_PEER_NONE}.
+	 *
+	 * @return string
+	 */
+	function getPeerType() {
+		if (!empty($this->field))
+			return RULE_PEER_FIELD;
+		elseif ($this->type != 'REQIF')
+			return RULE_PEER_VALUE;
+		return RULE_PEER_NONE;
+	}
+
+	/**
+	 * Gets the value of the peer field
+	 *
+	 * Returns NULL when there's no peer field
+	 * defined for this rule, or when it is invalid.
+	 *
+	 * @return FormField|NULL
+	 */
+	function &getPeerField() {
+		$null = NULL;
+		if (!empty($this->field)) {
+			$Form =& $this->getOwnerForm();
+			if (!is_null($Form)) {
+				$Peer =& $Form->getField($this->field);
+				if (!is_null($Peer)) {
+					return $Peer;
+				}
+			}
+		}
+		return $null;
+	}
+
+	/**
+	 * Gets the value of the rule's peer field
+	 *
+	 * Returns FALSE when there's no peer field
+	 * or when the declare peer field is invalid.
+	 *
+	 * @return mixed
+	 */
+	function getPeerValue() {
+		$Peer =& $this->getPeerField();
+		if (!is_null($Peer)) {
+			if (!$Peer->dataBind)
+				$Peer->onDataBind();
+			$value = $Peer->getValue();
+			if ($Peer->isA('CheckField') && $value == 'F')
+				$value = '';
+			return $value;
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Return the rule's comparison value
+	 *
+	 * @return string
+	 */
+	function getComparisonValue() {
+		return $this->value;
+	}
+
+	/**
+	 * Get comparison data type
+	 *
+	 * @return string
+	 */
+	function getComparisonType() {
+		return $this->compareType;
+	}
+
+	/**
+	 * Get error message
+	 *
+	 * @return string
+	 */
+	function getMessage() {
+		return $this->message;
 	}
 
 	/**
@@ -294,22 +372,22 @@ class FormRule extends PHP2Go
 			if (!ereg("^REGEX$|^REQIF$|^((REQIF)?(EQ|NEQ|GT|LT|GOET|LOET))$|^JSFUNC$", $this->type)) {
 				$this->_valid = FALSE;
 			// on a conditional obligatoriness rule, with or without comparison, a peer field is mandatory
-			} elseif (ereg("^REQIF(EQ|NEQ|GT|LT|LOET|GOET)?$", $this->type, $matches) && (TypeUtils::isNull($this->field) || $this->field == $this->_Field->getName())) {
+			} elseif (ereg("^REQIF(EQ|NEQ|GT|LT|LOET|GOET)?$", $this->type, $matches) && (is_null($this->field) || $this->field == $this->_Field->getName())) {
 				$this->_valid = FALSE;
 			// on a conditional obligatoriness rule with comparison, the peer value is mandatory
-			} elseif (ereg("^REQIF(EQ|NEQ|GT|LT|LOET|GOET)$", $this->type, $matches) && TypeUtils::isNull($this->value, TRUE)) {
+			} elseif (ereg("^REQIF(EQ|NEQ|GT|LT|LOET|GOET)$", $this->type, $matches) && $this->value === NULL) {
 				$this->_valid = FALSE;
 			// on a comparison rule, a peer field or value is mandatory
-			} elseif (ereg("^EQ|NEQ|GT|LT|GOET|LOET$", $this->type) && (TypeUtils::isNull($this->field) || $this->field == $this->_Field->getName()) && TypeUtils::isNull($this->value)) {
+			} elseif (ereg("^EQ|NEQ|GT|LT|GOET|LOET$", $this->type) && (is_null($this->field) || $this->field == $this->_Field->getName()) && is_null($this->value)) {
 				$this->_valid = FALSE;
 			// on a regular expression rule, the peer value is mandatory
-			} elseif ($this->type == 'REGEX' && TypeUtils::isNull($this->value)) {
+			} elseif ($this->type == 'REGEX' && is_null($this->value)) {
 				$this->_valid = FALSE;
 			// on a rule based on a custom function, the function body is mandatory
-			} elseif ($this->type == 'JSFUNC' && TypeUtils::isNull($this->functionBody)) {
+			} elseif ($this->type == 'JSFUNC' && is_null($this->functionBody)) {
 				$this->_valid = FALSE;
 			// validates the comparison data type
-			} elseif (!TypeUtils::isNull($this->compareType) && !preg_match("/^(DATE|INTEGER|FLOAT|CURRENCY)$/", $this->compareType)) {
+			} elseif (!is_null($this->compareType) && !preg_match("/^(DATE|INTEGER|FLOAT|CURRENCY)$/", $this->compareType)) {
 				$this->compareType = 'STRING';
 			} else {
 				if ($this->type == 'REQIF')

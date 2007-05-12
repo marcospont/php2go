@@ -1,7 +1,4 @@
-USE test;
-
 DROP TABLE IF EXISTS client;
-
 CREATE TABLE client (
   client_id int(11) unsigned NOT NULL auto_increment,
   name varchar(100) NOT NULL default '',
@@ -9,8 +6,7 @@ CREATE TABLE client (
   category varchar(20) NOT NULL default '',
   active smallint(1) NOT NULL default '1',
   PRIMARY KEY  (client_id)
-) TYPE=MyISAM COMMENT='Clients';
-
+) COMMENT='Clients';
 INSERT INTO client (name,address,category,active) VALUES ('Foo','5th Avenue, 125','Master',1);
 INSERT INTO client (name,address,category,active) VALUES ('Bar','4th Avenue, 333','Common',1);
 INSERT INTO client (name,address,category,active) VALUES ('Baz','Wall Street, 2344','Master',1);

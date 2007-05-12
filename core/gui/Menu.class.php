@@ -28,6 +28,15 @@
  */
 
 /**
+ * Absolute positioning
+ */
+define('MENU_ABSOLUTE', 1);
+/**
+ * Relative positioning
+ */
+define('MENU_RELATIVE', 2);
+
+/**
  * Base class to build tree based menus
  *
  * Menu items can be loaded either from the database or from a
@@ -163,7 +172,7 @@ class Menu extends Component
 		$this->_Db = Db::getInstance($connectionId);
 		$this->rootSql = $rootSql;
 		$this->childSql = ereg_replace("~([^~])~", "~".strtoupper("\\1")."~", $childSql);
-		$this->limit = TypeUtils::parseIntegerPositive($limit);
+		$this->limit = abs(intval($limit));
 	}
 
 	/**

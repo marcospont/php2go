@@ -119,7 +119,7 @@ class System extends PHP2Go
 	 * @static
 	 */
 	function setIni($key, $value) {
-		return @ini_set(TypeUtils::parseString($key), $value);
+		return @ini_set(strval($key), $value);
 	}
 
 	/**
@@ -129,19 +129,20 @@ class System extends PHP2Go
 	 * @static
 	 */
 	function getTempDir() {
-		if (System::isWindows())
+		if (System::isWindows()) {
 			if (Environment::has('TEMP'))
 				return Environment::get('TEMP');
-			else if (Environment::has('TMP'))
+			elseif (Environment::has('TMP'))
 				return Environment::get('TMP');
-			else if (Environment::has('windir'))
+			elseif (Environment::has('windir'))
 				return Environment::get('windir') . '\temp';
 			else
 				return Environment::get('SystemRoot') . '\temp';
-		else if (Environment::has('TMPDIR'))
+		} elseif (Environment::has('TMPDIR')) {
 			return Environment::get('TMPDIR');
-		else
+		} else {
 			return '/tmp';
+		}
 	}
 
 	/**

@@ -65,12 +65,12 @@ function php2GoErrorHandler ($errorCode, $errorMessage, $fileName, $lineNumber, 
 function php2GoAssertionHandler ($fileName, $lineNumber, $expressionCode) {
 	import('php2go.base.Php2GoError');
 	$userFile = Registry::get('PHP2Go_assertion_file');
-	if (!TypeUtils::isNull($userFile)) {
+	if (!is_null($userFile)) {
 		$fileName = $userFile;
 		Registry::remove('PHP2Go_assertion_file');
 	}
 	$userLine = Registry::get('PHP2Go_assertion_line');
-	if (!TypeUtils::isNull($userLine)) {
+	if (!is_null($userLine)) {
 		$lineNumber = $userLine;
 		Registry::remove('PHP2Go_assertion_line');
 	}
@@ -97,14 +97,14 @@ function dbErrorHandler($dbms, $function, $errorCode, $errorMessage, $p1=FALSE, 
 	if (error_reporting() != 0) {
 		switch ($function) {
 			case 'EXECUTE':
-				$extra = "$function (" . (TypeUtils::isArray($p1) ? exportVariable($p1) : "\"" . $p1 . "\"") . ($p2 ? "," . (TypeUtils::isArray($p2) ? exportVariable($p2) : "\"" . $p2 . "\"") . ")|" : ")");
+				$extra = "$function (" . (is_array($p1) ? exportVariable($p1) : "\"" . $p1 . "\"") . ($p2 ? "," . (is_array($p2) ? exportVariable($p2) : "\"" . $p2 . "\"") . ")|" : ")");
 				break;
 			case 'PCONNECT':
 			case 'CONNECT' :
 				$extra = "$function ($p1, '****', '****', $p2)";
 				break;
 			default:
-				$extra = "$function (" . (TypeUtils::isArray($p1) ? exportVariable($p1) : "\"{$p1}\"") . ($p2 ? "," . (TypeUtils::isArray($p2) ? exportVariable($p2) : "\"{$p2}\"") . ")" : ")");
+				$extra = "$function (" . (is_array($p1) ? exportVariable($p1) : "\"{$p1}\"") . ($p2 ? "," . (is_array($p2) ? exportVariable($p2) : "\"{$p2}\"") . ")" : ")");
 				break;
 		}
 		$Error = new PHP2GoError();
