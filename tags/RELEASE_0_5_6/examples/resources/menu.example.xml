@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<menu>
+	<item caption="Products" link="">
+		<item caption="Books »" link="">
+			<item caption="Fiction" link="?op=Books/Fiction" target="contentFrame"/>
+			<item caption="Non-Fiction" link="?op=Books/Non-Fiction" target="contentFrame"/>
+		</item>
+		<item caption="Toys" link="?op=Toys" target="contentFrame"/>
+		<item caption="Audio &amp; Video" link="?op=Audio/Video" target="contentFrame"/>
+	</item>
+	<item caption="Online Store" link="">
+		<item caption="About us" link="?op=about" target="contentFrame"/>
+		<item caption="Order information" link="?op=Order Info" target="contentFrame"/>
+		<item caption="Online support" link="?op=Support" target="contentFrame"/>
+	</item>
+	<item caption="My Cart" link="?op=Cart" target="contentFrame"/>
+	<item caption="Logout" link="?op=Logout" target="contentFrame"/>
+</menu>

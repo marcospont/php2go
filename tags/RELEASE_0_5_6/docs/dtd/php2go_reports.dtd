@@ -1,0 +1,102 @@
+<!-- This file is the document type specification for the PHP2Go reports API. -->
+<!-- $Id$ -->
+<!ENTITY % boolean "( T | F )">
+<!ENTITY % identifier "NMTOKEN">
+<!ENTITY % word "NMTOKEN">
+<!ENTITY % number "CDATA">
+<!ENTITY % text "CDATA">
+<!ENTITY % colname "NMTOKENS">
+<!ENTITY % align "( left | center | right )">
+<!ENTITY % mask "( DIGIT | INTEGER | FLOAT | CURRENCY | CPFCNPJ | DATE | TIME | URL | EMAIL | WORD | ZIP )">
+<!ENTITY % pagingstyle "( REPORT_PAGING_DEFAULT | REPORT_PREVNEXT | REPORT_FIRSTPREVNEXTLAST )">
+<!ENTITY % events "( onChangePage | onSort | onSearch )">
+<!ELEMENT report ( layout?, variable*, datasource, datafilters? )>
+<!ATTLIST report
+	title %text; #IMPLIED
+	baseuri %text; #IMPLIED
+	debug %boolean; #IMPLIED
+>
+<!ELEMENT layout ( pagination?, style?, listener*, icon*, columns? )>
+<!ATTLIST layout
+	grid %boolean; "F"
+	numcols %number; "1"
+	printable %boolean; "F"
+	pagebreak %number; #IMPLIED
+	sortable %boolean; "T"
+	emptytemplate %boolean; "T"
+	emptyblock %word; #IMPLIED
+>
+<!ELEMENT pagination ( param* )>
+<!ATTLIST pagination
+	pagesize %number; "30"
+	visiblepages %number; "10"
+	style %pagingstyle; "REPORT_PAGING_DEFAULT"
+>
+<!ELEMENT style EMPTY>
+<!ATTLIST style
+	link %text; #IMPLIED
+	filter %text; #IMPLIED
+	button %text; #IMPLIED
+	title %text; #IMPLIED
+	header %text; #IMPLIED
+	altstyle %text; #IMPLIED
+	highlight %text; #IMPLIED
+	help %text; #IMPLIED
+>
+<!ELEMENT listener ( #PCDATA )>
+<!ATTLIST listener
+	event %events; #REQUIRED
+	action %text; #IMPLIED
+>
+<!ELEMENT icon EMPTY>
+<!ATTLIST icon
+	name %word; #REQUIRED
+	path %text; #REQUIRED
+>
+<!ELEMENT variable EMPTY>
+<!ATTLIST variable
+	name %word; #REQUIRED
+	default %text; #IMPLIED
+	searchorder %word; #IMPLIED
+>
+<!ELEMENT columns ( column* )>
+<!ATTLIST columns
+	sizes %text; #IMPLIED
+	group %colname; #IMPLIED
+	groupdisplay %colname; #IMPLIED
+>
+<!ELEMENT column EMPTY>
+<!ATTLIST column
+	name %colname; #REQUIRED
+	alias %text; #IMPLIED
+	help %text; #IMPLIED
+	align %align; #IMPLIED
+	hidden %boolean; #IMPLIED
+	sortable %boolean; #IMPLIED
+>
+<!ELEMENT datasource ( procedure | ( fields, tables, clause?, groupby?, orderby?, limit? ) )>
+<!ATTLIST datasource
+	connection %identifier; #IMPLIED
+	optimizecount %boolean; #IMPLIED
+>
+<!ELEMENT procedure ( #PCDATA )>
+<!ATTLIST procedure
+	cursorname %word; #IMPLIED
+>
+<!ELEMENT fields ( #PCDATA )>
+<!ELEMENT tables ( #PCDATA )>
+<!ELEMENT clause ( #PCDATA )>
+<!ELEMENT groupby ( #PCDATA )>
+<!ELEMENT orderby ( #PCDATA )>
+<!ELEMENT datafilters ( datafilter+ )>
+<!ELEMENT datafilter EMPTY>
+<!ATTLIST datafilter
+	field %colname; #REQUIRED
+	label %text; #REQUIRED
+	mask %mask; #IMPLIED
+>
+<!ELEMENT param EMPTY>
+<!ATTLIST param
+	name %word; #REQUIRED
+	value %text; #REQUIRED
+>
