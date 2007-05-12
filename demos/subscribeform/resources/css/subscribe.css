@@ -1,0 +1,73 @@
+.header {
+	background-color: #D4D0C8;
+	font-family: Verdana;
+	font-size: 12px;	
+	color: #555555;
+	border: 1px #000000 solid
+}
+
+.menu {
+	background-color: #a5c8ef;
+	font-family: Verdana;
+	font-size: 12px;
+	padding: 3px;
+	color: #000000;
+	border: 1px #000000 solid
+}
+
+.footer {
+	background-color: #A0D3A0;
+	font-family: Verdana;
+	font-size: 12px;
+	padding: 3px;
+	color: #000000;
+	border: 1px #000000 solid
+}
+
+.main {
+	background-color: #FFFFFF;
+	font-family: Verdana;
+	font-size: 12px;
+	padding: 3px;
+	color: #000000;
+	border: 1px #000000 solid	
+}
+
+.input {
+	font-family: Verdana;
+	font-size: 11px;
+	font-weight: bolder;
+	color: #333333;
+	border: 1px #000000 solid
+}
+
+.label {
+	font-family: Verdana;
+	font-size: 12px;
+	color: #000000
+}
+
+.button {
+	font-family: Verdana;
+	font-size: 12px;
+	background-color: #A5C8EF;
+	color: #000000
+}
+
+.simpletext {
+	font-family: Verdana;
+	font-size: 11px;
+	color: #000000
+}
+
+A {
+	font-family: Verdana;
+	font-size: 12px;
+	font-weight: bolder;
+	text-decoration: none;
+	color: #000000
+}
+
+A:hover {
+	text-decoration: underline
+}

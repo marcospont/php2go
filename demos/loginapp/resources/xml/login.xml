@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<form>
+	<section name="User Login" id="login">
+		<editfield name="login" label="Login" size="12" length="15" mask="LOGIN" required="T"/>
+		<passwdfield name="password" label="Password" size="10" length="15" required="T"/>
+		<buttons>
+			<button name="send" value="Send" type="SUBMIT"/>
+			<button name="reset" value="Reset" type="RESET"/>
+		</buttons>
+	</section>
+</form>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<form>
+	<section name="Subscribe Form" id="subscribe">
+		<editfield name="userip" label="Your IP" readonly="T" default="~REMOTE_ADDR~" size="20" length="20"/>
+		<editfield name="username" label="User Name" size="15" length="15" minlength="8" mask="LOGIN" required="T"/>
+		<passwdfield name="password" label="Choose Password" size="15" minlength="6" length="15" required="T"/>
+		<passwdfield name="password_verify" label="Verify Password" size="15" minlength="6" length="15" required="T">
+			<rule type="EQ" field="password" message="The password and verify password fields must be equal!"/>
+		</passwdfield>
+		<editfield name="email" label="E-mail" size="35" length="50" mask="EMAIL" required="T"/>
+		<editfield name="first_name" label="First Name" size="20" length="20" required="T"/>
+		<editfield name="last_name" label="Last Name" size="25" length="25" required="T"/>
+		<editfield name="company" label="Company" size="45" length="45" required="T"/>
+		<editfield name="position" label="Position" size="45" length="45"/>
+		<editfield name="salary" label="Salary" align="right" mask="CURRENCY" size="15" length="15" calculator="T"/>
+		<editfield name="website" label="Website" size="45" length="80" mask="URL" required="F">
+			<listener type="JS" event="onFocus" action="alert('Provide a valid URL address')"/>
+		</editfield>
+		<editfield name="phone" label="Phone (only numbers)" size="20" minlength="6" length="20" mask="INTEGER" required="F"/>
+		<editfield name="fax" label="Fax (only numbers)" size="20" minlength="6" length="20" mask="INTEGER" required="F"/>
+		<editfield name="birth" label="Birth Date (DD/MM/YYYY)" size="12" length="10" mask="DATE" required="T"/>
+		<combofield name="sex" label="Gender" required="T" nofirst="T">
+			<option value="1" caption="Male"/>
+			<option value="2" caption="Female"/>
+			<listener type="JS" event="onChange" action="alert('You\'ve changed the gender value!')"/>
+		</combofield>
+		<lookupfield name="country" label="Country" required="T">
+			<datasource>
+				<keyfield>id_country</keyfield>
+				<displayfield>name</displayfield>
+				<lookuptable>country</lookuptable>
+				<orderby>name</orderby>
+			</datasource>
+		</lookupfield>
+		<editfield name="zipcode" label="ZIP Code (9999-9999)" size="10" length="10" mask="ZIP44" required="F"/>
+		<radiofield name="source" label="Where did you find this site?" cols="2" required="T" style="empty">
+			<option value="1" caption="SourceForge.net"/>
+			<option value="2" caption="Freshmeat.net"/>
+			<option value="3" caption="HotScripts.com"/>
+			<option value="4" caption="DevScripts.com"/>
+			<option value="5" caption="DevShed.com"/>
+			<option value="6" caption="PHPBuilder.com"/>			
+		</radiofield>		
+		<buttons>
+			<button name="send" value="Send" type="SUBMIT"/>
+			<button name="reset" value="Reset" type="RESET"/>
+		</buttons>
+	</section>
+</form>
