@@ -269,7 +269,7 @@ class SearchForm extends Component
 	 */
 	function SearchForm($xmlFile, $templateFile=NULL, $formName, &$Doc, $tplIncludes=array()) {
 		parent::Component();
-		if (TypeUtils::isNull($templateFile)) {
+		if (is_null($templateFile)) {
 			import('php2go.form.FormBasic');
 			$this->Form = new FormBasic($xmlFile, $formName, $Doc);
 		} else {
@@ -690,7 +690,7 @@ class SearchForm extends Component
 			// string operators
 			elseif ($args['OPERATOR'] == 'STARTING' || $args['OPERATOR'] == 'ENDING' || $args['OPERATOR'] == 'CONTAINING') {
 				$clause = (isset($args['FIELDFUNC']) ? sprintf($args['FIELDFUNC'], $args['ALIAS']) : $args['ALIAS']);
-				$value = $this->_resolveValueCallback(@$args['VALUEFUNC'], TypeUtils::parseString($args['VALUE']));
+				$value = $this->_resolveValueCallback(@$args['VALUEFUNC'], strval($args['VALUE']));
 				if ($args['OPERATOR'] == 'ENDING' || $args['OPERATOR'] == 'CONTAINING')
 					$value = '%' . $value;
 				if ($args['OPERATOR'] == 'STARTING' || $args['OPERATOR'] == 'CONTAINING')
@@ -748,7 +748,7 @@ class SearchForm extends Component
 			return TRUE;
 		} else {
 			if (in_array($args['OPERATOR'], array('STARTING', 'CONTAINING', 'ENDING')) && isset($this->stringMinLength)) {
-				return (!TypeUtils::isNull($args['VALUE']) && strlen($args['VALUE']) >= $this->stringMinLength);
+				return (!is_null($args['VALUE']) && strlen($args['VALUE']) >= $this->stringMinLength);
 			} elseif (is_array($args['VALUE'])) {
 				return (!empty($args['VALUE']));
 			} else {

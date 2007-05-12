@@ -139,21 +139,13 @@ ColorPickerField.prototype.clear = function() {
 };
 
 /**
- * Enable the component
+ * Disables/enables the component
+ * @param {Boolean} b Flag value
  * @type void
  */
-ColorPickerField.prototype.enable = function() {
-	this.fld.disabled = false;
-	this.picker.setDisabled(false);
-};
-
-/**
- * Disable the component
- * @type void
- */
-ColorPickerField.prototype.disable = function() {
-	this.fld.disabled = true;
-	this.picker.setDisabled(true);
+ColorPickerField.prototype.setDisabled = function(b) {
+	this.fld.disabled = b;
+	this.picker.setDisabled(b);
 };
 
 /**
@@ -161,7 +153,7 @@ ColorPickerField.prototype.disable = function() {
  * @type void
  */
 ColorPickerField.prototype.focus = function() {
-	if (!this.fld.disabled) {
+	if (this.beforeFocus() && !this.fld.disabled) {
 		if (this.mode == 'flat')
 			this.picker.text.select();
 		else

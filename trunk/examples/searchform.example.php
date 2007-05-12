@@ -31,11 +31,12 @@
 	import('php2go.base.Document');
 	import('php2go.db.QueryBuilder');
 	import('php2go.form.SearchForm');
+	import('php2go.net.HttpRequest');
 
 	$db =& Db::getInstance();
 	$tables = $db->getTables();
 	if (!in_array('products', $tables)) {
-		PHP2Go::raiseError("The <i>products</i> table was not found! Please run <i>products.sql</i>, located at the <i>ROOT/examples/resources</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
+		PHP2Go::raiseError("The <i>products</i> table was not found! Please run <i>products.sql</i>, located at the <i>ROOT/examples/sql</i> folder.<br>P.S.: The creation script was designed for mySQL databases.", E_USER_ERROR, __FILE__, __LINE__);
 	}
 
 	/**
@@ -60,7 +61,7 @@
 	 * this routine is just illustrative, you can implement it in a great variety of ways...
 	 */
 	$action = HttpRequest::get('action');
-	if ($keepSearchVisible || TypeUtils::isNull($action) || $action != 'list') {
+	if ($keepSearchVisible || is_null($action) || $action != 'list') {
 
 		/**
 		 * create an instance of SearchForm

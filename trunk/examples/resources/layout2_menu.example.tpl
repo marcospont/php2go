@@ -1,19 +1,47 @@
-<!-- PHP2Go Example : page layout containing two slots : menu and main -->
-<!-- the main table, containing the page body -->
+<!-- PHP2Go Examples : php2go.gui.TreeMenu -->
+<style type="text/css">
+	#overall {
+		width: 780px;
+		border: 1px solid #bbb;
+		background-color: #f2f2f2;
+		height: 500px;
+		overflow: hidden;
+	}
+	#header {
+		background-color: #ccc;
+		font-family: Verdana;
+		font-size: 16px;
+		font-weight: bold;
+		padding-top: 10px;
+		padding-bottom: 10px;
+		padding-left: 10px;
+		clear: both;
+	}
+	#menu {
+		float: left;
+		width: 180px;
+		height: 100%;
+	}
+	#content {
+		float: left;
+		width: 598px;
+		height: 100%;
+		background-color: #fff;
+		padding-top: 10px;
+		text-align: center;
+		font-family: Verdana;
+		font-size: 14px;
+	}
+</style>
 {$menu}
-<table width="770" cellpadding="4" cellspacing="0" style="border:1px solid #bbb; background-color: #fff">
-  <tr>
-    <td class="sample_simple_text" colspan="2" align="center" style="height:30px;background-color:#ccc">
-      <b>[ PHP2Go Examples - php2go.gui.TreeMenu ]</b>
-    </td>
-  </tr>
-  <tr>
-    <td style="background-color:#f4f4f4;width:170px" valign="top">
-      <span class="sample_simple_text"><b>[ Menu ]</b></span>
-    </td>
-    <td style="height:400px;width:600px" valign="top" class="sample_medium_text">
-{$main}
-    </td>
-  </tr>
-</table>
-<!-- PHP2Go Example : layout_menu.example.tpl -->
+<div id="overall">
+  <div id="header">
+    Application Title
+  </div>
+  <div id="menu"></div>
+  <div id="content">
+<!-- if $p2g.get.op is not empty -->
+    You've choosen option {$p2g.get.op|@urldecode}
+<!-- end if -->
+  </div>
+</div>

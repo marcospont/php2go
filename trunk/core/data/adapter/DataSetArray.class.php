@@ -128,7 +128,7 @@ class DataSetArray extends DataAdapter
 	 * @return bool
 	 */
 	function loadSubSet($offset, $size, $arr) {
-		if (TypeUtils::isArray($arr)) {
+		if (is_array($arr)) {
 			$content = $arr;
 			if (empty($content)) {
 				$this->recordCount = 0;
@@ -238,7 +238,7 @@ class DataSetArray extends DataAdapter
 	 * @access private
 	 */
 	function _setFieldProperties() {
-		$this->recordType = TypeUtils::getType($this->fields);
+		$this->recordType = gettype($this->fields);
 		if ($this->recordType == 'array') {
 			$this->fieldNames = array_keys($this->fields);
 			$this->fieldCount = sizeof($this->fieldNames);

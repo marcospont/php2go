@@ -45,12 +45,18 @@
 		var $action = NULL;
 		var $request = array();
 		var $dbConn = NULL;
+		var $integrityRef = array();
 
 		function AjaxPeople() {
 			$this->action = @$_POST['action'];
 			$this->request = $_POST;
 			$this->dbConn =& Db::getInstance();
 			$this->dbConn->setFetchMode(ADODB_FETCH_ASSOC);
+			$tables = $this->dbConn->getTables();
+			if (in_array('projects', $tables))
+				$this->integrityRef['projects'] = 'id_manager';
+			if (in_array('projects_people', $tables))
+				$this->integrityRef['projects_people'] = 'id_people';
 		}
 
 		/**
@@ -149,13 +155,28 @@
 		function delete() {
 			$res = FALSE;
 			if (TypeUtils::isInteger($this->request['id_people'])) {
-				$res = @$this->dbConn->delete('people', 'id_people = ' . $this->request['id_people']);
+				/**
+				 * check integrity against other example tables
+				 * that reference the "people" table
+				 */
+				if (!$this->dbConn->checkIntegrity('people', 'id_people', $this->request['id_people'], $this->integrityRef)) {
+					$msg = "This person can't be deleted!";
+				}
+				/**
+				 * execute the delete statement
+				 */
+				elseif (!@$this->dbConn->delete('people', 'id_people = ' . $this->request['id_people'])) {
+					$msg = "Error deleting person: " . $this->dbConn->getError();
+				}
+				else {
+					$res = TRUE;
+				}
 			}
 			/**
 			 * the confirmation/error message is returned using the X-JSON header
 			 * list is returned in the response body
 			 */
-			header("X-JSON: " . JSONEncoder::encode(($res ? "Person successfuly deleted!" : "Error deleting person: " . $this->dbConn->getError())));
+			header("X-JSON: " . JSONEncoder::encode(($res ? "Person successfuly deleted!" : $msg)));
 			$tpl = $this->getList();
 			$tpl->display();
 		}
@@ -175,10 +196,18 @@
  			} else {
 				$this->dbConn->startTransaction();
 				foreach ($chk as $idx => $idPeople)
-					if (!($res = $this->dbConn->delete('people', 'id_people = ' . intval($idPeople))))
+					/* check integrity */
+					if (!($res = $this->dbConn->checkIntegrity('people', 'id_people', intval($idPeople), $this->integrityRef))) {
 						$this->dbConn->failTransaction();
+						$msg = "The person {$idPeople} can't be deleted!";
+					}
+					/* delete the record */
+					elseif (!($res = $this->dbConn->delete('people', 'id_people = ' . intval($idPeople)))) {
+						$this->dbConn->failTransaction();
+						$msg = $this->dbConn->getError();
+					}
 				$res = $this->dbConn->completeTransaction();
-				header("X-JSON: " . JSONEncoder::encode(($res ? "Person records deleted successfully!" : "Error deleting multiple person records: " . $this->dbConn->getError())));
+				header("X-JSON: " . JSONEncoder::encode(($res ? "Person records deleted successfully!" : "Error deleting multiple person records: " . $msg)));
 			}
 			$tpl = $this->getList();
 			$tpl->display();

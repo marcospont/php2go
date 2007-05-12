@@ -129,7 +129,7 @@ class CaptchaField extends FormField
 	 * @param bool $setting Enable/disable
 	 */
 	function setReadonly($setting=TRUE) {
-		if (TypeUtils::isTrue($setting)) {
+		if ($setting === TRUE) {
 			$this->attributes['READONLY'] = " readonly";
 			$this->readOnly = TRUE;
 		} else {
@@ -150,7 +150,7 @@ class CaptchaField extends FormField
 		if (!$verify)
 			Validator::addError(PHP2Go::getLangVal('ERR_FORM_CAPTCHA', $this->label));
 		$result &= $verify;
-		return TypeUtils::toBoolean($result);
+		return (bool)$result;
 	}
 
 	/**
@@ -201,7 +201,7 @@ class CaptchaField extends FormField
 			$this->imagePath = $attrs['IMAGEPATH'];
 		// image type
 		$type = @constant(@$attrs['IMAGETYPE']);
-		if (!TypeUtils::isNull($type, TRUE))
+		if ($type !== NULL)
 			$this->imageType = $type;
 	}
 

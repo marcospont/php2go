@@ -137,6 +137,13 @@ class LayerMenu extends Menu
 	var $height = 20;
 
 	/**
+	 * Menu positioning
+	 *
+	 * @var int
+	 */
+	var $positioning = MENU_ABSOLUTE;
+
+	/**
 	 * Left X coordinate (absolute position)
 	 *
 	 * @var int
@@ -233,6 +240,28 @@ class LayerMenu extends Menu
 	}
 
 	/**
+	 * Defines menu positioning
+	 *
+	 * @param int $pos {@link MENU_ABSOLUTE} or {@link MENU_RELATIVE}
+	 */
+	function setPositioning($pos) {
+		if ($pos == MENU_ABSOLUTE || $pos == MENU_RELATIVE)
+			$this->positioning = $pos;
+	}
+
+	/**
+	 * Set the menu's absolute position
+	 *
+	 * @param int $left Left X coordinate
+	 * @param int $top Upper Y coordinate
+	 */
+	function setStartPoint($left, $top) {
+		$this->offsetX = abs(intval($left));
+		$this->offsetY = abs(intval($top));
+		$this->positioning = MENU_ABSOLUTE;
+	}
+
+	/**
 	 * Changes menu orientation to vertical
 	 */
 	function setVertical() {
@@ -257,23 +286,12 @@ class LayerMenu extends Menu
 	}
 
 	/**
-	 * Set the menu's absolute position
-	 *
-	 * @param int $left Left X coordinate
-	 * @param int $top Upper Y coordinate
-	 */
-	function setStartPoint($left, $top) {
-		$this->offsetX = TypeUtils::parseIntegerPositive($left);
-		$this->offsetY = TypeUtils::parseIntegerPositive($top);
-	}
-
-	/**
 	 * Set the width of the chars used at the menu item captions
 	 *
 	 * @param int $width Char width
 	 */
 	function setCharWidth($width) {
-		$this->charWidth = TypeUtils::parseIntegerPositive($width);
+		$this->charWidth = abs(intval($width));
 	}
 
 	/**
@@ -282,7 +300,7 @@ class LayerMenu extends Menu
 	 * @param int $itemSpacing Spacing, in pixels
 	 */
 	function setItemSpacing($itemSpacing) {
-		$this->itemSpacing = TypeUtils::parseIntegerPositive($itemSpacing);
+		$this->itemSpacing = abs(intval($itemSpacing));
 	}
 
 	/**
@@ -347,7 +365,7 @@ class LayerMenu extends Menu
 	 * @param int $height Item height
 	 */
 	function setChildrenHeight($height) {
-		$this->childrenHeight = TypeUtils::parseIntegerPositive($height);
+		$this->childrenHeight = abs(intval($height));
 	}
 
 	/**
@@ -359,7 +377,7 @@ class LayerMenu extends Menu
 	 * @param int $timeout Timeout
 	 */
 	function setChildrenTimeout($timeout) {
-		$this->childrenTimeout = TypeUtils::parseIntegerPositive($timeout);
+		$this->childrenTimeout = abs(intval($timeout));
 	}
 
 	/**
@@ -414,19 +432,49 @@ class LayerMenu extends Menu
 	 * @access private
 	 */
 	function _buildCode() {
+		// calculate dimensions when menu is vertical
+		if (!$this->isHorizontal) {
+			if (!isset($this->width)) {
+				$textSize = 1;
+				for ($i = 0; $i < sizeof($this->tree); $i++)
+					$textSize = (strlen($this->tree[$i]['CAPTION']) > $textSize) ? strlen($this->tree[$i]['CAPTION']) : $textSize;
+				$textSize = ($textSize * $this->charWidth) + 15;
+				$this->width = $textSize;
+			}
+			if (!isset($this->height))
+				$this->height = $this->rootSize * $this->childrenHeight;
+		}
+		if ($this->positioning == MENU_RELATIVE)
+			$this->menuCode .= "\n<div id=\"{$this->id}\"></div>";
 		$this->menuCode .=
-			"<script type=\"text/javascript\" language=\"Javascript\">\n" .
-			"     {$this->id} = new makeCM(\"{$this->id}\");\n" .
-			"     {$this->id}.resizeCheck = 1;\n" .
-			"     {$this->id}.openOnClick = 1;\n" .
-			"     {$this->id}.rows = " . ((int)$this->isHorizontal) . ";\n" .
-			"     {$this->id}.onlineRoot = \"{$this->addressPrefix}\";\n" .
-			"     {$this->id}.menuPlacement = 0;\n" .
-			"     {$this->id}.pxBetween = {$this->itemSpacing};\n" .
-			"     {$this->id}.fromLeft = {$this->offsetX};\n" .
-			"     {$this->id}.fromTop = {$this->offsetY};\n" .
-			"     {$this->id}.wait = {$this->childrenTimeout};\n" .
-			"     {$this->id}.zIndex = 400;\n";
+			"\n<script type=\"text/javascript\" language=\"Javascript\">" .
+			"\n\tvar {$this->id} = new makeCM(\"{$this->id}\");" .
+			"\n\t{$this->id}.resizeCheck = 1;" .
+			"\n\t{$this->id}.openOnClick = 1;" .
+			"\n\t{$this->id}.rows = " . ((int)$this->isHorizontal) . ";" .
+			"\n\t{$this->id}.onlineRoot = \"{$this->addressPrefix}\";" .
+			"\n\t{$this->id}.menuPlacement = 0;" .
+			"\n\t{$this->id}.pxBetween = {$this->itemSpacing};" .
+			"\n\t{$this->id}.wait = {$this->childrenTimeout};" .
+			"\n\t{$this->id}.zIndex = 400;";
+		// absolute positioning
+		if ($this->positioning == MENU_ABSOLUTE) {
+			$this->menuCode .=
+				"\n\t{$this->id}.fromLeft = {$this->offsetX};" .
+				"\n\t{$this->id}.fromTop = {$this->offsetY};";
+		}
+		// relative positioning
+		else {
+			$this->menuCode .=
+				"\n\t{$this->id}.parentPos = $(\"{$this->id}\").getPosition();" .
+				"\n\t{$this->id}.fromLeft = {$this->id}.parentPos.x;" .
+				"\n\t{$this->id}.fromTop = {$this->id}.parentPos.y;" .
+				"\n\t{$this->id}.onresize = function() {" .
+				"\n\t\t{$this->id}.parentPos = $(\"{$this->id}\").getPosition();" .
+				"\n\t\t{$this->id}.fromLeft = {$this->id}.parentPos.x;" .
+				"\n\t\t{$this->id}.fromTop = {$this->id}.parentPos.y;" .
+				"\n\t}";
+		}
 		// horizontal menu
 		if ($this->isHorizontal) {
 			// root height
@@ -446,52 +494,41 @@ class LayerMenu extends Menu
 					$rootWidth[$i] = (strlen($this->tree[$i]['CAPTION']) * $this->charWidth) + 15;
 			}
 			$this->menuCode .=
-				"     var menuSize = " . (isset($this->width) ? $this->width : "screen.width") . "-" . $this->offsetX . "-22;\n" .
-				"     {$this->id}.useBar = 1;\n" .
-				"     {$this->id}.barWidth = menuSize;\n" .
-				"     {$this->id}.barHeight = {$this->height};\n" .
-				"     {$this->id}.barX = {$this->offsetX};\n" .
-				"     {$this->id}.barY = {$this->offsetY};\n" .
-				"     {$this->id}.barClass = \"" . $this->_getStyle(0, 'reg') . "\";\n" .
-				"     {$this->id}.barBorderX = 0;\n" .
-				"     {$this->id}.barBorderY = 0;\n";
-			for ($i = 0; $i <= $this->lastLevel; $i++) {
-				$this->menuCode .= "     {$this->id}.level[$i] = new cm_makeLevel(80, " . (($i==0) ? $this->height : $this->childrenHeight) . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"bottom\", -1, -1, \"\", 10, 10, 0);\n";
-			}
+				"\n\t{$this->id}.useBar = 1;" .
+				"\n\t{$this->id}.barWidth = " . (isset($this->width) ? $this->width : "screen.width") . "-" . ($this->offsetX) . "-22;" .
+				"\n\t{$this->id}.barHeight = {$this->height};" .
+				"\n\t{$this->id}.barX = {$this->offsetX};" .
+				"\n\t{$this->id}.barY = {$this->offsetY};" .
+				"\n\t{$this->id}.barClass = \"" . $this->_getStyle(0, 'reg') . "\";" .
+				"\n\t{$this->id}.barBorderX = 0;" .
+				"\n\t{$this->id}.barBorderY = 0;";
+			for ($i = 0; $i <= $this->lastLevel; $i++)
+				$this->menuCode .= "\n\t{$this->id}.level[$i] = new cm_makeLevel(80, " . (($i==0) ? $this->height : $this->childrenHeight) . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"bottom\", -1, -1, \"\", 10, 10, 0);";
 		// vertical menu
 		} else {
 			// root height
 			$rootHeight = $this->childrenHeight;
-			// calculate maximum width
-			if (isset($this->width)) {
-				$textSize = $this->width;
-			} else {
-				$textSize = 1;
-				for ($i = 0; $i < sizeof($this->tree); $i++)
-					$textSize = (strlen($this->tree[$i]['CAPTION']) > $textSize) ? strlen($this->tree[$i]['CAPTION']) : $textSize;
-				$textSize = ($textSize * $this->charWidth) + 15;
-			}
 			// define placement of the root items
 			$placement = $this->offsetY;
-			$rootWidth[0] = $textSize;
+			$rootWidth[0] = $this->width;
 			for ($i = 1; $i < $this->rootSize; $i++) {
-				$rootWidth[$i] = $textSize;
+				$rootWidth[$i] = $this->width;
 				$placement .= "," . ($this->offsetY + ($i*$this->childrenHeight));
 			}
-			$this->menuCode .= "     {$this->id}.menuPlacement = new Array($placement);\n";
+			$this->menuCode .= "\n\t{$this->id}.menuPlacement = new Array($placement);";
 			// build the menu levels
-			for ($i = 0; $i <= $this->lastLevel; $i++) {
-				$this->menuCode .= "     {$this->id}.level[$i] = new cm_makeLevel(" . (isset($this->width) ? $this->width : 100) . ", " . $this->childrenHeight . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"right\", 0, -1, \"\", 10, 10);\n";
-			}
+			for ($i = 0; $i <= $this->lastLevel; $i++)
+				$this->menuCode .= "\n\t{$this->id}.level[$i] = new cm_makeLevel(" . $this->width . ", " . $this->childrenHeight . ", \"" . $this->_getStyle($i, 'reg') . "\", \"" . $this->_getStyle($i, 'over') . "\", " . $this->_getStyle($i, 'borderX') . ", " . $this->_getStyle($i, 'borderY') . ", \"" . $this->_getStyle($i, 'border') . "\" , 0, \"right\", 0, -1, \"\", 10, 10);";
 		}
 		// recursively build the menu items
 		for ($i = 0; $i < sizeof($this->tree); $i++) {
 			$thisId = "m" . $i;
-			$this->menuCode .= "     {$this->id}.makeMenu('{$thisId}', '', '{$this->tree[$i]['CAPTION']}', '{$this->tree[$i]['LINK']}', '{$this->tree[$i]['TARGET']}', {$rootWidth[$i]}, {$rootHeight});\n";
+			$this->menuCode .= "\n\t{$this->id}.makeMenu('{$thisId}', '', '{$this->tree[$i]['CAPTION']}', '{$this->tree[$i]['LINK']}', '{$this->tree[$i]['TARGET']}', {$rootWidth[$i]}, {$rootHeight});";
 			if (!empty($this->tree[$i]['CHILDREN']))
 				$this->_buildChildrenCode($this->tree[$i]['CHILDREN'], $thisId, 0);
 		}
-		$this->menuCode .= "     {$this->id}.construct();\n</script>";
+		$this->menuCode .= "\n\t{$this->id}.construct();";
+		$this->menuCode .= "\n</script>\n";
 	}
 
 	/**
@@ -510,7 +547,7 @@ class LayerMenu extends Menu
 		$itemWidth = max(($textSize * $this->charWidth) + 15, $this->minimumChildWidth);
 		for ($i = 0; $i < sizeof($children); $i++) {
 			$thisId = $parentId . "_c" . $i;
-			$this->menuCode .= "     {$this->id}.makeMenu('{$thisId}', '{$parentId}', '{$children[$i]['CAPTION']}', '{$children[$i]['LINK']}', '{$children[$i]['TARGET']}', {$itemWidth}, {$this->childrenHeight}, '', '', '', '', 'right');\n";
+			$this->menuCode .= "\n\t{$this->id}.makeMenu('{$thisId}', '{$parentId}', '{$children[$i]['CAPTION']}', '{$children[$i]['LINK']}', '{$children[$i]['TARGET']}', {$itemWidth}, {$this->childrenHeight}, '', '', '', '', 'right');";
 			if (!empty($children[$i]['CHILDREN'])) {
 				$this->_buildChildrenCode($children[$i]['CHILDREN'], $thisId, ($parentLevel + 1));
 			}

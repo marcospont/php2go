@@ -111,7 +111,7 @@ class AuthIMAP extends Auth
 	function authenticate() {
 		$mailbox = '{' . $this->host . ':' . $this->port . $this->flags . '}';
 		$conn = @imap_open($mailbox, $this->_login, $this->_password, OP_HALFOPEN);
-		if (TypeUtils::isResource($conn)) {
+		if (is_resource($conn)) {
 			@imap_close($conn);
 			return TRUE;
 		}

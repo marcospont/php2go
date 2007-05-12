@@ -9,8 +9,8 @@
 </table><input type="hidden" id="{$addedName}" name="{$addedName}"><input type="hidden" id="{$removedName}" name="{$removedName}">
 <script type="text/javascript">
 {$id}_instance = new LookupSelectionField('{$id}', '{$availableId}', '{$selectedId}', '{$addedName}', '{$removedName}', '{$separator}');
-<!-- LOOP var=$customListeners item="listener" key="event" -->
+<!-- loop var=$customListeners item="listener" key="event" -->
 {$id}_instance.addEventListener('{$event|lower|substring:2}', {$listener});
-<!-- END LOOP -->
+<!-- end loop -->
 </script>
 </fieldset>

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS country (
   id_country int(11) NOT NULL auto_increment,
   name varchar(100) NOT NULL default '',
   PRIMARY KEY  (id_country)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 INSERT INTO country (id_country, name) VALUES (1, 'United States');
 INSERT INTO country (id_country, name) VALUES (2, 'Albania');
 INSERT INTO country (id_country, name) VALUES (3, 'Algeria');

@@ -1,7 +1,7 @@
 PHP2Go Web Development Framework - README
 ==========================================
 
-	Version 0.5.5 - March 2007
+	Version 0.5.6 - May 2007
 	--------------------------------
 	http://www.php2go.com.br
 
@@ -49,17 +49,17 @@ PHP2Go Web Development Framework - README
 		documentation.
 
 		The PHP2Go Web Development Framework is fully compatible with PHP 5.
-		
+
 	Download:
 		You can get the latest version of the framework and the documentation files at
 		the project website: http://www.php2go.com.br.
-		
+
 	Report bugs and request features:
 
 		If you find any problems, bugs or inconsistences in the code or in the funcionality,
 		please let us know. You have the following channels to communicate:
 			* PHP2Go Trac Server: submit tickets of bugs and feature requests - http://dev.php2go.com.br;
-			* PHP2Go Forum: ask, find and provided help regarding the framework - http://forum.php2go.com.br;
+			* PHP2Go Forum: ask, find and provide help regarding the framework - http://forum.php2go.com.br;
 			* Contact the developer: <mpont@users.sourceforge.net>.
 
 	Subversion public access:
@@ -82,7 +82,8 @@ PHP2Go Web Development Framework - README
 		See INSTALL.txt
 
 	Changelog:
-		See CHANGELOG.txt
+		See CVS_CHANGELOG.txt (until november 2006)
+		See CHANGELOG.txt (since december 2006)
 
 	Examples:
 		You'll find usage examples of the most important classes in the examples/ folder.

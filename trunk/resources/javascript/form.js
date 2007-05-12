@@ -199,9 +199,9 @@ var Form = {
 		}).join('&');
 	},
 	/**
-	 * Setup a given form to be submitted using AJAX. The second
-	 * parameter must be a valid AJAX instance (AjaxRequest,
-	 * AjaxUpdater, ...)
+	 * Setup a given form to be submitted using AJAX. The
+	 * second argument must be a function that returns
+	 * a valid instance of an AJAX request class.
 	 * @param {Object} form Form reference or id
 	 * @param {Function} Function that builds the AJAX handler
 	 */
@@ -210,11 +210,15 @@ var Form = {
 		if (form && typeof(ajax) == 'function') {
 			form.ajax = ajax;
 			Event.addListener(form, 'submit', function(e) {
-				var frm, evt = $EV(e);
-				var elm = $E(evt.element());
+				var evt = $EV(e), frm = null;
 				evt.stop();
-				if (frm = elm.getParentByTagName('form'))
-					frm.ajax();
+				frm = Element.getParentByTagName(evt.element(), 'form');
+				if (frm) {
+					var ajax = frm.ajax();
+					ajax.form = frm.id;
+					ajax.formValidate = true;
+					ajax.send();
+				}
 			}, true);
 		}
 	},
@@ -385,14 +389,24 @@ Field.prototype.isEmpty = function() {
  * @type void
  */
 Field.prototype.enable = function() {
-	this.fld.disabled = false;
+	this.setDisabled(false);
 };
 
 /**
  * Disables the field
  */
 Field.prototype.disable = function() {
-	this.fld.disabled = true;
+	this.setDisabled(true);
+};
+
+/**
+ * Internal method to disable/enable the field
+ * @param {Boolean} b Flag value
+ * @type void
+ * @private
+ */
+Field.prototype.setDisabled = function(b) {
+	this.fld.disabled = b;
 };
 
 /**
@@ -400,11 +414,29 @@ Field.prototype.disable = function() {
  * won't execute on disabled inputs
  */
 Field.prototype.focus = function() {
-	if (!this.fld.disabled) {
+	if (this.beforeFocus() && !this.fld.disabled) {
 		this.fld.focus();
 		return true;
 	}
 	return false;
+};
+
+/**
+ * Perform tasks and run validations
+ * before activating the field
+ * @param {Object} Field element
+ * @type Bool
+ */
+Field.prototype.beforeFocus = function() {
+	var elm = (this instanceof GroupField ? this.grp[0] : this.fld);
+	while (elm = elm.parentNode) {
+		if (elm.tabPanel && !elm.tabPanel.isActive()) {
+			if (!elm.tabPanel.isEnabled())
+				return false;
+			elm.tabPanel.activate();
+		}
+	}
+	return true;
 };
 
 /**
@@ -783,6 +815,7 @@ GroupField = function(grp) {
 	 */
 	this.multiple = (this.type == 'checkbox');
 };
+GroupField.extend(Field, 'Field');
 
 /**
  * Return the current value of the group. For multiple
@@ -884,22 +917,12 @@ GroupField.prototype.isEmpty = function() {
 };
 
 /**
- * Enable all elements in the group
+ * Enables/disables all elements in the group
  * @type void
  */
-GroupField.prototype.enable = function() {
+GroupField.prototype.setDisabled = function(b) {
 	this.grp.walk(function(el, idx) {
-		el.disabled = false;
-	});
-};
-
-/**
- * Disable all elements in the group
- * @type void
- */
-GroupField.prototype.disable = function() {
-	this.grp.walk(function(el, idx) {
-		el.disabled = true;
+		el.disabled = b;
 	});
 };
 
@@ -908,6 +931,8 @@ GroupField.prototype.disable = function() {
  * @type void
  */
 GroupField.prototype.focus = function() {
+	if (!this.beforeFocus())
+		return false;
 	var found = false;
 	this.grp.walk(function(el, idx) {
 		if (!el.disabled) {
@@ -957,7 +982,7 @@ ComponentField = function(fld, clsName) {
 	this.componentClass = clsName;
 	/**
 	 * Component's event listeners
-	 * @type Array
+	 * @type Object
 	 */
 	this.listeners = {};
 };
@@ -983,9 +1008,9 @@ ComponentField.prototype.addEventListener = function(name, func) {
  */
 ComponentField.prototype.raiseEvent = function(name, args) {
 	var funcs = this.listeners[name] || [];
-	funcs.walk(function(item, index) {
-		item(args);
-	});
+	for (var i=0; i<funcs.length; i++) {
+		funcs[i](args);
+	}
 	if (this.fld && typeof(this.fld['on'+name]) == 'function')
 		this.fld['on'+name]();
 };

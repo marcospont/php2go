@@ -117,7 +117,6 @@ $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_IS_EXPR'] = "L'opération est invalide pour u
 $P2G_LANGUAGE['ERR_TPLPARSE_MISSING_TAG_ARGS'] = "Le tag <I>%s</I> doit avoir des arguments!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_TAG_ARGS'] = "Le tag <I>%s</I> ne peut pas contenir des arguments!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_MODIFIER'] = "Le modificateur <I>%s</I> est invalide ou n'existe pas!";
-$P2G_LANGUAGE['ERR_WIDGET_INCLUDE'] = "C'est possible d'utiliser le widget <i>%s</i> seulement entre les marqueurs INCLUDE WIDGET!";
 $P2G_LANGUAGE['ERR_WIDGET_MANDATORY_PROPERTY'] = "La propriété <i>%s</i> est requise dans la définition du widget <i>%s</i>!";
 $P2G_LANGUAGE['ERR_EMPTY_DOC_LAYOUT'] = "Il n'y a pas d'éléments définis dans la plan de document fourni.";
 $P2G_LANGUAGE['ERR_CANT_REPLICATE_ROOT_BLOCK'] = "Le bloc de base d'un gabarit ne peut pas être écrasé.";

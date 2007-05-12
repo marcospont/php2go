@@ -184,10 +184,10 @@ AjaxRequest = function(url, args) {
 	 */
 	this.contentType = 'application/x-www-form-urlencoded';
 	/**
-	 * Encoding. Defaults to 'iso-8859-1'
+	 * Character encoding
 	 * @type String
 	 */
-	this.encoding = 'iso-8859-1';
+	this.encoding = null;
 	/**
 	 * Hash of GET/POST parameters
 	 * @type Hash
@@ -203,6 +203,10 @@ AjaxRequest = function(url, args) {
 	 * @type Array
 	 */
 	this.formFields = [];
+	/**
+	 * Indicates if the form associated with the request should be validated
+	 */
+	this.formValidate = true;
 	/**
 	 * Request body
 	 * @type String
@@ -225,7 +229,6 @@ AjaxRequest.extend(Ajax, 'Ajax');
  * @type void
  */
 AjaxRequest.prototype.readArguments = function(args) {
-	var events = ['onLoading', 'onLoaded', 'onInteractive', 'onComplete', 'onSuccess', 'onFailure', 'onJSONResult', 'onXMLResult', 'onException'];
 	if (args.method)
 		this.method = args.method;
 	if (typeof(args.async) != 'undefined')
@@ -248,12 +251,15 @@ AjaxRequest.prototype.readArguments = function(args) {
 		this.form = args.form;
 	if (args.formFields)
 		this.formFields = args.formFields;
+	if (typeof(args.formValidate) != 'undefined')
+		this.formValidate = !!args.formValidate;
 	if (args.throbber) {
 		if ((args.throbber.constructor || $EF) == Throbber)
 			this.throbber = args.throbber;
 		else
 			this.throbber = new Throbber({element: args.throbber});
 	}
+	var events = ['onLoading', 'onLoaded', 'onInteractive', 'onComplete', 'onSuccess', 'onFailure', 'onJSONResult', 'onXMLResult', 'onException'];
 	for (var i=0; i<events.length; i++) {
 		if (args[events[i]])
 			this.bind(events[i], args[events[i]], args.scope || null);
@@ -279,7 +285,7 @@ AjaxRequest.prototype.addParam = function(param, val) {
  */
 AjaxRequest.prototype.send = function() {
 	this.form = $(this.form);
-	if (this.form) {
+	if (this.form && this.formValidate) {
 		if (this.form.validator && !this.form.validator.run())
 			return;
 	}
@@ -302,14 +308,14 @@ AjaxRequest.prototype.send = function() {
 		this.conn.open(this.method, uri, this.async);
 		this.conn.onreadystatechange = this.onStateChange.bind(this);
 		// request headers
-		this.headers['Content-Type'] = this.contentType + '; charset=' + this.encoding;
 		this.headers['X-Requested-With'] = 'XMLHttpRequest';
 		if (this.method.equalsIgnoreCase('post')) {
+			this.headers['Content-Type'] = this.contentType + (this.encoding ? '; charset=' + this.encoding : '');
 			this.headers['Content-Length'] = body.length;
 			if (this.conn.overrideMimeType)
 				this.headers['Connection'] = 'close';
 		}
-		for (name in this.headers)
+		for (var name in this.headers)
 			this.conn.setRequestHeader(name, this.headers[name]);
 		this.conn.send(body);
 		if (!this.async && this.conn.overrideMimeType)
@@ -365,7 +371,7 @@ AjaxRequest.prototype.onStateChange = function() {
 				var resp = this.createResponse();
 				this.raise('onComplete', [resp]);
 				if (resp.success) {
-					if ((resp.headers['Content-type'] || '').match(/^text\/javascript/i)) {
+					if ((resp.headers['Content-type'] || '').match(/^(text|application)\/(x-)?(java|ecma)script(;.*)?$/i)) {
 						try {
 							eval(resp.responseText);
 							this.raise('onSuccess', [resp]);
@@ -530,10 +536,11 @@ AjaxResponse = function(transId) {
 /**
  * Extends AjaxRequest in order to populate a given container
  * with the response returned by the server. Optionally, 2
- * containers (success and failure) can be provided. 2 more
+ * containers (success and failure) can be provided. 3 more
  * settings can be provided through the args parameter: noScripts
- * (avoid &lt;script&gt; tags inside the response) and insert
+ * (avoid &lt;script&gt; tags inside the response), insert
  * (indicates response's insert position in the target container)
+ * and onUpdate (update event listener)
  * @constructor
  * @extends AjaxRequest
  * @param {String} url Request URL
@@ -574,6 +581,8 @@ AjaxUpdater = function(url, args) {
 	this.noScripts = !!args.noScripts;
 	this.bind('onSuccess', this.update);
 	this.bind('onFailure', this.update);
+	if (args.onUpdate)
+		this.bind('onUpdate', args.onUpdate, args.scope || null);
 };
 AjaxUpdater.extend(AjaxRequest, 'AjaxRequest');
 
@@ -594,7 +603,8 @@ AjaxUpdater.prototype.update = function(response) {
 				this.success.insertHTML(resp, this.insert, true);
 			else
 				this.success.update(resp, true);
-			this.success.show();
+			if (this.success.getStyle('display') == 'none')
+				this.success.show();
 		}
 	} else {
 		if (this.failure) {
@@ -602,9 +612,11 @@ AjaxUpdater.prototype.update = function(response) {
 				this.failure.insertHTML(resp, this.insert, true);
 			else
 				this.failure.update(resp, true);
-			this.failure.show();
+			if (this.failure.getStyle('display') == 'none')
+				this.failure.show();
 		}
 	}
+	this.raise('onUpdate', [response]);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'ajax.js'] = true;

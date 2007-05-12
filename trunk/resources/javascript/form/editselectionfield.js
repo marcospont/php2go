@@ -167,29 +167,9 @@ EditSelectionField.prototype.clear = function() {
 };
 
 /**
- * Enable the component
- * @type void
- */
-EditSelectionField.prototype.enable = function() {
-	this.setDisabled(false);
-	this.updateButtons();
-};
-
-/**
- * Disable the component
- * @type void
- */
-EditSelectionField.prototype.disable = function() {
-	this.setDisabled(true);
-};
-
-/**
- * Internal method to disable/enable the component.
- * Is called from {@link EditSelectionField#enable}
- * and {@link EditSelectionField#disable}
+ * Disables/enables the component
  * @param {Boolean} b Flag value
  * @type void
- * @private
  */
 EditSelectionField.prototype.setDisabled = function(b) {
 	this.edit.disabled = b;
@@ -204,7 +184,7 @@ EditSelectionField.prototype.setDisabled = function(b) {
  * @type void
  */
 EditSelectionField.prototype.focus = function() {
-	if (!this.edit.disabled) {
+	if (this.beforeFocus() && !this.edit.disabled) {
 		this.edit.focus();
 		return true;
 	}

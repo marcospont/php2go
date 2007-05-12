@@ -234,8 +234,8 @@ class TreeMenu extends Menu
 	 * @param int $top Upper Y coordinate
 	 */
 	function setStartPoint($left, $top) {
-		$this->offsetX = TypeUtils::parseIntegerPositive($left);
-		$this->offsetY = TypeUtils::parseIntegerPositive($top);
+		$this->offsetX = abs(intval($left));
+		$this->offsetY = abs(intval($top));
 	}
 
 	/**
@@ -304,7 +304,7 @@ class TreeMenu extends Menu
 	 * @param int $ident Indentation
 	 */
 	function setLevelIdent($ident) {
-		$this->levelIdent = TypeUtils::parseIntegerPositive($ident);
+		$this->levelIdent = abs(intval($ident));
 	}
 
 	/**
@@ -322,7 +322,7 @@ class TreeMenu extends Menu
 	 * @param int $padding Padding
 	 */
 	function setItemPadding($padding) {
-    	$this->itemPadding = TypeUtils::parseIntegerPositive($padding);
+		$this->itemPadding = abs(intval($padding));
 	}
 
 	/**
@@ -331,7 +331,7 @@ class TreeMenu extends Menu
 	 * @param int $spacing Spacing
 	 */
 	function setItemSpacing($spacing) {
-    	$this->itemSpacing = TypeUtils::parseIntegerPositive($spacing);
+		$this->itemSpacing = abs(intval($spacing));
 	}
 
 	/**
@@ -355,8 +355,8 @@ class TreeMenu extends Menu
 	 * @param int $height Icons height
 	 */
 	function setImageSize($width, $height) {
-		$this->iconWidth = TypeUtils::parseIntegerPositive($width);
-		$this->iconHeight = TypeUtils::parseIntegerPositive($height);
+		$this->iconWidth = abs(intval($width));
+		$this->iconHeight = abs(intval($height));
 	}
 
 	/**
@@ -396,8 +396,8 @@ class TreeMenu extends Menu
 	 * @access private
 	 */
 	function _buildCode() {
-    	$this->menuCode = "<script type=\"text/javascript\" language=\"Javascript\">\n";
-		$this->menuCode .= 'var ' . $this->id . '_format = [';
+    	$this->menuCode = "\n<script type=\"text/javascript\" language=\"Javascript\">";
+		$this->menuCode .= "\nvar {$this->id}Format = [";
 		$this->menuCode .= $this->offsetX . ', ' . $this->offsetY . ', ';
 		$this->menuCode .= $this->showButtons ? 'true, ' : 'false, ';
 		$this->menuCode .= "[\"" . $this->icons['collapse'] . "\", \"" . $this->icons['expand'] . "\", \"" . $this->icons['blank'] . "\"], ";
@@ -423,15 +423,15 @@ class TreeMenu extends Menu
 		$this->menuCode .= "], ";
 		$this->menuCode .= $this->oneBranch ? 'true, ' : 'false, ';
 		$this->menuCode .= '[' . $this->itemPadding . ', ' . $this->itemSpacing . ']];';
-		$this->menuCode .= "var " . $this->id . "_nodes = [";
+		$this->menuCode .= "\nvar " . $this->id . "Nodes = [";
 		for ($i=0; $i<$this->rootSize; $i++) {
 			$this->menuCode .= "['" . $this->tree[$i]['CAPTION'] . "',";
-			$this->menuCode .= " '" . (isset($this->addressPrefix) ? $this->addressPrefix : '') . $this->tree[$i]['LINK'] . "', null";
+			$this->menuCode .= " '" . (isset($this->addressPrefix) ? $this->addressPrefix : '') . $this->tree[$i]['LINK'] . "', '" . $this->tree[$i]['TARGET'] . "'";
 			$this->menuCode .= $this->_buildChildrenCode($this->tree[$i]['CHILDREN']) . "]";
 			if ($i < ($this->rootSize - 1)) $this->menuCode .= ", ";
 		}
 		$this->menuCode .= "];\n";
-		$this->menuCode .= "new COOLjsTree (\"" . $this->id . "\", " . $this->id . "_nodes, " . $this->id . "_format);";
+		$this->menuCode .= "new COOLjsTree (\"" . $this->id . "\", " . $this->id . "Nodes, " . $this->id . "Format);";
 		$this->menuCode .= "\n</script>\n";
 	}
 
@@ -442,14 +442,14 @@ class TreeMenu extends Menu
 	 * @access private
 	 */
 	function _buildChildrenCode($children) {
-		$childrenSize = TypeUtils::isArray($children) ? sizeof($children) : 0;
+		$childrenSize = (is_array($children) ? sizeof($children) : 0);
     	if (!$childrenSize) {
         	return '';
  		} else {
 			$code = ', ';
 			for ($i=0; $i<$childrenSize; $i++) {
 				$code .= "['" . $children[$i]['CAPTION'] . "',";
-				$code .= " '" . $children[$i]['LINK'] . "', null";
+				$code .= " '" . $children[$i]['LINK'] . "', '" . $children[$i]['TARGET'] . "'";
 				$code .= $this->_buildChildrenCode($children[$i]['CHILDREN']) . "]";
 				if ($i < ($childrenSize - 1)) $code .= ", ";
 			}

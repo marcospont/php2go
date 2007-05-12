@@ -73,9 +73,9 @@
 	println('<b>Get user agent information</b>');
 	$agent =& UserAgent::getInstance();
 	println(nl2br($agent->__toString()));
-	println('<b>Is IE?</b> ' . TypeUtils::parseInteger($agent->matchBrowser('ie')));
+	println('<b>Is IE?</b> ' . intval($agent->matchBrowser('ie')));
 	println('<b>Match against a browser list:</b> ' . $agent->matchBrowserList(array('ie5+', 'ns6+', 'opera5+')));
-	println('<b>Accepts gzip encoding?</b> ' . TypeUtils::parseInteger($agent->matchAcceptList('gzip', 'encoding')));
+	println('<b>Accepts gzip encoding?</b> ' . intval($agent->matchAcceptList('gzip', 'encoding')));
 	println('<b>What is the JavaScript version?</b> ' . $agent->getFeature('javascript'));
 	println('<b>Print the browser full name</b> ' . $agent->getBrowserFullName());
 	println('<b>Print the OS full name</b> ' . $agent->getOSFullName());

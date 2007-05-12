@@ -41,7 +41,7 @@
 <div style="float:left;width:450px;">
   <div class="sample_title" style="padding:4px;">List of Products</div>
   <table class="sample_border_table" style="background-color:#e9e9e9">
-    <!-- LOOP var=$products item="product" -->
+    <!-- loop var=$products item="product" -->
     <tr>
       <td class="sample_list_item" colspan="2">
         <b>{$product.short_desc}</b><br>
@@ -51,14 +51,14 @@
         <a href="javascript:;" onClick="addToCart({$product.id_product}, '{$product.short_desc|escape:'javascript'}', '{$product.price}');"><img src="resources/img_cart.gif" border="0"></a>
       </td>
     </tr>
-    <!-- END LOOP -->
+    <!-- end loop -->
   </table>
 </div>
 <div style="float:right;width:320px;">
   <div class="sample_title" style="padding:4px;">Your Shopping Cart</div>
   <form id="frm_cart" name="frm_cart" style="display:inline">
   <div class="sample_border_table" id="cart">
-<!-- INCLUDE BLOCK : resources/ajaxcart.example.tpl -->
+<!-- include block : resources/ajaxcart.example.tpl -->
   </div>
   </form>
 </div>

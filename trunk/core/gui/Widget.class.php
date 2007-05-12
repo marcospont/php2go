@@ -27,6 +27,8 @@
  * @version $Id$
  */
 
+import('php2go.util.json.JSONEncoder');
+
 /**
  * Interface control that can be included in page templates
  *
@@ -54,11 +56,25 @@ class Widget extends Component
 	var $content;
 
 	/**
+	 * Event listeners
+	 *
+	 * @var array
+	 */
+	var $listeners = array();
+
+	/**
 	 * Whether this is a container widget
 	 *
 	 * @var bool
 	 */
 	var $isContainer = FALSE;
+
+	/**
+	 * Whether this widget produces output or not
+	 *
+	 * @var bool
+	 */
+	var $hasOutput = TRUE;
 
 	/**
 	 * Set of mandatory attributes
@@ -68,6 +84,13 @@ class Widget extends Component
 	var $mandatoryAttributes = array();
 
 	/**
+	 * Parent widget, when applicable
+	 *
+	 * @var object Widget
+	 */
+	var $Parent = NULL;
+
+	/**
 	 * Class constructor
 	 *
 	 * @param array $attrs Attributes
@@ -75,7 +98,53 @@ class Widget extends Component
 	 */
 	function Widget($attrs=array()) {
 		parent::PHP2Go();
-		$this->loadAttributes((array)$attrs);
+		$attrs = array_merge($this->getDefaultAttributes(), (array)$attrs);
+		$this->loadAttributes($attrs);
+	}
+
+	/**
+	 * Builds a new widget, given its path and attributes
+	 *
+	 * @param string $path Widget's dot path
+	 * @param array $attrs Widget's attributes
+	 * @return Widget
+	 * @static
+	 */
+	function factory($path, $attrs=array()) {
+		$widgetClass = classForPath($path);
+		$widget = new $widgetClass($attrs);
+		return $widget;
+	}
+
+	/**
+	 * Loads resources needed by a given widget
+	 *
+	 * This method will check if the widget class contains
+	 * a method called "loadResources". If yes, the singleton
+	 * of the DocumentHead class is passed to this method, so
+	 * that the widget is able to register all scripts, stylesheets
+	 * and other resources it needs to run.
+	 *
+	 * @param string $path Widget's path
+	 * @static
+	 */
+	function preload($path) {
+		$widgetClass = classForPath($path);
+		$methodName = (IS_PHP5 ? 'loadResources' : 'loadresources');
+		if (in_array($methodName, get_class_methods($widgetClass))) {
+			$params = array();
+			$params[] =& DocumentHead::getInstance();
+			call_user_func_array(array($widgetClass, $methodName), $params);
+		}
+	}
+
+	/**
+	 * Return the set of the default values for attributes
+	 *
+	 * @return array
+	 */
+	function getDefaultAttributes() {
+		return array();
 	}
 
 	/**
@@ -93,14 +162,38 @@ class Widget extends Component
 	}
 
 	/**
+	 * Adds a Javascript event listener
+	 *
+	 * @param string $event Event
+	 * @param string $code Listener code
+	 */
+	function addEventListener($event, $code) {
+		$event = preg_replace('/^on/i', '', strtolower($event));
+		$matches = array();
+		$funcBody = rtrim(ltrim($code, "\r\n"));
+		if (preg_match("/^([\t]+)/", $funcBody, $matches))
+			$funcBody = preg_replace("/^\t{" . strlen($matches[1]) . "}/m", "\t\t", $funcBody);
+		if (!isset($this->listeners[$event]))
+			$this->listeners[$event] = array();
+		$this->listeners[$event][] = $funcBody;
+	}
+
+	/**
 	 * Set widget's internal content
 	 *
 	 * @param string $content Content
 	 */
 	function setContent($content) {
-		if (!$this->isContainer)
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_INCLUDE', parent::getClassName()), E_USER_ERROR, __FILE__, __LINE__);
 		$this->content = $content;
+	}
+
+	/**
+	 * Set parent widget
+	 *
+	 * @param Widget $parent
+	 */
+	function setParent(&$parent) {
+		$this->Parent =& $parent;
 	}
 
 	/**
@@ -128,7 +221,34 @@ class Widget extends Component
 	function display() {
 		$this->validate();
 		$this->onPreRender();
-		$this->render();
+		if ($this->hasOutput) {
+			print "\n";
+			$this->render();
+			print "\n";
+		}
+	}
+
+	/**
+	 * Render Javascript code to initialize the widget
+	 *
+	 * @param array $attrs Attributes
+	 * @access private
+	 */
+	function renderJS($attrs) {
+		print "\n<script type=\"text/javascript\">\n";
+		print sprintf("Widget.init(\"%s\", %s", parent::getClassName(), JSONEncoder::encode($attrs));
+		if (!empty($this->listeners)) {
+			print ", function(widget) {\n";
+			foreach ($this->listeners as $event => $listeners) {
+				for ($i=0; $i<sizeof($listeners); $i++) {
+					print sprintf("\twidget.addEventListener(\"%s\", function(args) {\n%s\n\t});\n", $event, $listeners[$i]);
+				}
+			}
+			print "});\n";
+		} else {
+			print ");\n";
+		}
+		print "</script>";
 	}
 }
 ?>

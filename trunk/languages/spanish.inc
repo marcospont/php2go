@@ -116,7 +116,6 @@ $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_IS_EXPR'] = "Operación inválida para una ope
 $P2G_LANGUAGE['ERR_TPLPARSE_MISSING_TAG_ARGS'] = "La etiqueta <I>%s</I> requiere argumentos!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_TAG_ARGS'] = "La etiqueta <I>%s</I> no puede contener argumentos!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_MODIFIER'] = "El modificador %s no es válido o no existe!";
-$P2G_LANGUAGE['ERR_WIDGET_INCLUDE'] = "El widget <i>%s</i> solo puede ser usado entre etiquetas INCLUDE WIDGET!";
 $P2G_LANGUAGE['ERR_WIDGET_MANDATORY_PROPERTY'] = "La propiedad <i>%s</i> es obligatoria en la definición del widget <i>%s</i>!";
 $P2G_LANGUAGE['ERR_EMPTY_DOC_LAYOUT'] = "No hay elementos definidos en la capa de documento suministrada.";
 $P2G_LANGUAGE['ERR_CANT_REPLICATE_ROOT_BLOCK'] = "El bloque base de una plantilla no puede ser sobreescrito.";

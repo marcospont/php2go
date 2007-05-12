@@ -30,6 +30,7 @@
 	require_once('config.example.php');
 	import('php2go.base.Document');
 	import('php2go.form.FormBasic');
+	import('php2go.net.HttpRequest');
 
 	$doc = new Document('resources/layout.example.tpl');
 	$doc->addScript('resources/javascript.example.js');

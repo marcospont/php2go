@@ -116,7 +116,6 @@ $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_IS_EXPR'] = "Operazione non valida per un op
 $P2G_LANGUAGE['ERR_TPLPARSE_MISSING_TAG_ARGS'] = "Il tag <I>%s</I> necessita di argomenti!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_TAG_ARGS'] = "Il tag <I>%s</I> non puo' contenere argomenti!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_MODIFIER'] = "Il modificatore %s non e' valido o e' inesistente!";
-$P2G_LANGUAGE['ERR_WIDGET_INCLUDE'] = "Il widget <i>%s</i> puo' solo essere usato con i tag INCLUDE WIDGET!";
 $P2G_LANGUAGE['ERR_WIDGET_MANDATORY_PROPERTY'] = "La proprieta' <i>%s</i> e' obbligatoria nella definizione del widget <i>%s</i>!";
 $P2G_LANGUAGE['ERR_EMPTY_DOC_LAYOUT'] = "Non ci sono elementi definiti nel layout del documento.";
 $P2G_LANGUAGE['ERR_CANT_REPLICATE_ROOT_BLOCK'] = "Il blocco base di un template non puo' essere sovrascritto.";

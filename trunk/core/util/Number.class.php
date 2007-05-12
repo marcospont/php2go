@@ -50,7 +50,7 @@ class Number extends PHP2Go
 	 * @static
 	 */
 	function numberConversion($source, $baseIn, $baseOut, $targetLen = 0) {
-		if (!TypeUtils::parseInteger($baseIn) || !TypeUtils::parseInteger($baseOut) || $baseIn < 2 || $baseIn > 36 || $baseOut < 2 || $baseOut > 36)
+		if (!intval($baseIn) || !intval($baseOut) || $baseIn < 2 || $baseIn > 36 || $baseOut < 2 || $baseOut > 36)
 			return NULL;
 		if ($baseIn != 10) {
 			$source = strtolower($source);
@@ -74,7 +74,7 @@ class Number extends PHP2Go
 		if ($baseOut != 10) {
 			$return = "";
 			while ($decimalNumber > 0) {
-				$remainder = (TypeUtils::parseFloat($decimalNumber) % $baseOut);
+				$remainder = (floatval($decimalNumber) % $baseOut);
 				if ($remainder < 10) {
 					$return = $remainder . $return;
 				} else {
@@ -100,7 +100,6 @@ class Number extends PHP2Go
 	 * @static
 	 */
 	function fromHexToBin($number) {
-		$numberLen = strlen(TypeUtils::parseString($number));
 		$bin = "";
 		for ($i=0, $s=strlen($number); $i<$s; $i+=2) {
 			$bin .= decbin(hexdec(substr($number, $i, 2)));
@@ -133,7 +132,7 @@ class Number extends PHP2Go
 			$thousSep = $locale['mon_thousands_sep'];
 		if (empty($precision))
 			$precision = $locale['frac_digits'];
-		$number = TypeUtils::parseFloat(trim($number));
+		$number = floatval(trim($number));
 		if (TypeUtils::isFloat($number)) {
 			if (!empty($currencySign)) {
 				$x = ($number < 0 ? 'n' : 'p');
@@ -284,7 +283,7 @@ class Number extends PHP2Go
 		$locale = localeconv();
 		$decSep = $locale['decimal_point'];
 		$thousSep = $locale['thousands_sep'];
-		$precision = TypeUtils::parseInteger($precision);
+		$precision = intval($precision);
 		switch($mode) {
 			case 'K' : return number_format(($amount / 1024), $precision, $decSep, $thousSep) . 'K';
 			case 'M' : return number_format(($amount / 1024 / 1024), $precision, $decSep, $thousSep) . 'M';

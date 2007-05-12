@@ -261,14 +261,32 @@ function dumpVariable($var) {
  * @param bool $deep Recurse into inner arrays or objects
  * @return string
  */
-function dumpArray($arr, $return=TRUE, $stringLimit=200, $deep=FALSE) {
+function dumpArray($arr, $return=TRUE, $stringLimit=200, $deep=FALSE, $i=0) {
+	static $registry;
+	($i == 0) && ($registry = array());
 	$r = array();
+	if (is_object($arr)) {
+		if (in_array($arr, $registry)) {
+			if ($return)
+				return "*recursion*";
+			print "*recursion*";
+			return TRUE;
+		} else {
+			$registry[] = $arr;
+		}
+		(!IS_PHP5) && ($arr = get_object_vars($arr));
+	}
 	foreach ($arr as $k => $v) {
 		if (is_string($v)) {
 			$r[] = $k . "=>'" . (strlen($v) > $stringLimit ? substr($v, 0, $stringLimit) . "...(" . strlen($v) . ")" : $v) . "'";
-		} elseif ($deep && (is_array($v) || is_object($v))) {
-			(is_object($v)) && ($v = get_object_vars($v));
-			$r[] = $k . '=>' . dumpArray($v, TRUE, $stringLimit, TRUE);
+		} elseif (is_array($v)) {
+			$r[] = $k . '=>' . ($deep ? dumpArray($v, TRUE, $stringLimit, TRUE, $i+1) : 'array');
+		} elseif (is_object($v)) {
+			$r[] = $k . '=>' . ($deep ? dumpArray($v, TRUE, $stringLimit, TRUE, $i+1) : 'object (' . get_class($v) . ')');
+		} elseif (is_bool($v)) {
+			$r[] = $k . '=>' . ($v ? 'true' : 'false');
+		} elseif ($v === NULL) {
+			$r[] = $k . '=>null';
 		} else {
 			$r[] = $k . '=>' . $v;
 		}
@@ -384,7 +402,7 @@ function highlightPHP($code, $type=T_BYVAR) {
  * @return bool|NULL
  */
 function resolveBooleanChoice($value=NULL) {
-	if (TypeUtils::isNull($value))
+	if (is_null($value))
 		return NULL;
 	elseif (trim($value) == "T")
 		return TRUE;

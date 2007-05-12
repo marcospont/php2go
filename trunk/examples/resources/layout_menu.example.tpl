@@ -1,11 +1,39 @@
-<!-- PHP2Go Example : page layout containing two slots : menu and main -->
-<!-- the main table, containing the page body -->
-<table width="770" cellpadding="4" cellspacing="0" border="0">
-  <tr>
-    <td height="25" style="background-color:#ED1D24">{$menu}</td>
-  </tr>
-  <tr>
-    <td>{$main}</td>
-  </tr>
-</table>
-<!-- PHP2Go Example : layout_menu.example.tpl -->
+<!-- PHP2Go Examples : php2go.gui.LayerMenu -->
+<style type="text/css">
+	#header {
+		font-family: Verdana;
+		font-size: 16px;
+		font-weight: bold;
+		background-color: #DDE4EA;
+		padding: 10px 0px 10px 10px;
+	}
+	#menuContainer {
+		float: left;
+		width: 100%;
+		height: 20px;
+		background-color: #666;
+		padding-left: 15px;
+		padding-top: 5px;
+	}
+	#contentFrame {
+		width: 100%;
+		height: 450px;
+		overflow: auto;
+		border: none;
+	}
+</style>
+<div id="overall">
+  <div id="header">
+    Application Title
+  </div>
+  <div id="menuContainer">
+{$menu}
+  </div>
+  <iframe id="contentFrame"></iframe>
+</div>
+
+
+
+
+
+

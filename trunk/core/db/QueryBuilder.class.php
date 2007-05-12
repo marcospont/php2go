@@ -55,20 +55,20 @@ define('QUERY_BUILDER_OP_ALL', 2);
 
 /**
  * Builds database queries
- * 
+ *
  * Based on provided query parts (fields, tables, condition clause,
  * grouping clause, orderby clause, ...), this class is able to build,
  * extend, modify and execute regular SQL queries.
- * 
+ *
  * Examples:
  * <code>
  * $qry = new QueryBuilder('*', 'person');
  * print $qry->getQuery();
  * /**
  *  * Prints:
- *  * SELECT * FROM person 
+ *  * SELECT * FROM person
  * {@*}
- * 
+ *
  * $qry = new QueryBuilder();
  * $qry->setFields('p.name,p.address,p.category');
  * $qry->addTable('person p');
@@ -86,7 +86,7 @@ define('QUERY_BUILDER_OP_ALL', 2);
  *  * ORDER BY p.name
  * {@*}
  * </code>
- * 
+ *
  * @package db
  * @uses Db
  * @uses DataSet
@@ -103,56 +103,56 @@ class QueryBuilder extends PHP2Go
 	 * @var bool
 	 */
 	var $distinct;
-	
+
 	/**
 	 * Query fields
 	 *
 	 * @var string
 	 */
 	var $fields;
-	
+
 	/**
 	 * Query tables (including join operations)
 	 *
 	 * @var string
 	 */
 	var $tables;
-	
+
 	/**
 	 * Query condition clause
 	 *
 	 * @var string
 	 */
 	var $clause;
-	
+
 	/**
 	 * Query grouping clause
 	 *
 	 * @var string
 	 */
 	var $groupby;
-	
+
 	/**
 	 * Grouping clause condition (HAVING keyword)
 	 *
 	 * @var string
 	 */
 	var $condition;
-	
+
 	/**
 	 * Order clause
 	 *
 	 * @var string
 	 */
 	var $orderby;
-	
+
 	/**
 	 * Limit settings
 	 *
 	 * @var array
 	 */
 	var $limit = array();
-	
+
 	/**
 	 * Uppercase all SQL keywords inside the query
 	 *
@@ -187,7 +187,7 @@ class QueryBuilder extends PHP2Go
 	 * @param bool $setting Enable/disable
 	 */
 	function setDistinct($setting=TRUE) {
-		$this->distinct = TypeUtils::toBoolean($setting);
+		$this->distinct = (bool)$setting;
 	}
 
 	/**
@@ -204,7 +204,7 @@ class QueryBuilder extends PHP2Go
 
 	/**
 	 * Set the fields of the SQL query
-	 * 
+	 *
 	 * Replaces existent fields.
 	 *
 	 * @param string $fields Query fields (comma separated, if more than one)
@@ -287,7 +287,7 @@ class QueryBuilder extends PHP2Go
 
 	/**
 	 * Set the query condition clause
-	 * 
+	 *
 	 * Replaces the existent condition clause.
 	 *
 	 * @param string $clause Condition clause
@@ -346,7 +346,7 @@ class QueryBuilder extends PHP2Go
 
 	/**
 	 * Set the order clause of the SQL query
-	 * 
+	 *
 	 * Replaces existent order clause.
 	 *
 	 * @see prefixOrder()
@@ -369,13 +369,13 @@ class QueryBuilder extends PHP2Go
 	}
 
 	/**
-	 * Loads the SQL query from a XML file containing 
+	 * Loads the SQL query from a XML file containing
 	 * a DATASOURCE specification
-	 * 
+	 *
 	 * This method is able to parse DATASOURCE nodes from
 	 * XML files used by {@link Report} class to build
 	 * HTML reports.
-	 * 
+	 *
 	 * Example:
 	 * <code>
 	 * /* my_xml_query.xml {@*}
@@ -463,7 +463,7 @@ class QueryBuilder extends PHP2Go
 
 	/**
 	 * Build and execute the SQL query in the database
-	 * 
+	 *
 	 * If the query has limit settings, the record set will be
 	 * built based on these settings.
 	 *
@@ -484,7 +484,7 @@ class QueryBuilder extends PHP2Go
 
 	/**
 	 * Builds and creates a data set from the SQL query
-	 * 
+	 *
 	 * If the query has limit settings, the data set will be
 	 * built based on these settings.
 	 *

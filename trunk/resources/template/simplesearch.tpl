@@ -1,12 +1,12 @@
 <form name="{$name}_search" method="post" action="{$searchUrl|if_empty:$p2g.server.REQUEST_URI}" style="display:inline">
-<!-- ASSIGN mainOpCookie=$name|concat:"_mainop" -->
-<!-- IF $p2g.cookie.$mainOpCookie eq "OR" -->
-	<!-- ASSIGN orChecked=" checked" -->
-	<!-- ASSIGN andChecked="" -->
-<!-- ELSE -->
-	<!-- ASSIGN andChecked=" checked" -->
-	<!-- ASSIGN orChecked="" -->
-<!-- END IF -->
+<!-- assign mainOpCookie=$name|concat:"_mainop" -->
+<!-- if $p2g.cookie.$mainOpCookie eq "OR" -->
+	<!-- assign orChecked=" checked" -->
+	<!-- assign andChecked="" -->
+<!-- else -->
+	<!-- assign andChecked=" checked" -->
+	<!-- assign orChecked="" -->
+<!-- end if -->
 <table border="0" width="100%" cellpadding="3" cellspacing="0">
   <tr>
     <td align="left" valign="top" nowrap>
@@ -33,10 +33,10 @@
 </table>
 <script type="text/javascript">
 	search_{$name} = new ReportSimpleSearch('{$name}', [{$masks}], '{$searchUrl}');
-<!-- IF $onSearch is not empty -->
+<!-- if $onSearch is not empty -->
 	search_{$name}.onSearch = function(args) {
 {$onSearch}
 	};
-<!-- END IF -->
+<!-- end if -->
 </script>
 </form>

@@ -31,7 +31,6 @@
  * Validates values against a minimum value
  *
  * @package validation
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -72,7 +71,7 @@ class MinValidator extends AbstractValidator
 		if (!isset($this->min)) {
 			$result = TRUE;
 		} else {
-			$value = TypeUtils::parseFloat($value);
+			$value = floatval($value);
 			$result = ($value >= $this->min);
 		}
 		if ($result === FALSE && isset($this->fieldLabel))

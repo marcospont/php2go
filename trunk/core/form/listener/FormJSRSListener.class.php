@@ -52,7 +52,6 @@
  *
  * @package form
  * @subpackage listener
- * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
@@ -116,7 +115,7 @@ class FormJSRSListener extends FormEventListener
 		$this->remoteFunction = $remoteFunction;
 		$this->callback = $callback;
 		$this->params = $params;
-		$this->debug = TypeUtils::toBoolean($debug);
+		$this->debug = (bool)$debug;
 	}
 
 	/**

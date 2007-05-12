@@ -116,7 +116,6 @@ $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_IS_EXPR'] = "Neplatná operace pro 'is' (je) 
 $P2G_LANGUAGE['ERR_TPLPARSE_MISSING_TAG_ARGS'] = "Tag <I>%s</I> po&#382;aduje parametry!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_TAG_ARGS'] = "Tag <I>%s</I> nesmí obsahovat parametry!";
 $P2G_LANGUAGE['ERR_TPLPARSE_INVALID_MODIFIER'] = "Parametr %s není platný nebo neexistuje!";
-$P2G_LANGUAGE['ERR_WIDGET_INCLUDE'] = "Prvek <i>%s</i> m&#367;&#382;e být pou&#382;it pouze v INCLUDE WIDGET &#269;ásti!";
 $P2G_LANGUAGE['ERR_WIDGET_MANDATORY_PROPERTY'] = "Vlastnost <i>%s</i> is je povinná v definici prvku <i>%s</i>!";
 $P2G_LANGUAGE['ERR_EMPTY_DOC_LAYOUT'] = "V této p&#345;edloze nejsou definovány &#382;ádné elementy.";
 $P2G_LANGUAGE['ERR_CANT_REPLICATE_ROOT_BLOCK'] = "Základní blok v p&#345;edloze nem&#367;&#382;e b&#253;t p&#345;epsán.";

@@ -73,8 +73,6 @@ $P2G_USER_CFG['ABSOLUTE_URI'] = $url;
  */
 $P2G_USER_CFG['LANGUAGE'] = array(
 	'DEFAULT' => 'en-us',
-	'AUTO_DETECT' => TRUE,
-	//'AVAILABLE' => array('en-us', 'pt-br'),
 	'REQUEST_PARAM' => 'lang',
 	'MESSAGES_PATH' => dirname(__FILE__) . '/locale/'
 );

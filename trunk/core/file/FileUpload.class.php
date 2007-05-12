@@ -133,6 +133,18 @@ class FileUpload extends PHP2Go
 	}
 
 	/**
+	 * Reset class defaults
+	 *
+	 * Returns to the default settings for max file size,
+	 * allowed file types and overwrite files flag.
+	 */
+	function resetDefaults() {
+		$this->maxFileSize = FILE_UPLOAD_MAX_SIZE;
+		$this->allowedFileTypes = array();
+		$this->overwriteFiles = TRUE;
+	}
+
+	/**
 	 * Set allowed mime types
 	 *
 	 * @param string $type,... Expects a list of mime-types
@@ -157,7 +169,7 @@ class FileUpload extends PHP2Go
 	function setMaxFileSize($maxSize) {
 		$maxPHP = str_replace(array('g', 'G', 'm', 'M', 'k', 'K'), array('000000000', '000000000', '000000', '000000', '000', '000'), System::getIni('upload_max_filesize'));
 		$maxUser = str_replace(array('g', 'G', 'm', 'M', 'k', 'K'), array('000000000', '000000000', '000000', '000000', '000', '000'), $maxSize);
-		$this->maxFileSize = min(TypeUtils::parseInteger($maxPHP), TypeUtils::parseIntegerPositive($maxUser));
+		$this->maxFileSize = min(intval($maxPHP), abs(intval($maxUser)));
 	}
 
 	/**
@@ -233,7 +245,7 @@ class FileUpload extends PHP2Go
 			'save_callback' => NULL,
 			'error' => ''
 		);
-		if (!TypeUtils::isNull($callback))
+		if (!is_null($callback))
 			$newHandler['save_callback'] = new Callback($callback);
 		$this->uploadHandlers[] =& $newHandler;
 		return sizeof($this->uploadHandlers) - 1;
