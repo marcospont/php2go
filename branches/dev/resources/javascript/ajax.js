@@ -373,7 +373,7 @@ AjaxRequest.prototype.onStateChange = function() {
 				if (resp.success) {
 					if ((resp.headers['Content-type'] || '').match(/^(text|application)\/(x-)?(java|ecma)script(;.*)?$/i)) {
 						try {
-							eval(resp.responseText);
+							PHP2Go.eval(resp.responseText);
 							this.raise('onSuccess', [resp]);
 						} catch(e) {
 							this.raise('onException', [e]);
