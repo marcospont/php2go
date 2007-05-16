@@ -177,9 +177,10 @@ var PHP2Go = {
 	 *
 	 * <br>Properties:
 	 * <ul><li>ie (Boolean)</li><li>ie7 (Boolean)</li><li>ie6 (Boolean)</li><li>
-	 * ie5 (Boolean)</li><li>opera (Boolean)</li><li>khtml (Boolean)</li><li>mozilla
-	 * (Boolean)</li><li>gecko (Boolean)</li><li>windows (Boolean)</li><li>linux (Boolean)</li><li>
-	 * mac (Boolean)</li><li>unix (Boolean)</li><li>os (String)</li></ul>
+	 * ie5 (Boolean)</li><li>opera (Boolean)</li><li>khtml (Boolean)</li><li>safari
+	 * (Boolean)</li><li>mozilla (Boolean)</li><li>gecko (Boolean)</li><li>windows
+	 * (Boolean)</li><li>linux (Boolean)</li><li>mac (Boolean)</li><li>unix
+	 * (Boolean)</li><li>os (String)</li></ul>
 	 *
 	 * @type Object
 	 */
@@ -190,7 +191,8 @@ var PHP2Go = {
 		bw.ie6 = bw.ie && /msie 6/i.test(ua);
 		bw.ie5 = bw.ie && /msie 5\.0/i.test(ua);
 		bw.opera = /opera/i.test(ua);
-		bw.khtml = /konqueror|safari|khtml/i.test(ua);
+		bw.khtml = /konqueror|safari|webkit|khtml/i.test(ua);
+		bw.safari = /safari|webkit/i.test(ua);
 		bw.mozilla = !bw.ie && !bw.opera && !bw.khtml && /mozilla/i.test(ua);
 		bw.gecko = /gecko/i.test(ua);
 		bw.windows = bw.linux = bw.mac = bw.unix = false;
@@ -225,6 +227,18 @@ var PHP2Go = {
 			case 'GOET' : return (a >= b);
 			default : return false;
 		}
+	},
+	/**
+	 * Evaluates a Javascript string in global context
+	 * @param {String} Javascript string
+	 */
+	eval : function(str) {
+		if (window.execScript)
+			window.execScript(str);
+		else if (this.browser.safari)
+			window.setTimeout(str, 0);
+		else
+			eval.call(window, str);
 	}
 };
 
@@ -556,12 +570,8 @@ String.prototype.evalScripts = function() {
 		var matches = this.match(ra) || [];
 		return $C(matches).map(function(item) {
 			var match = item.match(ro);
-			if (match) {
-				if (window.execScript)
-					window.execScript(match[1]);
-				else
-					eval(match[1]);
-			}
+			if (match)
+				PHP2Go.eval(match[1]);
 		});
 	} catch(e) {
 		var tmp, self = this, sp = this.indexOf("<script"), ep1 = 0, ep2 = 0;
@@ -570,7 +580,7 @@ String.prototype.evalScripts = function() {
 			ep1 = tmp.indexOf(">");
 			ep2 = tmp.indexOf("</script>");
 			if (ep1 != -1 && ep2 != -1) {
-				eval(tmp.substr(ep1+1, ep2-ep1-1));
+				PHP2Go.eval(tmp.substr(ep1+1, ep2-ep1-1));
 				self = (sp ? self.substr(0, sp-1) : '') + tmp.substr(ep2+9);
 				sp = self.indexOf("<script");
 			} else {
@@ -1409,14 +1419,9 @@ $E = function(elm) {
  */
 $N = function(name, parent, style, html) {
 	var elm = $E(document.createElement(name.toLowerCase()));
-	if (style) {
-		for (p in style)
-			elm.style[p] = style[p];
-	}
-	if (parent)
-		elm = parent.appendChild(elm);
-	if (html)
-		elm.innerHTML = html;
+	elm.setStyle(style);
+	(parent) && (parent.appendChild(elm));
+	(html) && (elm.innerHTML = html);
 	return elm;
 };
 
