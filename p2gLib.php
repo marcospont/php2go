@@ -236,7 +236,7 @@ function __v(&$val) {
  * @param string $str Input string
  * @param string $nl New line string
  */
-function println($str, $nl='<br>') {
+function println($str, $nl='<br />') {
 	echo $str . $nl;
 }
 
@@ -305,7 +305,7 @@ function dumpArray($arr, $return=TRUE, $stringLimit=200, $deep=FALSE, $i=0) {
  * @return string
  */
 function exportVariable($var, $formatted=FALSE) {
-	if (is_object($var) && !System::isPHP5() && method_exists($var, '__tostring'))
+	if (is_object($var) && !IS_PHP5 && method_exists($var, '__tostring'))
 		$export = $var->__toString();
 	else
 		$export = var_export($var, TRUE);

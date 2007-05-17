@@ -73,11 +73,11 @@ class CheckField extends FormField
 				$this->id, $this->id . "_label", $this->_Form->getLabelStyle(), $caption
 			);
 		}
-		print sprintf("<input type=\"checkbox\" id=\"%s\" name=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s>%s",
+		print sprintf("<input type=\"checkbox\" id=\"%s\" name=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s />%s",
 			$this->id, $this->name, $this->attributes['CAPTION'], $this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'],
 			$this->attributes['STYLE'], $this->attributes['DISABLED'], $this->attributes['CHECKED'], $this->attributes['DATASRC'],
 			$this->attributes['DATAFLD'], $this->attributes['SCRIPT'], $captionString);
-		print sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">",
+		print sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\" />",
 				"V_{$this->id}", "V_{$this->name}",
 				(empty($this->attributes['DISABLED']) ? (empty($this->value) ? 'F' : $this->value) : '')
 		);
@@ -161,7 +161,7 @@ class CheckField extends FormField
 		$method = '_' . HttpRequest::method();
 		$$method["V_{$this->name}"] = $_REQUEST["V_{$this->name}"] = $value;
 		// set CHECKED attribute
-		$this->attributes['CHECKED'] = ($value == 'T' ? ' checked' : '');
+		$this->attributes['CHECKED'] = ($value == 'T' ? ' checked="checked"' : '');
 		$this->value = $value;
 	}
 
@@ -183,7 +183,7 @@ class CheckField extends FormField
 	function setChecked($setting=TRUE) {
 		$setting = (bool)$setting;
 		if ($setting) {
-			$this->attributes['CHECKED'] = ' checked';
+			$this->attributes['CHECKED'] = ' checked="checked"';
 			$this->value = 'T';
 		} else {
 			$this->attributes['CHECKED'] = '';

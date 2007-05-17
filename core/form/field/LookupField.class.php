@@ -69,7 +69,7 @@ class LookupField extends DbField
 		$name = ($this->attributes['MULTIPLE'] && substr($this->name, -2) != '[]' ? $this->name . '[]' : $this->name);
 		print sprintf("\n<select id=\"%s\" name=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s%s>\n",
 			$this->id, $name, $this->label, $this->attributes['SCRIPT'], $this->attributes['ACCESSKEY'],
-			$this->attributes['TABINDEX'], $this->attributes['STYLE'], ($this->attributes['MULTIPLE'] ? ' multiple' : ''),
+			$this->attributes['TABINDEX'], $this->attributes['STYLE'], ($this->attributes['MULTIPLE'] ? " multiple=\"multiple\"" : ''),
 			$this->attributes['SIZE'], $this->attributes['WIDTH'], $this->attributes['DISABLED'],
 			$this->attributes['DATASRC'], $this->attributes['DATAFLD']
 		);
@@ -89,9 +89,9 @@ class LookupField extends DbField
 					}
 					if ($hasValue) {
 						if ($arrayValue)
-							$optionSelected = (in_array($key, $this->value) ? ' selected' : '');
+							$optionSelected = (in_array($key, $this->value) ? ' selected="selected"' : '');
 						else
-							$optionSelected = (!strcasecmp($key, $this->value) ? ' selected' : '');
+							$optionSelected = (!strcasecmp($key, $this->value) ? ' selected="selected"' : '');
 					} else {
 						$optionSelected = '';
 					}
@@ -103,9 +103,9 @@ class LookupField extends DbField
 				while (list($key, $display) = $this->_Rs->fetchRow()) {
 					if ($hasValue) {
 						if ($arrayValue)
-							$optionSelected = (in_array($key, $this->value) ? ' selected' : '');
+							$optionSelected = (in_array($key, $this->value) ? ' selected="selected"' : '');
 						else
-							$optionSelected = (!strcasecmp($key, $this->value) ? ' selected' : '');
+							$optionSelected = (!strcasecmp($key, $this->value) ? ' selected="selected"' : '');
 					} else {
 						$optionSelected = '';
 					}

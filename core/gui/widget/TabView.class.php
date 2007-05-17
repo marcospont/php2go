@@ -229,8 +229,8 @@ class TabView extends Widget
 			$img1 = 'tabview_stop.gif';
 			$img2 = 'tabview_sbottom.gif';
 		}
-		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\"></button>", PHP2GO_ICON_PATH, $img1);
-		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\"></button>", PHP2GO_ICON_PATH, $img2);
+		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\" alt=\"\" /></button>", PHP2GO_ICON_PATH, $img1);
+		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\" alt=\"\" /></button>", PHP2GO_ICON_PATH, $img2);
 		$code .= "\n  </div>";
 		$code .= sprintf("\n  <div class=\"tabNavigationContainer\">");
 		$code .= sprintf("\n    <ul class=\"tabNavigation%s\">", (!empty($attrs['navigationClass']) ? " {$attrs['navigationClass']}" : ""));
@@ -241,7 +241,7 @@ class TabView extends Widget
 			$labelClass = $panel->getAttribute('labelClass');
 			if (!empty($labelClass))
 				$cssClasses[] = $labelClass;
-			$code .= sprintf("<li%s><a href=\"javascript:;\" title=\"%s\"%s><em>%s</em></a></li>", (!empty($cssClasses) ? " class=\"" . join(' ', $cssClasses) . "\"" : ""), $panel->getAttribute('caption'), ($panel->getAttribute('disabled') ? " disabled" : ""), $panel->getAttribute('caption'));
+			$code .= sprintf("<li%s><a href=\"javascript:;\" title=\"%s\"%s><em>%s</em></a></li>", (!empty($cssClasses) ? " class=\"" . join(' ', $cssClasses) . "\"" : ""), $panel->getAttribute('caption'), ($panel->getAttribute('disabled') ? " disabled=\"disabled\"" : ""), $panel->getAttribute('caption'));
 		}
 		$code .= "</ul>";
 		$code .= "\n  </div>";

@@ -492,7 +492,7 @@ class Document extends PHP2Go
 	 * @uses DocumentHead::appendContent()
 	 */
 	function setShortcutIcon($url) {
-		$this->Head->appendContent(sprintf("<link rel=\"shortcut icon\" href=\"%s\">", htmlentities($url)));
+		$this->Head->appendContent(sprintf("<link rel=\"shortcut icon\" href=\"%s\" />", htmlentities($url)));
 	}
 
 	/**
@@ -809,7 +809,7 @@ class Document extends PHP2Go
 			foreach($this->scriptBlocks as $language => $scripts) {
 				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
-				print sprintf("\n<script language=\"%s\" type=\"text/%s\">\n<!--\n%s//-->\n</script>", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
+				print sprintf("\n<script language=\"%s\" type=\"text/%s\">\n%s\n</script>", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
 		}
 		print "\n</body>\n</html>";

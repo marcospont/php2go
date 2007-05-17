@@ -296,7 +296,7 @@ class FormDataBind extends Form
 	function setExtraButtonFunction($button, $function) {
 		$button = strtoupper($button);
 		if (in_array($button, array('FIRST', 'PREVIOUS', 'NEXT', 'LAST', 'NEW', 'EDIT', 'SAVE', 'DELETE', 'CANCEL'))) {
-			$this->extraFunctions[$button] = " onClick=setTimeout(\"" . str_replace("\"", "'", $function) . "\", 100);";
+			$this->extraFunctions[$button] = " onclick=setTimeout(\"" . str_replace("\"", "'", $function) . "\", 100);";
 			return TRUE;
 		} else {
 			return FALSE;
@@ -453,7 +453,7 @@ class FormDataBind extends Form
 			$Tpl->assign('lang', $toolbarValues);
 			$Tpl->assign('jsrsSubmit', ($this->jsrsSubmit ? 'true' : 'false'));
 			$Tpl->assign('readonlyForm', ($this->readonly ? 'true' : 'false'));
-			$Tpl->assign('globalDisabled', ($this->readonly ? ' disabled' : ''));
+			$Tpl->assign('globalDisabled', ($this->readonly ? ' disabled="disabled"' : ''));
 			$Tpl->assign('buttonStyle', parent::getButtonStyle());
 			$Tpl->assign('inputStyle', parent::getInputStyle());
 			$Tpl->assign('labelStyle', parent::getLabelStyle());
@@ -537,12 +537,13 @@ class FormDataBind extends Form
 	function _buildFormStart() {
 		$target = (isset($this->actionTarget)) ? " target=\"" . $this->actionTarget . "\"" : '';
 		$enctype = ($this->hasUpload) ? " enctype=\"multipart/form-data\"" : '';
-		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\">", $this->formName, FORM_SIGNATURE, parent::getSignature());
-		$lastPosition = sprintf("\n<input type=\"hidden\" name=\"lastposition\" value=\"%s\">", HttpRequest::getVar('lastposition'));
-		$removeId = sprintf("\n<input type=\"hidden\" name=\"removeid\" value=\"%s\">", HttpRequest::getVar('removeid'));
+		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\" />", $this->formName, FORM_SIGNATURE, parent::getSignature());
+		$lastPosition = sprintf("\n<input type=\"hidden\" name=\"lastposition\" value=\"%s\" />", HttpRequest::getVar('lastposition'));
+		$removeId = sprintf("\n<input type=\"hidden\" name=\"removeid\" value=\"%s\" />", HttpRequest::getVar('removeid'));
 		return sprintf("<form id=\"%s\" name=\"%s\" action=\"%s\" method=\"%s\" style=\"display:inline\"%s%s>%s%s%s\n",
-			$this->formName, $this->formName, $this->formAction, $this->formMethod,
-			$target, $enctype, $signature, $lastPosition, $removeId
+			$this->formName, $this->formName, $this->formAction,
+			strtolower($this->formMethod), $target, $enctype,
+			$signature, $lastPosition, $removeId
 		);
 	}
 

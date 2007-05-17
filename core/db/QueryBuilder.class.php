@@ -393,7 +393,7 @@ class QueryBuilder extends PHP2Go
 	 * $qry->loadFromXml('my_xml_query.xml');
 	 * $dataset =& $qry->createDataSet();
 	 * while ($row = $dataset->fetch()) {
-	 *   print $row->getField('name') . '<br/>';
+	 *   print $row->getField('name') . '<br />';
 	 * }
 	 * </code>
 	 *
@@ -443,9 +443,9 @@ class QueryBuilder extends PHP2Go
 	function displayQuery($preFormatted=TRUE) {
 		$sql = $this->_formatReserved($this->_buildQuery(TRUE));
 		if ($preFormatted)
-			print '<pre>' . $sql . '</pre><br>';
+			println('<pre>' . $sql . '</pre>');
 		else
-        	print $sql . '<br>';
+			println($sql);
 	}
 
 	/**

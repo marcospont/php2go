@@ -404,9 +404,9 @@ class Statement extends PHP2Go
 		reset($this->variables);
 		foreach($this->variables as $name => $variable) {
 			if ($variable['value'] === NULL)
-				$str .= "<b>Variable:</b> {$name} => <b>*NOT BOUND*</b><br>";
+				$str .= "<b>Variable:</b> {$name} => <b>*NOT BOUND*</b><br />";
 			else
-				$str .= "<b>Variable:</b> {$name} => <b>{$variable['value']}</b><br>";
+				$str .= "<b>Variable:</b> {$name} => <b>{$variable['value']}</b><br />";
 		}
 		print ($pre ? '<pre>' . $str . '</pre>' : $str);
 	}

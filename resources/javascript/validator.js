@@ -652,7 +652,7 @@ FormValidator.prototype.setErrorDisplayOptions = function(mode, target, showAll,
 		if (trg) {
 			opt.mode = mode;
 			opt.ls = "";
-			opt.nl = "<br>";
+			opt.nl = "<br />";
 			opt.target = trg;
 			if (list == FormValidator.LIST_FLOW || list == FormValidator.LIST_BULLET)
 				opt.list = list;

@@ -94,7 +94,7 @@ class AutoCompleteField extends EditableField
 	 */
 	function display() {
 		if ($this->options['ajax'] && !$this->options['throbber']) {
-			$throbber = sprintf("\n<span id=\"%s_throbber\" style=\"display:none\"><img src=\"%sindicator.gif\" border=\"0\" align=\"top\" alt=\"\"></span>", $this->id, PHP2GO_ICON_PATH);
+			$throbber = sprintf("\n<span id=\"%s_throbber\" style=\"display:none\"><img src=\"%sindicator.gif\" border=\"0\" align=\"top\" alt=\"\" /></span>", $this->id, PHP2GO_ICON_PATH);
 			$this->options['throbber'] = "{$this->id}_throbber";
 		} else {
 			$throbber = '';
@@ -111,7 +111,7 @@ class AutoCompleteField extends EditableField
 			);
 		} else {
 			print sprintf(
-"\n<input id=\"%s\" name=\"%s\" type=\"text\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s>%s" .
+"\n<input id=\"%s\" name=\"%s\" type=\"text\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s />%s" .
 "\n<div id=\"%s_choices\" style=\"position:absolute;display:none\" class=\"autoCompleteChoices\"></div>" .
 "\n<script type=\"text/javascript\">\n\tnew AutoCompleteField('%s', %s);\n</script>",
 				$this->id, $this->name, $this->value, $this->attributes['LENGTH'], $this->attributes['SIZE'],
@@ -350,8 +350,7 @@ class AutoCompleteField extends EditableField
 				$this->_getChoices();
 		}
 		// search and print choices, responding to an AJAX request
-		$headers = HttpRequest::getHeaders();
-		if (@$headers['X-Requested-With'] == 'XMLHttpRequest') {
+		if (HttpRequest::isAjax()) {
 			$token = HttpRequest::post($this->name);
 			if ($token !== NULL) {
 				$this->_printChoices($token);

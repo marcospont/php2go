@@ -213,7 +213,7 @@ class OpenSSLCrypt extends PHP2Go
 		if (!$pub) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_OPENSSL_PUBKEY_ENCRYPT');
 			if (isset($this->openSSLError))
-				$this->errorMsg .= '<br><i>OpenSSL Error:</i> ' . $this->openSSLError;
+				$this->errorMsg .= '<br /><i>OpenSSL Error:</i> ' . $this->openSSLError;
 			if ($this->throwErrors)
 				PHP2Go::raiseError($this->errorMsg, E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
@@ -278,7 +278,7 @@ class OpenSSLCrypt extends PHP2Go
 		if (!$pk) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_OPENSSL_PRIVKEY_DECRYPT');
 			if (isset($this->openSSLError))
-				$this->errorMsg .= '<br><i>OpenSSL Error:</i> ' . $this->openSSLError;
+				$this->errorMsg .= '<br /><i>OpenSSL Error:</i> ' . $this->openSSLError;
 			if ($this->throwErrors)
 				PHP2Go::raiseError($this->errorMsg, E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
@@ -346,7 +346,7 @@ class OpenSSLCrypt extends PHP2Go
 		if (!$pk) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_OPENSSL_PRIVKEY_SIGN');
 			if (isset($this->openSSLError))
-				$this->errorMsg .= '<br><i>OpenSSL Error:</i> ' . $this->openSSLError;
+				$this->errorMsg .= '<br /><i>OpenSSL Error:</i> ' . $this->openSSLError;
 			if ($this->throwErrors)
 				PHP2Go::raiseError($this->errorMsg, E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
@@ -405,7 +405,7 @@ class OpenSSLCrypt extends PHP2Go
 		if (!$pub) {
 			$this->errorMsg = PHP2Go::getLangVal('ERR_OPENSSL_PUBKEY_VERIFY');
 			if (isset($this->openSSLError))
-				$this->errorMsg .= '<br><i>OpenSSL Error:</i> ' . $this->openSSLError;
+				$this->errorMsg .= '<br /><i>OpenSSL Error:</i> ' . $this->openSSLError;
 			if ($this->throwErrors)
 				PHP2Go::raiseError($this->errorMsg, E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;

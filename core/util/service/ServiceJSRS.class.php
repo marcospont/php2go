@@ -199,7 +199,7 @@ class ServiceJSRS extends PHP2Go
 	 * @access private
 	 */
 	function _buildResponse($payload) {
-		print ("<html><head></head><body onload=\"p=document.layers?parentLayer:window.parent;p.jsrsLoaded('" . $this->request['contextId'] . "');\">jsrsPayload:<br>" . "<form name=\"jsrs_Form\"><textarea name=\"jsrs_Payload\">" . $this->_escapeResponse($payload) . "</textarea></form></body></html>");
+		print ("<html><head></head><body onload=\"p=document.layers?parentLayer:window.parent;p.jsrsLoaded('" . $this->request['contextId'] . "');\">jsrsPayload:<br />" . "<form name=\"jsrs_Form\"><textarea name=\"jsrs_Payload\">" . $this->_escapeResponse($payload) . "</textarea></form></body></html>");
 		exit();
 	}
 

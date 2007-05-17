@@ -8,18 +8,18 @@
 	<!-- assign _itemClass = $itemClass -->
 <!-- end if -->
 <!-- if $mode eq $p2g.const.TOOLBAR_MODE_ICONS -->
-      <a id="{$id}{$p2g.loop.toolbar_items.rownum}" href="{$item.link}"{$_itemClass} title="{$item.caption}" onMouseOver="{$id}Desc.update('{$item.description|if_empty:"&nbsp;"}');" onMouseOut="{$id}Desc.update('&nbsp;');"><img src="{$item.image}" border="0"/></a>{$separator}
+      <a id="{$id}{$p2g.loop.toolbar_items.rownum}" href="{$item.link}"{$_itemClass} title="{$item.caption}" onmouseover="{$id}Desc.update('{$item.description|if_empty:"&nbsp;"}');" onmouseout="{$id}Desc.update('&nbsp;');"><img src="{$item.image}" border="0" alt="" /></a>{$separator}
 <!-- else if $mode eq $p2g.const.TOOLBAR_MODE_BUTTONS -->
-      <button id="{$id}{$p2g.loop.toolbar_items.rownum}"{$_itemClass} onClick="window.location.href='{$item.link}'" onMouseOver="{$id}Desc.update('{$item.description|if_empty:"&nbsp;"}');" onMouseOut="{$id}Desc.update('&nbsp;');">{$item.caption}</button>{$separator}
+      <button id="{$id}{$p2g.loop.toolbar_items.rownum}"{$_itemClass} onclick="window.location.href='{$item.link}'" onmouseover="{$id}Desc.update('{$item.description|if_empty:"&nbsp;"}');" onmouseout="{$id}Desc.update('&nbsp;');">{$item.caption}</button>{$separator}
 <!-- else -->
-      <a href="{$item.link}"{$_itemClass} onMouseOver="{$id}Desc.update('{$item.description|if_empty:"&nbsp;"}');" onMouseOut="{$id}Desc.update('&nbsp;');">{$item.caption}</a>{$separator}
+      <a href="{$item.link}"{$_itemClass} onmouseover="{$id}Desc.update('{$item.description|if_empty:"&nbsp;"}');" onmouseout="{$id}Desc.update('&nbsp;');">{$item.caption}</a>{$separator}
 <!-- end if -->
 <!-- if $horizontal eq TRUE -->
 	<!-- if $p2g.loop.toolbar_items.last eq FALSE -->
     </td><td align="{$align}">
 	<!-- end if -->
 <!-- else -->
-    <br>
+    <br />
 <!-- end if -->
 <!-- end loop -->
     </td>
