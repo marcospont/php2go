@@ -112,6 +112,11 @@ Ajax.parseHeaders = function(str) {
 };
 
 /**
+ * @ignore
+ */
+Ajax.lastModified = {};
+
+/**
  * Holds the current active transaction count
  * @type Number
  */
@@ -189,6 +194,11 @@ AjaxRequest = function(url, args) {
 	 */
 	this.encoding = null;
 	/**
+	 * Whether an If-Modified-Since header should be sent
+	 * @type Boolean
+	 */
+	this.ifModified = false;
+	/**
 	 * Hash of GET/POST parameters
 	 * @type Hash
 	 */
@@ -223,46 +233,40 @@ AjaxRequest.extend(Ajax, 'Ajax');
 
 /**
  * Parses the arguments provided to the AjaxRequest constructor.
- * Acceptable argument names: method, async, params, contentType,
- * encoding, body, form, formFields, scope and all supported event names
+ *
+ * Acceptable argument names: <ul><li>method</li><li>async</li><li>headers</li>
+ * <li>contentType</li><li>encoding</li><li>ifModified</li><li>params</li><li>form</li>
+ * <li>formFields</li><li>formValidate</li><li>body</li><li>xml</li><li>throbber</li><li>scope</li>
+ * <li>onLoading</li><li>onLoaded</li><li>onInteractive</li><li>onComplete</li><li>onSuccess</li>
+ * <li>onFailure</li><li>onJSONResult</li><li>onXMLResult</li><li>onException</li></ul>
+ *
  * @param {Object} args Arguments
  * @type void
  */
 AjaxRequest.prototype.readArguments = function(args) {
-	if (args.method)
-		this.method = args.method;
-	if (typeof(args.async) != 'undefined')
-		this.async = !!args.async;
-	if (args.params) {
-		for (var param in args.params)
-			this.params[param] = args.params[param];
-	}
-	if (args.headers) {
-		for (var name in args.headers)
-			this.headers[name] = args.headers[name];
-	}
-	if (args.contentType)
-		this.contentType = args.contentType;
-	if (args.encoding)
-		this.encoding = args.encoding;
-	if (args.body)
-		this.body = args.body;
-	if (args.form)
-		this.form = args.form;
-	if (args.formFields)
-		this.formFields = args.formFields;
-	if (typeof(args.formValidate) != 'undefined')
-		this.formValidate = !!args.formValidate;
-	if (args.throbber) {
-		if ((args.throbber.constructor || $EF) == Throbber)
-			this.throbber = args.throbber;
-		else
-			this.throbber = new Throbber({element: args.throbber});
-	}
-	var events = ['onLoading', 'onLoaded', 'onInteractive', 'onComplete', 'onSuccess', 'onFailure', 'onJSONResult', 'onXMLResult', 'onException'];
-	for (var i=0; i<events.length; i++) {
-		if (args[events[i]])
-			this.bind(events[i], args[events[i]], args.scope || null);
+	for (var n in args) {
+		switch (n) {
+			case 'onLoading' : case 'onLoaded' : case 'onInteractive' :
+			case 'onComplete' : case 'onSuccess' : case 'onFailure' :
+			case 'onJSONResult' : case 'onXMLResult' : case 'onException' :
+				this.bind(n, args[n], args.scope || null);
+				break;
+			case 'headers' : case 'params' :
+				for (var pn in args[n])
+					this[n][pn] = args[n][pn];
+				break;
+			case 'async' : case 'ifModified' : case 'formValidate' :
+				this[n] = !!args[n];
+				break;
+			case 'throbber' :
+				if ((args.throbber.constructor || $EF) != Throbber)
+					args.throbber = new Throbber({element: args.throbber});
+				this.throbber = args.throbber;
+				break;
+			default :
+				this[n] = args[n];
+				break;
+		}
 	}
 };
 
@@ -284,31 +288,33 @@ AjaxRequest.prototype.addParam = function(param, val) {
  * @type void
  */
 AjaxRequest.prototype.send = function() {
+	try {
 	this.form = $(this.form);
 	if (this.form && this.formValidate) {
 		if (this.form.validator && !this.form.validator.run())
 			return;
 	}
-	try {
-		// query string
-		var queryStr = this.buildQueryString();
-		// uri & body
-		var uri, body;
-		if (this.method.equalsIgnoreCase('get')) {
-			uri = this.uri + (this.uri.match(/\?/) ? '&' + queryStr : '?' + queryStr);
-			body = null;
-		} else {
-			uri = this.uri;
-			body = (this.body || queryStr);
-		}
+	// build query string
+	var uri, body, queryStr = this.buildQueryString();
+	// get request
+	if (this.method.equalsIgnoreCase('get')) {
+		uri = this.uri + (this.uri.match(/\?/) ? '&' + queryStr : '?' + queryStr);
+		body = null;
+	// post request
+	} else {
+		uri = this.uri;
+		body = (this.body || queryStr);
+	}
 		Ajax.transactionCount++;
 		if (this.throbber)
 			this.throbber.show();
 		this.conn = Ajax.getTransport();
 		this.conn.open(this.method, uri, this.async);
 		this.conn.onreadystatechange = this.onStateChange.bind(this);
-		// request headers
+		// set request headers
 		this.headers['X-Requested-With'] = 'XMLHttpRequest';
+		if (this.ifModified)
+			this.headers['If-Modified-Since'] = Ajax.lastModified[this.uri] || 'Thu, 01 Jan 1970 00:00:00 GMT';
 		if (this.method.equalsIgnoreCase('post')) {
 			this.headers['Content-Type'] = this.contentType + (this.encoding ? '; charset=' + this.encoding : '');
 			this.headers['Content-Length'] = body.length;
@@ -371,6 +377,7 @@ AjaxRequest.prototype.onStateChange = function() {
 				var resp = this.createResponse();
 				this.raise('onComplete', [resp]);
 				if (resp.success) {
+					// script responses
 					if ((resp.headers['Content-type'] || '').match(/^(text|application)\/(x-)?(java|ecma)script(;.*)?$/i)) {
 						try {
 							PHP2Go.eval(resp.responseText);
@@ -380,8 +387,10 @@ AjaxRequest.prototype.onStateChange = function() {
 						}
 					} else {
 						this.raise('onSuccess', [resp]);
+						// json handler
 						if (resp.json)
 							this.raise('onJSONResult', [resp]);
+						// xml handler
 						if (resp.xmlRoot)
 							this.raise('onXMLResult', [resp]);
 					}
@@ -453,6 +462,13 @@ AjaxRequest.prototype.createResponse = function() {
 			resp.headers = Ajax.parseHeaders(this.conn.getAllResponseHeaders());
 			resp.responseText = this.conn.responseText;
 			resp.responseXML = this.conn.responseXML;
+			// catch Last-Modified header
+			if (this.ifModified) {
+				try {
+					Ajax.lastModified[this.uri] = resp.headers['Last-Modified'];
+				} catch(e) {}
+			}
+			// eval JSON response
 			try {
 				if (resp.headers['X-JSON'])
 					resp.json = eval('(' + resp.headers['X-JSON'] + ')');
@@ -461,7 +477,7 @@ AjaxRequest.prototype.createResponse = function() {
 			} catch(e) {}
 			if (resp.responseXML)
 				resp.xmlRoot = resp.responseXML.documentElement;
-			resp.success = (resp.status >= 200 && resp.status < 300);
+			resp.success = ((resp.status >= 200 && resp.status < 300) || resp.status == 304);
 			return resp;
 	}
 };
