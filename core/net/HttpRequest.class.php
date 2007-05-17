@@ -95,6 +95,19 @@ class HttpRequest extends PHP2Go
 	}
 
 	/**
+	 * Get raw post contents
+	 *
+	 * @return string
+	 * @static
+	 */
+	function rawPost() {
+		global $HTTP_RAW_POST_DATA;
+		if (isset($HTTP_RAW_POST_DATA))
+			return $HTTP_RAW_POST_DATA;
+		return file_get_contents('php://input');
+	}
+
+	/**
 	 * Read a cookie value
 	 *
 	 * If $paramName is missing, the full superglobal
