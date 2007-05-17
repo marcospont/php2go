@@ -1,0 +1,55 @@
+/* 
+	root styles : 
+	menu (the custom style for the root level)
+	menuOver (related with onMouseOver event of each root option) 
+*/
+.menu {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	text-decoration: none;
+	font-weight: bold;
+	color: #FFFFFF;
+	cursor: pointer;
+	position: absolute
+}
+.menuOver {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	text-decoration: none;
+	font-weight: bold;
+	color: #F6FF00;
+	cursor: pointer;
+	position: absolute
+}
+/* 
+	child styles : 
+	menuChild (the custom menu child style)
+	menuChildOver (related with the onMouseOver event in each child)
+	menuBorder (style for the border of the nested levels)
+*/
+.menuChild {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	color: #000000;
+	cursor: pointer;
+	position: absolute;
+	text-align: left;
+	padding: 3px;
+	background-color: #DDE4EA;	
+}
+.menuChildOver {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	color: #ED1D24;
+	cursor: pointer;
+	position: absolute;
+	text-align: left;
+	padding: 3px;
+	background-color: #EFF2F7
+}
+.menuBorder {
+	background-color: #6d6d6d;
+	position: absolute	
+}
