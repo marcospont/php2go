@@ -84,7 +84,7 @@ class DatePickerField extends FormField
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		print sprintf(
-			"<input id=\"%s\" name=\"%s\" type=\"hidden\" value=\"%s\" title=\"%s\"%s%s/><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td id=\"%s_calendar\"%s></td></tr></table>" .
+			"<input id=\"%s\" name=\"%s\" type=\"hidden\" value=\"%s\" title=\"%s\"%s%s /><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td id=\"%s_calendar\"%s></td></tr></table>" .
 			"<script type=\"text/javascript\">new DatePickerField(\"%s\", %s);</script>",
 			$this->id, $this->name, $this->value, $this->label, $this->attributes['SCRIPT'],
 			$this->attributes['DISABLED'], $this->id, $this->attributes['STYLE'],

@@ -77,7 +77,7 @@ class ComboField extends FormField
 		$name = ($this->attributes['MULTIPLE'] && substr($this->name, -2) != '[]' ? $this->name . '[]' : $this->name);
 		print sprintf("\n<select id=\"%s\" name=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s%s>\n",
 				$this->id, $name, $this->label, $this->attributes['SCRIPT'], $this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'],
-				$this->attributes['STYLE'], ($this->attributes['MULTIPLE'] ? ' multiple' : ''), $this->attributes['SIZE'],
+				$this->attributes['STYLE'], ($this->attributes['MULTIPLE'] ? ' multiple="multiple"' : ''), $this->attributes['SIZE'],
 				$this->attributes['WIDTH'], $this->attributes['DISABLED'], $this->attributes['DATASRC'], $this->attributes['DATAFLD']
 		);
 		if (!$this->attributes['NOFIRST'])
@@ -88,9 +88,9 @@ class ComboField extends FormField
 			$key = $this->optionAttributes[$i]['VALUE'];
 			if ($hasValue) {
 				if ($arrayValue)
-					$optionSelected = in_array($key, $this->value) ? ' selected' : '';
+					$optionSelected = in_array($key, $this->value) ? ' selected="selected"' : '';
 				else
-					$optionSelected = !strcasecmp($key, $this->value) ? ' selected' : '';
+					$optionSelected = !strcasecmp($key, $this->value) ? ' selected="selected"' : '';
 			} else {
 				$optionSelected = '';
 			}

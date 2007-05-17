@@ -332,24 +332,24 @@ class PHP2GoError extends PHP2Go
 	 */
 	function _displayError($errData) {
 		$extra = @$errData['EXTRA'];
-		$location = ($errData['FILE'] != '' && $errData['LINE'] != '' ? "<br>on {$errData['FILE']}, {$errData['LINE']}" : '');
+		$location = ($errData['FILE'] != '' && $errData['LINE'] != '' ? "<br />on {$errData['FILE']}, {$errData['LINE']}" : '');
 		$stackTrace = '';
 		if (!empty($errData['TRACE'])) {
-			$stackTrace .= "<br><b>STACK TRACE</b><pre>";
+			$stackTrace .= "<br /><b>STACK TRACE</b><pre>";
 			foreach ($errData['TRACE'] as $element)
-				$stackTrace .= "\tat {$element['FUNCTION']}({$element['ARGS']})\n\t\ton {$element['FILE']}, {$element['LINE']}\n";
+				$stackTrace .= "\tat {$element['FUNCTION']}(" . htmlspecialchars($element['ARGS']) . "})\n\t\ton {$element['FILE']}, {$element['LINE']}\n";
 			$stackTrace .= "</pre>";
 		}
 		print ("
-			<table width='100%' cellpadding='6' cellspacing='0' border='1' bordercolor='#ff0000' bgcolor='#efefef'>
+			<table cellpadding=\"6\" cellspacing=\"0\" style=\"border:1px solid red;background-color:#efefef;width:auto;\">
 				<tr><td>
-					<table border='0' cellpadding='2' cellspacing='0' width='100%'>
-						<tr><td width='20' valign='top' rowspan='4'><img src='" . PHP2Go::getConfigVal('ABSOLUTE_URI', false) . "resources/icon/error.gif' hspace='3'></td><td style='font-family:Arial;font-weight:bolder;font-size:14px;color:#ff0000'>PHP2Go - {$errData['TYPE']}</td></tr>
-					   	<tr><td style='font-family:Arial;font-size:12px'><b>{$errData['MESSAGE']}</b></td></tr>
-						<tr><td style='font-family:Arial;font-size:12px'>{$extra}{$location}</td></tr>
-					   	<tr><td style='font-family:Arial;font-size:12px'>{$stackTrace}</tr>
+					<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\" width=\"100%\">
+						<tr><td width=\"20\" valign=\"top\" rowspan=\"4\"><img src=\"" . PHP2Go::getConfigVal('ABSOLUTE_URI', FALSE) . "resources/icon/error.gif\" hspace=\"3\" /></td><td style=\"font-family:Arial;font-weight:bold;font-size:14px;color:red;\">PHP2Go - {$errData['TYPE']}</td></tr>
+						<tr><td style=\"font-family:Arial;font-size:12px;\"><b>{$errData['MESSAGE']}</b></td></tr>
+						<tr><td style=\"font-family:Arial;font-size:12px;\">{$extra}{$location}</td></tr>
+						<tr><td style=\"font-family:Arial;font-size:12px;\">{$stackTrace}</td></tr>
 					</table>
-				</td></tr>
+				</tr></tr>
 			</table>
 		");
 	}
@@ -370,9 +370,9 @@ class PHP2GoError extends PHP2Go
 			$logString = "[" . strftime($this->dateFormat) . "]" . $nl;
 			$logString .= "\tTYPE=\"{$errData['TYPE']}\"" . $nl;
 			$logString .= "\tCODE={$errData['CODE']}" . $nl;
-			$logString .= "\tMESSAGE=\"" . str_replace(array('<br>','<br>',"\r","\n","\""), array(' ',' ',' ',' ','\''), $errData['MESSAGE']) . "\"" . $nl;
+			$logString .= "\tMESSAGE=\"" . str_replace(array('<br>','<br />',"\r","\n","\""), array(' ',' ',' ',' ','\''), $errData['MESSAGE']) . "\"" . $nl;
 			if (!empty($errData['EXTRA']))
-				$logString .= "\tEXTRA=\"" . str_replace(array('<br>','<br>',"\r","\n","\""), array(' ',' ',' ',' ','\''), $errData['EXTRA']) . "\"" . $nl;
+				$logString .= "\tEXTRA=\"" . str_replace(array('<br>','<br />',"\r","\n","\""), array(' ',' ',' ',' ','\''), $errData['EXTRA']) . "\"" . $nl;
 			$logString .= "\tFILE=\"{$errData['FILE']}\"" . $nl;
 			$logString .= "\tLINE={$errData['LINE']}" . $nl;
 			if (!empty($errData['TRACE'])) {
@@ -431,8 +431,8 @@ class PHP2GoError extends PHP2Go
 					$pars = array();
 					for ($j=0; $j<sizeof($trace[$i]['args']); $j++) {
 						if (is_string($trace[$i]['args'][$j])) {
-							$arg = eregi_replace("<br>", " ", $trace[$i]['args'][$j]);
-							$arg = ereg_replace("[[:blank:]]{2,}", " ", ereg_replace("[\r\t\n]{1,}", "", $arg));
+							$arg = preg_replace("/<br( \/)?>/", " ", $trace[$i]['args'][$j]);
+							$arg = preg_replace("/\s{2,}/", " ", preg_replace("/[\r\t\n]{1,}/", "", $arg));
 							$pars[] = "'" . (strlen($arg) > 200 ? substr($arg, 0, 200) . "...'(" . strlen($arg) . ")" : $arg . "'");
 						} elseif (is_object($trace[$i]['args'][$j])) {
 							$pars[] = get_class($trace[$i]['args'][$j]) . " object";
@@ -516,7 +516,7 @@ class PHP2GoError extends PHP2Go
 					} elseif (is_array($value)) {
 						$info['SESSION'][$key] = dumpArray($value);
 					} else {
-						$exported = ereg_replace("[[:blank:]]{2,}", " ", ereg_replace("[\r\t\n]{1,}", " ", exportVariable($value)));
+						$exported = preg_replace("/\s{2,}/", " ", preg_replace("/[\r\t\n]{1,}/", "", exportVariable($value)));
 						$info['SESSION'][$key] = $exported;
 					}
 				}

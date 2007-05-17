@@ -48,7 +48,7 @@ define('FTP_DEFAULT_PORT', 21);
  *     $ftp->changeDir('debian');
  *     $list = $ftp->fileList();
  *     foreach ($list as $entry)
- *       print $entry . '<br/>';
+ *       print $entry . '<br />';
  *     $ftp->quit();
  *   }
  * }

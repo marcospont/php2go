@@ -224,9 +224,9 @@ class EditableField extends FormField
 	 */
 	function setAutoComplete($setting) {
 		if ($setting === TRUE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"ON\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"on\"";
 		elseif ($setting === FALSE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"OFF\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"off\"";
 		else
 			$this->attributes['AUTOCOMPLETE'] = "";
 	}
@@ -238,7 +238,7 @@ class EditableField extends FormField
 	 */
 	function setReadonly($setting=TRUE) {
 		if ($setting) {
-			$this->attributes['READONLY'] = " readonly";
+			$this->attributes['READONLY'] = " readonly=\"readonly\"";
 			$this->readOnly = TRUE;
 		} else {
 			$this->attributes['READONLY'] = "";

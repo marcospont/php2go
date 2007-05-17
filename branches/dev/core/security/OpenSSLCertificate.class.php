@@ -311,12 +311,12 @@ class OpenSSLCertificate extends PHP2Go
 		fclose($fp);
 		// read certificate
 		if (!is_resource($this->handle = @openssl_x509_read($this->contents))) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br /><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 		// parse certificate
 		if (!is_array($info = @openssl_x509_parse($this->handle))) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br /><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 		// populate class properties

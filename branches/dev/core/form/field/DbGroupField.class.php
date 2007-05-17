@@ -63,8 +63,8 @@ class DbGroupField extends DbField
 		print sprintf("\n<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"%s>\n  <tr>", $this->attributes['TABLEWIDTH']);
 		for ($i=0,$s=sizeof($elements); $i<$s; $i++) {
 			print sprintf("\n    <td style=\"width:15px;height:15px;\">%s</td>", $elements[$i]['input']);
-			print sprintf("\n    <td><label for=\"%s_%s\" id=\"%s_label\"%s%s>%s</label></td>",
-				$elements[$i]['id'], $i, $elements[$i]['id'], $elements[$i]['alt'], $this->_Form->getLabelStyle(), $elements[$i]['caption']
+			print sprintf("\n    <td><label for=\"%s_%s\" id=\"%s_%s_label\"%s%s>%s</label></td>",
+				$elements[$i]['id'], $i, $elements[$i]['id'], $i, $elements[$i]['alt'], $this->_Form->getLabelStyle(), $elements[$i]['caption']
 			);
 			if ((($i+1) % $this->attributes['COLS']) == 0 && $i<($s-1))
 				print "\n  </tr><tr>";

@@ -152,7 +152,7 @@ class I25BarCode extends Widget
 	 * @return string
 	 */
 	function _drawBar($color, $type) {
-		return sprintf("<img src=\"%s\" width=\"%d\" height=\"%d\">", $this->bars[$color], $this->barWidth[$type], $this->attributes['barHeight']);
+		return sprintf("<img src=\"%s\" width=\"%d\" height=\"%d\" alt=\"\" />", $this->bars[$color], $this->barWidth[$type], $this->attributes['barHeight']);
 	}
 }
 ?>

@@ -228,7 +228,7 @@ class DirectoryManager extends PHP2Go
 	 * $dir->open("photo/");
 	 * /* get JPEG images only {@*}
 	 * while ($entry = $dir->read("\.jpg")) {
-	 *   print $entry->getFullName() . '<br/>';
+	 *   print $entry->getFullName() . '<br />';
 	 * }
 	 * $dir->close();
 	 * </code>

@@ -78,8 +78,8 @@ class GroupField extends FormField
 		print sprintf("\n<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"%s>\n  <tr>", $this->attributes['TABLEWIDTH']);
 		for ($i=0,$s=sizeof($elements); $i<$s; $i++) {
 			print sprintf("\n    <td style=\"width:15px;height:15px;\">%s</td>", $elements[$i]['input']);
-			print sprintf("\n    <td><label for=\"%s_%s\" id=\"%s_label\"%s%s>%s</label></td>",
-				$elements[$i]['id'], $i, $elements[$i]['id'], $elements[$i]['alt'], $this->_Form->getLabelStyle(), $elements[$i]['caption']
+			print sprintf("\n    <td><label for=\"%s_%s\" id=\"%s_%s_label\"%s%s>%s</label></td>",
+				$elements[$i]['id'], $i, $elements[$i]['id'], $i, $elements[$i]['alt'], $this->_Form->getLabelStyle(), $elements[$i]['caption']
 			);
 			if ((($i+1) % $this->attributes['COLS']) == 0 && $i<($s-1))
 				print "\n  </tr><tr>";
@@ -176,7 +176,7 @@ class GroupField extends FormField
 			$newOption['ALT'] = $alt;
 			$newOption['ACCESSKEY'] = $accessKey;
 			if ($disabled || $this->_Form->readonly)
-				$newOption['DISABLED'] = " disabled";
+				$newOption['DISABLED'] = " disabled=\"disabled\"";
 			else
 				$newOption['DISABLED'] = (isset($this->attributes['DISABLED']) ? $this->attributes['DISABLED'] : '');
 			// insert at last position
@@ -255,7 +255,7 @@ class GroupField extends FormField
 			// invalid index
 			if (!TypeUtils::isInteger($index) || $index < 0 || $index >= $this->optionCount)
 				return FALSE;
-			$this->optionAttributes[$index]['DISABLED'] = ($setting ? ' disabled' : '');
+			$this->optionAttributes[$index]['DISABLED'] = ($setting ? " disabled=\"disabled\"" : '');
 			return TRUE;
 		}
 	}
@@ -316,7 +316,7 @@ class GroupField extends FormField
 		parent::onPreRender();
 		if ($this->_Form->readonly) {
 			for ($i=0; $i<$this->optionCount; $i++)
-				$this->optionAttributes[$i]['DISABLED'] = " disabled";
+				$this->optionAttributes[$i]['DISABLED'] = " disabled=\"disabled\"";
 		}
 	}
 
@@ -345,7 +345,7 @@ class GroupField extends FormField
 				$optionEvents[$eventName][] = $optionListener->getScriptCode();
 			}
 			foreach ($optionEvents as $name => $actions)
-				$this->optionAttributes[$i]['SCRIPT'] .= " {$name}=\"" . str_replace('\"', '\'', implode(';', $actions)) . ";\"";
+				$this->optionAttributes[$i]['SCRIPT'] .= " " . strtolower($name) . "=\"" . str_replace('\"', '\'', implode(';', $actions)) . ";\"";
 		}
 	}
 }

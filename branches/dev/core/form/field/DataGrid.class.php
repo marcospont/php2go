@@ -330,7 +330,7 @@ class DataGrid extends DbField
 			$this->Template->assign('row_id', 'row_' . $dataRow[0]);
 			// identifier column
 			if ($this->attributes['SHOWCHECKBOXES'])
-				$identifier = sprintf("<input id=\"%s_%s_checked\" name=\"%s[%s][checked]\" type=\"checkbox\"%s>", $this->name, $dataRow[0], $this->name, $dataRow[0], $this->_Form->getInputStyle());
+				$identifier = sprintf("<input id=\"%s_%s_checked\" name=\"%s[%s][checked]\" type=\"checkbox\"%s />", $this->name, $dataRow[0], $this->name, $dataRow[0], $this->_Form->getInputStyle());
 			else
 				$identifier = sprintf("<span%s>%s</span>", $this->_Form->getLabelStyle(), $dataRow[1]);
 			$this->Template->createAndAssign('loop_cell', array(

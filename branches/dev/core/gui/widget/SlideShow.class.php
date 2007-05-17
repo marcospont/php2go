@@ -140,8 +140,8 @@ class SlideShow extends Widget
 		$attrs =& $this->attributes;
 		$code = sprintf("\n<div id=\"%s\"%s style=\"width:%s;\">", $attrs['id'], (!empty($attrs['class']) ? " class=\"{$attrs['class']}\"" : ""), $attrs['width'], $attrs['height']);
 		$code .= sprintf("\n  <div style=\"position:relative;width:%s;height:%s;vertical-align:middle\">", $attrs['width'], $attrs['height']);
-		$code .= sprintf("\n    <img id=\"%s_foreground\" style=\"z-index:1;visibility:hidden;\" class=\"slideShowImg\">", $attrs['id']);
-		$code .= sprintf("\n    <img id=\"%s_background\" style=\"z-index:0;visibility:hidden;\" class=\"slideShowImg\">", $attrs['id']);
+		$code .= sprintf("\n    <img id=\"%s_foreground\" style=\"z-index:1;visibility:hidden;\" class=\"slideShowImg\" alt=\"\" />", $attrs['id']);
+		$code .= sprintf("\n    <img id=\"%s_background\" style=\"z-index:0;visibility:hidden;\" class=\"slideShowImg\" alt=\"\" />", $attrs['id']);
 		$code .= "\n  </div>";
 		$code .= sprintf("\n  <table id=\"%s_toolbar\" width=\"100%%\" cellpadding=\"3\" cellspacing=\"0\" border=\"0\" style=\"margin-top:5px;\"%s><tr>", $attrs['id'], (!empty($attrs['toolbarClass']) ? " class=\"{$attrs['toolbarClass']}\"" : ""));
 		$code .= sprintf("\n    <td align=\"left\"><button id=\"%s_toggle\" type=\"button\">%s</button><span id=\"%s_count\" style=\"margin-left:8px;\"></span></td>", $attrs['id'], ($attrs['play'] ? $attrs['pauseCaption'] : $attrs['playCaption']), $attrs['id']);

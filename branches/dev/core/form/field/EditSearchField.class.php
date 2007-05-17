@@ -110,13 +110,13 @@ class EditSearchField extends DbField
 			$this->id, $this->name, $this->label, $this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['STYLE'], $this->attributes['DISABLED']
 		);
 		foreach ($this->filters as $value => $data) {
-			$filters .= sprintf("<option value=\"%s\"%s>%s</option>", $value, ($value == $requestFilter ? ' selected' : ''), $data[0]);
+			$filters .= sprintf("<option value=\"%s\"%s>%s</option>", $value, ($value == $requestFilter ? ' selected="selected"' : ''), $data[0]);
 			$masks[] = "'{$data[2]}'";
 		}
 		$filters .= "</select>";
 		$Tpl->assign('filters', $filters);
 		$Tpl->assign('masks', implode(',', $masks));
-		$Tpl->assign('search', sprintf("<input type=\"text\" id=\"%s_search\" name=\"%s_search\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s>&nbsp;",
+		$Tpl->assign('search', sprintf("<input type=\"text\" id=\"%s_search\" name=\"%s_search\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s />&nbsp;",
 			$this->id, $this->name, strval(HttpRequest::getVar($this->name . '_search')), $this->attributes['LENGTH'], $this->attributes['SIZE'], $this->label,
 			$this->attributes['SCRIPT'], $this->attributes['TABINDEX'], $this->attributes['STYLE'], $this->attributes['DISABLED'], $this->attributes['AUTOCOMPLETE']
 		));
@@ -217,9 +217,9 @@ class EditSearchField extends DbField
 	 */
 	function setAutoComplete($setting) {
 		if ($setting === TRUE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"ON\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"on\"";
 		elseif ($setting === FALSE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"OFF\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"off\"";
 		else
 			$this->attributes['AUTOCOMPLETE'] = "";
 	}

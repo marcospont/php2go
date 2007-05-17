@@ -39,7 +39,7 @@ import('php2go.form.Form');
  * Example:
  * <code>
  * /* layout.tpl {@*}
- * <table width='779' cellpadding='0' cellspacing='0' border='0'>
+ * <table width="779" cellpadding="0" cellspacing="0" border="0">
  *   <tr><td>
  *     {$main}
  *   </td></tr>
@@ -307,7 +307,7 @@ class FormBasic extends Form
 			$this->_Template->assign('_ROOT.errorDisplay', " style=\"display:block\"");
 			if ($this->clientErrorOptions['showAll']) {
 				$mode = @$this->errorStyle['list_mode'];
-				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br>", $errors));
+				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br />", $errors));
 				$this->_Template->assign('_ROOT.errorTitle', @$this->errorStyle['header_text']);
 				$this->_Template->assign('_ROOT.errorMessages', $errors);
 			} else {
@@ -363,7 +363,7 @@ class FormBasic extends Form
 								if ($this->helpOptions['mode'] == FORM_HELP_POPUP)
 									$this->_Template->assign('popupHelp', "&nbsp;" . $helpCode);
 								else
-									$this->_Template->assign('inlineHelp', "<br>" . $helpCode);
+									$this->_Template->assign('inlineHelp', "<br />" . $helpCode);
 							}
 						}
 					}
@@ -407,7 +407,7 @@ class FormBasic extends Form
 							if ($this->helpOptions['mode'] == FORM_HELP_POPUP)
 								$this->_Template->assign('popupHelp', "&nbsp;" . $helpCode);
 							else
-								$this->_Template->assign('inlineHelp', "<br>" . $helpCode);
+								$this->_Template->assign('inlineHelp', "<br />" . $helpCode);
 						}
 					}
 				}
@@ -442,10 +442,10 @@ class FormBasic extends Form
 	function _buildFormStart() {
 		$target = (isset($this->actionTarget) ? " target=\"" . $this->actionTarget . "\"" : '');
 		$enctype = ($this->hasUpload ? " enctype=\"multipart/form-data\"" : '');
-		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\">", $this->formName, FORM_SIGNATURE, parent::getSignature());
+		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\" />", $this->formName, FORM_SIGNATURE, parent::getSignature());
 		return sprintf("<form id=\"%s\" name=\"%s\" action=\"%s\" method=\"%s\" style=\"display:inline\"%s%s>%s\n",
 			$this->formName, $this->formName, $this->formAction,
-			$this->formMethod, $target, $enctype, $signature
+			strtolower($this->formMethod), $target, $enctype, $signature
 		);
 	}
 

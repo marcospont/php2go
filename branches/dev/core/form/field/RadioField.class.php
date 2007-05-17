@@ -66,11 +66,11 @@ class RadioField extends GroupField
 		$group = array();
 		for ($i=0, $s=$this->optionCount; $i<$s; $i++) {
 			if ($this->optionAttributes[$i]['VALUE'] == parent::getValue())
-				$this->optionAttributes[$i]['SELECTED'] = " checked";
+				$this->optionAttributes[$i]['SELECTED'] = ' checked="checked"'
 			else
-				$this->optionAttributes[$i]['SELECTED'] = "";
+				$this->optionAttributes[$i]['SELECTED'] = '';
 			$accessKey = TypeUtils::ifNull($this->optionAttributes[$i]['ACCESSKEY'], $this->accessKey);
-			$input = sprintf("<input type=\"radio\" id=\"%s\" name=\"%s\" title=\"%s\" value=\"%s\"%s%s%s%s%s%s%s%s>",
+			$input = sprintf("<input type=\"radio\" id=\"%s\" name=\"%s\" title=\"%s\" value=\"%s\"%s%s%s%s%s%s%s%s />",
 				$this->id . "_$i", $this->name, $this->label, $this->optionAttributes[$i]['VALUE'],
 				($accessKey ? " accesskey=\"{$accessKey}\"" : ''), $this->attributes['TABINDEX'],
 				$this->optionAttributes[$i]['SCRIPT'], $this->attributes['STYLE'],

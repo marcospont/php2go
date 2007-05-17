@@ -701,7 +701,7 @@ class MailMessage extends PHP2Go
 	 *
 	 * Example:
 	 * <code>
-	 * $msg->setHtmlBody('<html><body><img src='cid:logo' border=0><br>Hello World!</body></html>');
+	 * $msg->setHtmlBody('<html><body><img src='cid:logo' border='0' alt=''><br />Hello World!</body></html>');
 	 * $msg->addEmbeddedFile('images/logo.gif', 'logo');
 	 * </code>
 	 *
@@ -858,7 +858,7 @@ class MailMessage extends PHP2Go
 				} else {
 					$tmp = eregi_replace("<style.*></style>", "", $this->htmlBody);
 				}
-				$tmp = trim(strip_tags(eregi_replace("<br>", "\n", $tmp)), "\x00..\x2f\x7f..\xff");
+				$tmp = trim(strip_tags(preg_replace("/<br( \/)?>/", "\n", $tmp)), "\x00..\x2f\x7f..\xff");
 				$this->textBody = ereg_replace("[[:blank:]]{1,}", " ", ereg_replace("\x0D\x0A", "\x0A", $tmp));
 			}
 			if ($this->hasAttachments() || $this->hasEmbeddedFiles()) {

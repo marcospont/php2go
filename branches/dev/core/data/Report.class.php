@@ -111,31 +111,31 @@ define('REPORT_FIRSTPREVNEXTLAST', 3);
  *
  * Basic example of a template file:
  * <code>
- * <table align='center' width='700'>
+ * <table align="center" width="700">
  *   <tr>
- *     <td align='center' colspan='2'>{$title}</td>
+ *     <td align="center" colspan="2">{$title}</td>
  *   </tr>
  *   <tr>
- *     <td align='left'>{$rows_per_page}</td>
- *     <td align='right'>{$page_links}</td>
+ *     <td align="left">{$rows_per_page}</td>
+ *     <td align="right">{$page_links}</td>
  *   </tr>
  * </table>
- * <table align='center' width='700'>
+ * <table align="center" width="700">
  *   <!-- START BLOCK : loop_line -->
  *   <tr>
  *     <!-- START BLOCK : loop_header_cell -->
- *     <th width='{$col_width}'>{$col_help}{$col_name}{$col_order}</th>
+ *     <th width="{$col_width}">{$col_help}{$col_name}{$col_order}</th>
  *     <!-- END BLOCK : loop_header_cell -->
  *     <!-- START BLOCK : loop_cell -->
- *     <td width='{$col_width}' class='{$alt_style}'>{$col_data}</td>
+ *     <td width="{$col_width}" class="{$alt_style}">{$col_data}</td>
  *     <!-- END BLOCK : loop_cell -->
  *   </tr>
  *   <!-- END BLOCK : loop_line -->
  * </table>
- * <table align='center' width='700'>
+ * <table align="center" width="700">
  *   <tr>
- *     <td align='left'>{$this_page}</td>
- *     <td align='right'>{$row_interval}</td>
+ *     <td align="left">{$this_page}</td>
+ *     <td align="right">{$row_interval}</td>
  *   </tr>
  * </table>
  * </code>
@@ -455,7 +455,7 @@ class Report extends PagedDataSet
 		parent::PagedDataSet('db');
 		if (!TypeUtils::isInstanceOf($Document, 'Document'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_OBJECT', 'Document'), E_USER_ERROR, __FILE__, __LINE__);
-		$this->id = sprintf("%u", crc32($xmlFile . $templateFile));
+		$this->id = sprintf("%s%u", parent::getClassName(), crc32($xmlFile . $templateFile));
 		$this->baseUri = HttpRequest::basePath();
 		$this->pagination = array(
 			'visiblePages' => REPORT_DEFAULT_VISIBLE_PAGES,
@@ -696,7 +696,7 @@ class Report extends PagedDataSet
 	 * <td><table width="100%">
 	 *   <tr>
 	 *     <td>
-	 *       {$name_alias}: {$name}<br/>
+	 *       {$name_alias}: {$name}<br />
 	 *       {$address_alias}: {$address}
 	 *     </td>
 	 *   </tr>
@@ -1055,7 +1055,7 @@ class Report extends PagedDataSet
 	 * how to use a single template even when the data set is empty:
 	 * <code>
 	 * <!-- IF $report.total_rows gt 0 -->
-	 * <table width='700'>
+	 * <table width="700">
 	 *   <!-- START BLOCK : loop_line -->
 	 *   <tr>
 	 *     ...
@@ -1537,7 +1537,7 @@ class Report extends PagedDataSet
 						if (isset($config['alias']))
 							$this->Template->globalAssign("{$name}_alias", $config['alias']);
 						if (isset($config['help']))
-							$this->Template->globalAssign("{$name}_help", sprintf("<img id=\"%s\" src=\"%s\" alt=\"\" style=\"cursor:pointer\" border=\"0\"%s/>", "{$name}_help", $this->icons['help'], HtmlUtils::overPopup($this->_Document, $config['help'], $this->style['help'])));
+							$this->Template->globalAssign("{$name}_help", sprintf("<img id=\"%s\" src=\"%s\" alt=\"\" style=\"cursor:pointer\" border=\"0\"%s />", "{$name}_help", $this->icons['help'], HtmlUtils::overPopup($this->_Document, $config['help'], $this->style['help'])));
 					}
 					$this->Template->createBlock('loop_line');
 					while ($lineData = parent::fetch()) {
@@ -1626,7 +1626,7 @@ class Report extends PagedDataSet
 					if (isset($config['alias']))
 						$this->Template->globalAssign("{$name}_alias", $config['alias']);
 					if (isset($config['help']))
-						$this->Template->globalAssign("{$name}_help", sprintf("<img id=\"%s\" src=\"%s\" alt=\"\" style=\"cursor:pointer\" border=\"0\"%s/>", "{$name}_help", $this->icons['help'], HtmlUtils::statusBar($config['help'], TRUE)));
+						$this->Template->globalAssign("{$name}_help", sprintf("<img id=\"%s\" src=\"%s\" alt=\"\" style=\"cursor:pointer\" border=\"0\"%s />", "{$name}_help", $this->icons['help'], HtmlUtils::statusBar($config['help'], TRUE)));
 				}
 				// create the first line block
 				$this->Template->createBlock('loop_line');
@@ -1709,11 +1709,11 @@ class Report extends PagedDataSet
 				$this->Template->assign('col_id', $colName);
 				$this->Template->assign('col_wid', $colWidth);
 				if (isset($colConfig['help']))
-					$this->Template->assign('col_help', sprintf("&nbsp;<img id=\"%s\" src=\"%s\" alt=\"\" style=\"cursor:pointer\" border=\"0\"%s/>", "{$this->id}_{$colName}_help", $this->icons['help'], HtmlUtils::overPopup($this->_Document, $colConfig['help'], $this->style['help'])));
+					$this->Template->assign('col_help', sprintf("&nbsp;<img id=\"%s\" src=\"%s\" alt=\"\" style=\"cursor:pointer\" border=\"0\"%s />", "{$this->id}_{$colName}_help", $this->icons['help'], HtmlUtils::overPopup($this->_Document, $colConfig['help'], $this->style['help'])));
 				// if print mode is on, or if sorting is disabled, or if column is unsortable,
 				// display only the column name. otherwise, display a sort link
 				if ($this->isPrintable || $this->isSortable === FALSE || in_array($colName, $this->unsortable)) {
-					$this->Template->assign('col_name', (!empty($this->style['header']) ? "<span class='{$this->style['header']}'>{$colAlias}</span>" : $colAlias));
+					$this->Template->assign('col_name', (!empty($this->style['header']) ? "<span class=\"{$this->style['header']}\">{$colAlias}</span>" : $colAlias));
 				} else {
 					$orderTypeIcon = (
 						$this->_orderType == 'a' ? $this->icons['orderasc'] : (
@@ -1721,7 +1721,7 @@ class Report extends PagedDataSet
 						)
 					);
 					$onSort = @$this->jsListeners['onSort'];
-					$this->Template->assign('col_name', HtmlUtils::anchor($this->_generatePageLink(parent::getCurrentPage(), $colName), $colAlias, PHP2Go::getLangVal('REPORT_ORDER_TIP', $colAlias), $this->style['header'], ($onSort ? array('onClick' => $onSort . '()') : array()), '', "{$this->id}_header{$c}"));
+					$this->Template->assign('col_name', HtmlUtils::anchor($this->_generatePageLink(parent::getCurrentPage(), $colName), $colAlias, PHP2Go::getLangVal('REPORT_ORDER_TIP', $colAlias), $this->style['header'], ($onSort ? array('onclick' => $onSort . '()') : array()), '', "{$this->id}_header{$c}"));
 					$this->Template->assign('col_order', (urldecode(HttpRequest::get('order')) == $colName ? '&nbsp;' . HtmlUtils::image($orderTypeIcon) : ''));
 				}
 				$c++;
@@ -1758,7 +1758,7 @@ class Report extends PagedDataSet
 						$this->Template->createBlock('loop_cell');
 						$this->Template->assign('col_wid', ($this->colSizesMode == REPORT_COLUMN_SIZES_CUSTOM && isset($this->colSizes) ? $this->colSizes[$c] . '%' : ($this->colSizesMode == REPORT_COLUMN_SIZES_FIXED ? intval(100/$visibleCols) . '%' : '')));
 						(isset($colConfig['handler'])) && ($colData[$colName] = $colConfig['handler']->invoke($colData[$colName]));
-						(isset($colConfig['align']) && stristr($colConfig['align'], 'left') === FALSE) && ($colData[$colName] = "<div align='{$colConfig['align']}'>{$colData[$colName]}</div>");
+						(isset($colConfig['align']) && stristr($colConfig['align'], 'left') === FALSE) && ($colData[$colName] = "<div align=\"{$colConfig['align']}\">{$colData[$colName]}</div>");
 						$this->Template->assign('col_data', $colData[$colName]);
 						if (!empty($this->style['altstyle'])) {
 							$this->Template->assign('alt_style', $altStyle);
@@ -2016,13 +2016,13 @@ class Report extends PagedDataSet
 		else
 			$ot = $this->_orderType;
 		$char = (strpos($this->baseUri, '?') !== FALSE ? '&' : '?');
-		return sprintf("%s%spage=%s%s%s%s%s",
+		return htmlentities(sprintf("%s%spage=%s%s%s%s%s",
 					$this->baseUri, $char, $page,
 					($order != '' ? '&order=' . urlencode($order) : (isset($this->_order) ? '&order=' . $this->_order : '')),
 					'&ordertype=' . $ot,
 					($this->_SimpleSearch->searchSent ? $this->_SimpleSearch->getUrlString() : ''),
 					(isset($this->extraVars) ? '&' . $this->extraVars : '')
-		);
+		));
 	}
 
 	/**
@@ -2041,7 +2041,7 @@ class Report extends PagedDataSet
 		$useButtons = $this->pagination['style'][1]['useButtons'];
 		$hideInvalid = $this->pagination['style'][1]['hideInvalid'];
 		$onChangePage = @$this->jsListeners['onChangePage'];
-		$buttonCode = "<button id=\"%s\" name=\"%s\" type=\"button\" onClick=\"%s%s\" title=\"%s\" class=\"%s\"%s>%s</button>";
+		$buttonCode = "<button id=\"%s\" name=\"%s\" type=\"button\" onclick=\"%s%s\" title=\"%s\" class=\"%s\"%s>%s</button>";
 		$noLinkCode = "<span class=\"%s\" style=\"filter:alpha(opacity=30);opacity:0.3;-moz-opacity:0.3;-khtml-opacity:0.3\">%s</span>";
 		$link = ($page ? $this->_generatePageLink($page) : NULL);
 		if ($page) {
@@ -2052,7 +2052,7 @@ class Report extends PagedDataSet
 			}
 		} elseif (!$hideInvalid) {
 			if ($useButtons) {
-				$links[] = sprintf($buttonCode, $this->id . $name, $name, '', "javascript:void(0)", '', $this->style['button'], " disabled", ($useSymbols ? $symbol : $text));
+				$links[] = sprintf($buttonCode, $this->id . $name, $name, '', "javascript:void(0)", '', $this->style['button'], " disabled=\"disabled\"", ($useSymbols ? $symbol : $text));
 			} else {
 				$links[] = sprintf($noLinkCode, $this->style['link'], ($useSymbols ? $symbol : $text));
 			}
@@ -2080,31 +2080,31 @@ class Report extends PagedDataSet
 				if ($i == parent::getCurrentPage()) {
 					$linkStr .= sprintf("<span class=\"%s\">%d</span>\n", $this->style['link'], $i);
 				} else {
-					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($i), "<u>$i</u>", sprintf($lang['pageTip'], $i, parent::getPageCount()), $this->style['link'], ($onChangePage ? array('onClick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $i . '})') : array()));
+					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($i), "<u>$i</u>", sprintf($lang['pageTip'], $i, parent::getPageCount()), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $i . '})') : array()));
 				}
 				if ($i < $this->pagination['lastVisiblePage'])
 					$linkStr .= $linkLimiter;
 				else
-					$linkStr .= '<br>';
+					$linkStr .= '<br />';
 			}
 			// link to first page, back N pages, forward N pages and last page
 			if (isset($this->pagination['firstPage'])) {
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['firstPage']), $lang['firstTit'], $lang['firstTip'], $this->style['link'], ($onChangePage ? array('onClick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['firstPage'] . '})') : array()));
+				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['firstPage']), $lang['firstTit'], $lang['firstTip'], $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['firstPage'] . '})') : array()));
 			}
 			if (isset($this->pagination['previousScreen'])) {
 				if (isset($this->pagination['firstPage']))
 					$linkStr .= $linkLimiter;
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['previousScreen']), sprintf($lang['prevScrTit'], $this->pagination['visiblePages']), sprintf($lang['prevScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onClick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['previousScreen'] . '})') : array()));
+				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['previousScreen']), sprintf($lang['prevScrTit'], $this->pagination['visiblePages']), sprintf($lang['prevScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['previousScreen'] . '})') : array()));
 			}
 			if (isset($this->pagination['nextScreen'])) {
 				if (isset($this->pagination['firstPage']) || isset($this->pagination['previousScreen']))
 					$linkStr .= $linkLimiter;
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['nextScreen']), sprintf($lang['nextScrTit'], $this->pagination['visiblePages']), sprintf($lang['nextScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onClick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['nextScreen'] . '})') : array()));
+				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['nextScreen']), sprintf($lang['nextScrTit'], $this->pagination['visiblePages']), sprintf($lang['nextScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['nextScreen'] . '})') : array()));
 			}
 			if (isset($this->pagination['lastPage'])) {
 				if (isset($this->pagination['firstPage']) || isset($this->pagination['previousScreen']) || isset($this->pagination['nextScreen']))
 					$linkStr .= $linkLimiter;
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['lastPage']), $lang['lastTit'], $lang['lastTip'], $this->style['link'], ($onChangePage ? array('onClick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['lastPage'] . '})') : array()));
+				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['lastPage']), $lang['lastTit'], $lang['lastTip'], $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['lastPage'] . '})') : array()));
 			}
 			return $linkStr;
 		} elseif ($this->pagination['style'][0] == REPORT_PREVNEXT) {
@@ -2147,7 +2147,7 @@ class Report extends PagedDataSet
 					}
 				}
 				if (!empty($opts)) {
-					return sprintf("<label for=\"order_combo_%s\"%s>%s</label>&nbsp;<select id=\"order_combo_%s\" name=\"order_combo_%s\"%s onChange=\"var url = this.options[this.selectedIndex].value; if (url) { %swindow.location.href = url; }\"><option value=\"\">%s</option>%s</select>",
+					return sprintf("<label for=\"order_combo_%s\"%s>%s</label>&nbsp;<select id=\"order_combo_%s\" name=\"order_combo_%s\"%s onchange=\"var url = this.options[this.selectedIndex].value; if (url) { %swindow.location.href = url; }\"><option value=\"\">%s</option>%s</select>",
 						$this->id, (!empty($this->style['filter']) ? " class=\"" . $this->style['filter'] . "\"" : ''),
 						PHP2Go::getLangVal('REPORT_ORDER_OPTIONS_LABEL'), $this->id, $this->id,
 						(isset($this->style['filter']) ? " class=\"" . $this->style['filter'] . "\"" : ''),
@@ -2162,7 +2162,7 @@ class Report extends PagedDataSet
 					if (!in_array($colName, $this->unsortable)) {
 						$url = $this->_generatePageLink(parent::getCurrentPage(), $colName);
 						$caption = StringUtils::ifEmpty(@$colConfig['alias'], $colName);
-						$items[] = HtmlUtils::anchor($url, $caption, PHP2Go::getLangVal('REPORT_ORDER_TIP', $caption), $this->style['link'], ($onSort ? array('onClick' => $onSort . '()') : array()));
+						$items[] = HtmlUtils::anchor($url, $caption, PHP2Go::getLangVal('REPORT_ORDER_TIP', $caption), $this->style['link'], ($onSort ? array('onclick' => $onSort . '()') : array()));
 					}
 				}
 				if (!empty($items))
@@ -2241,8 +2241,8 @@ class Report extends PagedDataSet
 		if (parent::getTotalRecordCount() > 0) {
 			$goToUrl = ereg_replace("(\?|&)(page=[0-9]+)(&?)", "\\1", $this->_generatePageLink(parent::getCurrentPage()));
 			$goToLabel = sprintf("<label for=\"{$this->id}_page\" id=\"{$this->id}_page_label\" class=\"%s\">%s</label>", $this->style['filter'], $lang['goTo']);
-			$goToField = sprintf("<input type=\"text\" id=\"{$this->id}_page\" name=\"page\" size=\"5\" maxlength=\"10\" class=\"%s\"/>", $this->style['filter']);
-			return sprintf("<form id=\"%s_form\" name=\"%s\" method=\"POST\" action=\"%s\" style=\"display:inline\" onSubmit=\"return Report.goToPage(this, %d, %d, %s);\">\n%s\n&nbsp;%s\n</form>\n",
+			$goToField = sprintf("<input type=\"text\" id=\"{$this->id}_page\" name=\"page\" size=\"5\" maxlength=\"10\" class=\"%s\" />", $this->style['filter']);
+			return sprintf("<form id=\"%s_form\" name=\"%s\" method=\"post\" action=\"%s\" style=\"display:inline\" onsubmit=\"return Report.goToPage(this, %d, %d, %s);\">\n%s\n&nbsp;%s\n</form>\n",
 				$this->id, $this->id, $goToUrl, parent::getCurrentPage(), parent::getPageCount(),
 				TypeUtils::ifNull($this->jsListeners['onChangePage'], 'null'),
 				$goToLabel, $goToField

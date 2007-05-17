@@ -272,13 +272,13 @@ class LookupSelectionField extends FormField
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/lookupselectionfield.js');
 		$this->attributes['BUTTONS'] = array();
 		$buttonMessages = PHP2Go::getLangVal('LOOKUP_SELECTION_BUTTON_TITLES');
-		$imgActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" title=\"%s\" onClick=\"%s.%s();\" style=\"cursor:pointer;background-color:transparent;border:none\"%s%s><img src=\"%s\" alt=\"\" border=\"0\"></button>";
-		$btnActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" style=\"width:30px;padding:0\" title=\"%s\" onClick=\"%s.%s();\"%s%s%s>%s</button>";
+		$imgActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" title=\"%s\" onclick=\"%s.%s();\" style=\"cursor:pointer;background-color:transparent;border:none\"%s%s><img src=\"%s\" alt=\"\" border=\"0\" /></button>";
+		$btnActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" style=\"width:30px;padding:0\" title=\"%s\" onclick=\"%s.%s();\"%s%s%s>%s</button>";
 		$actHash = array(
-			array('ADDALL', 'addall', 'addAll', '>>'),
-			array('ADD', 'add', 'add', '>'),
-			array('REM', 'rem', 'remove', '<'),
-			array('REMALL', 'remall', 'removeAll', '<<')
+			array('ADDALL', 'addall', 'addAll', '&gt;&gt;'),
+			array('ADD', 'add', 'add', '&gt;'),
+			array('REM', 'rem', 'remove', '&lt;'),
+			array('REMALL', 'remall', 'removeAll', '&lt;&lt;')
 		);
 		for ($i=0; $i<sizeof($actHash); $i++) {
 			if (isset($this->buttonImages[$actHash[$i][0]]))
