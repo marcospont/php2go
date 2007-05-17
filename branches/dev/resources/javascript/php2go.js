@@ -285,9 +285,9 @@ Object.serialize = function(obj) {
 	if (obj === window || obj === document) return;
 	var buf = [];
 	for (var p in obj) {
-		if (obj[p] == '') continue;
-		if (obj[p] && obj[p].ownerDocument === document) continue;
 		try {
+			if (obj[p] == '') continue;
+			if (obj[p] && obj[p].ownerDocument === document) continue;
 			var v = Object.serialize(obj[p]);
 			if (typeof(v) != 'undefined')
 				buf.push(p + ":" + v);
