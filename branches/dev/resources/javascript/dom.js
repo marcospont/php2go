@@ -1067,14 +1067,22 @@ Event.onDOMReady = function(fn) {
 		var run = function() {
 			if (!arguments.callee.done) {
 				arguments.callee.done = true;
-				if (self.timer) {
-					clearInterval(self.timer);
-					self.timer = null;
-				}
 				self.queue.walk(function(item, idx) {
 					item();
 				});
 				self.queue = null;
+				// mozilla, opera9
+				if (d.removeEventListener)
+					d.removeEventListener('DOMContentLoaded', run, false);
+				// msie
+				var defer = $('defer_script');
+				if (defer)
+					defer.remove();
+				// safari, opera8
+				if (self.timer) {
+					clearInterval(self.timer);
+					self.timer = null;
+				}
 			}
 		};
 		// mozilla, opera9
@@ -1262,10 +1270,10 @@ Event.prototype.char = function() {
  * @type Object
  */
 Event.prototype.position = function() {
-	var b = document.body, e = document.documentElement;
+	var e = document.documentElement || document.body;
 	return {
-		x : this.clientX + (b.scrollLeft ? b.scrollLeft : e.scrollLeft),
-		y : this.clientY + (b.scrollTop ? b.scrollTop : e.scrollTop)
+		x : this.pageX || (this.clientX + e.scrollLeft),
+		y : this.pageY || (this.clientY + e.scrollTop)
 	};
 };
 
