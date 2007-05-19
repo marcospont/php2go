@@ -109,7 +109,7 @@ class QueryParser extends PHP2Go
 			$sql = trim(substr($sql, 1, -1));
 		$sql = preg_replace("/group\s+by/i", "group by", $sql);
 		$sql = preg_replace("/order\s+by/i", "order by", $sql);
-		// extract "limit M offset N" clause
+		// extract "limit M offset N" clause from the end of the query string
 		$limitMatches = array();
 		if (preg_match("/limit(\s+[0-9]+\s*((,|offset)\s*[0-9]+\s*)?)$/i", $sql, $limitMatches)) {
 			$this->parts['limit'] = $limitMatches[1];
