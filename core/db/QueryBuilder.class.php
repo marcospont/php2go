@@ -183,6 +183,8 @@ class QueryBuilder extends PHP2Go
 		$this->groupby = $groupby;
 		$this->groupcond = '';
 		$this->orderby = $orderby;
+		$this->limit = '';
+		$this->top = '';
 	}
 
 	/**
@@ -196,8 +198,7 @@ class QueryBuilder extends PHP2Go
 		import('php2go.db.QueryParser');
 		$Parser = new QueryParser($sql);
 		$Query = new QueryBuilder($Parser->parts['fields'], $Parser->parts['tables'], $Parser->parts['clause'], $Parser->parts['groupby'], $Parser->parts['orderby']);
-		if ($Parser->parts['limit'])
-			$Query->limit = $Parser->parts['limit'];
+		$Query->setLimit($Parser->parts['limit']);
 		return $Query;
 	}
 
@@ -208,18 +209,6 @@ class QueryBuilder extends PHP2Go
 	 */
 	function setDistinct($setting=TRUE) {
 		$this->distinct = (bool)$setting;
-	}
-
-	/**
-	 * Adds one or more fields in the SQL query
-	 *
-	 * @param string $fields Field name or comma separated list of fields
-	 */
-	function addFields($fields) {
-    	if (empty($this->fields))
-        	$this->fields = $fields;
-		else
-        	$this->fields .= ', ' . $fields;
 	}
 
 	/**
@@ -237,9 +226,30 @@ class QueryBuilder extends PHP2Go
 	}
 
 	/**
+	 * Adds one or more fields in the SQL query
+	 *
+	 * @param string $fields Field name or comma separated list of fields
+	 */
+	function addFields($fields) {
+    	if (empty($this->fields))
+        	$this->fields = $fields;
+		else
+        	$this->fields .= ', ' . $fields;
+	}
+
+	/**
+	 * Set query table
+	 *
+	 * @param string $tableName Table name
+	 */
+	function setTable($tableName) {
+		$this->tables = $tableName;
+	}
+
+	/**
 	 * Adds a table in the SQL query
 	 *
-	 * @param string $tableName
+	 * @param string $tableName Table name
 	 */
 	function addTable($tableName) {
 		if (empty($this->tables))
@@ -336,7 +346,7 @@ class QueryBuilder extends PHP2Go
 		$this->groupby = $by;
 		if (trim($by) == '')
 			$this->groupcond = '';
-		else if (trim($condition) != '')
+		elseif (trim($condition) != '')
 			$this->groupcond = $condition;
 	}
 
@@ -393,16 +403,27 @@ class QueryBuilder extends PHP2Go
 	}
 
 	/**
-	 * Defines limit settings
+	 * Set limit settings
 	 *
-	 * @param int $rows Number of rows
+	 * @param int $limit Limit clause (string) or number of rows
 	 * @param int $offset Starting offset
 	 */
-	function setLimit($rows, $offset=NULL) {
-		$this->limit = array(
-			'rows' => (int)$rows,
-			'offset' => (int)$offset
-		);
+	function setLimit($limit, $offset=NULL) {
+		if (is_numeric($limit) && is_numeric($offset)) {
+			$this->limit = array(
+				'rows' => intval($limit),
+				'offset' => intval($offset)
+			);
+		} elseif (is_string($limit) || is_numeric($limit)) {
+			$this->limit = strval($limit);
+		}
+	}
+
+	/**
+	 * Clears limit settings
+	 */
+	function clearLimit() {
+		$this->limit = '';
 	}
 
 	/**
@@ -449,11 +470,11 @@ class QueryBuilder extends PHP2Go
 			$candidates = array('FIELDS', 'TABLES', 'CLAUSE', 'GROUPBY', 'ORDERBY');
 			foreach ($candidates as $candidate) {
 				if ($children[$candidate]) {
-					$propName = strtolower($candidate);
 					$value = $children[$candidate]->value;
 					if (!empty($value)) {
 						if (preg_match("/~[^~]+~/", $value))
 							$value = Statement::evaluate($value);
+						$propName = strtolower($candidate);
 						$this->{$propName} = $value;
 					}
 				}
@@ -472,6 +493,8 @@ class QueryBuilder extends PHP2Go
 		$this->groupby = '';
 		$this->groupcond = '';
 		$this->orderby = '';
+		$this->limit = '';
+		$this->top = '';
 	}
 
 	/**
@@ -482,7 +505,7 @@ class QueryBuilder extends PHP2Go
 	function displayQuery($preFormatted=TRUE) {
 		$sql = $this->_formatReserved($this->_buildQuery(TRUE));
 		if ($preFormatted)
-			println('<pre>' . $sql . '</pre>');
+			println("<pre>{$sql}</pre>");
 		else
 			println($sql);
 	}
@@ -513,11 +536,22 @@ class QueryBuilder extends PHP2Go
 	 * @return ADORecordSet
 	 */
 	function &executeQuery($bindVars=array(), $connectionId=NULL) {
+		if (empty($this->fields) || empty($this->tables)) {
+			$null = NULL;
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_QUERY_ELEMENTS'), E_USER_ERROR, __FILE__, __LINE__);
+			return $null;
+		}
 		$Db =& Db::getInstance($connectionId);
-		if (is_array($this->limit) && $this->limit['rows'] > 0)
-			$Rs =& $Db->limitQuery($this->getQuery(), $this->limit['rows'], $this->limit['offset'], TRUE, $bindVars);
+		$sql = $this->_formatReserved($this->_buildQuery(FALSE, TRUE));
+		$limitMatches = array();
+		if (is_string($this->limit) && preg_match("/([0-9]+)(?:\s*(?:,|offset)\s*([0-9]+))?/", $this->limit, $limitMatches))
+			$Rs =& $Db->limitQuery($sql, $limitMatches[1], @$limitMatches[2]);
+		elseif (is_array($this->limit) && $this->limit['rows'] > 0)
+			$Rs =& $Db->limitQuery($sql, $this->limit['rows'], $this->limit['offset'], TRUE, $bindVars);
+		elseif (!empty($this->top))
+			$Rs =& $Db->limitQuery($sql, $this->top, 0, TRUE, $bindVars);
 		else
-			$Rs =& $Db->query($this->getQuery(), TRUE, $bindVars);
+			$Rs =& $Db->query($query, TRUE, $bindVars);
 		return $Rs;
 	}
 
@@ -533,47 +567,60 @@ class QueryBuilder extends PHP2Go
 	 * @return DataSet
 	 */
 	function &createDataSet($params=array()) {
+		if (empty($this->fields) || empty($this->tables)) {
+			$null = NULL;
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_QUERY_ELEMENTS'), E_USER_ERROR, __FILE__, __LINE__);
+			return $null;
+		}
 		import('php2go.data.DataSet');
-		$DataSet =& DataSet::factory('db', $params);
-		if (@$this->limit['rows'] > 0)
-			$DataSet->loadSubSet($this->limit['offset'], $this->limit['rows'], $this->getQuery(), $bindVars);
+		$Dataset = DataSet::factory('db', $params);
+		$sql = $this->_formatReserved($this->_buildQuery(FALSE, TRUE));
+		$limitMatches = array();
+		if (is_string($this->limit) && preg_match("/([0-9]+)(?:\s*(?:,|offset)\s*([0-9]+))?/", $this->limit, $limitMatches))
+			$Dataset->loadSubSet(@$limitMatches[2], $limitMatches[1], $sql);
+		elseif (is_array($this->limit) && $this->limit['rows'] > 0)
+			$Dataset->loadSubSet($this->limit['offset'], $this->limit['rows'], $sql);
+		elseif (!empty($this->top))
+			$Dataset->loadSubSet(0, $this->top, $sql);
 		else
-			$DataSet->load($this->getQuery());
-		return $DataSet;
+			$Dataset->load($query);
+		return $Dataset;
 	}
 
 	/**
 	 * Internal method used to build the SQL query
 	 *
 	 * @param bool $isDisplay Indicates if the query will be displayed
+	 * @param bool $isExecute Indicates if the query will be executed
 	 * @return string
 	 * @access private
 	 */
-	function _buildQuery($isDisplay=FALSE) {
-		$char = ($isDisplay) ? "\r\n\t" : ' ';
-		$sql = 'SELECT ';
+	function _buildQuery($isDisplay=FALSE, $isExecute=FALSE) {
+		$c1 = ($isDisplay ? "\r\n" : ' ');
+		$c2 = ($isDisplay ? "\t" : '');
+		$sql = $c1 . 'SELECT ';
 		// add "top N" limit clause
-		if ($this->top)
+		if (!$isExecute && !empty($this->top) && empty($this->limit))
 			$sql .= ' TOP ' . $this->top;
 		// add fields
-		$sql .= $char . ($this->distinct ? 'DISTINCT ' : '') . $this->fields;
+		$sql .= $c1 . $c2 . ($this->distinct ? 'DISTINCT ' : '') . $this->fields;
 		// add tables
-		$sql .= $char . 'FROM ' . $char . preg_replace("/JOIN\s/i", "JOIN" . $char, $this->tables);
+		$sql .= $c1 . 'FROM ' . $c1 . $c2 . preg_replace("/JOIN\s/i", "JOIN" . $c1 . $c2, $this->tables);
 		// add condition clause
 		if (trim($this->clause) != '')
-			$sql .= $char . 'WHERE ' . $char . $this->clause;
+			$sql .= $c1 . 'WHERE ' . $c1 . $c2 . $this->clause;
 		// add group by clause
 		if (trim($this->groupby) != '') {
-			$sql .= $char . 'GROUP BY ' . $char . $this->groupby;
+			$sql .= $c1 . 'GROUP BY ' . $c1 . $c2 . $this->groupby;
 			if (!empty($this->groupcond))
 				$sql .= ' HAVING ' . $this->groupcond;
 		}
 		// add order by clause
 		if (trim($this->orderby) != '')
-			$sql .= $char . 'ORDER BY ' . $char . $this->orderby;
+			$sql .= $c1 . 'ORDER BY ' . $c1 . $c2 . $this->orderby;
 		// add "limit M offset N" limit clause
-		if (is_string($this->limit))
-			$sql .= $char . 'LIMIT ' . $this->limit;
+		if (!$isExecute && is_string($this->limit) && !empty($this->limit) && empty($this->top))
+			$sql .= $c1 . 'LIMIT' . $c1 . $c2 . $this->limit;
 		return $sql;
 	}
 
