@@ -586,87 +586,61 @@ class Db extends PHP2Go
 	/**
 	 * Builds a query that counts records based on a normal SQL query
 	 *
-	 * The method will use nested SQL if available. Otherwise, it will remove
-	 * grouping and ordering clauses, replace most significant select/from
-	 * pair by "select count(*) from", and perform other transformations
-	 * in order to get the number of records.
+	 * The method will use nested SQL whenever possible. It will also try to
+	 * replace the query fields by a count(*) statement. Queries that use "group by"
+	 * or "distinct" keywords under databases that doesn't support nested SQL
+	 * will remain unchanged.
 	 *
 	 * @param string|array $stmt SQL query or prepared statement
 	 * @param array $bindVars Bind variables
-	 * @param bool $optimize Set this to FALSE to disable query transformations (removal or grouping and ordering clauses)
+	 * @param bool $optimize Set this to FALSE to disable query transformations (removal or sort clause)
 	 * @return int Number of records
 	 */
 	function getCount($stmt, $bindVars=FALSE, $optimize=TRUE) {
-		$count = 0;
-		$matches = array();
-		$sql = (is_array($stmt) ? $stmt[0] : $stmt);
-		// drivers that support nested SQL, queries that use DISTINCT or GROUP BY
-		if (!empty($this->AdoDb->_nestedSQL) || preg_match("/^\s*SELECT\s+DISTINCT/is", $sql) || preg_match('/\s+GROUP\s+BY\s+/is',$sql) || preg_match('/\s+UNION\s+/is',$sql)) {
-			$rewriteSql = $sql;
-			// oci8 and oci8po
+		$rewriteSql = $sql = (is_array($stmt) ? $stmt[0] : $stmt);
+		import('php2go.db.QueryBuilder');
+		$query = QueryBuilder::createFromSql($sql);
+		// remove sort clause in order to optimize record count
+		if ($optimize)
+			$query->clearOrder();
+		// driver supports nested SQL, query uses "top", "limit", "distinct" or "group by" keywords: must encapsulate into a subquery
+		if (!empty($this->AdoDb->_nestedSQL) || preg_match("/(\btop\b|\blimit\b)/i", $sql) || preg_match("/\b(distinct|distinctrow)\b/i", $query->fields) || $query->groupby) {
+			// oci8
 			if ($this->AdoDb->dataProvider == 'oci8') {
-				if ($optimize)
-					$rewriteSql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is', '', $rewriteSql);
 				if (preg_match('#/\\*+.*?\\*\\/#', $sql, $matches))
-					$rewriteSql = "SELECT {$matches[0]} COUNT(*) FROM ({$rewriteSql})";
+					$rewriteSql = "select {$matches[0]} count(*) from (" . $query->getQuery() . ") _p2g_alias_";
 				else
-					$rewriteSql = "SELECT COUNT(*) FROM ({$rewriteSql})";
+					$rewriteSql = "select count(*) from (" . $query->getQuery() . ") _p2g_alias_";
 			}
-			// mysql and mysqli
+			// db2, interbase, firebird, mssql, pdo, postgres
+			elseif (preg_match("/^(db2|ibase|mssql|pdo|postgres)$/", $this->AdoDb->dataProvider)) {
+				$rewriteSql = "select count(*) from (" . $query->getQuery() . ") _p2g_alias_";
+			}
+			// mysql >= 4.1
 			elseif (strncmp($this->AdoDb->databaseType, 'mysql', 5) == 0) {
 				$info = $this->AdoDb->ServerInfo();
 				$version = (float)$info['version'];
-				if ($version >= 4.1) {
-					if ($optimize) {
-						$rewriteSql = preg_replace("/(\sORDER\s+BY\s[^(]*)(LIMIT)/Uis", "\\2", $rewriteSql);
-						$rewriteSql = preg_replace('/(\sORDER\s+BY\s[^(]*)?/is', '', $rewriteSql);
-					}
-					$rewriteSql = "select COUNT(*) from ($rewriteSql) _ADODB_ALIAS_";
-				}
-			}
-			// postgres7 and postgres8
-			elseif (strncmp($this->AdoDb->databaseType, 'postgres', 8) == 0) {
-				if ($optimize)
-					$rewriteSql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is', '', $rewriteSql);
-				$rewriteSql = "select COUNT(*) from ($rewriteSql) _ADODB_ALIAS_";
-			}
-		// other query types: replace most significant select/from pair by "select count(*) from"
-		} else {
-			$stack = 1;
-			$index = -1;
-			// remove first "select" instruction
-			$sql = preg_replace("/^select/i", "", trim($sql));
-			// remove functions that use the "from" word
-			$sql = preg_replace('/(substring|extract)\s*\([^\)]+\)\s*/is', '', $sql);
-			$words = preg_split('/\s+/', $sql);
-			for ($i=0, $size=sizeof($words); $i<$size; $i++) {
-				if (preg_match('/select/i', $words[$i]))
-					$stack++;
-				elseif (preg_match('/from/i', $words[$i]))
-					$stack--;
-				if ($stack == 0) {
-					$index = $i;
-					break;
-				}
-			}
-			if ($index > -1) {
-				$result = array_slice($words, $index);
-				$rewriteSql = "select COUNT(*) " . implode(" ", $result);
-				if ($optimize) {
-					if (preg_match('/\sORDER\s+BY\s*\(/i', $rewriteSql))
-						$rewriteSql = preg_replace('/(\sORDER\s+BY\s.*)/is', '', $rewriteSql);
-					else
-						$rewriteSql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is', '', $rewriteSql);
-				}
+				if ($version >= 4.1)
+					$rewriteSql = "select count(*) from (" . $query->getQuery() . ") _p2g_alias_";
 			}
 		}
-		// execute the count sql, if it's valid
+		// other queries, when not using "top" and "limit" keywords: replace query fields by "count(*)"
+		elseif (!preg_match("/(\btop\b|\blimit\b)/i", $sql)) {
+			$query->setFields('count(*)');
+			$rewriteSql = $query->getQuery();
+		}
+		// run the rewritten sql, if it's valid
 		if (isset($rewriteSql) && $rewriteSql != $sql) {
-			if ($this->makeCache)
-				$count = $this->AdoDb->CacheGetOne($this->cacheSecs, $rewriteSql, $bindVars);
-			else
-				$count = $this->AdoDb->GetOne($rewriteSql, $bindVars);
-			if ($count !== FALSE) {
+			$oldMode = $this->AdoDb->SetFetchMode(ADODB_FETCH_NUM);
+			if ($this->makeCache) {
+				$rs =& $this->AdoDb->CacheExecute($this->cacheSecs, $rewriteSql, $bindVars);
+				$count = $rs->fields[0];
+			} else {
+				$rs =& $this->AdoDb->Execute($rewriteSql, $bindVars);
+				$count = $rs->fields[0];
+			}
+			$this->AdoDb->SetFetchMode($oldMode);
+			if ($count) {
 				$this->lastStatement = array(
 					'source' => 'getCount',
 					'statement' => $rewriteSql,
@@ -675,11 +649,7 @@ class Db extends PHP2Go
 				return $count;
 			}
 		}
-		// query rewrite has failed, use original query
-		if (preg_match('/\s*UNION\s*/is', $sql) || !$optimize)
-			$rewriteSql = $sql;
-		else
-			$rewriteSql = preg_replace('/(\sORDER\s+BY\s.*)/is', '', $sql);
+		// rewrite failed: use the original query
 		$this->lastStatement = array(
 			'source' => 'getCount',
 			'statement' => $rewriteSql,
@@ -927,16 +897,16 @@ class Db extends PHP2Go
 	 * </code>
 	 *
 	 * @param mixed $sqlCode SQL code or prepared statement
-	 * @param int $offset Subset size
-	 * @param int $lowerBound Starting offset (defaults to 0)
+	 * @param int $rows Subset size
+	 * @param int $offset Starting offset (defaults to 0)
 	 * @param bool $execute Whether to execute, or just print the SQL code
 	 * @param array $bindVars Bind variables
 	 * @return ADORecordSet
 	 */
-	function &limitQuery($sqlCode, $offset=-1, $lowerBound=0, $execute=TRUE, $bindVars=FALSE) {
-		if ($lowerBound < 0) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MUST_BE_POSITIVE', array("\$lowerBound", "limitQuery")), E_USER_WARNING, __FILE__, __LINE__);
-			$lowerBound = 0;
+	function &limitQuery($sqlCode, $rows=-1, $offset=0, $execute=TRUE, $bindVars=FALSE) {
+		if ($offset < 0) {
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MUST_BE_POSITIVE', array("\$offset", "limitQuery")), E_USER_WARNING, __FILE__, __LINE__);
+			$offset = 0;
 		}
 		if ($execute) {
 			$this->lastStatement = array(
@@ -945,9 +915,9 @@ class Db extends PHP2Go
 				'vars' => ($bindVars ? $bindVars : array())
 			);
 			if ($this->makeCache)
-				$rs =& $this->AdoDb->CacheSelectLimit($this->cacheSecs, $sqlCode, $offset, $lowerBound, $bindVars);
+				$rs =& $this->AdoDb->CacheSelectLimit($this->cacheSecs, $sqlCode, $rows, $offset, $bindVars);
 			else
-				$rs =& $this->AdoDb->SelectLimit($sqlCode, $offset, $lowerBound, $bindVars);
+				$rs =& $this->AdoDb->SelectLimit($sqlCode, $rows, $offset, $bindVars);
 			if ($rs) {
 				$this->affectedRows = $rs->RecordCount();
 			} else {
