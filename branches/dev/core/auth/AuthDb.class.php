@@ -232,7 +232,6 @@ class AuthDb extends Auth
 	 */
 	function authenticate() {
 		$Db =& Db::getInstance($this->connectionId);
-		$Db->setDebug();
 		$queryParams = array();
 		$Query = new QueryBuilder();
 		$Query->addTable($this->tableName);
