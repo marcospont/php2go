@@ -320,9 +320,10 @@ function exportVariable($var, $formatted=FALSE) {
  *
  * @param array $array Input array
  * @param string $key Key
+ * @param mixed $fallback Fallback return value
  * @return mixed
  */
-function consumeArray(&$array, $key) {
+function consumeArray(&$array, $key, $fallback=NULL) {
 	if (is_array($array)) {
 		if (array_key_exists($key, $array)) {
 			$return = $array[$key];
@@ -330,7 +331,7 @@ function consumeArray(&$array, $key) {
 			return $return;
 		}
 	}
-	return NULL;
+	return $fallback;
 }
 
 /**
