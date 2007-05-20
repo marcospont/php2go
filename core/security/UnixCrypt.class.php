@@ -41,7 +41,7 @@ class UnixCrypt extends PHP2Go
 	 *
 	 * @link http://www.php.net/crypt
 	 * @param string $data Data to encrypt
-	 * @param string $salt Encoding type
+	 * @param string $salt Encoding salt
 	 * @return string
 	 * @static
 	 */
@@ -52,14 +52,18 @@ class UnixCrypt extends PHP2Go
 	/**
 	 * Verifies data against its encrypted value
 	 *
+	 * <code>
+	 * $encrypted = UnixCrypt::encrypt('secret');
+	 * $bool = UnixCrypt::verify($encrypted, 'secret');
+	 * </code>
+	 *
 	 * @param string $encrypted Encrypted value
 	 * @param string $data Decrypted value
-	 * @param string $salt Encoding type
 	 * @return bool
 	 * @static
 	 */
-	function verify($encrypted, $data, $salt=NULL) {
-		return (UnixCrypt::encrypt($data, $salt) == $encrypted);
+	function verify($encrypted, $data) {
+		return ($encrypted == crypt($data, $encrypted));
 	}
 }
 ?>
