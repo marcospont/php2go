@@ -110,13 +110,10 @@ class LdapSearchResult extends PHP2Go
 	function getAllEntries() {
 		if ($this->handle) {
 			$entries = array();
-			$all = ldap_get_entries($this->conn, $this->handle);
-			foreach ($all as $key => $data) {
-				if (is_numeric($key)) {
-					$dn = consumeArray($data, 'dn');
-					$entries[$key] = LdapEntry::createFromResult($dn, $data);
-				}
-			}
+			$entry = ldap_first_entry($this->conn, $this->handle);
+			$entries[] = LdapEntry::createFromResult($this->conn, $entry);
+			while ($entry = ldap_next_entry($this->conn, $entry))
+				$entries[] = LdapEntry::createFromResult($this->conn, $entry);
 			return $entries;
 		}
 		return FALSE;

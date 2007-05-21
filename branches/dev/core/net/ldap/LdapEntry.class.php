@@ -173,6 +173,7 @@ class LdapEntry extends PHP2Go
 			else
 				$result[$key] = $value[0];
 		}
+		return $result;
 	}
 
 	/**
