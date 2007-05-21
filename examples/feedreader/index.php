@@ -74,7 +74,7 @@
 		println('<b>Example using a PagedDataSet to browse the items</b>');
 		$DataSet =& PagedDataSet::factory('array');
 		$DataSet->setPageSize(10);
-		$DataSet->load($Feed->Channel->getChildren());
+		$DataSet->load($Feed->getItems());
 		if ($DataSet->getRecordCount() > 0) {
 			println(sprintf("Current page: %d", $DataSet->getCurrentPage()));
 			println(sprintf("Max items per page: %d", $DataSet->getPageSize()));

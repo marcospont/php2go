@@ -230,6 +230,37 @@ class Feed extends FeedNode
 	}
 
 	/**
+	 * Set this feed's channel
+	 *
+	 * @param FeedChannel $Channel
+	 */
+	function setChannel($Channel) {
+		if (TypeUtils::isInstanceOf($Channel, 'FeedChannel'))
+			$this->Channel = $Channel;
+	}
+
+	/**
+	 * Get feed items
+	 *
+	 * @return array
+	 */
+	function getItems() {
+		return $this->Channel->getChildren();
+	}
+
+	/**
+	 * Creates a data set and fills it with the feed items
+	 *
+	 * @return DataSet
+	 */
+	function &createDataSet() {
+		import('php2go.data.DataSet');
+		$Dataset = DataSet::factory('array');
+		$Dataset->load(isset($this->Channel) ? $this->Channel->getChildren() : array());
+		return $Dataset;
+	}
+
+	/**
 	 * Get a list of valid channel properties, according with feed type and version
 	 *
 	 * @return array
@@ -320,16 +351,6 @@ class Feed extends FeedNode
 				'issued', 'published', 'modified', 'updated', 'content', 'summary'
 			);
 		}
-	}
-
-	/**
-	 * Set this feed's channel
-	 *
-	 * @param FeedChannel $Channel
-	 */
-	function setChannel($Channel) {
-		if (TypeUtils::isInstanceOf($Channel, 'FeedChannel'))
-			$this->Channel = $Channel;
 	}
 
 	/**
