@@ -253,6 +253,25 @@ function dumpVariable($var) {
 }
 
 /**
+ * Read a key from an array, and remove it
+ *
+ * @param array $array Input array
+ * @param string $key Key
+ * @param mixed $fallback Fallback return value
+ * @return mixed
+ */
+function consumeArray(&$array, $key, $fallback=NULL) {
+	if (is_array($array)) {
+		if (array_key_exists($key, $array)) {
+			$return = $array[$key];
+			unset($array[$key]);
+			return $return;
+		}
+	}
+	return $fallback;
+}
+
+/**
  * Returns or prints a human readable version of an array
  *
  * @param array $arr Input array
@@ -313,25 +332,6 @@ function exportVariable($var, $formatted=FALSE) {
 		return '<pre>' . $export . '</pre>';
 	else
 		return $export;
-}
-
-/**
- * Read a key from an array, and remove it
- *
- * @param array $array Input array
- * @param string $key Key
- * @param mixed $fallback Fallback return value
- * @return mixed
- */
-function consumeArray(&$array, $key, $fallback=NULL) {
-	if (is_array($array)) {
-		if (array_key_exists($key, $array)) {
-			$return = $array[$key];
-			unset($array[$key]);
-			return $return;
-		}
-	}
-	return $fallback;
 }
 
 /**
