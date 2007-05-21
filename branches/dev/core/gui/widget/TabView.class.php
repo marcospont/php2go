@@ -164,7 +164,7 @@ class TabView extends Widget
 	 */
 	function render() {
 		if (empty($this->panels))
-			PHP2Go::raiseError(sprintf("At least one %s must be declared inside the %s widget!", "TabPanel", "TabView"), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_MISSING_CHILDREN', array('TabPanel', 'TabView')), E_USER_ERROR, __FILE__, __LINE__);
 		$orientationClasses = array(
 			TABVIEW_ORIENTATION_TOP => 'tabView',
 			TABVIEW_ORIENTATION_BOTTOM => 'tabViewBottom',

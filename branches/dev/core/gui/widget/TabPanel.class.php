@@ -93,7 +93,7 @@ class TabPanel extends Widget
 	 */
 	function onPreRender() {
 		if (!TypeUtils::isInstanceOf($this->Parent, 'TabView'))
-			PHP2Go::raiseError(sprintf("The %s widget must be declared inside a %s widget!", "TabPanel", "TabView"), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_MISSING_PARENT', array('TabPanel', 'TabView')), E_USER_ERROR, __FILE__, __LINE__);
 		$this->Parent->addPanel($this);
 	}
 }
