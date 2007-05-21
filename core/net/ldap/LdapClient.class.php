@@ -337,6 +337,8 @@ class LdapClient extends PHP2Go
 	 */
 	function search($filter, $settings=array(), $sort=array()) {
 		$this->connect();
+		if (empty($this->baseDN))
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_LDAP_MISSING_BASEDN'), E_USER_ERROR, __FILE__, __LINE__);
 		$sizeLimit = (isset($settings['sizeLimit']) ? $settings['sizeLimit'] : 0);
 		$timeLimit = (isset($settings['timeLimit']) ? $settings['timeLimit'] : 0);
 		$attrsOnly = (isset($settings['attrsOnly']) ? $settings['attrsOnly'] : 0);
