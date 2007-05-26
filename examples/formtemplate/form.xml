@@ -41,9 +41,9 @@
 
 		<!-- this button contains a JSRS event listener, which is a simple tool to perform HTTP requests using JavaScript -->
 		<!-- in this special case, we will call a remote function that will bring the complete list of clients, not only the inactive ones -->
-		<!-- please open "resources/jsrs.example.php" for more details -->
+		<!-- please open "examples/common/jsrs.php" for more details -->
 		<button type="BUTTON" name="fill" value="List all">
-			<listener type="JSRS" event="onClick" file="resources/jsrs.example.php" remote="jsrsTest2" callback="jsrsTest2Return" debug="F"/>
+			<listener type="JSRS" event="onClick" file="../common/jsrs.php" remote="jsrsTest2" callback="jsrsTest2Return" debug="F"/>
 		</button>
 
 		<!-- a combofield builds an HTML select with static options, defined one by one in the XML specification file -->
@@ -54,7 +54,7 @@
 			<!-- an example of a JSRS listener, that allows to call a function from another script when an event is dispatched -->
 			<!-- ** the remote attribute is the name of the PHP function to be called -->
 			<!-- ** the callback attribute must point to a user JS function, that receives the PHP function return as parameter -->
-			<listener type="JSRS" event="onChange" file="resources/jsrs.example.php" remote="jsrsTest" callback="jsrsTestReturn" params="this.options[this.selectedIndex].text" debug="F"/>
+			<listener type="JSRS" event="onChange" file="../common/jsrs.php" remote="jsrsTest" callback="jsrsTestReturn" params="this.options[this.selectedIndex].text" debug="F"/>
 		</combofield>
 
 		<!-- a radiofield builds a group of HTML radio buttons, defined one by one in the XML file -->
