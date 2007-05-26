@@ -30,7 +30,7 @@
 import('php2go.form.field.DbField');
 import('php2go.form.field.LookupField');
 import('php2go.template.Template');
-import('php2go.util.service.ServiceJSRS');
+import('php2go.service.ServiceJSRS');
 
 /**
  * Default size of the search text input

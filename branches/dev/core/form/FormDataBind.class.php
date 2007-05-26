@@ -31,7 +31,7 @@ import('php2go.data.DataSet');
 import('php2go.db.QueryBuilder');
 import('php2go.form.Form');
 import('php2go.template.Template');
-import('php2go.util.service.ServiceJSRS');
+import('php2go.service.ServiceJSRS');
 
 /**
  * Builds a form based on data binding

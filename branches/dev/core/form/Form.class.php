@@ -966,7 +966,7 @@ class Form extends Component
 				if (!$Field->dataBind)
 					$Field->onDataBind();
 			}
-			import('php2go.util.service.ServiceJSRS');
+			import('php2go.service.ServiceJSRS');
 			$Service =& ServiceJSRS::getInstance();
 			$Service->handleRequest();
 		}
