@@ -291,17 +291,18 @@ class MailMessage extends PHP2Go
 	/**
 	 * Class constructor
 	 *
+	 * @param string $subject Message subject
 	 * @return MailMessage
 	 */
-	function MailMessage() {
+	function MailMessage($subject='') {
 		parent::PHP2Go();
 		$this->charset = PHP2Go::getConfigVal('CHARSET', FALSE);
 		$this->contentType = 'text/plain';
 		$this->contentEncoding = '8bit';
+		$this->subject = (!empty($subject) ? $subject : '');
 		$this->from = 'root@localhost';
 		$this->fromName = '';
 		$this->confirmReading = '';
-		$this->subject = '';
 		$this->priority = 3;
 		$this->body = '';
 		$this->textBody = '';

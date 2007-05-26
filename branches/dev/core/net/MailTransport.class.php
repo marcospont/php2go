@@ -75,6 +75,13 @@ class MailTransport extends PHP2Go
 	var $errorMessage;
 
 	/**
+	 * Whether send errors must be thrown or not
+	 *
+	 * @var bool
+	 */
+	var $throwErrors = TRUE;
+
+	/**
 	 * The message being sent
 	 *
 	 * @var object MailMessage
@@ -94,14 +101,15 @@ class MailTransport extends PHP2Go
 	 * Class constructor
 	 *
 	 * @param MailMessage &$MailMessage Message to be sent
+	 * @param int $type Transport type
+	 * @param array $params Transport type parameters
 	 * @return MailTransport
 	 */
-	function MailTransport(&$MailMessage) {
+	function MailTransport(&$MailMessage, $type=NULL, $params=array()) {
 		parent::PHP2Go();
-		if (!TypeUtils::isInstanceOf($MailMessage, 'MailMessage'))
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_OBJECT', 'MailMessage'), E_USER_ERROR, __FILE__, __LINE__);
-		$this->errors = array();
-		$this->_Message = $MailMessage;
+		$this->setMessage($MailMessage);
+		if (!empty($type))
+			$this->setType($type, (array)$params);
 		parent::registerDestructor($this, '__destruct');
 	}
 
@@ -142,20 +150,18 @@ class MailTransport extends PHP2Go
 	 *
 	 * @param int $type Type
 	 * @param array $params Parameters
-	 * @return bool
 	 */
 	function setType($type, $params=array()) {
-		if (!TypeUtils::isInteger($type) || $type < MAIL_TRANSPORT_MAIL || $type > MAIL_TRANSPORT_SMTP) {
-			return FALSE;
-		} elseif ($this->_validateParams($type, $params)) {
-			$this->params = $params;
-			$this->type = $type;
-			return TRUE;
-		} else {
+		// invalid type
+		if (!in_array($type, array(MAIL_TRANSPORT_MAIL, MAIL_TRANSPORT_SENDMAIL, MAIL_TRANSPORT_SMTP)))
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MAIL_INVALID_TYPE'), E_USER_ERROR, __FILE__, __LINE__);
+		// invalid params
+		if (!$this->_validateParams($type, $params)) {
 			$typeName = ($type == MAIL_TRANSPORT_MAIL) ? 'mail' : ($type == MAIL_TRANSPORT_SENDMAIL) ? 'sendmail' : 'smtp';
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MAIL_INCOMPLETE_PARAMS', $typeName), E_USER_ERROR, __FILE__, __LINE__);
-			return FALSE;
 		}
+		$this->type = $type;
+		$this->params = $params;
 	}
 
 	/**
@@ -203,19 +209,58 @@ class MailTransport extends PHP2Go
 	}
 
 	/**
+	 * Validate transport type parameters
+	 *
+	 * @param int $type Transport type
+	 * @param array &$params Transport parameters
+	 * @access private
+	 * @return bool
+	 */
+	function _validateParams($type, &$params) {
+		switch($type) {
+			case MAIL_TRANSPORT_MAIL :
+				return TRUE;
+			case MAIL_TRANSPORT_SENDMAIL :
+				return (isset($params['sendmail']));
+			case MAIL_TRANSPORT_SMTP :
+				return (isset($params['server']));
+			default :
+				return FALSE;
+		}
+
+	}
+
+	/**
+	 * Validate the message before sending
+	 *
+	 * @access private
+	 * @return bool
+	 */
+	function _validateMessage() {
+		if (!$this->_Message->built)
+			$this->_Message->build();
+		if (!$this->_Message->hasRecipients(MAIL_RECIPIENT_TO) && !$this->_Message->hasRecipients(MAIL_RECIPIENT_CC) && !$this->_Message->hasRecipients(MAIL_RECIPIENT_BCC)) {
+			if ($this->throwErrors)
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MAIL_EMPTY_RCPT'), E_USER_WARNING, __FILE__, __LINE__);
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	/**
 	 * Sends the message using the native {@link mail()} function
 	 *
 	 * @access private
 	 * @return bool
 	 */
 	function _mailSend() {
-		$this->_Message->removeHeader('To');
 		// get the subject, and remove the Subject header
 		$subject = $this->_Message->headers['Subject'];
-		$this->_Message->removeHeader('Subject');
 		// requires at least one "To" recipient
 		if (!$this->_Message->hasRecipients(MAIL_RECIPIENT_TO)) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MAIL_EMPTY_RCPT'), E_USER_ERROR, __FILE__, __LINE__);
+			$this->errorMessage = PHP2Go::getLangVal('ERR_MAIL_EMPTY_RCPT');
+			if ($this->throwErrors)
+				PHP2Go::raiseError($this->errorMessage, E_USER_WARNING, __FILE__, __LINE__);
 			return FALSE;
 		}
 		// recipients
@@ -225,8 +270,10 @@ class MailTransport extends PHP2Go
 		}
 		// mail() function
 		$parameters = sprintf("-oi -f %s", $this->_Message->getFrom());
-		if (!mail($recipients, $subject, $this->_Message->body, $this->_getMessageHeaders(), $parameters)) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', 'mail()'), E_USER_ERROR, __FILE__, __LINE__);
+		if (!@mail($recipients, $subject, $this->_Message->body, $this->_getMessageHeaders(), $parameters)) {
+			$this->errorMessage = PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', 'mail()');
+			if ($this->throwErrors)
+				PHP2Go::raiseError($this->errorMessage, E_USER_WARNING, __FILE__, __LINE__);
 			return FALSE;
 		} else {
 			return TRUE;
@@ -242,14 +289,18 @@ class MailTransport extends PHP2Go
 	function _sendmailSend() {
 		$sendmailString = sprintf("%s -oi -f %s -F %s -t", $this->params['sendmail'], $this->_Message->getFrom(), $this->_Message->getFromName());
 		if (!@$sendmail = popen($sendmailString, "w")) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', $sendmailString), E_USER_ERROR, __FILE__, __LINE__);
+			$this->errorMessage = PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', $sendmailString);
+			if ($this->throwErrors)
+				PHP2Go::raiseError($this->errorMessage, E_USER_WARNING, __FILE__, __LINE__);
 			return FALSE;
 		} else {
 			fputs($sendmail, $this->_getMessageHeaders());
 			fputs($sendmail, $this->_Message->body);
 			$result = pclose($sendmail) >> 8 & 0xFF;
 			if ($result != 0) {
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', $sendmailString), E_USER_ERROR, __FILE__, __LINE__);
+				$this->errorMessage = PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', $sendmailString);
+				if ($this->throwErrors)
+					PHP2Go::raiseError($this->errorMessage, E_USER_WARNING, __FILE__, __LINE__);
 				return FALSE;
 			} else {
 				return TRUE;
@@ -284,7 +335,7 @@ class MailTransport extends PHP2Go
 		}
 		// authentication
 		if ($result && isset($this->params['username']) && isset($this->params['password'])) {
-			$this->_Smtp->authenticate($this->params['username'], $this->params['password']);
+			$result = $this->_Smtp->authenticate($this->params['username'], $this->params['password']);
 		}
 		// sender
 		$result = $result && $this->_Smtp->mail($this->_Message->getFrom());
@@ -304,47 +355,12 @@ class MailTransport extends PHP2Go
 		if ($shutdown)
 			$result = $result && $this->_Smtp->quit();
 		// get send errors
-		if (!$result && $this->errorMessage = $this->_Smtp->getLastError())
-			PHP2Go::raiseError("SMTP ERROR: {$this->errorMessage}", E_USER_WARNING, __FILE__, __LINE__);
+		if (!$result) {
+			$this->errorMessage = $this->_Smtp->getLastError();
+			if ($this->errorMessage && $this->throwErrors)
+				PHP2Go::raiseError($this->errorMessage, E_USER_WARNING, __FILE__, __LINE__);
+		}
 		return $result;
-	}
-
-	/**
-	 * Validate the message before sending
-	 *
-	 * @access private
-	 * @return bool
-	 */
-	function _validateMessage() {
-		if (!$this->_Message->built)
-			$this->_Message->build();
-		if (!$this->_Message->hasRecipients(MAIL_RECIPIENT_TO) && !$this->_Message->hasRecipients(MAIL_RECIPIENT_CC) && !$this->_Message->hasRecipients(MAIL_RECIPIENT_BCC)) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MAIL_EMPTY_RCPT'), E_USER_ERROR, __FILE__, __LINE__);
-			return FALSE;
-		}
-		return TRUE;
-	}
-
-	/**
-	 * Valdiate transport parameters
-	 *
-	 * @param int $type Transport type
-	 * @param array &$params Transport parameters
-	 * @access private
-	 * @return bool
-	 */
-	function _validateParams($type, &$params) {
-		switch($type) {
-			case MAIL_TRANSPORT_MAIL :
-				return TRUE;
-			case MAIL_TRANSPORT_SENDMAIL :
-				return (isset($params['sendmail']));
-			case MAIL_TRANSPORT_SMTP :
-				return (isset($params['server']));
-			default :
-				return FALSE;
-		}
-
 	}
 
 	/**
@@ -356,6 +372,10 @@ class MailTransport extends PHP2Go
 	function _getMessageHeaders() {
 		$headers = '';
 		foreach($this->_Message->headers as $name => $value) {
+			if ($this->type == MAIL_TRANSPORT_MAIL) {
+				if ($name == 'To' || $name == 'Subject')
+					continue;
+			}
 			$headers .= sprintf("%s: %s", $name, $value);
 		}
 		return $headers;
