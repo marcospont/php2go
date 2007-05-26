@@ -132,10 +132,11 @@ InputMask.ignoreCodes = '#33#34#35#36#37#38#39#40#45#127#4098#';
 InputMask.setup = function(fld, mask) {
 	fld = $(fld);
 	if (fld) {
-		if (mask instanceof Mask)
+		if (mask instanceof Mask) {
 			fld.inputMask = new InputMask(fld, mask);
-		else
+		} else {
 			fld.inputMask = new InputMask(fld, Mask.fromExpression(mask));
+		}
 	}
 };
 
@@ -328,9 +329,9 @@ Mask = function() {
  * @param {String} expr Mask expression
  * @type Mask
  */
-Mask.fromExpression = function(expr) {
+Mask.fromExpression = function(expr, d) {
 	var mask = new Mask();
-	mask.loadExpression(expr);
+	mask.loadExpression(expr, d);
 	return mask;
 };
 
@@ -393,8 +394,23 @@ Mask.fromMaskName = function(name) {
  */
 Mask.prototype.loadExpression = function(expr) {
 	var ex = PHP2Go.raiseException;
+	/**
+	 * Special mask chars:
+	 * # - numbers
+	 * A - lowercase and uppercase chars
+	 * L - lowercase chars
+	 * U - uppercase chars
+	 * W - word boundary (numbers, lower and upper chars, underscore)
+	 * P - number separators (dot and comma)
+	 */
 	var map = { '#': '0-9', 'A': 'a-zA-Z', 'L': 'a-z', 'P' : '\.\,', 'U': 'A-Z', 'W': '0-9A-Za-z_' };
 	var c, lit, cc = "", cm = "", state = 0, m;
+	/**
+	 * state=0 : normal mask parsing
+	 * state=1 : a character class [...] was parsed and waits for limit definition
+	 * state=2 : mask char sequence waiting for limit definition
+	 * limits can be defined by *, +, {max}, {min,} or {min,max}
+	 */
 	try {
 		for (var i=0; i<expr.length; i++) {
 			c = expr.charAt(i);
@@ -494,7 +510,7 @@ Mask.prototype.loadExpression = function(expr) {
 			// mask char
 			if (map[c]) {
 				if (state == 1) {
-					this.addField(cc, (c=='*'?0:1), -1);
+					this.addField(cc, 1, 1);
 					cc = ""; state = 0;
 				} else if (state == 2) {
 					if (c != cm.charAt(0)) {
@@ -509,7 +525,7 @@ Mask.prototype.loadExpression = function(expr) {
 			// literal
 			} else {
 				if (state == 1) {
-					this.addField(cc, (c=='*'?0:1), -1);
+					this.addField(cc, 1, 1);
 					cc = ""; state = 0;
 				} else if (state == 2) {
 					this.addField(map[cm.charAt(0)], cm.length, cm.length);
@@ -518,10 +534,8 @@ Mask.prototype.loadExpression = function(expr) {
 				this.addLiteral(c, (expr.charAt(i+1) == '?'));
 			}
 		}
-		// pending char class
 		if (state == 1)
 			this.addField(cc, 1, 1);
-		// pending mask char sequence
 		if (state == 2)
 			this.addField(map[cm.charAt(0)], cm.length, cm.length);
 	} catch(e) {
