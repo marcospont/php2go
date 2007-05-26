@@ -157,7 +157,7 @@ function getPhp2GoOffset() {
  * @param string $handlersList Space separated list of handlers
  */
 function jsrsDispatch($handlersList) {
-	import('php2go.util.service.ServiceJSRS');
+	import('php2go.service.ServiceJSRS');
 	$Service = new ServiceJSRS();
 	$handlersList = trim((string)$handlersList);
 	$handlers = explode(' ', $handlersList);
