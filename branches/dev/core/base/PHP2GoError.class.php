@@ -163,6 +163,15 @@ class PHP2GoError extends PHP2Go
 	}
 
 	/**
+	 * Get the text representation of the error type
+	 *
+	 * @return string
+	 */
+	function getTypeDesc() {
+		return $this->typeDesc;
+	}
+
+	/**
 	 * Set the error type
 	 *
 	 * @param int $type Error type
@@ -243,7 +252,7 @@ class PHP2GoError extends PHP2Go
 		$userIgnoreErrors = PHP2Go::getConfigVal('IGNORE_ERRORS', FALSE);
 		$ignoreErrors = (!is_array($userIgnoreErrors) ? $this->ignoreErrors : array_merge($this->ignoreErrors, $userIgnoreErrors));
 		for ($i = 0; $i < sizeof($ignoreErrors); $i++) {
-			if (eregi($ignoreErrors[$i], $errorMessage) !== FALSE)
+			if (preg_match("/{$ignoreErrors[$i]}/i", $errorMessage))
 				return TRUE;
 		}
 		return FALSE;
@@ -349,7 +358,7 @@ class PHP2GoError extends PHP2Go
 						<tr><td style=\"font-family:Arial;font-size:12px;\">{$extra}{$location}</td></tr>
 						<tr><td style=\"font-family:Arial;font-size:12px;\">{$stackTrace}</td></tr>
 					</table>
-				</tr></tr>
+				</td></tr>
 			</table>
 		");
 	}
