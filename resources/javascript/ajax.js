@@ -35,6 +35,7 @@
 
 if (!PHP2Go.included[PHP2Go.baseUrl + 'ajax.js']) {
 
+PHP2Go.include(PHP2Go.baseUrl + 'form.js');
 PHP2Go.include(PHP2Go.baseUrl + 'util/throbber.js');
 
 if (window.ActiveXObject && !window.XMLHttpRequest) {
@@ -550,6 +551,110 @@ AjaxResponse = function(transId) {
 };
 
 /**
+ * Parses and executes command definitions
+ * returned in the response in JSON format
+ */
+AjaxResponse.prototype.run = function() {
+	var skip = 0;
+	var json = (this.json || {});
+	var cmds = json.commands || [];
+	for (var i=0; i<cmds.length; i++) {
+		var item = cmds[i];
+		if (skip-- > 0)
+			continue;
+		switch (item.cmd) {
+			case 'value' :
+				(item.frm) ? ($FF(item.frm, item.fld).setValue(item.arg)) : ($F(item.id).setValue(item.arg));
+				break;
+			case 'combo' :
+				var combo = $F(item.id);
+				(!item.arg.value) && (item.arg.value = combo.getValue());
+				(item.arg.clear) && (combo.clearOptions());
+				for (var v in item.arg.options)
+					combo.addOption(v, item.arg.options[v]);
+				combo.setValue(item.arg.value);
+				break;
+			case 'enable' :
+				(item.frm) ? ($FF(item.frm, item.fld).enable()) : ($F(item.id).enable());
+				break;
+			case 'disable' :
+				(item.frm) ? ($FF(item.frm, item.fld).disable()) : ($F(item.id).disable());
+				break;
+			case 'focus' :
+				(item.frm) ? ($FF(item.frm, item.fld).focus()) : ($F(item.id).focus());
+				break;
+			case 'clear' :
+				(item.frm) ? ($FF(item.frm, item.fld).clear()) : ($F(item.id).clear());
+				break;
+			case 'hide' :
+				$(item.id).hide();
+				break;
+			case 'show' :
+				$(item.id).show();
+				break;
+			case 'prop' :
+				var elm = $(item.id);
+				for (var p in item.arg)
+					elm.setAttribute(p, item.arg[p]);
+				break;
+			case 'style' :
+				var elm = $(item.id);
+				for (var p in item.arg)
+					elm.setStyle(p, item.arg[p]);
+				break;
+			case 'create' :
+				var elm = $N(item.arg.tag, $(item.arg.parent), item.arg.styles, item.arg.cont);
+				if (item.id)
+					elm.id = item.id;
+				for (var p in item.arg.attrs)
+					elm.setAttribute(p, item.arg.attrs[p]);
+				break;
+			case 'clear' :
+				$(item.id).clear();
+				break;
+			case 'update' :
+				$(item.id).update(item.arg.code, item.arg.eval, item.arg.dom);
+				break;
+			case 'insert' :
+				$(item.id).insertHTML(item.arg.code, item.arg.pos, item.arg.eval);
+				break;
+			case 'replace' :
+				$(item.id).replace(item.arg.code, item.arg.eval);
+				break;
+			case 'remove' :
+				$(item.id).remove();
+				break;
+			case 'addev' :
+				Event.addListener($(item.id), item.arg.type, item.arg.func, item.arg.capt);
+				break;
+			case 'remev' :
+				Event.removeListener($(item.id), item.arg.type, item.arg.func, item.arg.capt);
+				break;
+			case 'alert' :
+				alert(item.arg);
+				break;
+			case 'confirm' :
+				if (!confirm(item.arg.msg)) {
+					skip = item.arg.skip;
+					// skip all commands
+					if (!skip)
+						break;
+				}
+				break;
+			case 'redirect' :
+				window.location.href = item.arg;
+				return;
+			case 'eval' :
+				PHP2Go.eval(item.arg);
+				break;
+			case 'func' :
+				item.id.apply(item.arg.scope, item.arg.params);
+				break;
+		}
+	}
+};
+
+/**
  * Extends AjaxRequest in order to populate a given container
  * with the response returned by the server. Optionally, 2
  * containers (success and failure) can be provided. 3 more
@@ -633,6 +738,37 @@ AjaxUpdater.prototype.update = function(response) {
 		}
 	}
 	this.raise('onUpdate', [response]);
+};
+
+/**
+ * This class is able to interact with php2go.service.ServiceAjax
+ * class in order to call PHP functions or methods. If the returned
+ * response is a JSON string, the class will try to run commands
+ * and statements specified inside it
+ * @constructor
+ * @extends AjaxRequest
+ * @param {String} url Request URL
+ * @param {Object} args Settings
+ */
+AjaxService = function(url, args) {
+	this.AjaxRequest(url, Object.extend(args || {}, {
+		headers : { 'X-Handler-ID' : args.handler || '' }
+	}));
+	this.bind('onJSONResult', this.parseResponse);
+};
+AjaxService.extend(AjaxRequest, 'AjaxRequest');
+
+/**
+ * Tries to parse and execute commands from
+ * the returned JSON string
+ * @param {AjaxResponse} response Response
+ */
+AjaxService.prototype.parseResponse = function(response) {
+	try {
+		response.run();
+	} catch(e) {
+		this.raise('onException', [e]);
+	}
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'ajax.js'] = true;
