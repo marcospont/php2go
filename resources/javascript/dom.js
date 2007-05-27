@@ -946,7 +946,7 @@ CSSClasses = function(elm) {
 		return this.elm.className;
 	};
 };
-Object.implement(CSSClasses.prototype, Collection);
+Object.extend(CSSClasses.prototype, Collection);
 
 /**
  * WCH stands for Windowed Controls Hider, which is a tool that
@@ -1331,7 +1331,7 @@ $EV = function(e) {
 	e = e || window.event;
 	if (!e || PHP2Go.nativeEventExtension)
 		return e;
-	Object.implement(e, Event.prototype);
+	Object.extend(e, Event.prototype);
 	return e;
 };
 

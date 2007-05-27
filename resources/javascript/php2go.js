@@ -254,18 +254,16 @@ try {
 }
 
 /**
- * Makes all properties and methods of src
- * available to dst. That can be used to
- * add behaviours from a class to another,
- * without establishing inheritance relationship
+ * Makes all properties and methods of src available to dst
  * @param {Object} dst Target
  * @param {Object} src Source
- * @type void
+ * @type Object
  * @addon
  */
-Object.implement = function(dst, src) {
+Object.extend = function(dst, src) {
 	for (p in src)
 		dst[p] = src[p];
+	return dst;
 };
 
 /**
@@ -1376,7 +1374,7 @@ $C = function(o, assoc) {
 	} else {
 		o.each = Array.prototype.each;
 	}
-	Object.implement(o, Collection);
+	Object.extend(o, Collection);
 	return o;
 };
 
