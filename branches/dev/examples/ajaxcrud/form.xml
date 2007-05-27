@@ -29,19 +29,9 @@
 					- class='AjaxUpdater' means that we want to fill a given "container" with the returned response
 					- inside "onJSONResult", we fill "msg" with the returned JSON object (in this case, success or error message)
 				-->
-				<listener type="AJAX" event="onClick" class="AjaxUpdater" formsubmit="T">
-					<param name="container">people_list</param>
+				<listener type="AJAX" event="onClick" class="AjaxService" formsubmit="T">
 					<param name="throbber">throbber_save</param>
-					<param name="params">{action:"save"}</param>
-					<![CDATA[
-						return {
-							onJSONResult : function(response) {
-								var msg = $('msg');
-								msg.update(response.json);
-								msg.show();
-							}
-						};
-					]]>
+					<param name="handler">saveRecord</param>
 				</listener>
 			</button>
 		</buttons>

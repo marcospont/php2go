@@ -31,9 +31,8 @@
 	import('php2go.base.Document');
 	import('php2go.datetime.Date');
 	import('php2go.form.FormBasic');
-	import('php2go.net.HttpRequest');
+	import('php2go.service.ServiceAjax');
 	import('php2go.template.Template');
-	import('php2go.util.json.JSONEncoder');
 
 	/**
 	 * For coding organization purposes, we've created a class to wrap all the code
@@ -42,14 +41,13 @@
 	 */
 	class AjaxPeople
 	{
-		var $action = NULL;
-		var $request = array();
 		var $dbConn = NULL;
 		var $integrityRef = array();
+		var $service = NULL;
 
 		function AjaxPeople() {
-			$this->action = @$_POST['action'];
-			$this->request = $_POST;
+			$this->service = new ServiceAjax();
+			$this->service->registerObject($this, 'ajax');
 			$this->dbConn =& Db::getInstance();
 			$this->dbConn->setFetchMode(ADODB_FETCH_ASSOC);
 			$tables = $this->dbConn->getTables();
@@ -60,157 +58,131 @@
 		}
 
 		/**
-		 * This method calls the proper method to handle the requested action
+		 * This method runs the AJAX handler. If an AJAX action is
+		 * not performed, the index action takes place
 		 */
 		function run() {
-			switch ($this->action) {
-				case 'load' :
-					$this->load();
-					break;
-				case 'save' :
-					$this->save();
-					break;
-				case 'delete' :
-					$this->delete();
-					break;
-				case 'multiple' :
-					$this->multiple();
-					break;
-				default :
-					$this->index();
-					break;
-			}
+			$this->service->handleRequest();
+			$this->index();
 		}
 
 		/**
-		 * Action that loads a record from the database,
-		 * and return its fields as a JSON string
+		 * Action that loads a record from the database
 		 */
-		function load() {
-			if (TypeUtils::isInteger($this->request['id_people'])) {
-				$rs = $this->dbConn->query("select * from people where id_people = ?", TRUE, array($this->request['id_people']));
-				/**
-				 * the record data is returned in the response body,
-				 * so we must send the proper Content-Type header
-				 */
-				header("Content-Type: application/json; charset=iso-8859-1");
+		function ajaxLoadRecord($params) {
+			$response = new AjaxResponse();
+			if (TypeUtils::isInteger($params['id_people'])) {
+				$rs = $this->dbConn->query("select * from people where id_people = ?", TRUE, array($params['id_people']));
 				if ($rs->recordCount() > 0) {
-					$fields = $rs->fields;
-					/**
-					 * Convert birth date and active values
-					 * date: SQL -> EURO
-					 * checkboxes : (1|0) -> (T|F)
-					 */
+					$response->resetForm('form');
+					$fields =& $rs->fields;
+					// convert birth date and active fields
 					$fields['birth_date'] = Date::fromSqlToEuroDate($fields['birth_date']);
 					$fields['active'] = ($fields['active'] == 1 ? 'T' : 'F');
-					print JSONEncoder::encode($fields);
-					return;
+					$response->setValue($fields);
+					$response->focus('name');
+				} else {
+					$response->updateContents('msg', 'Record not found!');
+					$response->show('msg');
 				}
+			} else {
+				$response->updateContents('msg', 'Invalid people ID!');
+				$response->show('msg');
 			}
-			print '{}';
+			return $response;
 		}
 
 		/**
 		 * Saves a record and returns the updated people list
 		 */
-		function save() {
-			ob_start();
-			/**
-			 * Decode utf-8 request variables
-			 */
-			foreach ($this->request as $name => $value)
-				$this->request[$name] = utf8_decode($value);
-			/**
-			 * Convert birth date and active values
-			 * date: EURO -> SQL
-			 * checkboxes : (T|F) -> (1|0)
-			 */
-			$this->request['birth_date'] = Date::fromEuroToSqlDate($this->request['birth_date']);
-			$this->request['active'] = ($this->request['active'] == 'T' ? 1 : 0);
-			/**
-			 * Update or insert
-			 */
-			if (!empty($this->request['id_people'])) {
-				$idPeople = $this->request['id_people'];
-				unset($this->request['id_people']);
-				$res = @$this->dbConn->update('people', $this->request, 'id_people = ' . $idPeople);
+		function ajaxSaveRecord($params) {
+			$response = new AjaxResponse();
+			// convert birth date and active values
+			$params['birth_date'] = Date::fromEuroToSqlDate($params['birth_date']);
+			$params['active'] = ($params['active'] == 'T' ? 1 : 0);
+			// update or insert
+			if (!empty($params['id_people'])) {
+				$idPeople = consumeArray($params, 'id_people');
+				$res = @$this->dbConn->update('people', $params, 'id_people = ' . $idPeople);
 			} else {
-				$this->request['add_date'] = date('Y-m-d');
-				$res = @$this->dbConn->insert('people', $this->request);
-				print "<script type=\"text/javascript\">$('id_people').value = {$res};</script>";
+				// set 'add_date' field
+				$params['add_date'] = date('Y-m-d');
+				$res = @$this->dbConn->insert('people', $params);
+				$response->setValue('id_people', $res);
 			}
-			/**
-			 * the message is returned using the X-JSON record
-			 * generated output and list is returned in the response body
-			 */
-			header("X-JSON: " . JSONEncoder::encode(($res ? "<B>{$this->request['name']}</B> successfully saved!" : "Error saving data: " . $db->getError())));
-			print ob_get_clean();
-			$tpl = $this->getList();
-			$tpl->display();
+			// set result message
+			$response->updateContents('msg', ($res ? "<B>{$params['name']}</B> successfully saved!" : "Error saving data: " . $this->dbConn->getError()));
+			$response->show('msg');
+			// show updated list
+			$tpl =& $this->getList();
+			$response->updateContents('people_list', $tpl->getContent());
+			return $response;
 		}
 
 		/**
 		 * Deletes a record and returns the updated people list
 		 */
-		function delete() {
-			$res = FALSE;
-			if (TypeUtils::isInteger($this->request['id_people'])) {
-				/**
-				 * check integrity against other example tables
-				 * that reference the "people" table
-				 */
-				if (!$this->dbConn->checkIntegrity('people', 'id_people', $this->request['id_people'], $this->integrityRef)) {
+		function ajaxDeleteRecord($params) {
+			$response = new AjaxResponse();
+			if (TypeUtils::isInteger($params['id_people'])) {
+				// check integrity against other example tables
+				if (!$this->dbConn->checkIntegrity('people', 'id_people', $params['id_people'], $this->integrityRef)) {
 					$msg = "This person can't be deleted!";
 				}
-				/**
-				 * execute the delete statement
-				 */
-				elseif (!@$this->dbConn->delete('people', 'id_people = ' . $this->request['id_people'])) {
+				// execute the delete statement
+				elseif (!@$this->dbConn->delete('people', 'id_people = ' . $params['id_people'])) {
 					$msg = "Error deleting person: " . $this->dbConn->getError();
 				}
+				// delete OK
 				else {
-					$res = TRUE;
+					if ($params['id_people'] == $params['current_loaded']) {
+						$response->setValue('id_people', '');
+						$response->resetForm('form');
+					}
 				}
+			} else {
+				$msg = "Invalid people ID";
 			}
-			/**
-			 * the confirmation/error message is returned using the X-JSON header
-			 * list is returned in the response body
-			 */
-			header("X-JSON: " . JSONEncoder::encode(($res ? "Person successfuly deleted!" : $msg)));
-			$tpl = $this->getList();
-			$tpl->display();
+			$response->updateContents('msg', (isset($msg) ? $msg : "Person successfuly deleted!"));
+			$response->show('msg');
+			// show updated list
+			$tpl =& $this->getList();
+			$response->updateContents('people_list', $tpl->getContent());
+			return $response;
 		}
 
 		/**
 		 * Performs an operation over multiple records. Currently
 		 * supports only "delete" operation
 		 */
-		function multiple() {
-			$res = FALSE;
-			$op = HttpRequest::post('operation');
-			$chk = HttpRequest::post('chk');
-			if (!$op || $op != 'delete') {
-				header("X-JSON: " . JSONEncoder::encode("Invalid operation!"));
-			} elseif (empty($chk)) {
-				header("X-JSON: " . JSONEncoder::encode("Invalid arguments!"));
- 			} else {
+		function ajaxMultiple($params) {
+			$response = new AjaxResponse();
+			if (!isset($params['operation']) || $params['operation'] != 'delete') {
+				$response->updateContents('msg', 'Invalid operation!');
+			} elseif (empty($params['chk'])) {
+				$response->updateContents('msg', 'Invalid arguments!');
+			} else {
 				$this->dbConn->startTransaction();
-				foreach ($chk as $idx => $idPeople)
-					/* check integrity */
+				foreach ($params['chk'] as $idx => $idPeople) {
+					// check integrity
 					if (!($res = $this->dbConn->checkIntegrity('people', 'id_people', intval($idPeople), $this->integrityRef))) {
 						$this->dbConn->failTransaction();
 						$msg = "The person {$idPeople} can't be deleted!";
 					}
-					/* delete the record */
+					// delete the record
 					elseif (!($res = $this->dbConn->delete('people', 'id_people = ' . intval($idPeople)))) {
 						$this->dbConn->failTransaction();
 						$msg = $this->dbConn->getError();
 					}
+				}
 				$res = $this->dbConn->completeTransaction();
-				header("X-JSON: " . JSONEncoder::encode(($res ? "Person records deleted successfully!" : "Error deleting multiple person records: " . $msg)));
+				$response->updateContents('msg', ($res ? "Person records deleted successfully!" : "Error deleting multiple person records: " . $msg));
 			}
-			$tpl = $this->getList();
-			$tpl->display();
+			$response->show('msg');
+			// show updated list
+			$tpl =& $this->getList();
+			$response->updateContents('people_list', $tpl->getContent());
+			return $response;
 		}
 
 		/**

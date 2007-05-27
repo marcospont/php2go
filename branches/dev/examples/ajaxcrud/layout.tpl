@@ -80,31 +80,13 @@
 	function loadPerson(id) {
 		// hide message
 		$('msg').hide();
-		// create/send request
-		var request = new AjaxRequest(document.location.pathname, {
-			params: {action:"load",id_people:id},
-			throbber: "throbber_load",
-			onJSONResult: function(response) {
-				if (response.json.name) {
-					// reset form
-					Form.reset($('form'));
-					// apply field values
-					for (var name in response.json) {
-						try {
-							if (response.json[name] !== null)
-								$F(name).setValue(response.json[name]);
-						} catch(e) {
-						}
-					}
-					$('id_people').value = id;
-					// focus first field
-					Form.focusFirstField('form');
-				} else {
-					$('msg').update("Error loading record");
-				}
-			}
+		// run service
+		var service = new AjaxService(document.location.pathname, {
+			params: { id_people: id },
+			handler: 'loadRecord',
+			throbber: 'throbber_load'
 		});
-		request.send();
+		service.send();
 	}
 
 	/**
@@ -114,25 +96,15 @@
 		// display confirmation dialog
 		if (!confirm("Are you sure?"))
 			return;
-		var msg = $('msg');
 		// hide message
-		msg.hide();
-		// reset form if we're deleting the record being edited
-		if (id == $('id_people').value) {
-			$('id_people').value = '';
-			Form.reset($('form'));
-		}
+		$('msg').hide();
 		// create/send request
-		var request = new AjaxUpdater(document.location.pathname, {
-			params: {action:"delete",id_people:id},
-			container: 'people_list',
-			throbber: 'throbber_save',
-			onJSONResult: function(response) {
-				msg.update(response.json);
-				msg.show();
-			}
+		var service = new AjaxService(document.location.pathname, {
+			params: { id_people: id, current_loaded: $('id_people').value },
+			handler: 'deleteRecord',
+			throbber: 'throbber_save'
 		});
-		request.send();
+		service.send();
 	}
 
     /**
@@ -187,16 +159,9 @@
     </form>
     <script type="text/javascript">
 		Form.ajaxify($('listForm'), function() {
-			var ajax = new AjaxUpdater('ajaxcrud.example.php', {
-				container: 'people_list',
-				throbber: 'throbber_save',
-				params: {action: 'multiple'},
-				method: 'POST',
-				onJSONResult: function(response) {
-					var msg = $('msg');
-					msg.update(response.json);
-					msg.show();
-				}
+			var ajax = new AjaxService(document.location.pathname, {
+				handler: 'multiple',
+				throbber: 'throbber_save'
 			});
 			return ajax;
 		});
