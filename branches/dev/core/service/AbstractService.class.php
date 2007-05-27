@@ -166,9 +166,9 @@ class AbstractService extends PHP2Go
 					$func[0] =& $object;
 					$func[1] = $method;
 					$callback = new Callback();
-					$callback->setFunctionByRef($func);
+					$callback->setFunction($func);
 					$alias = preg_replace("/^{$methodPrefix}([A-Z])/e", "strtolower('$1')", $method);
-					$this->handlers[$alias] =& $callback;
+					$this->handlers[$alias] = $callback;
 				}
 			}
 		}

@@ -61,17 +61,27 @@ class AjaxResponse extends PHP2Go
 	}
 
 	/**
-	 * Defines the value of a form field given its ID
+	 * Defines the value of one or more form fields
 	 *
-	 * @param string $id Field ID
+	 * @param string $id Field ID or hash array of fields/values
 	 * @param mixed $value Field value
 	 */
-	function setValue($id, $value) {
-		$this->commands[] = array(
-			'cmd' => 'value',
-			'id' => $id,
-			'arg' => $value
-		);
+	function setValue($id, $value='') {
+		if (is_array($id)) {
+			foreach ($id as $elm => $value) {
+				$this->commands[] = array(
+					'cmd' => 'value',
+					'id' => $elm,
+					'arg' => $value
+				);
+			}
+		} else {
+			$this->commands[] = array(
+				'cmd' => 'value',
+				'id' => $id,
+				'arg' => $value
+			);
+		}
 	}
 
 	/**
@@ -237,6 +247,18 @@ class AjaxResponse extends PHP2Go
 			'cmd' => 'clear',
 			'frm' => $formId,
 			'fld' => $fieldName
+		);
+	}
+
+	/**
+	 * Reset a form by ID
+	 *
+	 * @param string $id Form ID
+	 */
+	function resetForm($id) {
+		$this->commands[] = array(
+			'cmd' => 'reset',
+			'id' => $id
 		);
 	}
 

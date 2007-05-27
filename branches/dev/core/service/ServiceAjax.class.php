@@ -161,7 +161,7 @@ class ServiceAjax extends AbstractService
 	function _decodeParams($source) {
 		foreach ($source as $key => $value) {
 			if (is_array($value))
-				$source[$key] = $this->_parseParams($value);
+				$source[$key] = $this->_decodeParams($value);
 			else
 				$source[$key] = utf8_decode($value);
 		}
