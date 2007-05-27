@@ -161,6 +161,18 @@ class Callback extends PHP2Go
 	}
 
 	/**
+	 * Defines the callback by reference
+	 *
+	 * This is useful when defining object methods as callbacks under PHP4.
+	 *
+	 * @param mixed $function Callback
+	 */
+	function setFunctionByRef(&$function) {
+		$this->function =& $function;
+		$this->_parseFunction();
+	}
+
+	/**
 	 * Enable/disable errors when invalid callbacks are detected
 	 *
 	 * @param bool $setting Boolean value
@@ -232,7 +244,7 @@ class Callback extends PHP2Go
 				$this->valid = (in_array($this->function[1], TypeUtils::toArray(get_class_methods($this->function[0]))));
 			}
 		} else {
-			$tmp = (!System::isPHP5() ? strtolower($this->function) : $this->function);
+			$tmp = (!IS_PHP5 ? strtolower($this->function) : $this->function);
 			if (strpos($tmp, '::') !== FALSE) {
 				$this->type = CALLBACK_STATIC_METHOD;
 				$this->function = explode('::', $tmp);
