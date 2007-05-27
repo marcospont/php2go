@@ -43,7 +43,7 @@
 		<!-- in this special case, we will call a remote function that will bring the complete list of clients, not only the inactive ones -->
 		<!-- please open "examples/common/jsrs.php" for more details -->
 		<button type="BUTTON" name="fill" value="List all">
-			<listener type="JSRS" event="onClick" file="../common/jsrs.php" remote="jsrsTest2ddd" callback="jsrsTest2Return" debug="F"/>
+			<listener type="JSRS" event="onClick" file="../common/jsrs.php" remote="jsrsTest2" callback="jsrsTest2Return" debug="F"/>
 		</button>
 
 		<!-- a combofield builds an HTML select with static options, defined one by one in the XML specification file -->
