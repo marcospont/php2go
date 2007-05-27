@@ -259,7 +259,7 @@ class AbstractService extends PHP2Go
 	}
 	function onInvalidHandler() {
 	}
-	function onError($code, $message, $file, $line, $vars) {
+	function onError() {
 	}
 	/**#@-*/
 }
