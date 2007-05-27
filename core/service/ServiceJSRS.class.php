@@ -27,7 +27,7 @@
  * @version $Id$
  */
 
-import('php2go.util.Callback');
+import('php2go.service.AbstractService');
 
 /**
  * Handles JSRS requests
@@ -37,32 +37,22 @@ import('php2go.util.Callback');
  * block. Internally, the request is performed through a hidden IFRAME
  * element.
  *
- * This class is used to handle these requests, parsing and calling the
- * requested function, printing its results.
+ * This class handles these requests. Parses the request, calls the requested
+ * function or method and prints its results.
  *
- * @package util
- * @subpackage service
- * @uses Callback
+ * @package service
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
-class ServiceJSRS extends PHP2Go
+class ServiceJSRS extends AbstractService
 {
 	/**
-	 * Registered handlers
+	 * JSRS context ID
 	 *
-	 * @var array
+	 * @var int
 	 * @access private
 	 */
-	var $handlers = array();
-
-	/**
-	 * Data parsed from the request
-	 *
-	 * @var array
-	 * @access private
-	 */
-	var $request = array();
+	var $contextId = NULL;
 
 	/**
 	 * Class constructor
@@ -70,7 +60,7 @@ class ServiceJSRS extends PHP2Go
 	 * @return ServiceJSRS
 	 */
 	function ServiceJSRS() {
-		parent::PHP2Go();
+		parent::AbstractService();
 	}
 
 	/**
@@ -118,113 +108,102 @@ class ServiceJSRS extends PHP2Go
 	}
 
 	/**
-	 * Registers a new JSRS handler
+	 * Tries to parse context ID, handler ID and handler arguments from the request
 	 *
-	 * The handler can be a procedural function, a class/method or
-	 * an object/method pair (the last two represented by an array).
-	 *
-	 * @param string|array $handler Handler spec
-	 * @param string $alias Handler alias
-	 */
-	function registerHandler($handler, $alias=NULL) {
-		$Callback = new Callback();
-		$Callback->throwErrors = FALSE;
-		$Callback->setFunction($handler);
-		$valid = $Callback->isValid();
-		if ($valid) {
-			if (empty($alias))
-				$alias = ($Callback->isType(CALLBACK_FUNCTION) ? $handler : $handler[1]);
-			$this->handlers[$alias] = $Callback;
-		}
-	}
-
-	/**
-	 * Triggers the handling of the request
-	 *
-	 * Parses the request parameters. If the request is a valid JSRS request,
-	 * this method tries to find a handler to the the requested function.
-	 *
-	 * @uses _parseRequest()
-	 * @uses _buildResponse()
-	 * @uses _buildErrorResponse()
-	 */
-	function handleRequest() {
-		if ($this->_parseRequest()) {
-			if (empty($this->request['handlerId'])) {
-				$this->_buildErrorResponse(PHP2Go::getLangVal('ERR_JSRS_MISSING_HANDLER'));
-			} elseif (array_key_exists($this->request['handlerId'], $this->handlers)) {
-				$handler =& $this->handlers[$this->request['handlerId']];
-				$result = $handler->invoke($this->request['handlerArgs'], TRUE);
-				if (!empty($result))
-					$this->_buildResponse((string)$result);
-				else
-					$this->_buildResponse('');
-			} else {
-				$this->_buildErrorResponse(PHP2Go::getLangVal('ERR_JSRS_INVALID_HANDLER', $this->request['handlerId']));
-			}
-		}
-	}
-
-	/**
-	 * Parses context ID, handler ID and handler arguments from the request
-	 *
-	 * @access private
+	 * @access protected
 	 * @return bool
 	 */
-	function _parseRequest() {
-		$context = (isset($_REQUEST['C']) ? $_REQUEST['C'] : '');
-		$handler = (isset($_REQUEST['F']) ? $_REQUEST['F'] : '');
+	function acceptRequest() {
+		$source = ($_SERVER['REQUEST_METHOD'] == 'GET' ? $_GET : $_POST);
+		$context = (array_key_exists('C', $source) ? $source['C'] : NULL);
+		$handler = (array_key_exists('F', $source) ? $source['F'] : NULL);
 		$args = array();
 		$i = 0;
-		while (isset($_REQUEST['P'.$i])) {
-			$argument = $_REQUEST['P'.$i];
-			$args[] = substr($argument, 1, strlen($argument)-2);
+		while (array_key_exists('P' . $i, $source)) {
+			$argument = $source['P' . $i];
+			$args[] = substr($argument, 1, -1);
 			$i++;
 		}
 		if (!empty($context)) {
-			$this->request = array(
-				'contextId' => $context,
-				'handlerId' => $handler,
-				'handlerArgs' => $args
-			);
+			$this->contextId = $context;
+			$this->handlerId = $handler;
+			$this->handlerParams = $args;
 			return TRUE;
 		}
 		return FALSE;
 	}
 
 	/**
-	 * Builds the HTML code of a JSRS response
+	 * Builds and prints the response produced by the JSRS handler
 	 *
-	 * @param string $payload Payload produced by the PHP function
-	 * @access private
+	 * @param string $response Response contents
+	 * @access protected
 	 */
-	function _buildResponse($payload) {
-		print ("<html><head></head><body onload=\"p=document.layers?parentLayer:window.parent;p.jsrsLoaded('" . $this->request['contextId'] . "');\">jsrsPayload:<br />" . "<form name=\"jsrs_Form\"><textarea name=\"jsrs_Payload\">" . $this->_escapeResponse($payload) . "</textarea></form></body></html>");
-		exit();
+	function sendResponse($response) {
+		// force string type
+		if (!empty($response))
+			$response = strval($response);
+		else
+			$response = '';
+		print "<html><head></head><body onload=\"p=document.layers?parentLayer:window.parent;p.jsrsLoaded('" . $this->contextId . "');\">jsrsPayload:<br />" . "<form name=\"jsrs_Form\"><textarea name=\"jsrs_Payload\">" . $this->_escapeResponse($response) . "</textarea></form></body></html>";
+		exit;
 	}
 
 	/**
-	 * Builds an error response
+	 * Executed when JSRS handler ID is not found in the request
 	 *
-	 * @param string $str Error message
-	 * @access private
+	 * @access protected
 	 */
-	function _buildErrorResponse($str) {
-		$cleanStr = ereg_replace("\'", "\\'", $str);
-		$cleanStr = "jsrsError: " . ereg_replace("\"", "\\\"", $cleanStr);
-		print ("<html><head></head><body " . "onload=\"p=document.layers?parentLayer:window.parent;p.jsrsError('" . $this->request['contextId'] . "','" . $str . "');\">" . $cleanStr . "</body></html>");
-		exit();
+	function onMissingHandler() {
+		$msg = PHP2Go::getLangVal('ERR_SERVICE_MISSING_HANDLER', SERVICE_TYPE_JSRS);
+		$cleanMsg = 'jsrsError: ' . preg_replace("/\"/", "\\\"", preg_replace("/\'/", "\\'", $msg));
+		print "<html><head></head><body " . "onload=\"p=document.layers?parentLayer:window.parent;p.jsrsError('" . $this->contextId . "','" . $msg . "');\">" . $cleanMsg . "</body></html>";
+		exit;
 	}
 
 	/**
-	 * Escape some special chars inside a response payload
+	 * Executed when JSRS handler ID is invalid
 	 *
-	 * @param string $payload Response payload
+	 * @access protected
+	 */
+	function onInvalidHandler() {
+		$msg = PHP2Go::getLangVal('ERR_SERVICE_INVALID_HANDLER', array(SERVICE_TYPE_JSRS, $this->handlerId));
+		$cleanMsg = 'jsrsError: ' . preg_replace("/\"/", "\\\"", preg_replace("/\'/", "\\'", $msg));
+		print "<html><head></head><body " . "onload=\"p=document.layers?parentLayer:window.parent;p.jsrsError('" . $this->contextId . "','" . $msg . "');\">" . $cleanMsg . "</body></html>";
+		exit;
+	}
+
+	/**
+	 * Handles errors when error handling is enabled
+	 *
+	 * @param int $code Error code
+	 * @param string $message Error message
+	 * @param string $file File path
+	 * @param int $line Line number
+	 * @param array $vars Local scope variables
+	 */
+	function onError($code, $message, $file, $line, $vars) {
+		if ($code != E_STRICT && error_reporting() != 0) {
+			$error = new PHP2GoError();
+			$error->setType($code);
+			if (!$error->isIgnoreError($message) && $error->isUserError($code)) {
+				$msg = $error->getTypeDesc() . ': ' . $message;
+				$cleanMsg = 'jsrsError: ' . preg_replace("/\"/", "\\\"", preg_replace("/\'/", "\\'", $message));
+				print "<html><head></head><body " . "onload=\"p=document.layers?parentLayer:window.parent;p.jsrsError('" . $this->contextId . "','" . $msg . "');\">" . $cleanMsg . "</body></html>";
+				exit;
+			}
+		}
+	}
+
+	/**
+	 * Escape some special chars inside a response
+	 *
+	 * @param string $response Response
 	 * @access private
 	 * @return string
 	 */
-	function _escapeResponse($payload) {
-		$tmp = ereg_replace("&", "&amp;", $payload);
+	function _escapeResponse($response) {
+		$tmp = ereg_replace("&", "&amp;", $response);
 		return ereg_replace("\/" , "\\/", $tmp);
 	}
 }
