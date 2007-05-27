@@ -586,6 +586,9 @@ AjaxResponse.prototype.run = function() {
 			case 'clear' :
 				(item.frm) ? ($FF(item.frm, item.fld).clear()) : ($F(item.id).clear());
 				break;
+			case 'reset' :
+				Form.reset($(item.id));
+				break;
 			case 'hide' :
 				$(item.id).hide();
 				break;
