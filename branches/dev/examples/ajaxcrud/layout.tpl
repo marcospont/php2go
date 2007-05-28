@@ -1,27 +1,21 @@
 <!-- CSS rules -->
 <style type="text/css">
-	label, legend, div {
-		font-family: Verdana, Helvetica;
-		font-size: 12px;
-	}
-	label, legend {
-		font-weight: bold;
-		color: #444;
-	}
-	button, input, select, textarea {
-		font-family: Verdana, Helvetica;
-		font-size: 11px;
-	}
-	input:focus, select:focus, textarea:focus {
-		background-color: #ffffcc;
-	}
-	fieldset {
-		background-color: #e0ecff;
-		padding: 6px;
-		height: 365px;
-	}
-	fieldset table {
-		background-color: #e0ecff;
+	label, legend, div { font-family: Verdana, Helvetica; font-size: 12px; }
+	label, legend { font-weight: bold; color: #444; }
+	button, input, select, textarea { font-family: Verdana, Helvetica; font-size: 11px; }
+	input:focus, select:focus, textarea:focus { background-color: #ffffcc; }
+	fieldset { background-color: #e0ecff; padding: 6px; height: 365px; }
+	fieldset table { background-color: #e0ecff; }
+	.error { display:none; margin:5px; padding:8px; border:1px solid #ff0000; background-color: #f0c2c2; color: #ff0000; }
+	.error_header { color: #000; font-weight: bold; }	
+	#throbber_load, #throbber_save {
+		position: absolute;
+		display: none;
+		background-color: #fff;
+		border: 1px solid gray;
+		padding: 4px;
+		width: 180px;
+		text-align: center;
 	}
 	#msg {
 		display:none;
@@ -30,7 +24,23 @@
 		border:1px solid #bbb;
 		background-color: #b5edbc;
 	}
-	#people_list div, #add {
+	#overall {
+		width: 780px;
+	}
+	#form_layer {
+		float: left;
+		width: 440px;
+	}
+	#list_layer {
+		float: right;
+		width: 340px;
+	}
+	#list_container {
+		border: 1px solid #bfbfc9;
+		height: 310px;
+		overflow: auto;
+	}
+	#list_container div, #add {
 		padding : 4px;
 	}
 	#add {
@@ -42,18 +52,6 @@
 		width: auto;
 		text-align: right;
 		padding: 4px;
-	}
-	.error {
-		display:none;
-		margin:5px;
-		padding:8px;
-		border:1px solid #ff0000;
-		background-color: #f0c2c2;
-		color: #ff0000;
-	}
-	.error_header {
-		color: #000;
-		font-weight: bold;
 	}
 </style>
 
@@ -69,11 +67,11 @@
 		// clear pk hidden field
 		$('id_people').value = '';
 		// reset form
-		Form.reset($('form'));
+		Form.reset($('people_form'));
 		// focus first field
-		Form.focusFirstField($('form'));
+		Form.focusFirstField($('people_form'));
 	}
-
+	
 	/**
 	 * Performs an AJAX request to load data from the database to the form
 	 */
@@ -94,17 +92,17 @@
 	 */
 	function deletePerson(id) {
 		// display confirmation dialog
-		if (!confirm("Are you sure?"))
-			return;
-		// hide message
-		$('msg').hide();
-		// create/send request
-		var service = new AjaxService(document.location.pathname, {
-			params: { id_people: id, current_loaded: $('id_people').value },
-			handler: 'deleteRecord',
-			throbber: 'throbber_save'
-		});
-		service.send();
+		if (confirm('Are you sure?')) {
+			// hide message
+			$('msg').hide();
+			// create/send request
+			var service = new AjaxService(document.location.pathname, {
+				params: { id_people: id, current_loaded: $('id_people').value },
+				handler: 'deleteRecord',
+				throbber: 'throbber_save'
+			});
+			service.send();
+		}
 	}
 
     /**
@@ -112,53 +110,58 @@
      */
 	function verifyPersonBoxes() {
 		// verify if at least one box is checked
-    	var val = $V('listForm', 'chk[]');
-    	if (!val) {
-    		alert("Please select at least one person!");
-    		return false;
-    	}
-    	// display confirmation dialog
-    	if (!confirm("Are you sure you want to delete " + val.length + " person record(s)?"))
-    		return false;
-    	// reset form if we're deleting the record being edited
-    	if (val.indexOf($('id_people').value) != -1) {
+		var val = $V('list_form', 'chk[]');
+		if (!val) {
+			alert('Please select at least one person!');
+			return false;
+		}
+		// display confirmation dialog
+		if (!confirm('Are you sure you want to delete ' + val.length + ' person record(s)?'))
+			return false;
+		// reset form if we're deleting the record being edited
+		if (val.indexOf($('id_people').value) != -1) {
 			$('id_people').value = '';
-			Form.reset($('form'));
-    	}
-    	return true;
+			Form.reset($('people_form'));
+		}
+		return true;
     }
-
+	
 </script>
 
 <!-- throbbers -->
-<div id="throbber_save" style="position:absolute;display:none;background-color:#fff;border:1px solid gray;padding:4px;width:180px;text-align:center">
+<div id="throbber_save">
   <p class="sample_simple_text"><img src="{$p2g.const.PHP2GO_ICON_PATH}indicator.gif" border="0" align="top" alt="" />&nbsp;Sending data...</p>
 </div>
-<div id="throbber_load" style="position:absolute;display:none;background-color:#fff;border:1px solid gray;padding:4px;width:180px;text-align:center">
+<div id="throbber_load">
   <p class="sample_simple_text"><img src="{$p2g.const.PHP2GO_ICON_PATH}indicator.gif" border="0" align="top" alt="" />&nbsp;Loading data...</p>
 </div>
 
 <!-- page layout -->
-<div id="overall" style="width:780px">
+<div id="overall">
   <div id="msg"></div>
-  <div id="formLayer" style="float:left;width:440px;">{$form}</div>
-  <div id="listLayer" style="float:right;width:340px;">
-    <form id="listForm" name="listForm" action="" method="post" style="display:inline">
+  <div id="form_layer">{$form}</div>
+  <div id="list_layer">
+    <form id="list_form" name="list_form" action="" method="post" style="display:inline">
     <fieldset>
       <legend>People List</legend>
-      <div id="add"><button id="btnAdd" name="add" type="button" onclick="prepareAddPerson()">New</button>&nbsp;</div>
+      <div id="add">
+	    <button id="btn_add" name="btn_add" type="button" onclick="prepareAddPerson()">New</button>&nbsp;
+	  </div>
       <div id="operations">
         <select id="operation" name="operation">
           <option value="delete" selected="selected">Delete selected</option>
-        </select>&nbsp;<button id="btnOperate" name="operate" type="submit" onclick="return verifyPersonBoxes();">Ok</button>
+        </select>&nbsp;<button id="btn_operation" name="btn_operation" type="submit" onclick="return verifyPersonBoxes();">Ok</button>
       </div><br style="clear:both;" />
-      <div id="people_list" style="border:1px solid #bfbfc9;height:310px;overflow:auto;">
+      <div id="list_container">
         {$list}
       </div>
     </fieldset>
     </form>
     <script type="text/javascript">
-		Form.ajaxify($('listForm'), function() {
+		/**
+		 * Prepares the 'list_form' form to be submitted through an AJAX call
+		 */
+		Form.ajaxify($('list_form'), function() {
 			var ajax = new AjaxService(document.location.pathname, {
 				handler: 'multiple',
 				throbber: 'throbber_save'

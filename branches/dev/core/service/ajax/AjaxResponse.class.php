@@ -389,16 +389,16 @@ class AjaxResponse extends PHP2Go
 	 *
 	 * @param string $id Element ID
 	 * @param string $code Code
-	 * @param bool $evalScrits If scripts must be evaluated
+	 * @param bool $evalScripts If scripts must be evaluated
 	 * @param bool $useDom If DOM must be used to update the contents
 	 */
-	function updateContents($id, $code, $evalScrits=FALSE, $useDom=FALSE) {
+	function updateContents($id, $code, $evalScripts=FALSE, $useDom=FALSE) {
 		$this->commands[] = array(
 			'cmd' => 'update',
 			'id' => $id,
 			'arg' => array(
 				'code' => $code . '',
-				'eval' => !!$evalScrits,
+				'eval' => !!$evalScripts,
 				'dom' => !!$useDom
 			)
 		);
