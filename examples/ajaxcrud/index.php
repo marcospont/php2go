@@ -72,9 +72,9 @@
 		function ajaxLoadRecord($params) {
 			$response = new AjaxResponse();
 			if (TypeUtils::isInteger($params['id_people'])) {
-				$rs = $this->dbConn->query("select * from people where id_people = ?", TRUE, array($params['id_people']));
+				$rs = $this->dbConn->query('select * from people where id_people = ?', TRUE, array($params['id_people']));
 				if ($rs->recordCount() > 0) {
-					$response->resetForm('form');
+					$response->resetForm('people_form');
 					$fields =& $rs->fields;
 					// convert birth date and active fields
 					$fields['birth_date'] = Date::fromSqlToEuroDate($fields['birth_date']);
@@ -115,7 +115,7 @@
 			$response->show('msg');
 			// show updated list
 			$tpl =& $this->getList();
-			$response->updateContents('people_list', $tpl->getContent());
+			$response->updateContents('list_container', $tpl->getContent(), TRUE);
 			return $response;
 		}
 
@@ -127,27 +127,27 @@
 			if (TypeUtils::isInteger($params['id_people'])) {
 				// check integrity against other example tables
 				if (!$this->dbConn->checkIntegrity('people', 'id_people', $params['id_people'], $this->integrityRef)) {
-					$msg = "This person can't be deleted!";
+					$msg = 'This person can\'t be deleted!';
 				}
 				// execute the delete statement
 				elseif (!@$this->dbConn->delete('people', 'id_people = ' . $params['id_people'])) {
-					$msg = "Error deleting person: " . $this->dbConn->getError();
+					$msg = 'Error deleting person: ' . $this->dbConn->getError();
 				}
 				// delete OK
 				else {
 					if ($params['id_people'] == $params['current_loaded']) {
 						$response->setValue('id_people', '');
-						$response->resetForm('form');
+						$response->resetForm('people_form');
 					}
 				}
 			} else {
-				$msg = "Invalid people ID";
+				$msg = 'Invalid people ID!';
 			}
-			$response->updateContents('msg', (isset($msg) ? $msg : "Person successfuly deleted!"));
+			$response->updateContents('msg', (isset($msg) ? $msg : 'Person successfuly deleted!'));
 			$response->show('msg');
 			// show updated list
 			$tpl =& $this->getList();
-			$response->updateContents('people_list', $tpl->getContent());
+			$response->updateContents('list_container', $tpl->getContent(), TRUE);
 			return $response;
 		}
 
@@ -176,12 +176,12 @@
 					}
 				}
 				$res = $this->dbConn->completeTransaction();
-				$response->updateContents('msg', ($res ? "Person records deleted successfully!" : "Error deleting multiple person records: " . $msg));
+				$response->updateContents('msg', ($res ? 'Person records deleted successfully!' : 'Error deleting multiple person records: ' . $msg));
 			}
 			$response->show('msg');
 			// show updated list
 			$tpl =& $this->getList();
-			$response->updateContents('people_list', $tpl->getContent());
+			$response->updateContents('list_container', $tpl->getContent(), TRUE);
 			return $response;
 		}
 
@@ -193,12 +193,12 @@
 			 * create and configure the HTML document
 			 */
 			$doc = new Document('layout.tpl');
-			$doc->setFocus('form');
+			$doc->setFocus('people_form');
 			$doc->setTitle('PHP2Go Examples - AJAX + Forms');
 			/**
 			 * create and configure the form
 			 */
-			$form = new FormBasic('form.xml', 'form', $doc);
+			$form = new FormBasic('form.xml', 'people_form', $doc);
 			$form->setFormWidth(430);
 			$form->setErrorStyle('error', FORM_ERROR_FLOW, NULL, 'error_header');
 			$form->setErrorDisplayOptions(FORM_CLIENT_ERROR_DHTML);

@@ -26,8 +26,7 @@
 
 					- formsubmit='T' indicates that the listener submits the form in which it is included
 					- when formsubmit='T' and url is not provided, the form action will be used as target URL
-					- class='AjaxUpdater' means that we want to fill a given "container" with the returned response
-					- inside "onJSONResult", we fill "msg" with the returned JSON object (in this case, success or error message)
+					- class='AjaxService' means that the save operation will be performed by a function or method identified by the "handler" parameter
 				-->
 				<listener type="AJAX" event="onClick" class="AjaxService" formsubmit="T">
 					<param name="throbber">throbber_save</param>
