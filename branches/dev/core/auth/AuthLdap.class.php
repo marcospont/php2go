@@ -187,7 +187,7 @@ class AuthLdap extends Auth
 	 */
 	function verifyPassword(&$entry) {
 		$userPwd = $entry->getAttribute($this->pwdAttr);
-		return UnixCrypt::verify($userPwd, $this->_password);
+		return UnixCrypt::verify($userPwd[0], $this->_password);
 	}
 }
 ?>
