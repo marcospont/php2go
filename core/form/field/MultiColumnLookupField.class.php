@@ -69,7 +69,7 @@ class MultiColumnLookupField extends DbField
 			'selected' => 'mclookupSelected',
 			'hover' => 'mclookupHover'
 		);
-		$this->attributes['TABLESTYLE'] = 'mcLookupTable';
+		$this->attributes['TABLESTYLE'] = 'mclookupTable';
 	}
 
 	/**

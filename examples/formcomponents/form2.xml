@@ -24,16 +24,17 @@
 			- the result set aliases will be used as column titles
 		-->
 		<datagrid
-			name="grid" label="DataGrid" tablewidth="400" showheader="T"
-			headerstyle="blue_style" cellstyle="sample_medium_text"
+			name="grid" label="DataGrid" tablewidth="400"
+			showheader="T" headers="#,Name,Comments,Active" headerstyle="blue_style"
+			cellstyle="sample_medium_text" showcheckboxes="T"
 		>
 			<datasource>
 				<keyfield>client_id</keyfield>
 				<displayfield>
-					client_id as "ID",
-					name as "Name",
-					null as "Comments",
-					active as "Active"
+					client_id,
+					name,
+					null as comments,
+					active
 				</displayfield>
 				<lookuptable>client</lookuptable>
 				<orderby>name</orderby>
