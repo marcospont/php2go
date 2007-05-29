@@ -744,7 +744,7 @@ AjaxUpdater.prototype.update = function(response) {
 };
 
 /**
- * This class is able to interact with php2go.service.ServiceAjax
+ * This class is able to interact with php2go.service.AjaxService
  * class in order to call PHP functions or methods. If the returned
  * response is a JSON string, the class will try to run commands
  * and statements specified inside it
