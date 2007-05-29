@@ -44,27 +44,27 @@ import('php2go.service.ajax.AjaxResponse');
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
-class ServiceAjax extends AbstractService
+class AjaxService extends AbstractService
 {
 	/**
 	 * Class constructor
 	 *
-	 * @return ServiceAjax
+	 * @return AjaxService
 	 */
-	function ServiceAjax() {
+	function AjaxService() {
 		parent::AbstractService();
 	}
 
 	/**
-	 * Get the singleton of the ServiceAjax class
+	 * Get the singleton of the AjaxService class
 	 *
-	 * @return ServiceAjax
+	 * @return AjaxService
 	 * @static
 	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
-			$instance = new ServiceAjax();
+			$instance = new AjaxService();
 		return $instance;
 	}
 

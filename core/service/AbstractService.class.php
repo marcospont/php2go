@@ -41,7 +41,7 @@ define('SERVICE_TYPE_AJAX', 'AJAX');
 /**
  * Base service class
  *
- * This is the base class for {@link ServiceJSRS} and {@link ServiceAjax},
+ * This is the base class for {@link JSRSService} and {@link AjaxService},
  * which are classes that handle calls performed from Javascript code.
  *
  * @package service

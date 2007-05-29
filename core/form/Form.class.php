@@ -85,7 +85,7 @@ define('FORM_HELP_POPUP', 2);
  *
  * @package form
  * @uses HttpRequest
- * @uses ServiceJSRS
+ * @uses JSRSService
  * @uses Statement
  * @uses TypeUtils
  * @uses UserAgent
@@ -966,8 +966,8 @@ class Form extends Component
 				if (!$Field->dataBind)
 					$Field->onDataBind();
 			}
-			import('php2go.service.ServiceJSRS');
-			$Service =& ServiceJSRS::getInstance();
+			import('php2go.service.JSRSService');
+			$Service =& JSRSService::getInstance();
 			$Service->handleRequest();
 		}
 	}

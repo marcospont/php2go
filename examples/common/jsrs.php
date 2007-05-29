@@ -28,9 +28,9 @@
  */
 
 	require_once('../config/config.php');
-	import('php2go.service.ServiceJSRS');
+	import('php2go.service.JSRSService');
 
-	$jsrs = new ServiceJSRS();
+	$jsrs = new JSRSService();
 	$jsrs->registerHandler('jsrsTest');
 	$jsrs->registerHandler('jsrsTest2');
 	$jsrs->handleRequest();
@@ -50,7 +50,7 @@
 			order by
 				NAME
 		");
-		return ServiceJSRS::arrayToString($rs);
+		return JSRSService::arrayToString($rs);
 	}
 
 ?>

@@ -31,7 +31,7 @@ import('php2go.data.DataSet');
 import('php2go.db.QueryBuilder');
 import('php2go.form.Form');
 import('php2go.template.Template');
-import('php2go.service.ServiceJSRS');
+import('php2go.service.JSRSService');
 
 /**
  * Builds a form based on data binding
@@ -76,7 +76,7 @@ import('php2go.service.ServiceJSRS');
  * @package form
  * @uses DataSet
  * @uses QueryBuilder
- * @uses ServiceJSRS
+ * @uses JSRSService
  * @uses Template
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
@@ -204,7 +204,7 @@ class FormDataBind extends Form
 		$this->primaryKey = $primaryKey;
 		$this->icons['sortasc'] = PHP2GO_ICON_PATH . "fdb_order_asc.gif";
 		$this->icons['sortdesc'] = PHP2GO_ICON_PATH . "fdb_order_desc.gif";
-		$Service = new ServiceJSRS();
+		$Service = new JSRSService();
 		$Service->registerHandler(array($this, '_saveRecord'), 'saveRecord');
 		$Service->registerHandler(array($this, '_deleteRecord'), 'deleteRecord');
 		$Service->handleRequest();

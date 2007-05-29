@@ -30,7 +30,7 @@
 import('php2go.form.field.DbField');
 import('php2go.form.field.LookupField');
 import('php2go.template.Template');
-import('php2go.service.ServiceJSRS');
+import('php2go.service.JSRSService');
 
 /**
  * Default size of the search text input
@@ -51,7 +51,7 @@ define('EDITSEARCH_DEFAULT_LOOKUP_WIDTH', 250);
  * @package form
  * @subpackage field
  * @uses LookupField
- * @uses ServiceJSRS
+ * @uses JSRSService
  * @uses Template
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
@@ -286,7 +286,7 @@ class EditSearchField extends DbField
 	/**
 	 * Processes attributes and child nodes loaded from the XML specification
 	 *
-	 * @uses ServiceJSRS::registerHandler()
+	 * @uses JSRSService::registerHandler()
 	 * @param array $attrs Node attributes
 	 * @param array $children Node children
 	 */
@@ -313,7 +313,7 @@ class EditSearchField extends DbField
 				$this->filters[$id] = array($label, $expression, $mask);
 			}
 			// initialize JSRS handler
-			$Service =& ServiceJSRS::getInstance();
+			$Service =& JSRSService::getInstance();
 			$Service->registerHandler(array($this, 'performSearch'), strtolower($this->id) . 'PerformSearch');
 			$this->_Form->postbackFields[] = $this->id;
 			// search input size
@@ -410,7 +410,7 @@ class EditSearchField extends DbField
 			else
 				$this->dataSource['CLAUSE'] = "({$this->dataSource['CLAUSE']}) AND {$clause}";
 			// execute the query
-			@parent::processDbQuery(ADODB_FETCH_NUM, ServiceJSRS::debugEnabled());
+			@parent::processDbQuery(ADODB_FETCH_NUM, JSRSService::debugEnabled());
 			// build the results string
 			if ($this->_Rs->RecordCount() > 0) {
 				$lines = array();
