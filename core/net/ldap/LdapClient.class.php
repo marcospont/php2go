@@ -410,8 +410,6 @@ class LdapClient extends PHP2Go
 	 *
 	 * Example:
 	 * <code>
-	 * import('php2go.net.ldap.LdapClient');
-	 * import('php2go.security.UnixCrypt');
 	 * $ldap = new LdapClient(array(
 	 *   'host' => 'ldap.yourdomain.com',
 	 *   'bindDN' => 'cn=Administrator,dc=yourcompany,dc=com',
@@ -445,11 +443,79 @@ class LdapClient extends PHP2Go
 		return FALSE;
 	}
 
+	/**
+	 * Updates a given LDAP entry
+	 *
+	 * Collects all changes stored in the class, performing
+	 * attribute inserts, updates and removes sequentially.
+	 *
+	 * Example:
+	 * <code>
+	 * $ldap = new LdapClient(array(
+	 *   'host' => 'ldap.yourdomain.com',
+	 *   'bindDN' => 'cn=Administrator,dc=yourcompany,dc=com',
+	 *   'bindPassword' => '123456',
+	 *   'baseDN' => 'dc=yourcompany,dc=com'
+	 * ));
+	 * $entry = $ldap->find('uid=foo');
+	 * $entry->setAttribute('gn', 'Foo');
+	 * $entry->setAttribute('sn', 'Bar');
+	 * $entry->addValues('mail', array('foo@foo.org', 'foobar@bar.org'));
+	 * $ldap->update($entry);
+	 * </code>
+	 *
+	 * @param LdapEntry $entry Entry to be updated
+	 * @return bool
+	 */
 	function update($entry) {
 		if (TypeUtils::isInstanceOf($entry, 'LdapEntry')) {
 			$this->connect();
-
+			$changes =& $entry->getChanges();
+			// renaming
+			if ($changes['dn'] && $this->protocolVersion == 3) {
+				$parent = $this->_explodeDN($entry->getDN());
+				$child = array_shift($parent);
+				$parent = join(',', $parent);
+				if (!@ldap_rename($this->handle, $entry->getDN(), $child, $parent, TRUE)) {
+					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_LDAP_COMMAND', array('rename', $this->_getErrorMessage())), E_USER_ERROR, __FILE__, __LINE__);
+					return FALSE;
+				}
+			}
+			// new attributes and new attribute values
+			foreach ($changes['add'] as $attr => $value) {
+				if ($entry->hasAttribute($attr)) {
+					if (!@ldap_mod_add($this->handle, $entry->getDN(), array($attr => $value))) {
+						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_LDAP_COMMAND', array('mod_add', $this->_getErrorMessage())), E_USER_ERROR, __FILE__, __LINE__);
+						return FALSE;
+					}
+				} else {
+					if (!@ldap_modify($this->handle, $entry->getDN(), array($attr => $value))) {
+						PHP2Go::raiseError(PHP2Go::getLangVal('ERR_LDAP_COMMAND', array('modify', $this->_getErrorMessage())), E_USER_ERROR, __FILE__, __LINE__);
+						return FALSE;
+					}
+				}
+			}
+			// attributes or attribute values to remove
+			foreach ($changes['delete'] as $attr => $value) {
+				if (is_null($value) && $this->protocolVersion == 3)
+					$value = $entry->original[$attr];
+				if (!@ldap_mod_del($this->handle, $entry->getDN(), array($attr => $value))) {
+					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_LDAP_COMMAND', array('mod_del', $this->_getErrorMessage())), E_USER_ERROR, __FILE__, __LINE__);
+					return FALSE;
+				}
+			}
+			// updated attributes
+			foreach ($changes['replace'] as $attr => $value) {
+				if (!@ldap_modify($this->handle, $entry->getDN(), array($attr => $value))) {
+					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_LDAP_COMMAND', array('modify', $this->_getErrorMessage())), E_USER_ERROR, __FILE__, __LINE__);
+					return FALSE;
+				}
+			}
+			// confirm changes
+			$entry->confirmChanges();
+			return TRUE;
 		}
+		return FALSE;
 	}
 
 	/**
