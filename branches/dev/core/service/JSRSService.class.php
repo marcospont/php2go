@@ -44,7 +44,7 @@ import('php2go.service.AbstractService');
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
  */
-class ServiceJSRS extends AbstractService
+class JSRSService extends AbstractService
 {
 	/**
 	 * JSRS context ID
@@ -57,22 +57,22 @@ class ServiceJSRS extends AbstractService
 	/**
 	 * Class constructor
 	 *
-	 * @return ServiceJSRS
+	 * @return JSRSService
 	 */
-	function ServiceJSRS() {
+	function JSRSService() {
 		parent::AbstractService();
 	}
 
 	/**
-	 * Get the singleton of the ServiceJSRS class
+	 * Get the singleton of the JSRSService class
 	 *
-	 * @return ServiceJSRS
+	 * @return JSRSService
 	 * @static
 	 */
 	function &getInstance() {
 		static $instance;
 		if (!isset($instance))
-			$instance = new ServiceJSRS();
+			$instance = new JSRSService();
 		return $instance;
 	}
 
