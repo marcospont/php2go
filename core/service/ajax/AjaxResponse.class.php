@@ -24,7 +24,7 @@ import('php2go.util.json.JSONEncoder');
  *   $response->focus('a');
  *   return $response;
  * }
- * $service = new ServiceAjax();
+ * $service = new AjaxService();
  * $service->registerHandler('sayHello');
  * $service->registerHandler('sum');
  * $service->handleRequest();
