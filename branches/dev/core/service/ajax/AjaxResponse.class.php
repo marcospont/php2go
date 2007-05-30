@@ -7,7 +7,28 @@ import('php2go.util.json.JSONEncoder');
  *
  * This class contains methods that allow to build
  * a sequence of Javascript commands to be executed
- * as the response of an AJAX call.
+ * on the client side, when the request is completed.
+ *
+ * Examples:
+ * <code>
+ * function sayHello($params) {
+ *   $response = new AjaxResponse();
+ *   $response->alert('Hello World!');
+ *   return $response;
+ * }
+ * function sum($params) {
+ *   $result = ($params['a'] + $params['b']);
+ *   $response = new AjaxResponse();
+ *   $response->setValue('result', $result);
+ *   $response->clear(array('a', 'b'));
+ *   $response->focus('a');
+ *   return $response;
+ * }
+ * $service = new ServiceAjax();
+ * $service->registerHandler('sayHello');
+ * $service->registerHandler('sum');
+ * $service->handleRequest();
+ * </code>
  *
  * @package service
  * @subpackage ajax
@@ -52,6 +73,9 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Renders all response commands as a JSON string
+	 *
+	 * This method is automatically called by {@link AjaxService}
+	 * class when the response is generated.
 	 */
 	function render() {
 		header("Content-type: application/json; charset={$this->charset}");
@@ -62,6 +86,14 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Defines the value of one or more form fields
+	 *
+	 * <code>
+	 * $response->setValue('name', 'John');
+	 * $response->setValue(array(
+	 *   'address' => 'Elm Street, 123',
+	 *   'phone' => '5555-6666'
+	 * ));
+	 * </code>
 	 *
 	 * @param string $id Field ID or hash array of fields/values
 	 * @param mixed $value Field value
@@ -103,8 +135,17 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Populates a combo box with a given set of options
 	 *
+	 * <code>
+	 * $response->fillCombo('sex', array(
+	 *   'M' => 'Male',
+	 *   'F' => 'Female'
+	 * ), true, 'M');
+	 * </code>
+	 *
 	 * @param string $id Combo ID
 	 * @param array $options Combo options
+	 * @param bool $clear If existent options must be removed
+	 * @param mixed $value Combo value
 	 */
 	function fillCombo($id, $options, $clear=TRUE, $value=NULL) {
 		$options = (array)$options;
@@ -121,6 +162,11 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Enables one or more form fields
+	 *
+	 * <code>
+	 * $response->enable('order_type');
+	 * $response->enable(array('phone', 'cellphone'));
+	 * </code>
 	 *
 	 * @param string|array $id Field ID or IDs
 	 */
@@ -192,6 +238,10 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Give focus to a given field
 	 *
+	 * <code>
+	 * $response->focus('client_name');
+	 * </code>
+	 *
 	 * @param string $id Field ID
 	 */
 	function focus($id) {
@@ -203,6 +253,10 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Give focus to a given field given its name and form ID
+	 *
+	 * <code>
+	 * $response->focus('hire_form', 'employee_name');
+	 * </code>
 	 *
 	 * @param string $formId Form ID
 	 * @param string $fieldName Field name
@@ -217,6 +271,10 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Clears one or more fields
+	 *
+	 * <code>
+	 * $response->clear(array('product_id', 'amount'));
+	 * </code>
 	 *
 	 * @param string $id Field ID or IDs
 	 */
@@ -253,6 +311,10 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Reset a form by ID
 	 *
+	 * <code>
+	 * $response->resetForm('hire_form');
+	 * </code>
+	 *
 	 * @param string $id Form ID
 	 */
 	function resetForm($id) {
@@ -264,6 +326,11 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Shows one or more elements
+	 *
+	 * <code>
+	 * $response->show(array('error_header', 'error_details'));
+	 * $response->show('login_div');
+	 * </code>
 	 *
 	 * @param string|array $id Element ID or IDs
 	 */
@@ -286,6 +353,11 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Hides one or more elements
 	 *
+	 * <code>
+	 * $response->hide('product_details');
+	 * $response->hide(array('shopping_cart', 'add_product'));
+	 * </code>
+	 *
 	 * @param string|array $id Element ID or IDs
 	 */
 	function hide($id) {
@@ -307,6 +379,14 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Set one or more attributes of an element
 	 *
+	 * <code>
+	 * $response->setAttribute('name', 'maxLength', 10);
+	 * $response->setAttribute('hire_form', array(
+	 *   'action' => 'process_hire.php',
+	 *   'method' => 'post'
+	 * ));
+	 * </code>
+	 *
 	 * @param string $id Element ID
 	 * @param string|array $attr Attribute name or attributes hash
 	 * @param mixed $value Attribute value
@@ -325,6 +405,14 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Set one or more style properties of an element
+	 *
+	 * <code>
+	 * $response->setStyle('error_header', 'background-color', 'red');
+	 * $response->setStyle('login_div', array(
+	 *   'opacity' => 0.8,
+	 *   'border' => '1px solid black'
+	 * ));
+	 * </code>
 	 *
 	 * @param string $id Element ID
 	 * @param string|array $attr Attribute name or attributes hash
@@ -345,7 +433,6 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Creates a new element in the DOM tree
 	 *
-	 * Example:
 	 * <code>
 	 * $response->create('input', array('name' => 'text_box', 'type'=>'text'), NULL, 'my_form');
 	 * $response->create('div', array('id' => 'message'), 'Hello World!', JSONEncoder::jsIdentifier('document.body'));
@@ -375,6 +462,10 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Clear the contents of an element
 	 *
+	 * <code>
+	 * $response->clearContents('error_div');
+	 * </code>
+	 *
 	 * @param string $id Element ID
 	 */
 	function clearContents($id) {
@@ -386,6 +477,10 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Updates the contents of an element
+	 *
+	 * <code>
+	 * $response->updateContents('error_div', "Error trying to save record to the database!");
+	 * </code>
 	 *
 	 * @param string $id Element ID
 	 * @param string $code Code
@@ -406,6 +501,10 @@ class AjaxResponse extends PHP2Go
 
 	/**
 	 * Insert content on an element
+	 *
+	 * <code>
+	 * $response->insertContents('container', "<div>Record saved at " . date('r') . "</div>", 'bottom');
+	 * </code>
 	 *
 	 * @param string $id Element ID
 	 * @param string $code Code
@@ -445,6 +544,10 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Removes an element from the tree
 	 *
+	 * <code>
+	 * $response->remove('shopping_cart');
+	 * </code>
+	 *
 	 * @param string $id Element ID
 	 */
 	function remove($id) {
@@ -457,7 +560,6 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Adds an event handler on an element
 	 *
-	 * Example:
 	 * <code>
 	 * $response->addEvent('my_button', 'click', "alert('Hello World!');");
 	 * $response->addEvent('my_button', 'click', JSONEncoder::jsIdentifier('function_name'));
@@ -522,6 +624,13 @@ class AjaxResponse extends PHP2Go
 	 * Set skip to 0 to skip all next commands
 	 * if the user chooses 'no'.
 	 *
+	 * <code>
+	 * // skip only next command
+	 * $response->confirm("Are u sure?", 1);
+	 * // skip all following commands
+	 * $response->confirm("Click OK to proceed", 0);
+	 * </code>
+	 *
 	 * @param string $msg Message
 	 * @param int $skip Number of commands to skip if user chooses 'no'
 	 */
@@ -550,7 +659,6 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Runs a block of JS code
 	 *
-	 * Example:
 	 * <code>
 	 * $response->runScript("var div = $('my_div');");
 	 * $response->runScript("globalArray = [1, 2, 3];");
@@ -568,7 +676,6 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Calls a JS function
 	 *
-	 * Example:
 	 * <code>
 	 * $response->callFunction('myFunction', array(1, 'str', true), 'myObject');
 	 * </code>
