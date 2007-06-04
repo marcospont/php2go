@@ -461,6 +461,12 @@ Element.setStyle = function(elm, prop, value) {
 				case 'opacity' :
 					elm.setOpacity(props[prop]);
 					break;
+				case 'width' :
+				case 'height' :
+					elm.style[prop.camelize()] = props[prop];
+					if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
+						WCH.update(elm);
+					break;
 				default :
 					elm.style[prop.camelize()] = props[prop];
 					break;
@@ -1026,8 +1032,11 @@ var WCH = {
 		if (elm.wchIframe || elm.wchList) {
 			if (elm.wchIframe) {
 				var pos = elm.getPosition();
+				var dim = elm.getDimensions();
 				elm.wchIframe.style.left = pos.x;
 				elm.wchIframe.style.top = pos.y;
+				elm.wchIframe.style.width = dim.width;
+				elm.wchIframe.style.height = dim.height;
 			} else {
 				this.detach(elm);
 				this.attach(elm);
