@@ -149,7 +149,7 @@ var PHP2Go = {
 		if (typeof(Error) == 'function') {
 			var e = new Error(msg);
 			if (!e.message)
-				e.message = expr;
+				e.message = msg;
 			if (name)
 				e.name = name;
 			throw e;
