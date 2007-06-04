@@ -343,6 +343,16 @@ $P2G_USER_CFG['REPORTS'] = array(
 */
 
 /**
+ * This config key tells PHP2Go if it needs load its
+ * Javascript libraries from the jsrun folder (compressed)
+ * or from the javascript folder (uncompressed).
+ *
+ * Set it to FALSE when you need to track problems with
+ * framework's JS libraries (patches are always welcome!).
+ */
+$P2G_USER_CFG['USE_COMPRESSED_JS'] = TRUE;
+
+/**
  * Through this configuration entry, you'll be able to register include keys that
  * could be used inside import() calls, just as you see in "php2go.xxx.yyy".
  * For instance, if you have your classes saved at "/www/htdocs/app/classes/",
