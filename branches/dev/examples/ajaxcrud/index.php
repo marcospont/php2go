@@ -31,7 +31,7 @@
 	import('php2go.base.Document');
 	import('php2go.datetime.Date');
 	import('php2go.form.FormBasic');
-	import('php2go.service.ServiceAjax');
+	import('php2go.service.AjaxService');
 	import('php2go.template.Template');
 
 	/**
@@ -46,7 +46,7 @@
 		var $service = NULL;
 
 		function AjaxPeople() {
-			$this->service = new ServiceAjax();
+			$this->service = new AjaxService();
 			$this->service->registerObject($this, 'ajax');
 			$this->dbConn =& Db::getInstance();
 			$this->dbConn->setFetchMode(ADODB_FETCH_ASSOC);
@@ -108,6 +108,7 @@
 				// set 'add_date' field
 				$params['add_date'] = date('Y-m-d');
 				$res = @$this->dbConn->insert('people', $params);
+				// expose new record key to a hidden field for update purposes
 				$response->setValue('id_people', $res);
 			}
 			// set result message
