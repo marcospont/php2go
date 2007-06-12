@@ -159,16 +159,16 @@ Ajax.prototype.raise = function(name, args) {
  * response types: JSON, XML, Javascript or HTML
  * @constructor
  * @extends Ajax
- * @param {String} url Request URL (with or without a query string)
+ * @param {String} uri Request URI (with or without a query string)
  * @param {Object} args Arguments
  */
-AjaxRequest = function(url, args) {
+AjaxRequest = function(uri, args) {
 	this.Ajax();
 	/**
 	 * Request URI
 	 * @type String
 	 */
-	this.uri = url;
+	this.uri = uri;
 	/**
 	 * Request method (GET or POST)
 	 * @type String
@@ -215,7 +215,13 @@ AjaxRequest = function(url, args) {
 	 */
 	this.formFields = [];
 	/**
+	 * Indicates if the form associated with the request contains files to be uploaded
+	 * @type Boolean
+	 */
+	this.formUpload = true;
+	/**
 	 * Indicates if the form associated with the request should be validated
+	 * @type Boolean
 	 */
 	this.formValidate = true;
 	/**
@@ -228,6 +234,11 @@ AjaxRequest = function(url, args) {
 	 * @type Object
 	 */
 	this.throbber = null;
+	/**
+	 * Secure URI, when using IFRAME to upload files
+	 * @type String
+	 */
+	this.secureUri = 'javascript:false';
 	this.readArguments(args || {});
 };
 AjaxRequest.extend(Ajax, 'Ajax');
@@ -237,9 +248,10 @@ AjaxRequest.extend(Ajax, 'Ajax');
  *
  * Acceptable argument names: <ul><li>method</li><li>async</li><li>headers</li>
  * <li>contentType</li><li>encoding</li><li>ifModified</li><li>params</li><li>form</li>
- * <li>formFields</li><li>formValidate</li><li>body</li><li>xml</li><li>throbber</li><li>scope</li>
- * <li>onLoading</li><li>onLoaded</li><li>onInteractive</li><li>onComplete</li><li>onSuccess</li>
- * <li>onFailure</li><li>onJSONResult</li><li>onXMLResult</li><li>onException</li></ul>
+ * <li>formFields</li><li>formUpload</li><li>formValidate</li><li>body</li><li>throbber</li>
+ * <li>secureUri</li><li>scope</li><li>onLoading</li><li>onLoaded</li><li>onInteractive</li>
+ * <li>onComplete</li><li>onSuccess</li><li>onFailure</li><li>onJSONResult</li>
+ * <li>onXMLResult</li><li>onException</li></ul>
  *
  * @param {Object} args Arguments
  * @type void
@@ -256,7 +268,7 @@ AjaxRequest.prototype.readArguments = function(args) {
 				for (var pn in args[n])
 					this[n][pn] = args[n][pn];
 				break;
-			case 'async' : case 'ifModified' : case 'formValidate' :
+			case 'async' : case 'ifModified' : case 'formValidate' : case 'formUpload' :
 				this[n] = !!args[n];
 				break;
 			case 'throbber' :
@@ -289,11 +301,21 @@ AjaxRequest.prototype.addParam = function(param, val) {
  * @type void
  */
 AjaxRequest.prototype.send = function() {
-	try {
 	this.form = $(this.form);
 	if (this.form && this.formValidate) {
 		if (this.form.validator && !this.form.validator.run())
 			return;
+	}
+	Ajax.transactionCount++;
+	if (this.throbber)
+		this.throbber.show();
+	// form upload
+	if (this.form) {
+		var enctype = (this.form.getAttribute('enctype') || '');
+		if (this.formUpload || enctype.equalsIgnoreCase('multipart/form-data')) {
+			this.doFormUpload();
+			return;
+		}
 	}
 	// build query string
 	var uri, body, queryStr = this.buildQueryString();
@@ -306,9 +328,7 @@ AjaxRequest.prototype.send = function() {
 		uri = this.uri;
 		body = (this.body || queryStr);
 	}
-		Ajax.transactionCount++;
-		if (this.throbber)
-			this.throbber.show();
+	try {
 		this.conn = Ajax.getTransport();
 		this.conn.open(this.method, uri, this.async);
 		this.conn.onreadystatechange = this.onStateChange.bind(this);
@@ -333,14 +353,102 @@ AjaxRequest.prototype.send = function() {
 };
 
 /**
- * This method can be used to abort a request in progress
+ * Method called when the form associated with the AJAX request
+ * contains one or more files to upload. Performs the request
+ * by submitting the form through an IFRAME element
  * @type void
+ */
+AjaxRequest.prototype.doFormUpload = function() {
+	try {
+		// build iframe
+		var id = PHP2Go.uid('ajaxFrame');
+		if (PHP2Go.browser.ie) {
+			var ifr = document.createElement("<iframe id=\"%1\" name=\"%2\" />".assignAll(id, id));
+			ifr.src = this.secureUri;
+		} else {
+			var ifr = document.createElement('iframe');
+			ifr.id = id;
+			ifr.name = id;
+		}
+		ifr.style.position = 'absolute';
+		ifr.style.top = '-1000px';
+		ifr.style.left = '-1000px';
+		document.body.appendChild(ifr);
+		// configure form
+		var frm = this.form;
+		frm.target = id;
+		frm.method = this.method;
+		frm.enctype = frm.encoding = 'multipart/form-data';
+		frm.action = this.uri;
+		// add hidden params
+		var hp = [];
+		for (var n in this.params) {
+			var input = $N('input');
+			input.type = 'hidden';
+			input.name = n;
+			input.id = PHP2Go.uid('ajaxField' + this.transId + '-');
+			input.value = this.params[n];
+			frm.appendChild(input);
+			hp.push(input);
+		}
+		// upload callback
+		var self = this;
+		var uploadCallback = function(e) {
+			self.conn = {
+				status: 200,
+				statusText: 'OK',
+				readyState: 4,
+				responseText: '',
+				responseXML: null,
+				abort: $EF,
+				headers: {}
+			};
+			var doc = (PHP2Go.browser.ie ? ifr.contentWindow.document : (ifr.contentDocument || window.frames[id].document));
+			if (doc && doc.body) {
+				self.conn.responseText = doc.body.innerHTML;
+				self.conn.headers['Content-Type'] = 'text/html';
+				self.conn.headers['Content-Length'] = self.conn.responseText.length;
+				if (!self.conn.responseText.match(/\s*</)) {
+					try {
+						var json = eval('(' + resp.responseText + ')');
+						self.conn.json = json;
+						self.conn.headers['Content-Type'] = 'application/json';
+					} catch (e) { }
+				}
+			}
+			if (doc && doc.XMLDocument) {
+				self.conn.responseXML = doc.XMLDocument;
+				self.conn.headers['Content-Type'] = 'text/xml';
+			} else {
+				self.conn.responseXML = doc;
+			}
+			Event.removeListener(ifr, 'load', uploadCallback);
+			self.onStateChange();
+			setTimeout(function() { document.body.removeChild(ifr); }, 100);
+		};
+		// add load listener and submit form
+		frm.submit();
+		Event.addListener(ifr, 'load', uploadCallback);
+		// remove hidden fields
+		hp.walk(function(item, idx) {
+			frm.removeChild(item);
+		});
+	} catch (e) {
+		this.raise('onException', [e]);
+	}
+};
+
+/**
+ * This method can be used to abort a request in progress
+ * @type Boolean
  */
 AjaxRequest.prototype.abort = function() {
 	if (this.conn && this.conn.readyState >= 1 && this.conn.readyState < 4) {
 		this.conn.abort();
 		this.release();
+		return true;
 	}
+	return false;
 };
 
 /**
@@ -460,21 +568,21 @@ AjaxRequest.prototype.createResponse = function() {
 			return resp;
 		default :
 			resp.statusText = this.conn.statusText;
-			resp.headers = Ajax.parseHeaders(this.conn.getAllResponseHeaders());
+			resp.headers = (this.conn.headers || Ajax.parseHeaders(this.conn.getAllResponseHeaders()));
 			resp.responseText = this.conn.responseText;
 			resp.responseXML = this.conn.responseXML;
 			// catch Last-Modified header
-			if (this.ifModified) {
-				try {
-					Ajax.lastModified[this.uri] = resp.headers['Last-Modified'];
-				} catch(e) {}
-			}
+			if (this.ifModified && resp.headers['Last-Modified'])
+				Ajax.lastModified[this.uri] = resp.headers['Last-Modified'];
 			// eval JSON response
 			try {
-				if (resp.headers['X-JSON'])
-					resp.json = eval('(' + resp.headers['X-JSON'] + ')');
-				if ((resp.headers['Content-Type'] || '').match(/^application\/json/i))
+				if (this.conn.json) {
+					resp.json = this.conn.json;
+				} else if ((resp.headers['Content-Type'] || '').match(/^application\/json/i)) {
 					resp.json = eval('(' + resp.responseText + ')');
+				} else if (resp.headers['X-JSON']) {
+					resp.json = eval('(' + resp.headers['X-JSON'] + ')');
+				}
 			} catch(e) {}
 			if (resp.responseXML)
 				resp.xmlRoot = resp.responseXML.documentElement;
@@ -667,12 +775,12 @@ AjaxResponse.prototype.run = function() {
  * and onUpdate (update event listener)
  * @constructor
  * @extends AjaxRequest
- * @param {String} url Request URL
+ * @param {String} uri Request URI
  * @param {Object} args Settings
  */
-AjaxUpdater = function(url, args) {
+AjaxUpdater = function(uri, args) {
 	args = args || {};
-	this.AjaxRequest(url, args);
+	this.AjaxRequest(uri, args);
 	/**
 	 * Success container
 	 * @type Object
@@ -750,11 +858,11 @@ AjaxUpdater.prototype.update = function(response) {
  * and statements specified inside it
  * @constructor
  * @extends AjaxRequest
- * @param {String} url Request URL
+ * @param {String} uri Request URI
  * @param {Object} args Settings
  */
-AjaxService = function(url, args) {
-	this.AjaxRequest(url, Object.extend(args || {}, {
+AjaxService = function(uri, args) {
+	this.AjaxRequest(uri, Object.extend(args || {}, {
 		headers : { 'X-Handler-ID' : args.handler || '' }
 	}));
 	this.bind('onJSONResult', this.parseResponse);
