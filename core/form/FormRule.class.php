@@ -353,7 +353,7 @@ class FormRule extends PHP2Go
 					"\tfunction {$funcName}(element) {\n" . $funcBody . "\n\t}"
 				);
 			}
-			return sprintf("\t%s_validator.add('%s', RuleValidator, {%s});\n", $Form->formName, $this->_Field->validationName, implode(',', $args));
+			return sprintf("\t%sValidator.add('%s', RuleValidator, {%s});\n", strtolower($Form->formName), $this->_Field->validationName, implode(',', $args));
 		}
 		return '';
 	}
