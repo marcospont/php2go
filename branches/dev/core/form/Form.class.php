@@ -888,8 +888,8 @@ class Form extends Component
 	 */
 	function buildScriptCode() {
 		if (!empty($this->validatorCode) || !empty($this->beforeValidateCode) || array_key_exists('VALIDATEFUNC', (array)$this->rootAttrs)) {
-			$instance = $this->formName . '_validator';
-			$script = "\t{$instance} = new FormValidator('{$this->formName}');\n";
+			$instance = sprintf("%sValidator", strtolower($this->formName));
+			$script = "\tvar {$instance} = new FormValidator('{$this->formName}');\n";
 			// error summary settings
 			$summaryOptions = sprintf("%s, %s, %s, %s, \"%s\"",
 				$this->clientErrorOptions['mode'],

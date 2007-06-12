@@ -770,7 +770,7 @@ class FormField extends Component
 			$this->setRequired(FALSE);
 		// add required validation script
 		if ($this->required && !$this->isA('RangeField') && !$this->isA('DataGrid'))
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', RequiredValidator);\n", $this->_Form->formName, $this->validationName);
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', RequiredValidator);\n", strtolower($this->_Form->formName), $this->validationName);
 		// build and register valiadation rules script code
 		if (!empty($this->rules)) {
 			foreach ($this->rules as $Rule)

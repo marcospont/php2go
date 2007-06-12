@@ -433,15 +433,15 @@ class EditableField extends FormField
 				$msg = PHP2Go::getLangVal('ERR_FORM_FIELD_INVALID_FLOAT', array($this->label, $this->limiters[0], $this->limiters[1]));
 				$args[] = "msg:\"" . StringUtils::escape($msg, 'javascript') . "\"";
 			}
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', DataTypeValidator, {%s});\n", $this->_Form->formName, $this->name, implode(',', $args));
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', DataTypeValidator, {%s});\n", strtolower($this->_Form->formName), $this->name, implode(',', $args));
 			$this->_Form->Document->addScriptCode(sprintf($this->maskSetupScript, $this->id), 'Javascript', SCRIPT_END);
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'inputmask.js');
 		}
 		// add maxlength and minlength validation script
 		if (isset($this->minLength) && TypeUtils::isInteger($this->minLength))
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', LengthValidator, {rule:'MINLENGTH',limit:%d});\n", $this->_Form->formName, $this->name, $this->minLength);
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', LengthValidator, {rule:'MINLENGTH',limit:%d});\n", strtolower($this->_Form->formName), $this->name, $this->minLength);
 		if (isset($this->maxLength) && TypeUtils::isInteger($this->maxLength))
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', LengthValidator, {rule:'MAXLENGTH',limit:%d});\n", $this->_Form->formName, $this->name, $this->maxLength);
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', LengthValidator, {rule:'MAXLENGTH',limit:%d});\n", strtolower($this->_Form->formName), $this->name, $this->maxLength);
 		// add value transformation scripts
 		if ($this->attributes['UPPER'] == 'T')
 			$this->_Form->beforeValidateCode .= sprintf("\t\tfrm.elements['%s'].value = frm.elements['%s'].value.toUpperCase();\n", $this->name, $this->name);
