@@ -1334,10 +1334,18 @@ $ = function() {
 };
 
 /**
- * Special function that's used as an empty function
+ * Empty function
  * @type void
  */
 $EF = function() {
+};
+
+/**
+ * Identity function
+ * @type Object
+ */
+$IF = function(x) {
+	return x;
 };
 
 /**
