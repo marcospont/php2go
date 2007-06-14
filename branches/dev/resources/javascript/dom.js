@@ -342,7 +342,7 @@ Element.getPosition = function(elm) {
 		} else {
 			p.x = elm.offsetLeft || parseInt(elm.style.left.replace('px', '') || '0', 10);
 			p.y = elm.offsetTop || parseInt(elm.style.top.replace('px', '') || '0', 10);
-			var op = elm.offsetParent;
+			var op = (elm.parentNode ? elm.offsetParent : null);
 			while (op) {
 				p.x += op.offsetLeft;
 				p.y += op.offsetTop;
@@ -365,7 +365,7 @@ Element.getPosition = function(elm) {
  * @type Object
  */
 Element.getDimensions = function(elm) {
-	var elm = $(elm), d = {width: -1, height: -1};
+	var elm = $(elm), d = {width: 0, height: 0};
 	if (elm) {
 		if (elm.getStyle('display') != 'none') {
 			if (elm.offsetWidth && elm.offsetHeight) {
@@ -464,7 +464,7 @@ Element.setStyle = function(elm, prop, value) {
 				case 'width' :
 				case 'height' :
 					elm.style[prop.camelize()] = props[prop];
-					if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
+					if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute' && elm.getStyle('display') != 'none')
 						WCH.update(elm);
 					break;
 				default :
@@ -556,6 +556,32 @@ Element.classNames = function(elm) {
 		return elm._classNames;
 	}
 	return null;
+};
+
+/**
+ * Adds a CSS class on an element
+ * @param {Object} elm Element
+ * @param {String} cl CSS class
+ * @type void
+ */
+Element.addClass = function(elm, cl) {
+	if ((elm = $(elm)) && cl) {
+		elm.removeClass(cl);
+		elm.className = cl + ' ' + elm.className.trim();
+	}
+};
+
+/**
+ * Removes a CSS class from an element
+ * @param {Object} elm Element
+ * @param {String} cl CSS class
+ * @type void
+ */
+Element.removeClass = function(elm, cl) {
+	if ((elm = $(elm)) && cl) {
+		var re = new RegExp("^"+cl+"\\b\\s*|\\s*\\b"+cl+"\\b", 'g');
+		elm.className = elm.className.replace(re, '');
+	}
 };
 
 /**
@@ -685,6 +711,30 @@ Element.empty = function(elm) {
 	if (elm = $(elm))
 		return elm.innerHTML.empty();
 	return true;
+};
+
+/**
+ * Collects the contents of all text nodes inside a given element
+ * @param {Object} elm Element
+ * @type String
+ */
+Element.getInnerText = function(elm) {
+	if (elm = $(elm)) {
+		if (elm.innerText)
+			return elm.innerText;
+		var s = '', cs = elm.childNodes;
+		for (var i=0; i<cs.length; i++) {
+			switch (cs[i].nodeType) {
+				case 1 :
+					s += Element.getInnerText(cs[i]);
+					break;
+				case 3 :
+					s += cs[i].nodeValue;
+					break;
+			}
+		}
+		return s;
+	}
 };
 
 /**
@@ -882,8 +932,9 @@ CSSClasses = function(elm) {
 	 */
 	this.elm = $(elm);
 	/**
-	 * Applies an iterator function
-	 * on the element class names
+	 * Implements the collection interface by
+	 * applying an iterator function on the
+	 * element's class names
 	 * @type void
 	 * @private
 	 */
@@ -894,11 +945,11 @@ CSSClasses = function(elm) {
 	};
 	/**
 	 * Verifies if the element contains a given class name
-	 * @param {String} cls Class name
+	 * @param {String} cl Class name
 	 * @type Boolean
 	 */
-	this.has = function(cls) {
-		var re = new RegExp("\s?"+cls+"\s?", 'i');
+	this.has = function(cl) {
+		var re = new RegExp("\s?"+cl+"\s?", 'i');
 		return re.test(this.elm.className);
 	};
 	/**
@@ -916,8 +967,9 @@ CSSClasses = function(elm) {
 	 */
 	this.add = function() {
 		var a = arguments, c = this.elm.className;
-		for (var i=0; i<a.length; i++)
-			c = a[i] + ' ' + c.trim();
+		for (var i=0; i<a.length; i++) {
+			(a[i]) && (c = a[i] + ' ' + c.trim());
+		}
 		this.set(c.trim());
 	};
 	/**
@@ -928,8 +980,10 @@ CSSClasses = function(elm) {
 	this.remove = function() {
 		var re, a = arguments, c = this.elm.className;
 		for (var i=0; i<a.length; i++) {
-			re = new RegExp("^"+a[i]+"\\b\\s*|\\s*\\b"+a[i]+"\\b", 'g');
-			c = c.replace(re, '');
+			if (a[i]) {
+				re = new RegExp("^"+a[i]+"\\b\\s*|\\s*\\b"+a[i]+"\\b", 'g');
+				c = c.replace(re, '');
+			}
 		}
 		this.set(c.trim());
 	};
