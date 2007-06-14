@@ -202,8 +202,8 @@ class FormDataBind extends Form
 		$this->csvDbName = "db_" . strtolower($tableName);
 		$this->tableName = $tableName;
 		$this->primaryKey = $primaryKey;
-		$this->icons['sortasc'] = PHP2GO_ICON_PATH . "fdb_order_asc.gif";
-		$this->icons['sortdesc'] = PHP2GO_ICON_PATH . "fdb_order_desc.gif";
+		$this->icons['sortasc'] = PHP2GO_ICON_PATH . 'order_asc.gif';
+		$this->icons['sortdesc'] = PHP2GO_ICON_PATH . 'order_desc.gif';
 		$Service = new JSRSService();
 		$Service->registerHandler(array($this, '_saveRecord'), 'saveRecord');
 		$Service->registerHandler(array($this, '_deleteRecord'), 'deleteRecord');

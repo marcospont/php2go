@@ -472,9 +472,9 @@ class Report extends PagedDataSet
 		);
 		$this->colSizesMode = REPORT_COLUMN_SIZES_FREE;
 		$this->icons = array(
-			'orderasc' => PHP2GO_ICON_PATH . "report_order_asc.gif",
-			'orderdesc' => PHP2GO_ICON_PATH . "report_order_desc.gif",
-			'help' => PHP2GO_ICON_PATH . "help.gif"
+			'orderasc' => PHP2GO_ICON_PATH . 'order_asc.gif',
+			'orderdesc' => PHP2GO_ICON_PATH . 'order_desc.gif',
+			'help' => PHP2GO_ICON_PATH . 'help.gif'
 		);
 		$this->Template = new Template($templateFile);
 		if (TypeUtils::isHashArray($tplIncludes) && !empty($tplIncludes)) {
