@@ -676,7 +676,7 @@ Date.toDays = function(date) {
 	} else {
 		return 0;
 	}
-	c = parseInt(y.substring(0, 2));
+	c = parseInt(y.substring(0, 2), 10);
 	y = y.substring(2);
 	if (m > 2) {
 		m -= 3;
@@ -1418,16 +1418,18 @@ $E = function(elm) {
  * element can be initialized with a set of style
  * properties and initial HTML contents
  * @param {String} name Tag name
- * @param {Object} parent Element parent node
- * @param {Object} styleProps Element style properties
- * @param {String} innerHTML Element inner HTML
+ * @param {Object} parent Parent node
+ * @param {Object} style Style properties
+ * @param {String} innerHTML Inner HTML
+ * @param {Object} attrs Attributes
  * @type Object
  */
-$N = function(name, parent, style, html) {
+$N = function(name, parent, style, html, attrs) {
 	var elm = $E(document.createElement(name.toLowerCase()));
 	elm.setStyle(style);
 	(parent) && (parent.appendChild(elm));
 	(html) && (elm.innerHTML = html);
+	(attrs) && (Object.extend(elm, attrs));
 	return elm;
 };
 
