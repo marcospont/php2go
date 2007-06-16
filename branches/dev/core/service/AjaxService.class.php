@@ -27,6 +27,7 @@
  * @version $Id$
  */
 
+import('php2go.net.HttpRequest');
 import('php2go.service.AbstractService');
 import('php2go.service.ajax.AjaxResponse');
 
@@ -76,7 +77,7 @@ class AjaxService extends AbstractService
 	 */
 	function acceptRequest() {
 		$method = strtolower($_SERVER['REQUEST_METHOD']);
-		$headers = array_change_key_case(apache_request_headers(), CASE_LOWER);
+		$headers = array_change_key_case(HttpRequest::getHeaders(), CASE_LOWER);
 		if (array_key_exists('x-requested-with', $headers)) {
 			$this->handlerId = @$headers['x-handler-id'];
 			$this->handlerParams = $this->_decodeParams(($method == 'post' ? $_POST : $_GET));
