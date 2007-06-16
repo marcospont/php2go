@@ -583,7 +583,7 @@ class QueryBuilder extends PHP2Go
 		elseif (!empty($this->top))
 			$Dataset->loadSubSet(0, $this->top, $sql);
 		else
-			$Dataset->load($query);
+			$Dataset->load($sql);
 		return $Dataset;
 	}
 
