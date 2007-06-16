@@ -634,13 +634,13 @@ class Db extends PHP2Go
 			$oldMode = $this->AdoDb->SetFetchMode(ADODB_FETCH_NUM);
 			if ($this->makeCache) {
 				$rs =& $this->AdoDb->CacheExecute($this->cacheSecs, $rewriteSql, $bindVars);
-				$count = $rs->fields[0];
+				$count = ($rs ? $rs->fields[0] : FALSE);
 			} else {
 				$rs =& $this->AdoDb->Execute($rewriteSql, $bindVars);
-				$count = $rs->fields[0];
+				$count = ($rs ? $rs->fields[0] : FALSE);
 			}
 			$this->AdoDb->SetFetchMode($oldMode);
-			if ($count) {
+			if ($count !== FALSE) {
 				$this->lastStatement = array(
 					'source' => 'getCount',
 					'statement' => $rewriteSql,
