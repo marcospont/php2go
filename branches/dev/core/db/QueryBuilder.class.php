@@ -551,7 +551,7 @@ class QueryBuilder extends PHP2Go
 		elseif (!empty($this->top))
 			$Rs =& $Db->limitQuery($sql, $this->top, 0, TRUE, $bindVars);
 		else
-			$Rs =& $Db->query($query, TRUE, $bindVars);
+			$Rs =& $Db->query($sql, TRUE, $bindVars);
 		return $Rs;
 	}
 
