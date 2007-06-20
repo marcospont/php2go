@@ -39,7 +39,7 @@
 	/**
 	 * make all reserved words lowercase
 	 */
-	$query->upCaseWords = false;
+	$query->upCaseWords = FALSE;
 	/**
 	 * add some fields
 	 */
@@ -90,7 +90,7 @@
 	$resultSet =& $query->executeQuery();
 	while (!$resultSet->EOF) {
 		println($resultSet->fields['name'] . ' - ' . $resultSet->fields['dep_count'] . ' dependant(s)');
-		$resultSet->MoveNext();
+		$resultSet->moveNext();
 	}
 
 	/**

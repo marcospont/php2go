@@ -49,7 +49,6 @@
 	}
 </style>
 <script type="text/javascript">
-<![CDATA[
 	/**
 	 * This function is called by the first button,
 	 * at the right side of the first combo box
@@ -265,7 +264,6 @@
 				break;
 		}
 	}
-]]>
 </script>
 
 <table width="779" align="center" cellpadding="4" cellspacing="0" border="0">

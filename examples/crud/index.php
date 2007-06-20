@@ -142,13 +142,12 @@
 		if ($form->isPosted()) {
 			if ($form->isValid()) {
 				/**
-				 * The "getSubmittedValues" is the best way to read the information posted by a form.
-				 * In the following lines, we perform the necessary transformations for dates (input is
-				 * using d/m/Y format, and mySQL uses Y-m-d format) and checkboxes (PHP2Go checkboxes
-				 * send T or F, and the active column is 0 or 1 in the database)
+				 * The "getSubmittedValues" is the best way to read the information posted by a form
 				 */
 				$values = $form->getSubmittedValues();
-				$values['birth_date'] = Date::fromEuroToSqlDate($values['birth_date']);
+				/**
+				 * PHP2Go checkboxes send T or F. The active column accepts 1 or 0
+				 */
 				$values['active'] = ($values['active'] == 'T' ? 1 : 0);
 				/**
 				 * Create an instance of the DMLBuilder class, which will be used to build the INSERT and UPDATE statements

@@ -157,11 +157,6 @@
 				 */
 				$values = $form->getSubmittedValues();
 				/**
-				 * Translate dates
-				 */
-				$values['start_date'] = Date::fromEuroToSqlDate($values['start_date']);
-				$values['end_date'] = Date::fromEuroToSqlDate($values['end_date']);
-				/**
 				 * Create and configure the DML builder
 				 */
 				$error = FALSE;
@@ -243,8 +238,6 @@
 						if (!$error) {
 							$tasks = $values['tasks'];
 							foreach ($tasks as $id => $task) {
-								$task['start_date'] = Date::fromEuroToSqlDate($task['start_date']);
-								$task['end_date'] = Date::fromEuroToSqlDate($task['end_date']);
 								$dml->prepare(DML_BUILDER_UPDATE, 'tasks', $task, 'id_task = ?', array($id));
 								if (!@$dml->execute()) {
 									$error = $db->getError();

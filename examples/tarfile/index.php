@@ -54,6 +54,6 @@
 	/**
 	 * extract the compressed archive
 	 */
-	$tar->extractFileTo('../tmp/test.tar.gz', '../tmp/', 0777);
+	$tar->extractFileTo('../tmp/test.tar', '../tmp/', 0777);
 
 ?>
