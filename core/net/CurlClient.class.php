@@ -230,7 +230,7 @@ class CurlClient extends PHP2Go
 	 */
 	function uploadFile($fileName) {
 		$fileName = realpath($fileName);
-		if (file_exists($fileName)) {
+		if (is_readable($fileName)) {
 			$this->uploadHandle = @fopen($fileName, 'rb');
 			$this->setOption(CURLOPT_UPLOAD, 1);
 			$this->setOption(CURLOPT_INFILE, $this->uploadHandle);
@@ -245,7 +245,8 @@ class CurlClient extends PHP2Go
 	 * @return bool
 	 */
 	function returnToFile($fileName) {
-		if (file_exists($fileName) && $this->returnHandle = @fopen($fileName, 'wb')) {
+		$fileName = realpath($fileName);
+		if ($this->returnHandle = @fopen($fileName, 'wb')) {
 			$this->setOption(CURLOPT_FILE, $this->returnHandle);
 			return TRUE;
 		}
