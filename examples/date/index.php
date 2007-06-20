@@ -53,14 +53,20 @@
 	println('Diff (today - 03/05/1980) : ' . $diff);
 
 	// date validation
-	print('Date Validation');
+	println('Date Validation');
 	$arr = array('29/02/2003', '31/05/2002', '31/11/2000', '29/02/2000');
 	for ($i=0; $i<sizeof($arr); $i++) {
 		if (Date::isValid($arr[$i]))
-			print(' - valid : ' . $arr[$i]);
+			println(' - valid : ' . $arr[$i]);
 		else
-			print(' - not valid : ' . $arr[$i]);
+			println(' - not valid : ' . $arr[$i]);
 	}
+	println('');
+
+	// date conversions
+	println('Date Conversion');
+	println('From SQL to local date: ' . Date::fromSqlDate(date('Y-m-d')));
+	println('From local to SQL date: ' . Date::toSqlDate(Date::localDate()));
 	println('');
 
 	// local current date
@@ -70,7 +76,7 @@
 	println('Month name (current date) : ' . Date::monthName(time()));
 
 	// past date
-	$pd = Date::pastDate(date('d/m/Y'), 100);
+	$pd = Date::pastDate(Date::localDate(), 100);
 	println('Past date (today - 100 days) : ' . $pd);
 
 	// previous and next day

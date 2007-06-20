@@ -512,7 +512,49 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Transform a date from <b>EURO</b> to <b>SQL</b> format
+	 * Transforms a date from <b>SQL</b> format to local date format
+	 *
+	 * The local date format is defined in the global configuration settings.
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string
+	 * @static
+	 */
+	function fromSqlDate($date, $preserveTime=FALSE) {
+		$format = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
+		switch ($format) {
+			case 'd/m/Y' :
+				return Date::fromSqlToEuroDate($date, $preserveTime);
+			case 'Y/m/d' :
+				return Date::fromSqlToUsDate($date, $preserveTime);
+		}
+		return $date;
+	}
+
+	/**
+	 * Transforms a date from local date format to <b>SQL</b> format
+	 *
+	 * Local date format is read from the global configuration settings.
+	 *
+	 * @param string $date Input date
+	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @return string
+	 * @static
+	 */
+	function toSqlDate($date, $preserveTime=FALSE) {
+		$format = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
+		switch ($format) {
+			case 'd/m/Y' :
+				return Date::fromEuroToSqlDate($date, $preserveTime);
+			case 'Y/m/d' :
+				return Date::fromUsToSqlDate($date, $preserveTime);
+		}
+		return $date;
+	}
+
+	/**
+	 * Transforms a date from <b>EURO</b> to <b>SQL</b> format
 	 *
 	 * The transformation will only be performed if the input date
 	 * respects the input format (in this case, <b>EURO</b>).
@@ -538,7 +580,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Transform a date from <b>EURO</b> to <b>US</b> format
+	 * Transforms a date from <b>EURO</b> to <b>US</b> format
 	 *
 	 * The transformation will only be performed if the input date
 	 * respects the input format (in this case, <b>EURO</b>).
@@ -564,7 +606,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Transform a date from <b>US</b> to <b>SQL</b> format
+	 * Transforms a date from <b>US</b> to <b>SQL</b> format
 	 *
 	 * The transformation will only be performed if the input date
 	 * respects the input format (in this case, <b>US</b>).
@@ -584,7 +626,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Transform a date from <b>US</b> to <b>EURO</b> format
+	 * Transforms a date from <b>US</b> to <b>EURO</b> format
 	 *
 	 * The transformation will only be performed if the input date
 	 * respects the input format (in this case, <b>US</b>).
@@ -610,7 +652,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Transform a date from <b>SQL</b> to <b>EURO</b> format
+	 * Transforms a date from <b>SQL</b> to <b>EURO</b> format
 	 *
 	 * The transformation will only be performed if the input date
 	 * respects the input format (in this case, <b>SQL</b>).
@@ -636,7 +678,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Transform a date from <b>SQL</b> to <b>US</b> format
+	 * Transforms a date from <b>SQL</b> to <b>US</b> format
 	 *
 	 * The transformation will only be performed if the input date
 	 * respects the input format (in this case, <b>SQL</b>).
@@ -656,7 +698,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Convert a UNIX timestamp into a 4-byte DOS date
+	 * Converts a UNIX timestamp into a 4-byte DOS date
 	 *
 	 * Current timestamp will be used if $ts is missing.
 	 *
@@ -683,7 +725,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Convert a date into a UNIX timestamp
+	 * Converts a date into a UNIX timestamp
 	 *
 	 * @param string $date Input date
 	 * @return int Timestamp
@@ -695,7 +737,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Convert a date string into a day count
+	 * Converts a date string into a day count
 	 *
 	 * Current date will be used if $date is missing.
 	 *
@@ -731,7 +773,7 @@ class Date extends PHP2Go
 	}
 
 	/**
-	 * Convert a day count into a date string
+	 * Converts a day count into a date string
 	 *
 	 * @param int $days Day count
 	 * @param string $dateType Date format (EURO, US or SQL)
