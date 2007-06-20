@@ -59,12 +59,11 @@
 	if ($testCase == 1) {
 
 		/**
-		 * define the host and perform a simple GET request;
-		 * test for the HTTP 502 code (HTTP_STATUS_OK) to print the response body
+		 * define the host and perform a simple GET request
 		 */
 		$http->setHost('www.php.net');
 		if ($http->doGet('/') == HTTP_STATUS_OK) {
-			echo $http->responseBody;
+			echo $http->getResponseBody();
 		}
 
 	} elseif ($testCase == 2) {
@@ -101,7 +100,7 @@
 		 * specifying the hash array containing the POST data
 		 */
 		$http->setHost('www.php2go.com.br');
-		$formData = array(
+		$postData = array(
 			'name'=>'John Doe',
 			'e_mail'=>'john@foo.org',
 			'phone'=>'6666666',
@@ -110,7 +109,7 @@
 		);
 		if ($http->doPost(
 			'index.php?process=1',
-			$formData
+			$postData
 		) == HTTP_STATUS_OK) {
 			echo '<pre>' . $http->getResponseBody() . '</pre>';
 		}

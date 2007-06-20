@@ -38,7 +38,7 @@
 
 	// define the URL to be used in this example
 	// this method accepts string URLs or php2go.net.Url instances
-	$curl->setUrl('request.php');
+	$curl->setUrl(dirname(HttpRequest::url()) . '/request.php');
 
 	println('<b>Perform a simple GET request</b>');
 	// sinalize that we want the response headers
