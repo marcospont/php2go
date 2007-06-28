@@ -209,7 +209,7 @@ class AbstractService extends PHP2Go
 				if ($this->errorHandling)
 					set_error_handler(array($this, 'onError'));
 				$callback =& $this->handlers[$this->handlerId];
-				$response = $callback->invoke($this->handlerParams);
+				$response = $callback->invoke($this->handlerParams, $this->isA('JSRSService'));
 				if ($this->errorHandling)
 					restore_error_handler();
 				$this->sendResponse($response);
