@@ -74,8 +74,51 @@ class Init
 	 * Available set of locales
 	 *
 	 * @var array
+	 * @access private
 	 */
-	var $localeTable = array();
+	var $_localeTable = array(
+		'pt-br' => array(array('pt_BR', 'portuguese', 'pt_BR.iso-8859-1', 'pt_BR.utf-8'), 'brazilian-portuguese', 'pt-br'),
+		'en-us' => array(array('en_US', 'en'), 'us-english', 'en'),
+		'es' => array(array('es_ES', 'es'), 'spanish', 'es'),
+		'cs' => array(array('cs_CZ', 'cz'), 'czech', 'cz'),
+		'it' => array(array('it_IT', 'it'), 'italian', 'it'),
+		'de-de' => array(array('de_DE', 'de', 'ge'), 'de-german', 'de'),
+		'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr'),
+		'th' => array(array('th_TH'), 'thai', 'th')
+	);
+
+	/**
+	 * Date format settings table
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $_dateFormatTable = array(
+		'EURO' => array(
+			'type' => 'EURO',
+			'format' => 'd/m/Y',
+			'calendarFormat' => '%d/%m/%Y',
+			'regexp' => '^([0-9]{1,2})(\/|\-|\.)([0-9]{1,2})(\/|\-|\.)([0-9]{1,4})(\s([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$',
+			'matches' => array(1, 3, 5),
+			'mask' => '[#]{0,2}/[#]{0,2}/[#]{0,4}'
+		),
+		'US' => array(
+			'type' => 'US',
+			'format' => 'm/d/Y',
+			'calendarFormat' => '%m/%d/%Y',
+			'regexp' => '^([0-9]{1,2})(\/|\-|\.)([0-9]{1,2})(\/|\-|\.)([0-9]{1,4})(\s([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$',
+			'matches' => array(3, 1, 5),
+			'mask' => '[#]{0,2}/[#]{0,2}/[#]{0,4}'
+		),
+		'SQL' => array(
+			'type' => 'SQL',
+			'format' => 'Y-m-d',
+			'calendarFormat' => '%Y-%m-%d',
+			'regexp' => '^([0-9]{1,4})(\/|\-|\.)([0-9]{1,2})(\/|\-|\.)([0-9]{1,2})(\s([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$',
+			'matches' => array(5, 3, 1),
+			'mask' => '[#]{0,4}-[#]{0,2}-[#]{0,2}'
+		)
+	);
 
 	/**
 	 * Reference to the singleton of the {@link Conf} class
@@ -107,25 +150,15 @@ class Init
 	 * @return Init
 	 */
 	function Init() {
-		$this->localeTable = array(
-			'pt-br' => array(array('pt_BR', 'portuguese', 'pt_BR.iso-8859-1', 'pt_BR.utf-8'), 'brazilian-portuguese', 'pt-br'),
-			'en-us' => array(array('en_US', 'en'), 'us-english', 'en'),
-			'es' => array(array('es_ES', 'es'), 'spanish', 'es'),
-			'cs' => array(array('cs_CZ', 'cz'), 'czech', 'cz'),
-			'it' => array(array('it_IT', 'it'), 'italian', 'it'),
-			'de-de' => array(array('de_DE', 'de', 'ge'), 'de-german', 'de'),
-			'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr'),
-			'th' => array(array('th_TH'), 'thai', 'th')
-		);
 		$this->_Conf =& Conf::getInstance();
 		$this->_Lang =& LanguageBase::getInstance();
 		$this->_Negotiator =& LocaleNegotiator::getInstance();
 		$this->_initConfig();
 		$this->_initSession();
 		$this->_initLocale();
+		$this->_initDateFormat();
 		$this->_checkPhpVersion();
 		$this->_checkAbsoluteUri();
-		$this->_checkDateFormat();
 	}
 
 	/**
@@ -284,17 +317,16 @@ class Init
 	function _initLocale() {
 		// language
 		$conf = $this->_Conf->getConfig('LANGUAGE');
-		$jsLangCode = (isset($_REQUEST['locale']) && preg_match("/resources\/(javascript|jsrun)\/lang.php$/", @$_SERVER['PHP_SELF']) ? $_REQUEST['locale'] : NULL);
-		$userDefined = FALSE;
 		if (!empty($conf)) {
 			if (is_array($conf)) {
+				$userDefined = FALSE;
 				$default = (isset($conf['DEFAULT']) ? $conf['DEFAULT'] : PHP2GO_DEFAULT_LANGUAGE);
 				$param = (!empty($conf['REQUEST_PARAM']) ? $conf['REQUEST_PARAM'] : NULL);
-				$supported = (isset($conf['AVAILABLE']) ? (array)$conf['AVAILABLE'] : array_keys($this->localeTable));
+				$supported = (isset($conf['AVAILABLE']) ? (array)$conf['AVAILABLE'] : array_keys($this->_localeTable));
+				$jsLangCode = (isset($_REQUEST['locale']) && preg_match("/resources\/(javascript|jsrun)\/locale\.php$/", @$_SERVER['PHP_SELF']) ? $_REQUEST['locale'] : NULL);
 				// JS language file generation
 				if ($jsLangCode) {
 					$language = $jsLangCode;
-					$userDefined = FALSE;
 				}
 				// dynamic language change from GET or POST
 				elseif (!empty($param) && !empty($_REQUEST[$param]) && in_array($_REQUEST[$param], $supported)) {
@@ -341,6 +373,30 @@ class Init
 	}
 
 	/**
+	 * Initializes date format settings
+	 *
+	 * @access private
+	 */
+	function _initDateFormat() {
+		$dateFormat = (isset($_REQUEST['date']) && preg_match("/resources\/(javascript|jsrun)\/locale\.php$/", @$_SERVER['PHP_SELF']) ? $_REQUEST['date'] : $this->_Conf->getConfig('LOCAL_DATE_FORMAT'));
+		if ($dateFormat) {
+			switch ($dateFormat) {
+				case 'US' :
+				case 'SQL' :
+				case 'EURO' :
+					$this->_Conf->setConfig('DATE_FORMAT_SETTINGS', $this->_dateFormatTable[$dateFormat]);
+					break;
+				default :
+					$this->_Conf->setConfig('LOCAL_DATE_FORMAT', 'EURO');
+					$this->_Conf->setConfig('DATE_FORMAT_SETTINGS', $this->_dateFormatTable['EURO']);
+			}
+		} else {
+			$this->_Conf->setConfig('LOCAL_DATE_FORMAT', 'EURO');
+			$this->_Conf->setConfig('DATE_FORMAT_SETTINGS', $this->_dateFormatTable['EURO']);
+		}
+	}
+
+	/**
 	 * Check if the running PHP version satisfies the
 	 * minimum requirement of the framework
 	 *
@@ -378,28 +434,6 @@ class Init
 	}
 
 	/**
-	 * Validate LOCAL_DATE_FORMAT provided in the configuration settings
-	 *
-	 * @access private
-	 */
-	function _checkDateFormat() {
-		$dateFormat = $this->_Conf->getConfig('LOCAL_DATE_FORMAT');
-		if ($dateFormat) {
-			switch ($dateFormat) {
-				case 'd/m/Y' :
-					$this->_Conf->setConfig('LOCAL_DATE_TYPE', 'EURO');
-					break;
-				case 'Y/m/d' :
-					$this->_Conf->setConfig('LOCAL_DATE_TYPE', 'US');
-					break;
-				default :
-					$this->_Conf->setConfig('LOCAL_DATE_TYPE', 'EURO');
-					break;
-			}
-		}
-	}
-
-	/**
 	 * Apply a given language code
 	 *
 	 * @param string $language Language code
@@ -408,12 +442,12 @@ class Init
 	 */
 	function _applyLocale($language, $userDefined=FALSE) {
 		global $ADODB_LANG;
-		if (isset($this->localeTable[$language])) {
+		if (isset($this->_localeTable[$language])) {
 			$this->locale = $language;
 			// get locale settings
-			$locale = $this->localeTable[$language][0];
-			$langName = $this->localeTable[$language][1];
-			$adodbLang = $this->localeTable[$language][2];
+			$locale = $this->_localeTable[$language][0];
+			$langName = $this->_localeTable[$language][1];
+			$adodbLang = $this->_localeTable[$language][2];
 			// defines locale using setlocale()
 			if (version_compare(PHP_VERSION, '4.3.0', '>=')) {
 				$params = array_merge(array(LC_ALL), $locale);

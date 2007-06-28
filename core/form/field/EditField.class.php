@@ -149,12 +149,14 @@ class EditField extends EditableField
 	 */
 	function onDataBind() {
 		parent::onDataBind();
-		// date expressions
-		$regs = array();
-		if (preg_match('/^DATE/', $this->mask) && !empty($this->value) && !Date::isEuroDate($this->value, $regs) && !Date::isUsDate($this->value, $regs))
-			parent::setValue(Date::parseFieldExpression($this->value));
+		// force string type
 		if (is_array($this->value))
 			$this->value = '';
+		// date expressions
+		if ($this->mask == 'DATE' && !empty($this->value)) {
+			if ($expr = Date::parseFieldExpression($this->value))
+				parent::setValue($expr);
+		}
 	}
 
 	/**
@@ -169,14 +171,14 @@ class EditField extends EditableField
 			$this->_Form->beforeValidateCode .= sprintf("\t\tfrm.elements['%s'].value = frm.elements['%s'].value.trim();\n", $this->name, $this->name);
 		$btnDisabled = ($this->attributes['READONLY'] != '' || $this->attributes['DISABLED'] != '' || $this->_Form->readonly ? " disabled=\"disabled\"" : "");
 		// date picker button (for DATE mask)
-		if (preg_match('/^DATE/', $this->mask)) {
+		if ($this->mask == 'DATE') {
+			$settings = PHP2Go::getConfigVal('DATE_FORMAT_SETTINGS');
 			$this->_Form->Document->importStyle(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar-system.css");
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar_stripped.js");
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar-setup_stripped.js");
 			$this->_Form->Document->addScriptCode(sprintf("\tCalendar.setup( {\n\t\tinputField:\"%s\", ifFormat:\"%s\", button:\"%s\", singleClick:true, align:\"Bl\", cache:true, showOthers:true, weekNumbers:false\n\t} );",
-				$this->id, (PHP2Go::getConfigVal('LOCAL_DATE_TYPE') == 'EURO' ? "%d/%m/%Y" : "%Y/%m/%d"),
-				$this->id . '_calendar'), 'Javascript', SCRIPT_END
-			);
+				$this->id, $settings['calendarFormat'], $this->id . '_calendar'
+			), 'Javascript', SCRIPT_END);
 			$ua =& UserAgent::getInstance();
 			$this->attributes['CALENDAR'] = sprintf("<button id=\"%s\" type=\"button\" %s style=\"cursor:pointer;%s;background:transparent;border:none;vertical-align:text-bottom\"%s><img src=\"%s\" border=\"0\" alt=\"\" /></button>",
 					$this->id . '_calendar',

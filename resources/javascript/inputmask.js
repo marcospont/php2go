@@ -364,14 +364,12 @@ Mask.fromMaskName = function(name) {
 			Mask.cache[name] = EmailMask; break;
 		case 'URL' :
 			Mask.cache[name] = URLMask; break;
-		case 'DATE-EURO' :
-			Mask.cache[name] = DateMask('EURO'); break;
-		case 'DATE-US' :
-			Mask.cache[name] = DateMask('US'); break;
-		case 'TIME-AMPM' :
-			Mask.cache[name] = TimeMask(true); break;
+		case 'DATE' :
+			Mask.cache[name] = DateMask; break;
 		case 'TIME' :
 			Mask.cache[name] = TimeMask(false); break;
+		case 'TIME-AMPM' :
+			Mask.cache[name] = TimeMask(true); break;
 		default :
 			var m = [];
 			if (m = /FLOAT(\-([1-9][0-9]*)\:([1-9][0-9]*))?/.exec(name))
@@ -1009,27 +1007,26 @@ var EmailMask = Mask.fromExpression("[W\\.\\-\\[\\]@]+");
  */
 var URLMask = Mask.fromExpression("[W\\.\\-\\[\\]@\\:=&;\\+\\/\\?%\\$\\#~]+");
 /**
- * Date mask. Accepts EURO (d/m/Y) and US (Y/m/d) formats
+ * Date mask
  * @param {String} format Date format
  * @type Mask
  */
-var DateMask = function(format) {
-	var mask = new Mask();
-	mask.loadExpression(format == 'US' ? '[#]{0,4}/[#]{0,2}/[#]{0,2}' : '[#]{0,2}/[#]{0,2}/[#]{0,4}');
-	mask.onBeforeChange = function(val) {
+var DateMask = Mask.fromExpression(Locale.date.mask);
+DateMask.onBeforeChange = function(val) {
+	var f = Locale.date.type;
+	if (f == 'EURO' || f == 'US')
 		return val.replace(/[-\.]/, '/');
-	};
-	mask.onBlur = function(fld) {
-		var m = [];
-		if (format == 'EURO') {
-			if (m = /^([0-9]{2}\/[0-9]{2}\/)([0-9]{2})$/.exec(fld.value))
-				fld.value = m[1] + (parseInt(m[2]) > 50 ? '19'+m[2] : '20'+m[2]);
-		} else {
-			if (m = /^([0-9]{2})(\/[0-9]{2}\/[0-9]{2})$/.exec(fld.value))
-				fld.value = (parseInt(m[1]) > 50 ? '19'+m[1] : '20'+m[1]) + m[2];
-		}
-	};
-	return mask;
+	return val.replace(/[\/\.]/, '-');
+};
+DateMask.onBlur = function(fld) {
+	var m = [], f = Locale.date.type;
+	if (f == 'EURO' || f == 'US') {
+		if (m = /^([0-9]{2}\/[0-9]{2}\/)([0-9]{2})$/.exec(fld.value))
+			fld.value = m[1] + (parseInt(m[2]) > 50 ? '19'+m[2] : '20'+m[2]);
+	} else {
+		if (m = /^([0-9]{2})(\-[0-9]{2}\-[0-9]{2})$/.exec(fld.value))
+			fld.value = (parseInt(m[1]) > 50 ? '19'+m[1] : '20'+m[1]) + m[2];
+	}
 };
 /**
  * Time mask

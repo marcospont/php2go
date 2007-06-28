@@ -146,8 +146,6 @@ class EditableField extends FormField
 					$this->mask = $matches[2];
 					$this->limiters = array($matches[4], $matches[5]);
 					$this->setLength($matches[4] + $matches[5] + 2);
-				} elseif ($matches[0] == 'DATE') {
-					$mask = $this->mask = 'DATE-' . PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
 				} elseif ($matches[0] == 'LOGIN') {
 					$this->mask = 'WORD';
 				} else {
@@ -297,8 +295,7 @@ class EditableField extends FormField
 				case 'CURRENCY' :
 					$validators[] = array('php2go.validation.CurrencyValidator', NULL, NULL);
 					break;
-				case 'DATE-EURO' :
-				case 'DATE-US' :
+				case 'DATE' :
 					$validators[] = array('php2go.validation.DateValidator', NULL, NULL);
 					break;
 				case 'EMAIL' :
@@ -399,11 +396,7 @@ class EditableField extends FormField
 		if (!is_string($this->value))
 			$this->value = strval($this->value);
 		switch ($this->mask) {
-			case 'DATE-EURO' :
-			case 'DATE-US' :
-				$this->searchDefaults['OPERATOR'] = 'EQ';
-				$this->searchDefaults['DATATYPE'] = 'DATE';
-				break;
+			case 'DATE' :
 			case 'FLOAT' :
 			case 'INTEGER' :
 				$this->searchDefaults['OPERATOR'] = 'EQ';

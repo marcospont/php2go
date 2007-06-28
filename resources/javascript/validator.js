@@ -77,8 +77,7 @@ Validator.isMask = function(v, mask) {
 		case 'WORD' : return Validator.isWord(v);
 		case 'EMAIL' : return Validator.isEmail(v);
 		case 'URL' : return Validator.isURL(v);
-		case 'DATE-EURO' : return Validator.isDate(v, 'EURO');
-		case 'DATE-US' : return Validator.isDate(v, 'US');
+		case 'DATE' : return Validator.isDate(v);
 		case 'TIME' : return Validator.isTime(v, false);
 		case 'TIME-AMPM' : return Validator.isTime(v, true);
 		default :
@@ -216,20 +215,18 @@ Validator.isURL = function(val) {
  * @param {String} fmt Date format (EURO, US)
  * @type Boolean
  */
-Validator.isDate = function(val, fmt) {
+Validator.isDate = function(val) {
 	if (val == "")
 		return true;
-	fmt = fmt || 'EURO';
-	var re, d, m, y, bm, leap;
-	if (fmt == 'US')
-		re = /^(\d{1,4})(\/|\.|\-)(\d{1,2})(\/|\.|\-)(\d{1,2})$/;
-	else
-		re = /^(\d{1,2})(\/|\.|\-)(\d{1,2})(\/|\.|\-)(\d{1,4})$/;
+	var d, m, y, leap, m31, bm;
+	var loc = Locale.date;
+	var re = loc.regexp;
 	if (mt = re.exec(val)) {
-		d = parseInt((fmt == 'US' ? mt[5] : mt[1]), 10);
-		y = parseInt((fmt == 'US' ? mt[1] : mt[5]), 10);
+		d = parseInt(mt[loc.matches[0]], 10);
+		m = parseInt(mt[loc.matches[1]], 10);
+		y = parseInt(mt[loc.matches[2]], 10);
 		leap = (y % 4 == 0) && (y % 100 != 0 || y % 400 == 0);
-		m = parseInt(mt[3], 10), m31 = 0xAD5, bm = (1 << (m-1));
+		m31 = 0xAD5, bm = (1 << (m-1));
         if (y < 1000 || m < 1 || m > 12 || d < 1 || d > 31 || (d == 31 && (bm & m31) == 0) || (d == 30 && m == 2) || (d == 29 && m == 2 && !leap)) {
             return false;
         } else {

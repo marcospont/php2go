@@ -424,9 +424,10 @@ class FormRule extends PHP2Go
 			$this->value = $Form->resolveVariables($this->value);
 		}
 		// evaluate date expressions
-		$regs = array();
-		if ($this->compareType == 'DATE' && !empty($this->value) && !Date::isEuroDate($this->value, $regs) && !Date::isUsDate($this->value, $regs))
-			$this->value = Date::parseFieldExpression($this->value);
+		if ($this->compareType == 'DATE' && !empty($this->value)) {
+			if ($expr = Date::parseFieldExpression($this->value))
+				$this->value = $expr;
+		}
 	}
 
 	/**

@@ -721,7 +721,7 @@ class Document extends PHP2Go
 			$this->elements[$elements[$i]] = '';
 		// add basic JS libraries
 		$Conf =& Conf::getInstance();
-		$this->addScript(PHP2GO_JAVASCRIPT_PATH . 'php2go.js?locale=' . $Conf->getConfig('LANGUAGE_CODE') . '&charset=' . $Conf->getConfig('CHARSET'));
+		$this->addScript(PHP2GO_JAVASCRIPT_PATH . 'php2go.js?locale=' . $Conf->getConfig('LANGUAGE_CODE') . '&date=' . $Conf->getConfig('LOCAL_DATE_FORMAT') . '&charset=' . $Conf->getConfig('CHARSET'));
 	}
 
 	/**

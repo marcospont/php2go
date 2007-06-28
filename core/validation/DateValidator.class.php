@@ -57,17 +57,12 @@ class DateValidator extends AbstractValidator
 	 * @param array $params Arguments
 	 * @return DateValidator
 	 */
-	function DateValidator($params = NULL) {
+	function DateValidator($params=NULL) {
 		parent::AbstractValidator($params);
-		if (is_array($params)) {
-			if (isset($params['type']) && in_array(strtoupper($params['type']), array('EURO', 'SQL', 'US'))) {
-				$this->type = $params['type'];
-			} else {
-				$this->type = PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
-			}
-		} else {
-			$this->type = PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
-		}
+		if (is_array($params) && isset($params['type']) && in_array($params['type'], array('EURO', 'US', 'SQL')))
+			$this->type = $params['type'];
+		else
+			$this->type = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 	}
 
 	/**
@@ -78,35 +73,8 @@ class DateValidator extends AbstractValidator
 	 */
 	function execute(&$value) {
 		$result = TRUE;
-		$matches = array();
-		$value = strval($value);
-		$type = strval($this->type);
-		switch ($type) {
-			case 'EURO' :
-				if (Date::isEuroDate($value, $matches)) {
-					list(,$day,$month,$year,$hours,$minutes,$seconds) = $matches;
-				} else {
-					$result = FALSE;
-				}
-				break;
-			case 'SQL' :
-				if (Date::isSqlDate($value, $matches)) {
-					list(,$year,$month,$day,$hours,$minutes,$seconds) = $matches;
-				} else {
-					$result = FALSE;
-				}
-				break;
-			case 'US' :
-				if (Date::isUsDate($value, $matches)) {
-					list(,$year,$month,$day,$hours,$minutes,$seconds) = $matches;
-				} else {
-					$result = FALSE;
-				}
-				break;
-			default :
-				$result = FALSE;
-		}
-		if ($result) {
+		if ($regs = Date::parse($value, $this->type)) {
+			list($day, $month, $year, $hours, $minutes, $seconds) = $regs;
 			// validates day ( > 0 && <= 31 )
 			if (intval($day) < 1 || intval($day) > 31)
 				$result = FALSE;
@@ -128,6 +96,8 @@ class DateValidator extends AbstractValidator
 				if ($seconds && (intval($seconds) < 0 || intval($seconds) > 59))
 					$result = FALSE;
 			}
+		} else {
+			$result = FALSE;
 		}
 		if ($result === FALSE && isset($this->fieldLabel)) {
 			$maskLabels = PHP2Go::getLangVal('FORM_MASKS');
