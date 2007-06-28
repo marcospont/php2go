@@ -2014,13 +2014,13 @@ class Report extends PagedDataSet
 		else
 			$ot = $this->_orderType;
 		$char = (strpos($this->baseUri, '?') !== FALSE ? '&' : '?');
-		return htmlentities(sprintf("%s%spage=%s%s%s%s%s",
+		return sprintf("%s%spage=%s%s%s%s%s",
 					$this->baseUri, $char, $page,
 					($order != '' ? '&order=' . urlencode($order) : (isset($this->_order) ? '&order=' . $this->_order : '')),
 					'&ordertype=' . $ot,
 					($this->_SimpleSearch->searchSent ? $this->_SimpleSearch->getUrlString() : ''),
 					(isset($this->extraVars) ? '&' . $this->extraVars : '')
-		));
+		);
 	}
 
 	/**
