@@ -359,7 +359,7 @@ MultiColumnLookupField.prototype.keyHandler = function(e) {
 			}
 			break;
 		default :
-			if (!e.ctrlKey && !e.altKey && k != 32 && (key < 112 || key > 123))
+			if (!e.ctrlKey && !e.altKey && k != 32 && (k < 112 || k > 123))
 				$EV(e).stop();
 			break;
 	}
