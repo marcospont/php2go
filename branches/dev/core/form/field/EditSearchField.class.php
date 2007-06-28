@@ -306,8 +306,6 @@ class EditSearchField extends DbField
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EDITSEARCH_INVALID_DATAFILTER', (empty($id) ? '?' : $id)), E_USER_ERROR, __FILE__, __LINE__);
 				if ($mask != 'STRING' && !preg_match(PHP2GO_MASK_PATTERN, $mask))
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EDITSEARCH_INVALID_DATAFILTER_MASK', $id), E_USER_ERROR, __FILE__, __LINE__);
-				if ($mask == 'DATE')
-					$mask .= '-' . PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
 				if (isset($this->filters[$id]))
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EDITSEARCH_DUPLICATED_DATAFILTER', $id), E_USER_ERROR, __FILE__, __LINE__);
 				$this->filters[$id] = array($label, $expression, $mask);
@@ -404,6 +402,8 @@ class EditSearchField extends DbField
 	function performSearch($filter, $term) {
 		if (isset($this->filters[$filter])) {
 			// builds the condition clause
+			if ($this->filters[$filter][2] == 'DATE')
+				$term = Date::toSqlDate($term);
 			$clause = sprintf($this->filters[$filter][1], $term);
 			if (empty($this->dataSource['CLAUSE']))
 				$this->dataSource['CLAUSE'] = $clause;
