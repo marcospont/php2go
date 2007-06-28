@@ -249,8 +249,10 @@ class LookupField extends DbField
 	 */
 	function onDataBind() {
 		parent::onDataBind();
-		if (!isset($this->_Rs))
+		if (!isset($this->_Rs)) {
 			parent::processDbQuery(ADODB_FETCH_NUM);
+			$this->optionCount = $this->_Rs->recordCount();
+		}
 	}
 
 	/**
