@@ -41,24 +41,37 @@ $errorMsg = ob_get_clean();
 
 if (!empty($errorMsg)) {
 	header("Content-type: text/javascript");
-	die("var Lang = {};");
+	die("var Locale = {}; var Lang = {};");
 }
 
-$Lang =& LanguageBase::getInstance();
-$base =& $Lang->languageBase['PHP2GO'];
-$js = array();
-$js['invalidValue'] = $base['ERR_INVALID_VALUE'];
-$js['duplicatedValue'] = $base['ERR_DUPLICATED_VALUE'];
-$js['commFailure'] = $base['ERR_COMM_FAILURE'];
-$js['ajaxSupport'] = $base['ERR_AJAX_SUPPORT'];
-$js['editor'] = array(
+$Conf =& Conf::getInstance();
+$LangBase =& LanguageBase::getInstance();
+
+// locale settings
+$locale = array();
+$settings = $Conf->getConfig('DATE_FORMAT_SETTINGS');
+$locale['date'] = array();
+$locale['date']['type'] = $settings['type'];
+$locale['date']['regexp'] = new stdClass();
+$locale['date']['regexp']->__json__ = 'new RegExp("' . $settings['regexp'] . '")';
+$locale['date']['matches'] = $settings['matches'];
+$locale['date']['mask'] = $settings['mask'];
+
+// language entries
+$lang = array();
+$base =& $LangBase->languageBase['PHP2GO'];
+$lang['invalidValue'] = $base['ERR_INVALID_VALUE'];
+$lang['duplicatedValue'] = $base['ERR_DUPLICATED_VALUE'];
+$lang['commFailure'] = $base['ERR_COMM_FAILURE'];
+$lang['ajaxSupport'] = $base['ERR_AJAX_SUPPORT'];
+$lang['editor'] = array(
 	'validateMode' => $base['EDITOR_VARS']['validateMode'],
 	'createLink' => $base['EDITOR_VARS']['createLink'],
 	'insertImage' => $base['EDITOR_VARS']['insertImage']
 );
-$js['colorPicker'] = $base['COLOR_PICKER_VARS'];
-$js['dataBind'] = $base['FORM_DATA_BIND_MESSAGES'];
-$js['report'] = array(
+$lang['colorPicker'] = $base['COLOR_PICKER_VARS'];
+$lang['dataBind'] = $base['FORM_DATA_BIND_MESSAGES'];
+$lang['report'] = array(
 	'invalidPage' => $base['REPORT_INVALID_PAGE'],
 	'emptyFilters' => $base['REPORT_SEARCH_VALUES']['emptyFilters'],
 	'closeFilters' => $base['REPORT_SEARCH_VALUES']['closeFilters'],
@@ -68,14 +81,14 @@ $js['report'] = array(
 	'stringOperators' => $base['REPORT_STRING_OPERATORS'],
 	'resendConfirmation' => $base['REPORT_SEARCH_VALUES']['resendConfirmation']
 );
-$js['search'] = array(
+$lang['search'] = array(
 	'emptySearch' => $base['EMPTY_SEARCH'],
 	'emptyResults' => $base['EMPTY_RESULTS'],
 	'searchingBtnValue' => $base['EDITSEARCH_BTN_VALUE']
 );
-$js['inputMask'] = $base['FORM_INPUT_MASK_MESSAGES'];
-$js['masks'] = $base['FORM_MASKS'];
-$js['validator'] = array(
+$lang['inputMask'] = $base['FORM_INPUT_MASK_MESSAGES'];
+$lang['masks'] = $base['FORM_MASKS'];
+$lang['validator'] = array(
 	'invalidFloat' => $base['ERR_FORM_FIELD_INVALID_FLOAT'],
 	'requiredFields' => $base['ERR_FORM_REQUIRED_SUMMARY'],
 	'invalidFields' => $base['ERR_FORM_ERRORS_SUMMARY'],
@@ -99,52 +112,65 @@ $js['validator'] = array(
 	'goetValue' => $base['ERR_FORM_FIELD_VALUE_GOET'],
 	'loetValue' => $base['ERR_FORM_FIELD_VALUE_LOET']
 );
+
 header("Content-type: text/javascript");
-echo "var Lang = ", jsLangGetHash($js), ";";
+echo "var Locale = ", jsLocaleSerialize($locale), ";";
+echo "var Lang = ", jsLocaleSerialize($lang), ";";
 
 /**
- * Trasform a N-dimensional PHP array of strings into
- * a N-dimensional Javascript hash, recursively
+ * Serializes a PHP variable into a JSON string
  *
- * @param array $arr
- * @return string Array converted to JS
+ * @param mixed $value PHP variable
+ * @return mixed
  */
-function jsLangGetHash($arr) {
-	$result = array();
-	foreach ($arr as $key => $value) {
-		if (is_array($value)) {
-			$result[] = "'{$key}':" . jsLangGetHash($value);
-		} else {
-			$result[] = "'{$key}':" . jsLangFormatValue($value);
-		}
+function jsLocaleSerialize($value) {
+	if (TypeUtils::isHashArray($value)) {
+		$result = array();
+		foreach ($value as $k => $v)
+			$result[] = "'{$k}':" . jsLocaleSerialize($v);
+		return '{' . implode(',', $result) . '}';
+	} elseif (is_array($value)) {
+		$result = array();
+		for ($i=0; $i<sizeof($value); $i++)
+			$result[] = jsLocaleSerialize($value[$i]);
+		return '[' . implode(',', $result) . ']';
+	} elseif (is_numeric($value)) {
+		return $value;
+	} elseif (is_bool($value)) {
+		return ($value ? 'true' : 'false');
+	} elseif (is_null($value)) {
+		return 'null';
+	} elseif (is_object($value) && $value->__json__) {
+		return $value->__json__;
+	} else {
+		return jsLocaleFormatString(strval($value));
 	}
-	return "{" . implode(',', $result) . "}";
 }
 
 /**
  * Perform a replacement from
- * an sprintf placeholder to a numeric
+ * an sprintf placeholder by a numeric
  * placeholder (%s => %1, %s => %2)
  *
  * @param array $item Regexp matches
  * @return string
  */
-function jsLangDoReplacement($item) {
+function jsLocaleDoReplacement($item) {
 	global $count;
 	return '%' . (++$count);
 }
 
 /**
  * Format a language entry value, escaping it as a Javascript
- * string and replacing sprintf placeholders for ordered %N holders
+ * string and replacing sprintf placeholders by ordered %N holders
  *
  * @param string $value
  * @return string Processed value
  */
-function jsLangFormatValue($value) {
+function jsLocaleFormatString($value) {
 	global $count;
 	$count = 0;
-	$value = preg_replace_callback('/(?<!%)%[bcdufosxX\.0-9]+/', 'jsLangDoReplacement', $value);
+	$value = preg_replace_callback('/(?<!%)%[bcdufosxX\.0-9]+/', 'jsLocaleDoReplacement', $value);
 	$value = StringUtils::escape($value, 'javascript');
 	return "\"" . $value . "\"";
 }
