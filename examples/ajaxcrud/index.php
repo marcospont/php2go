@@ -98,6 +98,7 @@
 		function ajaxSaveRecord($params) {
 			$response = new AjaxResponse();
 			// convert birth date and active values
+			$params['birth_date'] = Date::toSqlDate($params['birth_date']);
 			$params['active'] = ($params['active'] == 'T' ? 1 : 0);
 			// update or insert
 			if (!empty($params['id_people'])) {
