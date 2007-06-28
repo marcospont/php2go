@@ -40,7 +40,7 @@
 		-->
 		<editsearchfield
 			name="edit_search" label="EditSearchField"
-			required="T" autotrim="T" autodispatch="T" debug="T"
+			required="T" autotrim="T" autodispatch="T" debug="F"
 		>
 			<datafilter id="1" label="Name" expression="code like '%%%s%%'" mask="STRING"/>
 			<datafilter id="2" label="Date Added" expression="date_added > '%s'" mask="DATE"/>
