@@ -62,7 +62,7 @@
 		if ($form->isValid()) {
 			$doc->assign('main',
 				"<br /><div align='center'><fieldset style='width:576px;text-align:left;padding:8px'><legend class='label_style'>Submitted Values</legend>" .
-				"<button id=\"back\" onclick=\"location.href='" . $_SERVER['PHP_SELF'] . "'\" class='button_style'>Back</button>" .
+				"<button id=\"back\" onclick=\"location.href='" . $_SERVER['HTTP_REFERER'] . "'\" class='button_style'>Back</button>" .
 				exportVariable($form->getSubmittedValues(), TRUE) .
 				"</fieldset></div>"
 			);
