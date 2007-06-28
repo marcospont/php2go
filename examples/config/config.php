@@ -82,10 +82,10 @@ $P2G_USER_CFG['CITY'] = '';
 
 /**
  * Date and time zone settings
- * Possible date formats: d/m/Y or Y/m/d (case sensitive)
+ * Possible date formats: EURO, US or SQL (case sensitive)
  * Possible time zone values: hour offset (-01:00, +03:00, -04:30), universal time (UT, GMT), north american time (EST, EDT, CST, ...) or military time (A..Z)
  */
-$P2G_USER_CFG['LOCAL_DATE_FORMAT'] = "d/m/Y";
+$P2G_USER_CFG['LOCAL_DATE_FORMAT'] = 'EURO';
 $P2G_USER_CFG['LOCAL_TIME_ZONE'] = 'GMT';
 
 /**
