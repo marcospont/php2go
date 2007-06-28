@@ -657,11 +657,30 @@ class AjaxResponse extends PHP2Go
 	}
 
 	/**
+	 * Set a Javascript variable
+	 *
+	 * <code>
+	 * $response->setVariable('myFlag', TRUE);
+	 * $response->setVariable('globalArray', array(1, 2, 3));
+	 * </code>
+	 *
+	 * @param string $name Variable name
+	 * @param mixed $value Variable value
+	 */
+	function setVariable($name, $value) {
+		$value = JSONEncoder::encode($value);
+		$this->commands[] = array(
+			'cmd' => 'eval',
+			'arg' => "{$name} = {$value};"
+		);
+	}
+
+	/**
 	 * Runs a block of JS code
 	 *
 	 * <code>
 	 * $response->runScript("var div = $('my_div');");
-	 * $response->runScript("globalArray = [1, 2, 3];");
+	 * $response->runScript("$('my_element').hide(); $('my_field').addClass('class_name');");
 	 * </code>
 	 *
 	 * @param string $script JS code
