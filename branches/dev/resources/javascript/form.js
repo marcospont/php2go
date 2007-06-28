@@ -687,19 +687,23 @@ SelectField.prototype.addOption = function(value, text, pos) {
  * @param {String} lsep Line separator
  * @param {String} csep Column separator
  * @param {Number} pos Insertion position
+ * @param {String} val Value to set
  * @type void
  */
-SelectField.prototype.importOptions = function(str, lsep, csep, pos) {
-	lsep = (lsep || '|'), csep = (csep || '~');
+SelectField.prototype.importOptions = function(str, lsep, csep, pos, val) {
+	lsep = (lsep || '|'), csep = (csep || '~'), val = (val || this.fld.value);
 	pos = Math.abs(pos || 0);
 	if (pos <= this.fld.options.length) {
 		var self = this;
+		self.fld.options.length = pos;
 		str.split(lsep).walk(function(el, idx) {
 			var opt = el.split(csep);
 			if (opt.length >= 2) {
 				self.fld.options[pos] = new Option(opt[1], opt[0]);
 				pos++;
 			}
+			if (val && val == opt[0])
+				self.fld.value = val;
 		});
 	}
 };
