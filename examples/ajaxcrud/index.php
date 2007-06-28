@@ -77,7 +77,7 @@
 					$response->resetForm('people_form');
 					$fields =& $rs->fields;
 					// convert birth date and active fields
-					$fields['birth_date'] = Date::fromSqlToEuroDate($fields['birth_date']);
+					$fields['birth_date'] = Date::fromSqlDate($fields['birth_date']);
 					$fields['active'] = ($fields['active'] == 1 ? 'T' : 'F');
 					$response->setValue($fields);
 					$response->focus('name');
@@ -98,7 +98,6 @@
 		function ajaxSaveRecord($params) {
 			$response = new AjaxResponse();
 			// convert birth date and active values
-			$params['birth_date'] = Date::fromEuroToSqlDate($params['birth_date']);
 			$params['active'] = ($params['active'] == 'T' ? 1 : 0);
 			// update or insert
 			if (!empty($params['id_people'])) {
