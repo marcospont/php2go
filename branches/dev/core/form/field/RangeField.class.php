@@ -171,8 +171,6 @@ class RangeField extends FormField
 		}
 		switch ($mask) {
 			case 'DATE' :
-			case 'DATE-EURO' :
-			case 'DATE-US' :
 				if ($searchData['DATATYPE'] != 'DATETIME')
 					$searchData['DATATYPE'] = 'DATE';
 				break;
@@ -278,8 +276,6 @@ class RangeField extends FormField
 		if (isset($attrs['RULEMESSAGE']))
 			$attrs['RULEMESSAGE'] = resolveI18nEntry($attrs['RULEMESSAGE']);
 		$mask = TypeUtils::ifNull(@$attrs['MASK'], 'STRING');
-		if ($mask == 'DATE-EURO' || $mask == 'DATE-US')
-			$mask = 'DATE';
 		$this->_EndField->addRule(new FormRule(
 			($type ? 'GOET' : 'GT'), $this->_StartField->getName(),
 			NULL, $mask, @$attrs['RULEMESSAGE']

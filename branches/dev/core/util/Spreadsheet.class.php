@@ -1110,21 +1110,17 @@ class Spreadsheet extends PHP2Go
 	 * @access private
 	 */
 	function _transformDate($date) {
-		if (!System::loadExtension('calendar'))
-			return '';
-		$dateParts = array();
-		if (Date::isEuroDate($date, $dateParts)) {
-			$dtVal = juliantojd($dateParts[2], $dateParts[1], $dateParts[3]) - SPRSH_DATE + 1;
-		} elseif (Date::isUsDate($date, $dateParts) || Date::isSqlDate($date, $dateParts)) {
-			$dtVal = juliantojd($dateParts[2], $dateParts[3], $dateParts[1]) - SPRSH_DATE + 1;
+		if ((System::loadExtension('calendar')) && (($regs = Date::parse($date, 'EURO')) || ($regs = Date::parse($date, 'US')) || ($regs = Date::parse($date, 'SQL')))) {
+			$dtVal = juliantojd($regs[1], $regs[0], $regs[2]) - SPRSH_DATE + 1;
+			if ($regs[4]) {
+				$dtVal += (intval($regs[4]) / 24);
+				$dtVal += (intval($regs[5]) / 1440);
+				if ($regs[6])
+					$dtVal += (intval($regs[6]) / 86400);
+			}
+			return $dtVal;
 		}
-		if (isset($dateParts[5]))
-			$dtVal += ( intval($dateParts[5]) / 24 );
-		if (isset($dateParts[6]))
-			$dtVal += ( intval($dateParts[6]) / 1440 );
-		if (isset($dateParts[7]))
-			$dtVal += ( intval($dateParts[7]) / 86400 );
-		return $dtVal;
+		return '';
 	}
 
 	/**

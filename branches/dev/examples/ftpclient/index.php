@@ -73,7 +73,7 @@
 			println('<b>Retrieve the details of each file included in a remote directory</b>');
 			$list = $ftp->rawList('', TRUE);
 			foreach ($list as $entry) {
-				println("Name: {$entry['name']} - Size: {$entry['size']} bytes - Permissions: {$entry['attr']}");
+				println("Name: {$entry['name']} - Size: {$entry['size']} bytes - Permissions: {$entry['attr']} - Date: {$entry['date']}");
 			}
 		} else {
 			println('FtpClient: Authentication failed');

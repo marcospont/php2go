@@ -803,12 +803,8 @@ class Db extends PHP2Go
 		if (empty($date)) {
 			return ($time ? $this->AdoDb->sysTimeStamp : $this->AdoDb->sysDate);
 		} else {
-			if (!TypeUtils::isInteger($date)) {
-				// convert euro->sql
-				$date = Date::fromEuroToSqlDate($date, $time);
-				// convert us->sql
-				$date = Date::fromUsToSqlDate($date, $time);
-			}
+			if (!TypeUtils::isInteger($date))
+				$date = Date::toSqlDate($date, $time);
 			if ($time)
 				return ($bind ? $this->AdoDb->BindTimeStamp($date) : $this->AdoDb->DBTimeStamp($date));
 			else

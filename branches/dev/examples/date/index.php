@@ -32,64 +32,67 @@
 
 	println('<b>PHP2Go Examples</b> : php2go.datetime.Date<br />');
 
-	// current month name, based on the active locale
-	$mn = Date::monthName(time());
-	println('Current month name (today) : ' . $mn);
+	// print current date based on local settings
+	$local = Date::localDate();
+	println('Current date using local format: ' . $local);
+
+	// month name of a timestamp
+	println('Month name for ' . $local . ' : ' . Date::monthName(time()));
 
 	// day of week of a given date
-	$dow = Date::dayOfWeek(date('d/m/Y'), true, false);
-	println('Day of week ('.date('d/m/Y').') : ' . $dow);
+	$dow = Date::dayOfWeek($local, TRUE, FALSE);
+	println('Day of week for ' . $local . ' : ' . $dow);
 
 	// days of a given month
 	$dim = Date::daysInMonth(2, 1940);
-	println('Days in month (02/1940) : ' . $dim);
+	println('Days in month for February 1940 : ' . $dim);
+	println('');
 
-	// future date
-	$fd = Date::futureDate(date('d/m/Y'), 40);
+	// date operations
+	println('<b>Date Operations</b>');
+	$fd = Date::futureDate($local, 40);
 	println('Future date (today + 40 days) : ' . $fd);
-
-	// difference between days
-	$diff = Date::getDiff('03/05/1980', date('d/m/Y'));
-	println('Diff (today - 03/05/1980) : ' . $diff);
+	$pd = Date::pastDate($local, 500);
+	println('Past date (today - 500 days) : ' . $pd);
+	$diff = Date::getDiff('03/05/1980', date('d/m/Y'), TRUE, 'EURO');
+	println('Date Diff (today - 03/05/1980) : ' . $diff);
+	$pd = Date::prevDay('01/03/2004', 'EURO');
+	$nd = Date::nextDay('28/02/2004', 'EURO');
+	println('Next and Prev day - prev 01/03/2004 : ' . $pd . '  - next 28/02/2004 : ' . $nd);
+	$t = Date::tomorrow();
+	$y = Date::yesterday();
+	println('Tomorrow and yesterday : ' . $t . ' ' . $y);
+	println('');
 
 	// date validation
-	println('Date Validation');
+	println('<b>Date Validation</b>');
 	$arr = array('29/02/2003', '31/05/2002', '31/11/2000', '29/02/2000');
 	for ($i=0; $i<sizeof($arr); $i++) {
-		if (Date::isValid($arr[$i]))
-			println(' - valid : ' . $arr[$i]);
+		if (Date::isValid($arr[$i], 'EURO'))
+			println('&nbsp;&nbsp;&nbsp;- valid : ' . $arr[$i]);
 		else
-			println(' - not valid : ' . $arr[$i]);
+			println('&nbsp;&nbsp;&nbsp;- not valid : ' . $arr[$i]);
 	}
 	println('');
 
 	// date conversions
-	println('Date Conversion');
+	println('<b>Date Conversion</b>');
 	println('From SQL to local date: ' . Date::fromSqlDate(date('Y-m-d')));
-	println('From local to SQL date: ' . Date::toSqlDate(Date::localDate()));
+	println('From local to SQL date: ' . Date::toSqlDate($local));
 	println('');
 
-	// local current date
-	println('Local date : ' . Date::localDate());
+	// date format
+	println('<b>Date and Time Format</b>');
+	println('Date format (ISO8601) : ' . Date::formatDate(3, 5, 1980, DATE_FORMAT_ISO8601));
+	println('Date format (RFC822) : ' . Date::formatDate(3, 5, 1980, DATE_FORMAT_RFC822));
+	println('Date format (Local) : ' . Date::formatDate(3, 5, 1980, DATE_FORMAT_LOCAL));
+	println('Date format (Custom) : ' . Date::formatDate(3, 5, 1980, DATE_FORMAT_CUSTOM, 'D d m Y'));
 
-	// month name of a timestamp
-	println('Month name (current date) : ' . Date::monthName(time()));
-
-	// past date
-	$pd = Date::pastDate(Date::localDate(), 100);
-	println('Past date (today - 100 days) : ' . $pd);
-
-	// previous and next day
-	$pd = Date::prevDay('01/03/2004');
-	$nd = Date::nextDay('28/02/2004');
-	println('Next and Prev day - prev 01/03/2004 : ' . $pd . '  - next 28/02/2004 : ' . $nd);
-
-	// print local date
-	println('Print date : ' . Date::printDate());
-
-	// tomorrow and yesterday
-	$t = Date::tomorrow();
-	$y = Date::yesterday();
-	println('Tomorrow and yesterday : ' . $t . ' ' . $y);
+	// time format
+	println('Time format (ISO8601) : ' . Date::formatTime(time(), DATE_FORMAT_ISO8601));
+	println('Time format (RFC822) : ' . Date::formatTime(time(), DATE_FORMAT_RFC822));
+	println('Time format (Local) : ' . Date::formatTime(time(), DATE_FORMAT_LOCAL));
+	println('Time format (Custom) : ' . Date::formatTime(time(), DATE_FORMAT_CUSTOM, 'H:i:s'));
+	println('');
 
 ?>

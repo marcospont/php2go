@@ -121,7 +121,7 @@ var PHP2Go = {
 		for (var i=0; i<scripts.length; i++) {
 			if (scripts[i].src) {
 				this.included[scripts[i].src] = true;
-				mt = scripts[i].src.match(/(.*)php2go\.js(\?locale=([^&]+)(&charset=(.*))?)?/);
+				mt = scripts[i].src.match(/(.*)php2go\.js(\?locale=([^&]+)(&date=(.*))?(&charset=(.*))?)?/);
 				if (mt) {
 					this.baseUrl = mt[1];
 					break;
@@ -136,7 +136,7 @@ var PHP2Go = {
 		this.include(this.baseUrl + 'structures.js');
 		this.include(this.baseUrl + 'dom.js');
 		this.include(this.baseUrl + 'compat.js');
-		this.include(this.baseUrl + 'lang.php?locale=' + mt[3], (mt[5] ? mt[5] : null));
+		this.include(this.baseUrl + 'locale.php?locale=' + mt[3] + (mt[4] ? mt[4] : ''), (mt[7] ? mt[7] : null));
 		this.loaded = true;
 	},
 	/**
@@ -637,26 +637,17 @@ String.prototype.serialize = function() {
  * @addon
  */
 Date.fromString = function(str) {
-	var mt, d, m, y, dt = new Date();
-	if (mt = str.match(new RegExp("^([0-9]{1,2})(\/|\.|\-)([0-9]{1,2})(\/|\.|\-)([0-9]{4})(?: ([0-9]{2})\:([0-9]{2})\:?([0-9]{2})?)?"))) {
-		dt.setDate(parseInt(mt[1], 10));
-		dt.setMonth(parseInt(mt[3], 10)-1);
-		dt.setYear(mt[5]);
-		(mt[6]) && (dt.setHours(parseInt(mt[6], 10)));
-		(mt[7]) && (dt.setMinutes(parseInt(mt[7], 10)));
-		(mt[8]) && (dt.setSeconds(parseInt(mt[8], 10)));
-		return dt;
-	} else if (mt = str.match(new RegExp("^([0-9]{4})(?:\/|\.|\-)([0-9]{1,2})(?:\/|\.|\-)([0-9]{1,2})(?: ([0-9]{2})\:([0-9]{2})\:?([0-9]{2})?)?"))) {
-		dt.setDate(parseInt(mt[5], 10));
-		dt.setMonth(parseInt(mt[3], 10)-1);
-		dt.setYear(mt[1]);
-		(mt[6]) && (dt.setHours(parseInt(mt[6], 10)));
-		(mt[7]) && (dt.setMinutes(parseInt(mt[7], 10)));
-		(mt[8]) && (dt.setSeconds(parseInt(mt[8], 10)));
-		return dt;
-	} else {
-		return dt;
+	var mt, dt = new Date();
+	var loc = Locale.date, re = loc.regexp;
+	if (mt = str.match(re)) {
+		dt.setDate(parseInt(mt[loc.matches[0]], 10));
+		dt.setMonth(parseInt(mt[loc.matches[1]], 10)-1);
+		dt.setYear(mt[loc.matches[2]]);
+		(mt[7]) && (dt.setHours(parseInt(mt[7], 10)));
+		(mt[8]) && (dt.setMinutes(parseInt(mt[8], 10)));
+		(mt[9]) && (dt.setSeconds(parseInt(mt[9], 10)));
 	}
+	return dt;
 };
 
 /**
@@ -669,27 +660,29 @@ Date.fromString = function(str) {
  */
 Date.toDays = function(date) {
 	var d, m, y, c;
-	if (mt = date.match(new RegExp("^([0-9]{1,2})(\/|\.|\-)([0-9]{1,2})(\/|\.|\-)([0-9]{4})"))) {
-		d = parseInt(mt[1], 10), m = parseInt(mt[3], 10), y = mt[5];
-	} else if (mt = date.match(new RegExp("^([0-9]{4})(?:\/|\.|\-)([0-9]{1,2})(?:\/|\.|\-)([0-9]{1,2})"))) {
-		d = parseInt(m[5], 10), m = parseInt(mt[3], 10), y = mt[1];
+	var loc = Locale.date;
+	var re = loc.regexp;
+	if (mt = date.match(re)) {
+		d = parseInt(mt[loc.matches[0]], 10);
+		m = parseInt(mt[loc.matches[1]], 10);
+		y = mt[loc.matches[2]];
+		c = parseInt(y.substring(0, 2), 10);
+		y = y.substring(2);
+		if (m > 2) {
+			m -= 3;
+		} else {
+			m += 9;
+			if (y) {
+				y--;
+			} else {
+				y = 99;
+				c--;
+			}
+		}
+		return (Math.floor((146097*c)/4)+Math.floor((1461*y)/4)+Math.floor((153*m+2)/5)+d+1721119);
 	} else {
 		return 0;
 	}
-	c = parseInt(y.substring(0, 2), 10);
-	y = y.substring(2);
-	if (m > 2) {
-		m -= 3;
-	} else {
-		m += 9;
-		if (y) {
-			y--;
-		} else {
-			y = 99;
-			c--;
-		}
-	}
-	return (Math.floor((146097*c)/4)+Math.floor((1461*y)/4)+Math.floor((153*m+2)/5)+d+1721119);
 };
 
 /**

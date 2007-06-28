@@ -1972,8 +1972,6 @@ class Report extends PagedDataSet
 			$vars['filterOptions'] = '';
 			$filters = $this->_SimpleSearch->iterator();
 			while ($filter = $filters->next()) {
-				if ($filter['mask'] == 'DATE')
-					$filter['mask'] .= '-' . PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
 				$vars['filterOptions'] .= "<option value=\"{$filter['field']}\">{$filter['label']}</option>\n";
 				$masks[] = "'{$filter['mask']}'";
 			}
