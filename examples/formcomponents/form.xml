@@ -40,10 +40,10 @@
 		-->
 		<editsearchfield
 			name="edit_search" label="EditSearchField"
-			required="T" autotrim="T" autodispatch="T"
+			required="T" autotrim="T" autodispatch="T" debug="T"
 		>
 			<datafilter id="1" label="Name" expression="code like '%%%s%%'" mask="STRING"/>
-			<datafilter id="2" label="Date Added" expression="date_format(date_added, '%%d/%%m/%%Y') > '%s'" mask="DATE"/>
+			<datafilter id="2" label="Date Added" expression="date_added > '%s'" mask="DATE"/>
 			<datasource>
 				<keyfield>id_product</keyfield>
 				<displayfield>concat(code,' - ',short_desc)</displayfield>
