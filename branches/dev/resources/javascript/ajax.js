@@ -218,7 +218,7 @@ AjaxRequest = function(uri, args) {
 	 * Indicates if the form associated with the request contains files to be uploaded
 	 * @type Boolean
 	 */
-	this.formUpload = true;
+	this.formUpload = false;
 	/**
 	 * Indicates if the form associated with the request should be validated
 	 * @type Boolean
