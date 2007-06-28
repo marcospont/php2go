@@ -105,8 +105,8 @@
 	 * Transforms each line of the projects list
 	 */
 	function lineHandler($line) {
-		$line['start_date'] = Date::fromSqlToEuroDate($line['start_date']);
-		$line['end_date'] = Date::fromSqlToEuroDate($line['end_date']);
+		$line['start_date'] = Date::fromSqlDate($line['start_date']);
+		$line['end_date'] = Date::fromSqlDate($line['end_date']);
 		$actions = array(
 			HtmlUtils::anchor(HttpRequest::basePath() . '?action=update&id_project=' . $line['id_project'], 'Edit', 'Edit', 'input_style'),
 			HtmlUtils::anchor(HttpRequest::basePath() . '?action=delete&id_project=' . $line['id_project'], 'Delete', 'Delete', 'input_style', array('onclick' => 'return confirm("Are you sure?")'))
@@ -321,8 +321,8 @@
 					'id_owner' => $request['task_id_owner'],
 					'status' => $request['task_status'],
 					'priority' => $request['task_priority'],
-					'start_date' => Date::fromEuroToSqlDate($request['task_start_date']),
-					'end_date' => Date::fromEuroToSqlDate($request['task_end_date'])
+					'start_date' => $request['task_start_date'],
+					'end_date' => $request['task_end_date']
 				));
 				$result = @$dml->execute();
 				if (!$result) {
