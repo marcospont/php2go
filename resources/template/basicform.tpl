@@ -25,8 +25,7 @@
         </tr>
         <!-- else if $itemType eq 'button_group' -->
         <tr>
-          <td>&nbsp;</td>
-          <td><table cellpadding="0" cellspacing="0"  border="0" width="100%">
+          <td colspan="2"><table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
               <!-- start block : loop_button_group -->
               <td width="{$btnW}" align="center">{$button}</td>
