@@ -76,7 +76,7 @@ class AjaxService extends AbstractService
 	 * @return bool
 	 */
 	function acceptRequest() {
-		$method = strtolower($_SERVER['REQUEST_METHOD']);
+		$method = strtolower(HttpRequest::method());
 		$headers = array_change_key_case(HttpRequest::getHeaders(), CASE_LOWER);
 		if (array_key_exists('x-requested-with', $headers)) {
 			$this->handlerId = @$headers['x-handler-id'];
