@@ -8,6 +8,7 @@
 	$doc->addScript(PHP2GO_JAVASCRIPT_PATH . 'ajax.js');
 	$doc->addScript(PHP2GO_JAVASCRIPT_PATH . 'form.js');
 	$doc->addStyle('index.css');
+	$doc->setTitle('PHP2Go - Examples Browser');
 	$doc->setCache();
 
 	$main = new Template('index.tpl');
