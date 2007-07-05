@@ -210,6 +210,17 @@ class User extends SessionObject
 			parent::createProperty($name, $value);
 		parent::createTimeCounter('userTimeStamp');
 		parent::register();
+		$this->onAuthenticate();
+	}
+
+	/**
+	 * Called when the user is authenticated
+	 *
+	 * Must be overriden by child classes.
+	 *
+	 * @abstract
+	 */
+	function onAuthenticate() {
 	}
 
 	/**
