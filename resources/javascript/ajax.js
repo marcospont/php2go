@@ -597,9 +597,11 @@ AjaxRequest.prototype.createResponse = function() {
  * @type void
  */
 AjaxRequest.prototype.release = function() {
-	this.conn.onreadystatechange = $EF;
-	delete this.conn;
-	Ajax.transactionCount--;
+	if (this.conn) {
+		this.conn.onreadystatechange = $EF;
+		delete this.conn;
+		Ajax.transactionCount--;
+	}
 };
 
 /**
@@ -759,7 +761,13 @@ AjaxResponse.prototype.run = function() {
 				PHP2Go.eval(item.arg);
 				break;
 			case 'func' :
-				item.id.apply(item.arg.scope, item.arg.params);
+				if (item.arg.delay > 0) {
+					setTimeout(function() {
+						item.id.apply(item.arg.scope, item.arg.params);
+					}, item.arg.delay);
+				} else {
+					item.id.apply(item.arg.scope, item.arg.params);
+				}
 				break;
 		}
 	}
@@ -862,12 +870,20 @@ AjaxUpdater.prototype.update = function(response) {
  * @param {Object} args Settings
  */
 AjaxService = function(uri, args) {
-	this.AjaxRequest(uri, Object.extend(args || {}, {
-		headers : { 'X-Handler-ID' : args.handler || '' }
-	}));
+	this.AjaxRequest(uri, args);
 	this.bind('onJSONResult', this.parseResponse);
+	this.setHandler(args.handler);
 };
 AjaxService.extend(AjaxRequest, 'AjaxRequest');
+
+/**
+ * Changes the service handler ID
+ * @param {String} id Handler ID
+ * @type void
+ */
+AjaxService.prototype.setHandler = function(id) {
+	this.headers['X-Handler-ID'] = id || '';
+};
 
 /**
  * Tries to parse and execute commands from
@@ -880,6 +896,58 @@ AjaxService.prototype.parseResponse = function(response) {
 	} catch(e) {
 		this.raise('onException', [e]);
 	}
+};
+
+/**
+ * This class is able to perform a periodic update, needed by
+ * any kind of polling. An instance of the AjaxUpdater class
+ * is created and executed at regular intervals
+ * @constructor
+ * @param {String} uri Request URI
+ * @param {Object} args Settings
+ */
+AjaxPeriodicalUpdater = function(uri, args) {
+	this.uri = uri;
+	this.frequency = args.frequency || 2;
+	this.updater = null;
+	this.updaterArgs = args;
+	this.timer = null;
+	this.onBeforeUpdate = args.onBeforeUpdate;
+	this.start();
+};
+
+/**
+ * Starts the periodical updater
+ */
+AjaxPeriodicalUpdater.prototype.start = function() {
+	this.updater = new AjaxUpdater(this.uri, this.updaterArgs);
+	this.updater.bind('onComplete', this.onUpdate, this);
+	this.onTimer();
+};
+
+/**
+ * Stops the periodical updater
+ */
+AjaxPeriodicalUpdater.prototype.stop = function() {
+	if (this.updater)
+		this.updater.abort();
+	clearTimeout(this.timer);
+};
+
+/**
+ * Executes an iteration by calling AjaxUpdater.send
+ */
+AjaxPeriodicalUpdater.prototype.onTimer = function() {
+	if (this.onBeforeUpdate)
+		this.onBeforeUpdate.apply(this);
+	this.updater.send();
+};
+
+/**
+ * Called when updater response is returned
+ */
+AjaxPeriodicalUpdater.prototype.onUpdate = function() {
+	this.timer = setTimeout(this.onTimer.bind(this), this.frequency * 1000);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'ajax.js'] = true;
