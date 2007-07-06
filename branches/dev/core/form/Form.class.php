@@ -912,7 +912,7 @@ class Form extends Component
 			if (array_key_exists('VALIDATEFUNC', (array)$this->rootAttrs)) {
 				$matches = array();
 				$validateFunc = trim($this->rootAttrs['VALIDATEFUNC']);
-				if (preg_match("~^(\w+)(\((.*)\))?$~", $validateFunc, $matches)) {
+				if (preg_match("~^([\w\.]+)(\((.*)\))?$~", $validateFunc, $matches)) {
 					if (@$matches[3])
 						$script .= "\t{$instance}.onAfterValidate = function(validator) { return {$validateFunc}; };\n";
 					else
