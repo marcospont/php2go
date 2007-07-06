@@ -112,12 +112,13 @@ class SessionManager extends PHP2Go
 	 * Get the value of a session variable
 	 *
 	 * @param string $name Variable name
+	 * @param mixed $fallback Fallback value
 	 * @return mixed
 	 */
-	function getValue($name) {
+	function getValue($name, $fallback=FALSE) {
 		if ($this->isRegistered($name))
 			return $_SESSION[$name];
-		return FALSE;
+		return $fallback;
 	}
 
 	/**

@@ -702,14 +702,16 @@ class AjaxResponse extends PHP2Go
 	 * @param string $func Function ID
 	 * @param array $params Function params
 	 * @param string $scope Function scope
+	 * @param int $delay Delay, in miliseconds
 	 */
-	function callFunction($func, $params=array(), $scope=NULL) {
+	function callFunction($func, $params=array(), $scope=NULL, $delay=0) {
 		$this->commands[] = array(
 			'cmd' => 'func',
 			'id' => JSONEncoder::jsIdentifier($func),
 			'arg' => array(
 				'params' => (is_array($params) ? $params : array()),
-				'scope' => (!empty($scope) ? JSONEncoder::jsIdentifier($scope) : NULL)
+				'scope' => (!empty($scope) ? JSONEncoder::jsIdentifier($scope) : NULL),
+				'delay' => $delay
 			)
 		);
 	}
