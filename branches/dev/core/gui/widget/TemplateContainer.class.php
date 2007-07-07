@@ -78,10 +78,15 @@ class TemplateContainer extends Widget
 		parent::onPreRender();
 		$this->Template = new Template($this->attributes['tpl'], T_BYFILE);
 		$this->Template->parse();
-		$this->Template->assign($this->attributes['localVars']);
+		foreach ($this->attributes['localVars'] as $name => $value) {
+			if (is_object($value))
+				$this->Template->assignByRef($name, $this->attributes['localVars'][$name]);
+			else
+				$this->Template->assign($name, $value);
+		}
 		if (!$this->Template->isVariableDefined('_ROOT.body'))
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_FIND_VARIABLE', array('body', $this->attributes['tpl'], 'body')), E_USER_ERROR, __FILE__, __LINE__);
-		$this->Template->assign('_ROOT.body', $this->content);
+		$this->Template->assign('body', $this->content);
 	}
 
 	/**
