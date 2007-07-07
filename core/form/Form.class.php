@@ -547,7 +547,7 @@ class Form extends Component
 	 */
 	function setHelpDisplayOptions($mode, $options=array()) {
 		if ($mode == FORM_HELP_INLINE || $mode == FORM_HELP_POPUP)
-			$this->helpOptions = array_merge((array)$options, array('mode' => $mode));
+			$this->helpOptions = array_merge($this->helpOptions, (array)$options, array('mode' => $mode));
 	}
 
 	/**
