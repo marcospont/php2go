@@ -7,7 +7,7 @@
 	</table>
 	<table width="600" cellpadding="8" cellspacing="2" border="0" style="border:1px solid #89a1e7">
 	  <tr>
-	    <td align="center">
+	    <td>
 		  <!--
 			this HTML div will be used to display the client-side and server-side error summary;
 			it's recommended to include "style='display:none'" in the attribute string to avoid
@@ -19,7 +19,7 @@
 			  <td colspan="2" height="35" class="label_style"><big><big>PHP2Go Example : php2go.form.FormTemplate</big></big></td>
 			</tr>
 			<tr>
-			  <td width="25%">{label_edit_field}&nbsp;{help_edit_field}>{edit_field}</td>
+			  <td width="25%">{label_edit_field}&nbsp;{help_edit_field}{edit_field}</td>
 			  <td>{label_passwd_field}&nbsp;{help_passwd_field}<br />{passwd_field}</td>
 			</tr>
 			<tr>

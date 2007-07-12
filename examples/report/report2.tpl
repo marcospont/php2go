@@ -18,10 +18,10 @@
 		font-family: Verdana; font-size: 11px; font-weight: normal; color: #000;
 	}
 	.col_odd {
-		font-family: Verdana; background-color: #dddde9; font-size: 11px; font-weight: normal; color: #000;
+		text-align: left; font-family: Verdana; background-color: #dddde9; font-size: 11px; font-weight: normal; color: #000;
 	}
 	.col_even {
-		font-family: Verdana; background-color: #aaaabc; font-size: 11px; font-weight: normal; color: #000;
+		text-align: left; font-family: Verdana; background-color: #aaaabc; font-size: 11px; font-weight: normal; color: #000;
 	}
 	.col_odd table, .col_even table {
 		font-family: Verdana; font-size: 11px; font-weight: normal; color: #000;
@@ -60,7 +60,7 @@
 			</tr>
 		</table>
 	</div>
-	<table width="625" cellpadding="4" cellspacing="1" align="center" style="border:1px solid #999">
+	<table width="625" cellpadding="4" cellspacing="1" style="border:1px solid #999">
 <!-- start block : loop_line -->
 		<tr>
 <!-- start block : loop_group -->
