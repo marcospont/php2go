@@ -2337,7 +2337,7 @@ class Report extends PagedDataSet
 		if (isset($this->_order) && !in_array($this->_order, $this->unsortable) && !in_array($this->_order, $this->hidden)) {
 			$orderMembers[] = "\"{$this->_order}\" " . ($this->_orderType == 'd' ? ' DESC' : ' ASC');
 			$matches = array();
-			if (preg_match("/^\s*{$this->_order}(\s*(asc|desc)?\s*,)?/is", $this->_dataSource['ORDERBY'], $matches)) {
+			if (preg_match("/^\s*{$this->_order}(\s*(asc|desc)?\s*,?)?/is", $this->_dataSource['ORDERBY'], $matches)) {
 				$this->_dataSource['ORDERBY'] = preg_replace('/' . $matches[0] . '/', '', $this->_dataSource['ORDERBY']);
 			}
 		}
