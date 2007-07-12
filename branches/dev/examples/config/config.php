@@ -343,6 +343,13 @@ $P2G_USER_CFG['REPORTS'] = array(
 */
 
 /**
+ * Widgets configuration settings
+ */
+$P2G_USER_CFG['WIDGETS'] = array(
+	'GOOGLE_MAPS_KEY' => 'ABQIAAAAIMlFBJk8Qye0VOevuP0zWRQ_QnzB0rZCPfrTuFCMZO0XvUahdBSj3ZwjToPsM3B3Gvjb1ELl8rJ4AQ'
+);
+
+/**
  * This config key tells PHP2Go if it needs load its
  * Javascript libraries from the jsrun folder (compressed)
  * or from the javascript folder (uncompressed).
