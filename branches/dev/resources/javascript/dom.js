@@ -661,7 +661,7 @@ Element.moveTo = function(elm, x, y) {
 		elm.setStyle('left', x + 'px');
 		elm.setStyle('top', y + 'px');
 		if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
-			WCH.update(elm);
+			WCH.update(elm, {position: {x: x, y: y}});
 	}
 	return elm;
 };
@@ -678,7 +678,7 @@ Element.resizeTo = function(elm, w, h) {
 		elm.setStyle('width', w + 'px');
 		elm.setStyle('height', h + 'px');
 		if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
-			WCH.update(elm);
+			WCH.update(elm, {dimensions: {width: w, height: h}});
 	}
 	return elm;
 };
@@ -1080,13 +1080,15 @@ var WCH = {
 	 * Update WCH of a given element. This method is
 	 * useful when the layer changes position or dimension
 	 * @param {Object} elm Element
+	 * @param {Object} opts Cached position and/or dimensions, to avoid calculations
 	 * @type void
 	 */
-	update : function(elm) {
+	update : function(elm, opts) {
 		if (elm.wchIframe || elm.wchList) {
 			if (elm.wchIframe) {
-				var pos = elm.getPosition();
-				var dim = elm.getDimensions();
+				opts = opts || {};
+				var pos = opts.position || elm.getPosition();
+				var dim = opts.dimensions || elm.getDimensions();
 				elm.wchIframe.style.left = pos.x;
 				elm.wchIframe.style.top = pos.y;
 				elm.wchIframe.style.width = dim.width;
