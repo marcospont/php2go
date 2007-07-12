@@ -1094,10 +1094,10 @@ var Window = {
 	 * @type Number
 	 */
 	scroll : function() {
-		var w = window, e = document.documentElement, b = document.body;
+		var w = window, e = (document.documentElement || document.body);
 		return {
-			x : (w.pageXOffset || (e && e.scrollLeft ? e.scrollLeft : (b && b.scrollLeft ? b.scrollLeft : 0))),
-			y : (w.pageYOffset || (e && e.scrollTop ? e.scrollTop : (b && b.scrollTop ? b.scrollTop : 0)))
+			x : (w.pageXOffset || e.scrollLeft || 0),
+			y : (w.pageYOffset || e.scrollTop || 0)
 		};
 	}
 };
