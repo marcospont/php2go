@@ -30,22 +30,23 @@
 </script>
 <div id="example_outer">
 <div id="example_inner">
-<!-- if $examples is not empty -->
-<div id="example_loader">
-  <form id="loader_form" name="loader" method="post" action="">
-    <select id="examples" name="examples" style="width:200px;">
-<!-- loop var=$examples item="example" -->
-      <option value="{$example}">{$example}</option>
-<!-- end loop -->
-    </select>
-    <button id="view" name="view" type="button" onclick="changeExample()">View</button>
-  </form>
-</div>
-<!-- end if -->
-<!-- widget id="example_view" path="TabView" width="100%" contentHeight=560 -->
+<!-- widget id="example_view" path="TabView" width="100%" contentHeight=520 -->
 	<!-- widget id="example_panel" path="TabPanel" caption="Example" -->
 	<iframe id="example_iframe" frameborder="0"></iframe>
 	<!-- end widget -->
 <!-- end widget -->
+<!-- if $examples is not empty -->
+<div id="example_loader">
+  <form id="loader_form" name="loader" method="post" action="" style="display:inline;">
+    Examples:&nbsp;
+    <select id="examples" name="examples" style="width:250px;">
+<!-- loop var=$examples item="example" -->
+      <option value="{$example}">{$example}</option>
+<!-- end loop -->
+    </select>&nbsp;
+    <button id="view" name="view" type="button" onclick="changeExample()">View</button>
+  </form>
+</div>
+<!-- end if -->
 </div>
 </div>
