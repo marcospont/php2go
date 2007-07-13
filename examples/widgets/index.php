@@ -88,22 +88,26 @@
 			$tpl->assign('code1', 1234567890);
 			$tpl->assign('code2', 1610200299);
 			break;
+		case 'slideshow' :
+			$tpl = new Template('slideshow.tpl');
+			$tpl->parse();
+			break;
 		case 'templatecontainer' :
 			$tpl = new Template('templatecontainer.tpl');
 			$tpl->parse();
 			$tpl->assignByRef('clients', $clients);
+			break;
+		default :
+			$tpl = new Template('header.tpl');
+			$tpl->parse();
 			break;
 	}
 
 	/**
 	 * display document
 	 */
-	if (isset($tpl)) {
-		$tpl->assign('options', $options);
-		$doc->assignByRef('main', $tpl);
-	} else {
-		$doc->assign('main', 'Invalid widget type!');
-	}
+	$tpl->assign('options', $options);
+	$doc->assignByRef('main', $tpl);
 	$doc->display();
 
 
