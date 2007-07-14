@@ -57,23 +57,25 @@
 			println('Current Directory: ' . $ftp->getCurrentDir());
 			// print server system information
 			println('Server system type: ' . $ftp->getSysType());
-
+			
 			// change directory
 			$ftp->changeDir('debian');
 
 			// retrieve the file list containing only the file names
-			println('<hr />');
-			println('<b>Retrieve the file names of a remote directory</b>');
-			$list = $ftp->fileList();
-			foreach ($list as $entry)
-				print $entry . '<br />';
+			if ($list = $ftp->fileList()) {
+				println('<hr />');
+				println('<b>Retrieve the file names of a remote directory</b>');
+				foreach ($list as $entry)
+					print $entry . '<br />';
+			}
 
 			// retrieve the details of the files inside a remote directory
-			println('<hr />');
-			println('<b>Retrieve the details of each file included in a remote directory</b>');
-			$list = $ftp->rawList('', TRUE);
-			foreach ($list as $entry) {
-				println("Name: {$entry['name']} - Size: {$entry['size']} bytes - Permissions: {$entry['attr']} - Date: {$entry['date']}");
+			if ($list = $ftp->rawList('', TRUE)) {
+				println('<hr />');
+				println('<b>Retrieve the details of each file included in a remote directory</b>');
+				foreach ($list as $entry) {
+					println("Name: {$entry['name']} - Size: {$entry['size']} bytes - Permissions: {$entry['attr']} - Date: {$entry['date']}");
+				}
 			}
 		} else {
 			println('FtpClient: Authentication failed');

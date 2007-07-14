@@ -50,11 +50,15 @@
 		$xml = "form.xml";
 	$form = new FormBasic($xml, 'form', $doc);
 	$form->setFormAction(HttpRequest::uri(FALSE));
-	$form->setFormWidth(600);
-	$form->setLabelWidth(0.25);
+	$form->setFormWidth(800);
+	$form->setLabelWidth(0.2);
 	$form->setInputStyle('input_style');
 	$form->setLabelStyle('label_style');
 	$form->setButtonStyle('button_style');
+	$form->setFieldsetStyle('fieldset_style');
+	$form->setSectionTitleStyle('legend_style');	
+	$form->setErrorStyle('error_style', FORM_ERROR_BULLET_LIST, NULL, 'error_header');
+	$form->setErrorDisplayOptions(FORM_CLIENT_ERROR_DHTML);
 	$form->setFormTableProperties(12, 1);
 	$form->setBackUrl($_SERVER['REQUEST_URI']);
 

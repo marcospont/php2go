@@ -59,7 +59,7 @@
 
 		<!-- a radiofield builds a group of HTML radio buttons, defined one by one in the XML file -->
 		<!-- ** the cols attribute indicates the number of options per line -->
-		<radiofield name="radio_field" label="Radio Group" required="T" cols="2">
+		<radiofield name="radio_field" label="Radio Group" required="T" cols="3">
 			<!--
 				the radiofield accepts global listeners (direct descendants of radiofield node) or
 				individual listeners (descendants of option node). the global listeners will be included

@@ -54,59 +54,74 @@
 	background-color: #f4f4f4;
 	text-decoration: none
 }
+.fieldset_style {
+	border: 1px solid #888;
+	background-color: #fff;
+	padding: 10px;
+}
+.legend_style {
+	font-family: Verdana;
+	font-size: 12px;
+	font-weight: bold;	
+	color: #000;	
+}
 .input_style {
-	font-family: Arial;
+	font-family: Verdana;
 	font-size: 12px;
 	color: #000;
 }
-
 .button_style {
 	font-family: Verdana;
 	font-size: 12px;
 	font-weight: bold;
+	background-color: #fff;
 	color: #000;
 }
-
+.button_style:hover {
+	background-color: #c3d9ff;
+}
 .error_style {
 	font-family: Verdana;
 	font-size: 11px;
+	line-height: 15px;
 	color: #ff0000;
-	background-color: #f2f2f2;
+	background-color: #fff;
 	border: 1px solid #ff0000;
-	width: 545px;
+	margin-bottom: 10px;
+	width: 99%;
 }
-
 .error_style ul {
 	margin-top: 5px;
 	margin-bottom: 10px;
 }
-
 .error_header {
 	font-family: Verdana;
 	font-size: 11px;
 	color: #fff;
-	background-color: #ff0000;
+	background-color: #e04040;
 	font-weight: bold;
 	padding: 4px;
 	width: auto;
 }
-
 .label_style {
-	font-family: Arial;
-	font-size: 12px;
+	font-family: Verdana;
+	font-size: 11px;
 	color: #000;
 	font-weight: bold;
 }
-
+.form_title {
+	border-top: 1px solid #000;
+	border-left: 1px solid #000;
+	border-right: 1px solid #000;
+}
 .blue_style {
 	font-family: Verdana;
 	font-size: 12px;
 	font-weight: bold;
-	padding: 2px;
-	background-color: #3333dd;
-	color: #fff;
+	padding: 4px;
+	background-color: #c3d9ff;
+	color: #000;
 }
-
 .reportLinks, A.reportLinks {
 	font-size: 11px;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -122,6 +137,16 @@ A.reportLinks:hover {
 	font-weight: bold;
 	font-size: 11px
 }
+.reportButtons {
+	font-family: Verdana;
+	font-size: 12px;
+	font-weight: bold;
+	background-color: #fff;
+	color: #000;
+}
+.reportButtons:hover {
+	background-color: #c3d9ff;
+}
 .reportTitle {
 	font-family: Verdana, Helvetica;
 	font-size: 14px;
@@ -131,9 +156,9 @@ A.reportLinks:hover {
 .reportHeader {
 	font-family: Verdana, Helvetica;
 	font-size: 12px;
-	color: #fff;
+	color: #000;
 	padding: 3px;
-	background-color: #666;
+	background-color: #c3d9ff;
 }
 .reportCellA {
 	font-family: Verdana, Helvetica;
@@ -147,5 +172,5 @@ A.reportLinks:hover {
 	font-size: 12px;
 	color: #333;
 	padding: 5px;
-	background-color: #e9e9e9;
+	background-color: #e8eef7;
 }

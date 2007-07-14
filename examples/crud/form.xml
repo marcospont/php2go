@@ -5,7 +5,8 @@
 	<!-- layout & style settings -->
 	<style
 		input="input_style" label="label_style" button="button_style"
-		width="550" labelwidth="0.2"
+		fieldset="fieldset_style" sectiontitle="legend_style"
+		width="715" labelwidth="0.15"
 	/>
 	<!-- error summary settings -->
 	<errors

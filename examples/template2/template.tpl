@@ -8,12 +8,12 @@
 		font-family: Courier;
 		font-size: 14px;
 		font-weight: normal;
-		color: #666;
+		color: #000;
 	}
 </style>
 <br />
 <div class="sample_title">PHP2Go Examples - php2go.template.Template</div><br />
-<div class="sample_border_table" style="background-color:#e9e9e9;padding:12px;">
+<div class="sample_border_table" style="width:800px;background-color:#c3d9ff;padding:12px;">
   <b>Simple variable access:</b>
   <p>
   $simpleVar : {$simpleVar}<br />

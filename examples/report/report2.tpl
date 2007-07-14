@@ -9,7 +9,10 @@
 		font-family: Verdana; font-size: 11px; font-weight: normal; color: #000;
 	}
 	.buttons {
-		font-family: Verdana; font-size: 11px; font-weight: bold; color: #000;
+		font-family: Verdana; font-size: 11px; font-weight: bold; color: #000; background-color: #fff;
+	}
+	.buttons:hover {
+		background-color: #aaaabc;
 	}
 	.title {
 		font-family: Verdana; font-size: 14px; font-weight: bold; color: #000;
@@ -28,11 +31,11 @@
 	}
 </style>
 <center>
-<div id="overall" style="width:625px">
+<div id="overall" style="width:800px">
 	<div style="text-align:center;font-weight:bold;padding:10px;font-size:16px;">
 		<table width="100%" cellpadding="4" cellspacing="0" border="0">
 			<tr>
-				<td>{$title}</td>
+				<td align="left">{$title}</td>
 				<td align="right">
 					<form id="reports" name="reports" action="{$p2g.server.PHP_SELF}" method="get" style="display:inline">
 						<div style="padding:4px">Choose a report type:</div>
@@ -60,7 +63,7 @@
 			</tr>
 		</table>
 	</div>
-	<table width="625" cellpadding="4" cellspacing="1" style="border:1px solid #999">
+	<table width="100%" cellpadding="4" cellspacing="1" style="border:1px solid #999">
 <!-- start block : loop_line -->
 		<tr>
 <!-- start block : loop_group -->

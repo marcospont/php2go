@@ -1,13 +1,13 @@
 <!-- PHP2Go Example : template used by crudcomponents example -->
 <style type="text/css">
 	.tasksContainer {
-		border: 1px solid #999;
+		border: 1px solid #000;
 		padding: 8px;
 		width: 740px;
 	}
 	.dataGrid th {
-		background-color: #666;
-		color: #fff;
+		background-color: #c3d9ff;
+		color: #000;
 	}
 	.dataGrid th, .dataGrid td {
 		padding: 4px;
@@ -19,15 +19,15 @@
 		font-family: Verdana;
 		font-size: 11px;
 		color: #ff0000;
-		border: 1px solid #999;
+		border: 1px solid #000;
 	}
 </style>
-<div style="width:770px;padding:5px;height:18px;margin-top:10px;background-color:#f2f2f2;border:1px solid #999;">
+<div style="width:770px;padding:5px;height:18px;margin-top:10px;background-color:#c3d9ff;border:1px solid #000;">
   <div style="width:500px;float:left;" class="reportTitle">{$section_project}</div>
   <div style="width:260px;float:right;text-align:right;padding-right:3px;"><a href="{$p2g.server.PHP_SELF}" class="reportLinks">Back</a></div>
 </div>
 <div id="error_container" {$errorDisplay}>{$error}</div>
-<div style="width:770px;padding:10px 5px 10px 5px;border:1px solid #999;margin-top:5px;">
+<div style="width:770px;padding:10px 5px 10px 5px;border:1px solid #000;margin-top:5px;">
   <table width="98%" cellpadding="3" cellspacing="1" border="0" align="center">
 	<tr>
 	  <td colspan="2" valign="top" height="20">{$label_name}<br />{$name}</td>
@@ -43,7 +43,7 @@
   </table>
 </div>
 <!-- start block : details -->
-<div style="width:770px;padding:10px 5px 10px 5px;border:1px solid #999;margin-top:5px;">
+<div style="width:770px;padding:10px 5px 10px 5px;border:1px solid #000;margin-top:5px;">
   <table width="98%" cellpadding="3" cellspacing="1" border="0" align="center">
     <tr><td colspan="8" class="label_style">New Task</td></tr>
     <tr>
@@ -61,7 +61,7 @@
   </table>
 </div>
 <!-- end block : details -->
-<div style="width:770px;padding:10px 5px 10px 5px;height:18px;margin-top:5px;background-color:#f2f2f2;border:1px solid #999;" align="center">
+<div style="width:770px;padding:10px 5px 10px 5px;height:18px;margin-top:5px;background-color:#e8eef7;border:1px solid #000;" align="center">
   {$send}
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{$back}
 <!-- if $action eq "update" -->
