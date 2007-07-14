@@ -31,6 +31,23 @@
 	import('php2go.base.Document');
 	import('php2go.net.HttpRequest');
 	import('php2go.template.Template');
+	
+	/**
+	 * handle ajax calls that load tab contents
+	 */
+	if (HttpRequest::isAjax()) {
+		if (isset($_GET['panel'])) {
+			switch ($_GET['panel']) {
+				case 'A3' :
+					print "<b>Ajax Content</b><br/><br/>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Etiam ac eros nec arcu semper auctor. Nullam tellus. Cras euismod sollicitudin ante. Proin ullamcorper cursus est. Vestibulum at ante. Vivamus malesuada sem tristique nisi. Cras neque tellus, pharetra in, vulputate at, sagittis vitae, magna. Nullam sed nulla. Donec rhoncus, lectus quis dapibus suscipit, quam augue pellentesque diam, iaculis auctor tortor quam eget leo. In sed lorem at eros sodales rutrum. Integer purus turpis, venenatis non, interdum et, volutpat a, turpis.";
+					break;
+				case 'B3' :
+					print "<b>Ajax Content</b><br/><br/>Curabitur a arcu nec nunc elementum volutpat. Nam ultrices, neque nec porttitor adipiscing, dui nisi venenatis magna, ac porta felis ante a ipsum. Vivamus velit justo, varius ac, tincidunt in, imperdiet tincidunt, nibh. Suspendisse molestie, quam ut lacinia mattis, arcu risus dictum lorem, sit amet lobortis metus eros sed tortor. Morbi nisi nisl, varius vel, dignissim porta, malesuada nec, ipsum. In orci nibh, semper a, consectetuer non, aliquet id, arcu. Sed ultricies nisi vitae libero. Mauris viverra blandit sem. Donec vitae mauris. Morbi dictum. Maecenas et dui eu dui gravida dignissim. Donec non neque. Fusce non dui. Nulla facilisi. Donec leo. Integer quis augue. Quisque augue lectus, lobortis at, venenatis non, elementum ut, risus. Vestibulum risus. Duis orci arcu, euismod non, volutpat quis, porttitor ac, diam.";
+					break;
+			}
+		}
+		exit;
+	}
 
 	/**
 	 * document creation and configuration
@@ -92,10 +109,32 @@
 			$tpl = new Template('slideshow.tpl');
 			$tpl->parse();
 			break;
+		case 'tabview' :
+			$tpl = new Template('tabview.tpl');
+			$tpl->parse();
+			break;
 		case 'templatecontainer' :
 			$tpl = new Template('templatecontainer.tpl');
 			$tpl->parse();
 			$tpl->assignByRef('clients', $clients);
+			break;
+		case 'toolbar' :
+			$tpl = new Template('toolbar.tpl');
+			$tpl->parse();
+			$tpl->assign('items1', array(
+				array('link' => '#', 'description' => 'Edit this record', 'image' => 'icons/edit.gif'),
+				array('link' => '#', 'description' => 'Delete this record', 'image' => 'icons/delete.gif'),
+				array('link' => '#', 'description' => 'Lock this record', 'image' => 'icons/lock.gif'),
+				array('link' => '#', 'description' => 'Print this record', 'image' => 'icons/print.gif'),
+				array('link' => '#', 'description' => 'Search records', 'image' => 'icons/search.gif'),
+			));
+			$tpl->assign('items2', array(
+				array('link' => '#', 'caption' => 'Edit', 'description' => 'Edit this record'),
+				array('link' => '#', 'caption' => 'Delete', 'description' => 'Delete this record'),
+				array('link' => '#', 'caption' => 'Lock', 'description' => 'Lock this record'),
+				array('link' => '#', 'caption' => 'Print', 'description' => 'Print this record'),
+				array('link' => '#', 'caption' => 'Search', 'description' => 'Search records'),
+			));
 			break;
 		default :
 			$tpl = new Template('header.tpl');

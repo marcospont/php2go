@@ -19,7 +19,7 @@
 	}
 </style>
 <!-- include block : header.tpl -->
-<div id="container">
+<div id="container" align="center">
 <!-- widget path="SlideShow" imagesFolder="images/" imagesFolderFilter="\.jpg$" width=640 height=480 delay=2000 class="ss" toolbarClass="ssToolbar" play=no -->
 <!-- end widget -->
 </div>
