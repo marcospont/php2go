@@ -49,6 +49,9 @@
 	 * the 7th parameter is the table primary key (CLIENT_ID)
 	 */
 	$form = new FormDataBind('form.xml', 'form.tpl', 'myForm', $doc, array(), 'client', 'client_id');
+	$form->setInputStyle('input_style');
+	$form->setLabelStyle('label_style');
+	$form->setButtonStyle('button_style');
 
 	/**
 	 * here we define the SQL query that will be used to retrieve the table values and create the DBCSV file

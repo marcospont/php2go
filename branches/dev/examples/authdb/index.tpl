@@ -1,14 +1,29 @@
-<span class="sample_style"><b>PHP2Go Examples</b> : php2go.auth.AuthDb</span><br /><br />
+<style type="text/css">
+	form {
+		display: inline;
+	}
+	fieldset {
+		border: 1px solid #888;
+		background-color: #fff;
+		padding: 10px;
+		width: 400px;
+	}
+</style>
+<span class="sample_style"><b>PHP2Go Examples</b> : php2go.auth.AuthDb</span><br />
 <!-- if !$p2g.user->registered -->
-<fieldset style="width:350px" class="sample_border_table">
+<fieldset>
 	<legend class="label_style">Login</legend>
 	<!-- if $loginErrorMsg is not empty -->
-	<p class="sample_style">{$loginErrorMsg}</p>
+	<div align="center" class="error_header">{$loginErrorMsg}</div>
 	<!-- end if -->
-	<form method="post" action="{$p2g.server.PHP_SELF}" style="display:inline">
-	<table border="0" cellpadding="3" cellspacing="0">
+	<form method="post" action="{$p2g.server.PHP_SELF}">
+	<table width="100%" border="0" cellpadding="3" cellspacing="0">
 		<tr>
-			<td><label for="username" class="label_style">Username:</label></td>
+			<td>&nbsp;</td>
+			<td class="label_style"><i>Username: admin, Password: admin</i></td>
+		</tr>
+		<tr>
+			<td width="20%"><label for="username" class="label_style">Username:</label></td>
 			<td><input type="text" id="username" name="username" value="{$p2g.post.username}" class="input_style" size="25" /></td>
 		</tr>
 		<tr>
@@ -16,13 +31,17 @@
 			<td><input type="password" id="password" name="password" class="input_style" size="25" /></td>
 		</tr>
 		<tr>
-			<td colspan="2" align="center"><input type="submit" value="Login" class="button_style" /></td>
+			<td>&nbsp;</td>
+			<td><input type="submit" value="Login" class="button_style" /></td>
 		</tr>
 	</table>
 	</form>
+	<script type="text/javascript">
+		$('username').focus();
+	</script>
 </fieldset>
 <!-- else -->
-<fieldset style="width:600px;" class="sample_simple_text sample_border_table">
+<fieldset style="width:600px;">
 	<legend class="label_style">Secure Page</legend>
 	<!-- if $successMsg is not empty -->
 	<p><i>{$successMsg}</i></p>

@@ -1,5 +1,5 @@
 <!-- PHP2Go Example : template used by crudcomponents example -->
-<div style="width:770px;padding:5px;height:18px;margin-top:10px;background-color:#f2f2f2;border:1px solid #999;">
+<div style="width:770px;padding:5px;height:18px;margin-top:10px;background-color:#c3d9ff;border:1px solid #000;">
   <div style="width:500px;float:left;">{$title}</div>
   <div style="width:260px;float:right;text-align:right;padding-right:3px;"><a href="{$p2g.server.PHP_SELF}?action=create" class="reportLinks">Insert Project</a></div>
 </div>

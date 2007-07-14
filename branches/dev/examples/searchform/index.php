@@ -95,11 +95,13 @@
 		/**
 		 * configure the form interface: form width, labels width and CSS styles
 		 */
-		$search->Form->setFormWidth(550);
+		$search->Form->setFormWidth(800);
 		$search->Form->setInputStyle('input_style');
-		$search->Form->setLabelWidth(0.23);
+		$search->Form->setLabelWidth(0.18);
 		$search->Form->setLabelStyle('label_style');
 		$search->Form->setButtonStyle('button_style');
+		$search->Form->setFieldsetStyle('fieldset_style');
+		$search->Form->setSectionTitleStyle('legend_style');
 		$search->Form->setErrorStyle('error_style', FORM_ERROR_BULLET_LIST, 'Some error(s) occurred while processing the form:', 'error_header');
 		/**
 		 * the `run` method verifies if the SearchForm is posted and is valid. if this condition is satisfied,

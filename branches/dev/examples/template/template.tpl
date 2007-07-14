@@ -1,14 +1,20 @@
 <style type="text/css">
 	div {
-		font-family: Verdana;background-color: #88bbee;
+		font-family: Verdana; 
+		background-color: #c3d9ff;
 	}
 	td,th {
-		font-family: Verdana;font-size: 11px;vertical-align: top;
+		font-family: Verdana;
+		font-size: 11px;
+		vertical-align: top;
 	}
 	table {
-		border: 1px solid #000000;padding: 4px
+		border: 1px solid #000000;
+		padding: 4px
 	}
-	span {font-size: 16px;font-weight: bold;
+	span {
+		font-size: 16px;
+		font-weight: bold;
 	}
 </style>
 <br />
@@ -21,7 +27,7 @@
 
 <!-- start block : modifiers_block -->
 
-<div>
+<div style="width:800px;">
 <table width="100%" border="0">
   <tr>
 	<!-- simple string modifiers: capitalize (StringUtils::capitalize) and truncate (StringUtils::truncate) -->

@@ -1,11 +1,13 @@
 	<!-- PHP2Go Example : template used by formtemplate example -->
-	<div id="form_client_errors" {errorStyle} {errorDisplay}>{error}</div><br />
-	<table width="600" cellpadding="0" cellspacing="0" border="0">
+    <div style="width:800px;">
+      <div id="form_client_errors" {errorStyle} {errorDisplay}>{error}</div>
+    </div>
+	<table width="800" cellpadding="0" cellspacing="0" border="0">
 	  <tr>
-	    <td class="blue_style">{section_section}</td>
+	    <td class="blue_style form_title">{section_section}</td>
 	  </tr>
 	</table>
-	<table width="600" cellpadding="8" cellspacing="2" border="0" style="border:1px solid #89a1e7">
+	<table width="800" cellpadding="8" cellspacing="2" border="0" style="border:1px solid #000;background-color:#e8eef7;">
 	  <tr>
 	    <td>
 		  <!--
@@ -19,7 +21,7 @@
 			  <td colspan="2" height="35" class="label_style"><big><big>PHP2Go Example : php2go.form.FormTemplate</big></big></td>
 			</tr>
 			<tr>
-			  <td width="25%">{label_edit_field}&nbsp;{help_edit_field}{edit_field}</td>
+			  <td width="17%">{label_edit_field}&nbsp;{help_edit_field}<br/>{edit_field}</td>
 			  <td>{label_passwd_field}&nbsp;{help_passwd_field}<br />{passwd_field}</td>
 			</tr>
 			<tr>
@@ -39,11 +41,11 @@
 			  <td colspan="2">{check_field}</td>
 			</tr>
 			<!-- start block : condsection -->
-			<tr style="background-color:#f2f2f2">
+			<tr style="background-color:#99ff99;">
 			  <td>{label_remote_addr}<br />{remote_addr}</td>
 			  <td>{label_php_text}<br />{php_text}</td>
 			</tr>
-			<tr style="background-color:#f2f2f2">
+			<tr style="background-color:#99ff99;">
 			  <td colspan="2" align="right" class="input_style">This is a conditional section. Its visibility is defined by the developer.</td>
 			</tr>
 			<!-- end block : condsection -->

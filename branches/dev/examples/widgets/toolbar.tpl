@@ -22,6 +22,7 @@
 		font-size: 12px;
 		font-weight: bold;
 		padding: 4px;
+		height: 25px;
 	}
 	.toolbarVert {
 		border: 1px solid #000;

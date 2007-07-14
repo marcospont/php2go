@@ -10,7 +10,7 @@
 			<param name="useSymbols" value="F"/>
 		</pagination>
 		<!-- style settings: CSS class for links, filters, buttons and title -->
-		<style link="reportLinks" filter="reportInputs" button="reportInputs" title="reportTitle" altstyle="reportCellA,reportCellB" header="reportHeader"/>
+		<style link="reportLinks" filter="reportInputs" button="reportButtons" title="reportTitle" altstyle="reportCellA,reportCellB" header="reportHeader"/>
 		<!-- columns configuration -->
 		<columns sizes="35,10,10,35,10">
 			<column name="name" alias="Name"/>

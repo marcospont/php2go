@@ -59,7 +59,7 @@
 	 */
 	$form = new FormBasic('form.xml', 'myForm', $doc);
 	$form->setFormMethod('POST');
-	$form->setFormWidth(550);
+	$form->setFormWidth(800);
 	$form->setLabelWidth(0.2);
 	//$form->setFormAction('target.php'); The default value points to the current script
 	/**
@@ -75,6 +75,14 @@
 	 * the style to be used in buttons (only when they don't use images)
 	 */
 	$form->setButtonStyle('button_style');
+	/**
+	 * the style to be applied on the section fieldset
+	 */
+	$form->setFieldsetStyle('fieldset_style');
+	/**
+	 * the style to be applied on the legend nodes (section titles)
+	 */
+	$form->setSectionTitleStyle('legend_style');
 	/**
 	 * configure the css style of the error messages
 	 * the second parameter is the list mode: FORM_ERROR_FLOW (messages separated by a line break) or

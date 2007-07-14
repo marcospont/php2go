@@ -2,7 +2,7 @@
 <!DOCTYPE form SYSTEM "..\..\docs\dtd\php2go_forms.dtd">
 <form method="POST" action="~REQUEST_URI~">
 	<!-- CSS classes for inputs and labels; form width and label align (FormBasic only) -->
-	<style input="input_style" label="label_style" width="580" labelwidth="0.15"/>
+	<style input="input_style" label="label_style" fieldset="fieldset_style" sectiontitle="legend_style" width="800" labelwidth="0.15"/>
 	<!--
 		CSS class for errors, header text and header style for the error summary;
 		Display options (client/server) for error summary

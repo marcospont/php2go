@@ -8,7 +8,10 @@
 		font-family: Verdana; font-size: 11px; font-weight: normal; color: #000;
 	}
 	.buttons {
-		font-family: Verdana; font-size: 11px; font-weight: bold; color: #000;
+		font-family: Verdana; font-size: 11px; font-weight: bold; color: #000; background-color: #fff;
+	}
+	.buttons:hover {
+		background-color: #e8eef7;
 	}
 	.title {
 		font-family: Verdana; font-size: 14px; font-weight: bold; color: #000;
@@ -17,18 +20,18 @@
 		font-family: Verdana; font-size: 11px; font-weight: normal; color: #000;
 	}
 	.col_odd {
-		text-align: left; font-family: Verdana; background-color: #dde9dd; font-size: 11px; font-weight: normal; color: #000;
+		text-align: left; font-family: Verdana; background-color: #c3d9ff; font-size: 11px; font-weight: normal; color: #000;
 	}
 	.col_even {
-		text-align: left; font-family: Verdana; background-color: #aabcaa; font-size: 11px; font-weight: normal; color: #000;
+		text-align: left; font-family: Verdana; background-color: #e8eef7; font-size: 11px; font-weight: normal; color: #000;
 	}
 </style>
 <center>
-<div id="overall" style="width:625px">
+<div id="overall" style="width:800px">
 	<div style="text-align:center;font-weight:bold;padding:10px;font-size:16px;">
 		<table width="100%" cellpadding="4" cellspacing="0" border="0">
 			<tr>
-				<td>{$title}</td>
+				<td align="left">{$title}</td>
 				<td align="right">
 					<form id="reports" name="reports" action="{$p2g.server.PHP_SELF}" method="get" style="display:inline">
 						<div style="padding:4px">Choose a report type:</div>
@@ -42,7 +45,7 @@
 			</tr>
 		</table>
 	</div>
-	<div style="background-color:#dfe9df;border:1px solid #999;padding:4px;">{$simple_search}</div>
+	<div style="background-color:#c3d9ff;border:1px solid #666;padding:4px;">{$simple_search}</div>
 <!-- if $report.total_rows gt 0 -->
 	<div style="padding:4px;">
 		<table width="100%" cellpadding="4" cellspacing="0" border="0">
@@ -56,7 +59,7 @@
 			</tr>
 		</table>
 	</div>
-	<table width="625" cellpadding="4" cellspacing="1" style="border:1px solid #999">
+	<table width="100%" cellpadding="4" cellspacing="1" style="border:1px solid #666">
 <!-- start block : loop_line -->
 		<tr>
 <!-- start block : loop_group -->

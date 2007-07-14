@@ -1,5 +1,5 @@
 <div><a href="index.php" class="label_style">« New Search</a></div><br />
-<table cellpadding="0" cellspacing="0" border="0" width="550">
+<table cellpadding="0" cellspacing="0" border="0" width="800">
   <tr><td>
     <fieldset>
       <legend class="label_style">Search Results</legend>
@@ -17,7 +17,11 @@
           <th class="blue_style">Amount</th>
         </tr>
 	<!-- end if -->
+	<!-- if $p2g.loop.results.iteration is odd -->
+        <tr style="background-color:#e8eef7;">
+	<!-- else -->
         <tr>
+	<!-- end if -->
           <td class="input_style">{$result.code}</td>
           <td class="input_style">{$result.short_desc}</td>
           <td class="input_style">{$result.price|decimal_currency}</td>
