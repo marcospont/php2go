@@ -177,13 +177,16 @@ class TabView extends Widget
 		if ($attrs['orientation'] == TABVIEW_ORIENTATION_TOP || $attrs['orientation'] == TABVIEW_ORIENTATION_BOTTOM) {
 			$code .= sprintf("\n#%s .tabScrollContainer { width: %s; }", $attrs['id'], $attrs['width']);
 		} else {
-			$code .= sprintf("\n#%s.tabViewLeft .tabNavigationContainer, #%s.tabViewRight .tabNavigationContainer { width: %s; height: %s; }", $attrs['id'], $attrs['id'], $attrs['navigationWidth'], $attrs['contentHeight']);
+			$code .= sprintf("\n#%s.tabView%s .tabNavigationContainer { width: %s; height: %s; }", $attrs['id'], ucfirst($attrs['orientation']), $attrs['navigationWidth'], $attrs['contentHeight']);
 			$code .= sprintf("\n#%s .tabScrollContainer { height: %s; }", $attrs['id'], $attrs['contentHeight']);
+			$code .= sprintf("\n#%s .tabScrollArrow { width: %s; }", $attrs['id'], $attrs['navigationWidth']);
 		}
 		if ($attrs['orientation'] == TABVIEW_ORIENTATION_LEFT)
 			$code .= sprintf("\n#%s.tabViewLeft { padding-left: %s; }", $attrs['id'], $attrs['navigationWidth']);
-		if ($attrs['orientation'] == TABVIEW_ORIENTATION_RIGHT)
+		if ($attrs['orientation'] == TABVIEW_ORIENTATION_RIGHT) {
 			$code .= sprintf("\n#%s.tabViewRight { padding-right: %s; }", $attrs['id'], $attrs['navigationWidth']);
+			$code .= sprintf("\n#%s.tabViewRight .tabScrollContainer { right: %s; }", $attrs['id'], $attrs['navigationWidth']);
+		}
 		$code .= sprintf("\n#%s { width: %s; }", $attrs['id'], $attrs['width']);
 		$code .= "\n</style>";
 		$code .= sprintf("\n<div id=\"%s\" class=\"%s%s\">", $attrs['id'], $orientationClasses[$attrs['orientation']], (!empty($attrs['class']) ? " {$attrs['class']}" : ""));

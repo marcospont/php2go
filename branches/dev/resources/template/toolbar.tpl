@@ -1,4 +1,4 @@
-<table id="{$id}" align="{$align}" style="width:{$width};height:{$itemHeight}">
+<table id="{$id}" style="width:{$width};height:{$itemHeight}"{$class}>
   <tr>
     <td align="{$align}">
 <!-- loop var=$items name="toolbar_items" item="item" -->
