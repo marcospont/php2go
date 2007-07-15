@@ -31,10 +31,10 @@ import('php2go.base.AbstractNode');
 
 /**
  * Represents an entry of a file system directory
- * 
+ *
  * This class is used by {@link DirectoryManager} to represent entries
  * read from file system directories.
- * 
+ *
  * @package file
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
@@ -115,8 +115,19 @@ class DirectoryEntry extends AbstractNode
 	}
 
 	/**
+	 * Implements the data set row interface
+	 *
+	 * @return array
+	 */
+	function toArray() {
+		if (empty($this->attrs))
+			$this->_getAttributes();
+		return $this->attrs;
+	}
+
+	/**
 	 * Determine entry's attributes
-	 * 
+	 *
 	 * @access private
 	 */
 	function _getAttributes() {

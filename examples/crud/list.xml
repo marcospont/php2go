@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- PHP2Go Examples : list.xml, used by crud example -->
+<!DOCTYPE form SYSTEM "..\..\docs\dtd\php2go_reports.dtd">
+<report title="People List" baseuri="~PHP_SELF~?action=list">
+	<!-- layout settings -->
+	<layout grid="T" emptytemplate="F">
+		<!-- pagination settings: style, style parameters -->
+		<pagination style="REPORT_FIRSTPREVNEXTLAST">
+			<param name="useButtons" value="T"/>
+			<param name="useSymbols" value="F"/>
+		</pagination>
+		<!-- style settings: CSS class for links, filters, buttons and title -->
+		<style link="reportLinks" filter="reportInputs" button="reportButtons" title="reportTitle" altstyle="reportCellA,reportCellB" header="reportHeader"/>
+		<!-- columns configuration -->
+		<columns sizes="35,10,10,35,10">
+			<column name="name" alias="Name"/>
+			<column name="sex" alias="Sex"/>
+			<column name="active" alias="Active"/>
+			<column name="country" alias="Country"/>
+			<column name="id_people" alias="Actions" sortable="F"/>
+		</columns>
+	</layout>
+	<!-- datasource -->
+	<datasource>
+		<fields>
+			p.name,
+			if(p.sex='M', 'Male', 'Female') sex,
+			if(p.active=1, 'Yes', 'No') active,
+			c.name country,
+			p.id_people
+		</fields>
+		<tables>
+			people p inner join
+			country c on p.id_country = c.id_country</tables>
+		<clause/>
+		<groupby/>
+		<orderby>p.name</orderby>
+	</datasource>
+</report>

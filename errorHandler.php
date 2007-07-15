@@ -121,11 +121,10 @@ function dbErrorHandler($dbms, $function, $errorCode, $errorMessage, $p1=FALSE, 
  */
 function setupError($msg) {
 	die ("
-		<br>
-		<table border='1' bordercolor='#ff0000' cellpadding='0' cellspacing='0' width='100%'>
+		<table cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid red;\" width=\"100%\">
 			<tr><td>
-				<table border='0' cellpadding='6' cellspacing='0' width='100%'>
-					<tr bgcolor='#EEEEEE'><td valign='top' style='font-family:Sans-Serif;font-size:12px'><b><font color='#ff0000'>SETUP ERROR</font></b><br>".$msg."<br></td></tr>
+				<table cellpadding=\"6\" cellspacing=\"0\" border=\"0\" width=\"100%\">
+					<tr style=\"background-color:#eee;\"><td valign=\"top\" style=\"font-family:Sans-Serif;font-size:12px;\"><b><span style=\"color:red;\">SETUP ERROR</span></b><br />" . $msg . "<br /></td></tr>
 				</table>
 			</td></tr>
 		</table>

@@ -324,7 +324,7 @@ var Hash = {
 /**
  * Add Collection class methods
  */
-Object.implement(Hash, Collection);
+Object.extend(Hash, Collection);
 
 /**
  * Builds a Hash object based on an iterable value
@@ -334,7 +334,7 @@ Object.implement(Hash, Collection);
 Hash.valueOf = function(iterable) {
 	var h = new Object();
 	h.data = iterable || {};
-	Object.implement(h, Hash);
+	Object.extend(h, Hash);
 	return h;
 };
 
@@ -496,7 +496,7 @@ Array.prototype.serialize = function() {
 /**
  * Add Collection class methods
  */
-Object.implement(Array.prototype, Collection);
+Object.extend(Array.prototype, Collection);
 
 PHP2Go.included[PHP2Go.baseUrl + 'structures.js'] = true;
 

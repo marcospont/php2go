@@ -94,13 +94,13 @@ class DbCheckGroup extends DbGroupField
 			$index = $this->_Rs->absolutePosition() - 1;
 			if ($hasValue) {
 				if ($arrayValue)
-					$optionSelected = (in_array($value, $this->value) ? ' checked' : '');
+					$optionSelected = (in_array($value, $this->value) ? ' checked="checked"' : '');
 				else
-					$optionSelected = (!strcasecmp($value, $this->value) ? ' checked' : '');
+					$optionSelected = (!strcasecmp($value, $this->value) ? ' checked="checked"' : '');
 			} else {
 				$optionSelected = '';
 			}
-			$input = sprintf("<input type=\"checkbox\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s>",
+			$input = sprintf("<input type=\"checkbox\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s />",
 				"{$this->id}_{$index}", $groupName, $value, $this->label, $this->attributes['ACCESSKEY'],
 				$this->attributes['TABINDEX'], $this->attributes['SCRIPT'], $this->attributes['STYLE'],
 				$this->attributes['DISABLED'], $this->attributes['DATASRC'], $this->attributes['DATAFLD'],

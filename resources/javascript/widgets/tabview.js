@@ -135,10 +135,12 @@ TabView.prototype.addTab = function(tab, idx) {
 		if (!tab.isEnabled())
 			a.setAttribute('disabled', true);
 		var span = $N('em', a);
-		span.innerHTML = tab.attributes.caption;
+		span.innerHTML = tab.attributes.caption || '';
 		// create tab container
 		var div = $N('div');
-		div.id = tab.attributes.id;
+		tab.contentEl = div;
+		if (tab.attributes.id)
+			div.id = tab.attributes.id;
 		// insert before or append
 		if (before) {
 			nav.insertBefore(li, before.labelEl);
@@ -367,25 +369,26 @@ TabView.prototype._initArrows = function() {
 	var ar = this.arrows = ac.getElementsByClassName('tabScrollArrow');
 	var self = this, ns = this.navScroll, dim = ns.getDimensions(), al = Event.addListener;
 	var functions = {
-		left : function() { (ns.scrollLeft > 0) && (ns.scrollLeft -= 5); self._updateArrows(); (ns.scrollLeft > 0) && (self.timeout = setTimeout(functions.left, 10)); },
-		right : function() { ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (ns.scrollLeft += 5); self._updateArrows(); ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (self.timeout = setTimeout(functions.right, 10)); },
-		top : function() { (ns.scrollTop > 0) && (ns.scrollTop -= 5); self._updateArrows(); (ns.scrollTop > 0) && (setTimeout(functions.top, 10)); },
-		bottom : function() { ((ns.scrollTop+dim.height) < ns.scrollHeight) && (ns.scrollTop += 5); self._updateArrows(); ((ns.scrollTop+dim.height) < ns.scrollHeight) && (setTimeout(functions.bottom, 10)); }
+		left : function() { (ns.scrollLeft > 0) && (ns.scrollLeft -= 5); self._updateArrows(); (ns.scrollLeft > 0) && (self.timeout = setTimeout(functions.left, 20)); },
+		right : function() { ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (ns.scrollLeft += 5); self._updateArrows(); ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (self.timeout = setTimeout(functions.right, 20)); },
+		top : function() { (ns.scrollTop > 0) && (ns.scrollTop -= 5); self._updateArrows(); (ns.scrollTop > 0) && (setTimeout(functions.top, 20)); },
+		bottom : function() { ((ns.scrollTop+dim.height) < ns.scrollHeight) && (ns.scrollTop += 5); self._updateArrows(); ((ns.scrollTop+dim.height) < ns.scrollHeight) && (setTimeout(functions.bottom, 20)); },
+		clear: function() { clearTimeout(self.timeout); }
 	};
 	if (this.attributes.orientation == 'top' || this.attributes.orientation == 'bottom') {
-		ar[0].style.height = ar[1].style.height = ns.offsetHeight;
-		ar[1].style.left = dim.width - 12;
+		ar[0].style.height = ar[1].style.height = (ns.offsetHeight) + 'px';
+		ar[1].style.left = (dim.width - 12) + 'px';
 		al(ar[0], 'mousedown', functions.left);
-		al(ar[0], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+		al(ar[0], 'mouseup', functions.clear);
 		al(ar[1], 'mousedown', functions.right);
-		al(ar[1], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+		al(ar[1], 'mouseup', functions.clear);
 	} else {
-		ar[0].style.width = ar[1].style.width = ns.offsetWidth;
-		ar[1].style.top = dim.height - 12;
+		ar[0].style.width = ar[1].style.width = (ns.offsetWidth) + 'px';
+		ar[1].style.top = (dim.height - 12) + 'px';
 		al(ar[0], 'mousedown', functions.top);
-		al(ar[0], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+		al(ar[0], 'mouseup', functions.clear);
 		al(ar[1], 'mousedown', functions.bottom);
-		al(ar[1], 'mouseup', function() { if (self.timeout) clearTimeout(self.timeout); });
+		al(ar[1], 'mouseup', functions.clear);
 	}
 };
 
@@ -400,8 +403,8 @@ TabView.prototype._updateArrows = function() {
 		ar[0].style.visibility = (ns.scrollLeft > 0 ? 'visible' : 'hidden');
 		ar[1].style.visibility = (ns.scrollWidth > (dim.width+ns.scrollLeft) ? 'visible' : 'hidden');
 	} else {
-		ar[0].style.display = (ns.scrollTop > 0 ? 'visible' : 'hidden');
-		ar[1].style.display = (ns.scrollHeight > (dim.height+ns.scrollTop) ? 'visible' : 'hidden');
+		ar[0].style.visibility = (ns.scrollTop > 0 ? 'visible' : 'hidden');
+		ar[1].style.visibility = (ns.scrollHeight > (dim.height+ns.scrollTop) ? 'visible' : 'hidden');
 	}
 };
 
@@ -415,7 +418,7 @@ TabView.prototype._updateArrows = function() {
  * @base Widget
  */
 function TabPanel(attrs) {
-	this.Widget(attrs, null);
+	this.Widget(Object.extend({id: null}, attrs), null);
 	/**
 	 * Label element
 	 * @type Object
@@ -439,7 +442,8 @@ TabPanel.extend(Widget, 'Widget');
  * Initializes the widget
  */
 TabPanel.prototype.setup = function() {
-	this.contentEl = $(this.attributes.id);
+	if (!this.contentEl)
+		this.contentEl = $(this.attributes.id);
 	this.contentEl.tabPanel = this;
 };
 

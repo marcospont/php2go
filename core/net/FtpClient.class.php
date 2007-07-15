@@ -48,7 +48,7 @@ define('FTP_DEFAULT_PORT', 21);
  *     $ftp->changeDir('debian');
  *     $list = $ftp->fileList();
  *     foreach ($list as $entry)
- *       print $entry . '<br/>';
+ *       print $entry . '<br />';
  *     $ftp->quit();
  *   }
  * }
@@ -677,15 +677,20 @@ class FtpClient extends PHP2Go
 	 *
 	 * @uses Date::formatTime()
 	 * @param string $remoteFile Remote file name
-	 * @param int $formatDate Date format
+	 * @param int $format Whether last modified date should be formatted
 	 * @return int|string|bool
 	 */
-	function fileLastMod($remoteFile, $formatDate=TRUE) {
+	function fileLastMod($remoteFile, $format=TRUE) {
 		if (!$this->isConnected())
 			return FALSE;
 		$result = ftp_mdtm($this->connectionId, $remoteFile);
-		if ($result && $result != 1)
-			return ($formatDate ? Date::formatTime($result) : $result);
+		if ($result && $result != 1) {
+			if ($format) {
+				import('php2go.datetime.Date');
+				return Date::formatTime($result);
+			}
+			return $result;
+		}
 		return FALSE;
 	}
 
@@ -760,6 +765,7 @@ class FtpClient extends PHP2Go
 	 * @return array
 	 */
 	function _parseRawList($rawList) {
+		$settings = PHP2Go::getConfigVal('DATE_FORMAT_SETTINGS');
 		if (is_array($rawList)) {
 			$newList = array();
 			$fileInfo = array();
@@ -767,13 +773,12 @@ class FtpClient extends PHP2Go
 				$element = split(' {1,}', $rawList[$k], 9);
 				if (is_array($element) && sizeof($element) == 9) {
 					unset($fileInfo);
-					$dateF = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 					$year = (FALSE === strpos($element[7], ':') ? $element[7] : date('Y'));
 					$month = $element[5];
 					$day = (strlen($element[6]) == 2 ? $element[6] : '0' . $element[6]);
 					$fileInfo['name'] = $element[8];
 					$fileInfo['size'] = intval($element[4]);
-					$fileInfo['date'] = ($dateF == 'Y/m/d') ? $year . '/' . $month . '/' . $day : $day . '/' . $month . '/' . $year;
+					$fileInfo['date'] = date($settings['format'], strtotime("{$day} {$month} {$year}"));
 					$fileInfo['attr'] = $element[0];
 					$fileInfo['type'] = ($element[0][0] == '-') ? 'file' : 'dir';
 					$fileInfo['dirno'] = intval($element[1]);

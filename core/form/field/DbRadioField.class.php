@@ -64,8 +64,8 @@ class DbRadioField extends DbGroupField
 		$group = array();
 		while (list($value, $caption) = $this->_Rs->fetchRow()) {
 			$index = $this->_Rs->absolutePosition() - 1;
-			$optionSelected = ($value == $this->value ? ' checked' : '');
-			$input = sprintf("<input type=\"radio\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s>",
+			$optionSelected = ($value == $this->value ? ' checked="checked"' : '');
+			$input = sprintf("<input type=\"radio\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s />",
 				"{$this->id}_{$index}", $this->name, $value, $this->label, $this->attributes['ACCESSKEY'],
 				$this->attributes['TABINDEX'], $this->attributes['SCRIPT'], $this->attributes['STYLE'],
 				$this->attributes['DISABLED'], $this->attributes['DATASRC'], $this->attributes['DATAFLD'],

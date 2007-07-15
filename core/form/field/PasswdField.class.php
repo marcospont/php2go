@@ -56,7 +56,7 @@ class PasswdField extends EditableField
 	 */
 	function display() {
 		(!$this->preRendered && parent::onPreRender());
-		print sprintf("<input type=\"password\" id=\"%s\" name=\"%s\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s>",
+		print sprintf("<input type=\"password\" id=\"%s\" name=\"%s\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s />",
 			$this->id, $this->name, $this->value, $this->attributes['LENGTH'], $this->attributes['SIZE'],
 			$this->label, $this->attributes['SCRIPT'], $this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'],
 			$this->attributes['STYLE'],  $this->attributes['READONLY'], $this->attributes['DISABLED'], $this->attributes['DATASRC'],

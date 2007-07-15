@@ -96,7 +96,7 @@ class CaptchaField extends FormField
 	 */
 	function display() {
 		(!$this->preRendered && parent::onPreRender());
-		print sprintf("%s&nbsp;&nbsp;<input type=\"text\" id=\"%s\" name=\"%s\" value=\"\" maxlength=\"%s\" size=\"%s\" title=\"%s\" autocomplete=\"OFF\"%s%s%s%s%s%s>",
+		print sprintf("%s&nbsp;&nbsp;<input type=\"text\" id=\"%s\" name=\"%s\" value=\"\" maxlength=\"%s\" size=\"%s\" title=\"%s\" autocomplete=\"off\"%s%s%s%s%s%s />",
 			(isset($this->imageType) ? $this->Captcha->buildHTML($this->imagePath, $this->imageType) : $this->Captcha->buildHTML($this->imagePath)),
 			$this->id, $this->name, $this->attributes['LENGTH'], $this->attributes['SIZE'], $this->label, $this->attributes['SCRIPT'],
 			$this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['STYLE'], $this->attributes['READONLY'], $this->attributes['DISABLED']
@@ -130,7 +130,7 @@ class CaptchaField extends FormField
 	 */
 	function setReadonly($setting=TRUE) {
 		if ($setting === TRUE) {
-			$this->attributes['READONLY'] = " readonly";
+			$this->attributes['READONLY'] = " readonly=\"readonly\"";
 			$this->readOnly = TRUE;
 		} else {
 			$this->attributes['READONLY'] = "";

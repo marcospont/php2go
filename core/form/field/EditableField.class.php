@@ -146,8 +146,6 @@ class EditableField extends FormField
 					$this->mask = $matches[2];
 					$this->limiters = array($matches[4], $matches[5]);
 					$this->setLength($matches[4] + $matches[5] + 2);
-				} elseif ($matches[0] == 'DATE') {
-					$mask = $this->mask = 'DATE-' . PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
 				} elseif ($matches[0] == 'LOGIN') {
 					$this->mask = 'WORD';
 				} else {
@@ -224,9 +222,9 @@ class EditableField extends FormField
 	 */
 	function setAutoComplete($setting) {
 		if ($setting === TRUE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"ON\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"on\"";
 		elseif ($setting === FALSE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"OFF\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"off\"";
 		else
 			$this->attributes['AUTOCOMPLETE'] = "";
 	}
@@ -238,7 +236,7 @@ class EditableField extends FormField
 	 */
 	function setReadonly($setting=TRUE) {
 		if ($setting) {
-			$this->attributes['READONLY'] = " readonly";
+			$this->attributes['READONLY'] = " readonly=\"readonly\"";
 			$this->readOnly = TRUE;
 		} else {
 			$this->attributes['READONLY'] = "";
@@ -297,8 +295,7 @@ class EditableField extends FormField
 				case 'CURRENCY' :
 					$validators[] = array('php2go.validation.CurrencyValidator', NULL, NULL);
 					break;
-				case 'DATE-EURO' :
-				case 'DATE-US' :
+				case 'DATE' :
 					$validators[] = array('php2go.validation.DateValidator', NULL, NULL);
 					break;
 				case 'EMAIL' :
@@ -399,11 +396,7 @@ class EditableField extends FormField
 		if (!is_string($this->value))
 			$this->value = strval($this->value);
 		switch ($this->mask) {
-			case 'DATE-EURO' :
-			case 'DATE-US' :
-				$this->searchDefaults['OPERATOR'] = 'EQ';
-				$this->searchDefaults['DATATYPE'] = 'DATE';
-				break;
+			case 'DATE' :
 			case 'FLOAT' :
 			case 'INTEGER' :
 				$this->searchDefaults['OPERATOR'] = 'EQ';
@@ -433,15 +426,15 @@ class EditableField extends FormField
 				$msg = PHP2Go::getLangVal('ERR_FORM_FIELD_INVALID_FLOAT', array($this->label, $this->limiters[0], $this->limiters[1]));
 				$args[] = "msg:\"" . StringUtils::escape($msg, 'javascript') . "\"";
 			}
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', DataTypeValidator, {%s});\n", $this->_Form->formName, $this->name, implode(',', $args));
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', DataTypeValidator, {%s});\n", strtolower($this->_Form->formName), $this->name, implode(',', $args));
 			$this->_Form->Document->addScriptCode(sprintf($this->maskSetupScript, $this->id), 'Javascript', SCRIPT_END);
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'inputmask.js');
 		}
 		// add maxlength and minlength validation script
 		if (isset($this->minLength) && TypeUtils::isInteger($this->minLength))
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', LengthValidator, {rule:'MINLENGTH',limit:%d});\n", $this->_Form->formName, $this->name, $this->minLength);
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', LengthValidator, {rule:'MINLENGTH',limit:%d});\n", strtolower($this->_Form->formName), $this->name, $this->minLength);
 		if (isset($this->maxLength) && TypeUtils::isInteger($this->maxLength))
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', LengthValidator, {rule:'MAXLENGTH',limit:%d});\n", $this->_Form->formName, $this->name, $this->maxLength);
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', LengthValidator, {rule:'MAXLENGTH',limit:%d});\n", strtolower($this->_Form->formName), $this->name, $this->maxLength);
 		// add value transformation scripts
 		if ($this->attributes['UPPER'] == 'T')
 			$this->_Form->beforeValidateCode .= sprintf("\t\tfrm.elements['%s'].value = frm.elements['%s'].value.toUpperCase();\n", $this->name, $this->name);

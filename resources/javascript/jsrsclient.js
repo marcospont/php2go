@@ -378,12 +378,12 @@ function jsrsDebugInfo(){
   // with onHelp = "return jsrsDebugInfo();" in the body tag
   var doc = window.open().document;
   doc.open;
-  doc.write( 'Pool Size: ' + jsrsContextPoolSize + '<br><font face="arial" size="2"><b>' );
+  doc.write( 'Pool Size: ' + jsrsContextPoolSize + '<br /><font face="arial" size="2"><b>' );
   for( var i in jsrsContextPool ){
     var contextObj = jsrsContextPool[i];
-    doc.write( '<hr>' + contextObj.id + ' : ' + (contextObj.busy ? 'busy' : 'available') + '<br>');
-    doc.write( contextObj.container.document.location.pathname + '<br>');
-    doc.write( contextObj.container.document.location.search + '<br>');
+    doc.write( '<hr />' + contextObj.id + ' : ' + (contextObj.busy ? 'busy' : 'available') + '<br />');
+    doc.write( contextObj.container.document.location.pathname + '<br />');
+    doc.write( contextObj.container.document.location.search + '<br />');
     doc.write( '<table border="1"><tr><td>' + contextObj.container.document.body.innerHTML + '</td></tr></table>' );
   }
   doc.write('</table>');

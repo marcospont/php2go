@@ -35,6 +35,7 @@
 
 if (!PHP2Go.included[PHP2Go.baseUrl + 'ajax.js']) {
 
+PHP2Go.include(PHP2Go.baseUrl + 'form.js');
 PHP2Go.include(PHP2Go.baseUrl + 'util/throbber.js');
 
 if (window.ActiveXObject && !window.XMLHttpRequest) {
@@ -112,6 +113,11 @@ Ajax.parseHeaders = function(str) {
 };
 
 /**
+ * @ignore
+ */
+Ajax.lastModified = {};
+
+/**
  * Holds the current active transaction count
  * @type Number
  */
@@ -153,16 +159,16 @@ Ajax.prototype.raise = function(name, args) {
  * response types: JSON, XML, Javascript or HTML
  * @constructor
  * @extends Ajax
- * @param {String} url Request URL (with or without a query string)
+ * @param {String} uri Request URI (with or without a query string)
  * @param {Object} args Arguments
  */
-AjaxRequest = function(url, args) {
+AjaxRequest = function(uri, args) {
 	this.Ajax();
 	/**
 	 * Request URI
 	 * @type String
 	 */
-	this.uri = url;
+	this.uri = uri;
 	/**
 	 * Request method (GET or POST)
 	 * @type String
@@ -189,6 +195,11 @@ AjaxRequest = function(url, args) {
 	 */
 	this.encoding = null;
 	/**
+	 * Whether an If-Modified-Since header should be sent
+	 * @type Boolean
+	 */
+	this.ifModified = false;
+	/**
 	 * Hash of GET/POST parameters
 	 * @type Hash
 	 */
@@ -204,7 +215,13 @@ AjaxRequest = function(url, args) {
 	 */
 	this.formFields = [];
 	/**
+	 * Indicates if the form associated with the request contains files to be uploaded
+	 * @type Boolean
+	 */
+	this.formUpload = false;
+	/**
 	 * Indicates if the form associated with the request should be validated
+	 * @type Boolean
 	 */
 	this.formValidate = true;
 	/**
@@ -217,52 +234,52 @@ AjaxRequest = function(url, args) {
 	 * @type Object
 	 */
 	this.throbber = null;
+	/**
+	 * Secure URI, when using IFRAME to upload files
+	 * @type String
+	 */
+	this.secureUri = 'javascript:false';
 	this.readArguments(args || {});
 };
 AjaxRequest.extend(Ajax, 'Ajax');
 
 /**
  * Parses the arguments provided to the AjaxRequest constructor.
- * Acceptable argument names: method, async, params, contentType,
- * encoding, body, form, formFields, scope and all supported event names
+ *
+ * Acceptable argument names: <ul><li>method</li><li>async</li><li>headers</li>
+ * <li>contentType</li><li>encoding</li><li>ifModified</li><li>params</li><li>form</li>
+ * <li>formFields</li><li>formUpload</li><li>formValidate</li><li>body</li><li>throbber</li>
+ * <li>secureUri</li><li>scope</li><li>onLoading</li><li>onLoaded</li><li>onInteractive</li>
+ * <li>onComplete</li><li>onSuccess</li><li>onFailure</li><li>onJSONResult</li>
+ * <li>onXMLResult</li><li>onException</li></ul>
+ *
  * @param {Object} args Arguments
  * @type void
  */
 AjaxRequest.prototype.readArguments = function(args) {
-	if (args.method)
-		this.method = args.method;
-	if (typeof(args.async) != 'undefined')
-		this.async = !!args.async;
-	if (args.params) {
-		for (var param in args.params)
-			this.params[param] = args.params[param];
-	}
-	if (args.headers) {
-		for (var name in args.headers)
-			this.headers[name] = args.headers[name];
-	}
-	if (args.contentType)
-		this.contentType = args.contentType;
-	if (args.encoding)
-		this.encoding = args.encoding;
-	if (args.body)
-		this.body = args.body;
-	if (args.form)
-		this.form = args.form;
-	if (args.formFields)
-		this.formFields = args.formFields;
-	if (typeof(args.formValidate) != 'undefined')
-		this.formValidate = !!args.formValidate;
-	if (args.throbber) {
-		if ((args.throbber.constructor || $EF) == Throbber)
-			this.throbber = args.throbber;
-		else
-			this.throbber = new Throbber({element: args.throbber});
-	}
-	var events = ['onLoading', 'onLoaded', 'onInteractive', 'onComplete', 'onSuccess', 'onFailure', 'onJSONResult', 'onXMLResult', 'onException'];
-	for (var i=0; i<events.length; i++) {
-		if (args[events[i]])
-			this.bind(events[i], args[events[i]], args.scope || null);
+	for (var n in args) {
+		switch (n) {
+			case 'onLoading' : case 'onLoaded' : case 'onInteractive' :
+			case 'onComplete' : case 'onSuccess' : case 'onFailure' :
+			case 'onJSONResult' : case 'onXMLResult' : case 'onException' :
+				this.bind(n, args[n], args.scope || null);
+				break;
+			case 'headers' : case 'params' :
+				for (var pn in args[n])
+					this[n][pn] = args[n][pn];
+				break;
+			case 'async' : case 'ifModified' : case 'formValidate' : case 'formUpload' :
+				this[n] = !!args[n];
+				break;
+			case 'throbber' :
+				if ((args.throbber.constructor || $EF) != Throbber)
+					args.throbber = new Throbber({element: args.throbber});
+				this.throbber = args.throbber;
+				break;
+			default :
+				this[n] = args[n];
+				break;
+		}
 	}
 };
 
@@ -289,26 +306,36 @@ AjaxRequest.prototype.send = function() {
 		if (this.form.validator && !this.form.validator.run())
 			return;
 	}
-	try {
-		// query string
-		var queryStr = this.buildQueryString();
-		// uri & body
-		var uri, body;
-		if (this.method.equalsIgnoreCase('get')) {
-			uri = this.uri + (this.uri.match(/\?/) ? '&' + queryStr : '?' + queryStr);
-			body = null;
-		} else {
-			uri = this.uri;
-			body = (this.body || queryStr);
+	Ajax.transactionCount++;
+	if (this.throbber)
+		this.throbber.show();
+	// form upload
+	if (this.form) {
+		var enctype = (this.form.getAttribute('enctype') || '');
+		if (this.formUpload || enctype.equalsIgnoreCase('multipart/form-data')) {
+			this.doFormUpload();
+			return;
 		}
-		Ajax.transactionCount++;
-		if (this.throbber)
-			this.throbber.show();
+	}
+	// build query string
+	var uri, body, queryStr = this.buildQueryString();
+	// get request
+	if (this.method.equalsIgnoreCase('get')) {
+		uri = this.uri + (this.uri.match(/\?/) ? '&' + queryStr : '?' + queryStr);
+		body = null;
+	// post request
+	} else {
+		uri = this.uri;
+		body = (this.body || queryStr);
+	}
+	try {
 		this.conn = Ajax.getTransport();
 		this.conn.open(this.method, uri, this.async);
 		this.conn.onreadystatechange = this.onStateChange.bind(this);
-		// request headers
+		// set request headers
 		this.headers['X-Requested-With'] = 'XMLHttpRequest';
+		if (this.ifModified)
+			this.headers['If-Modified-Since'] = Ajax.lastModified[this.uri] || 'Thu, 01 Jan 1970 00:00:00 GMT';
 		if (this.method.equalsIgnoreCase('post')) {
 			this.headers['Content-Type'] = this.contentType + (this.encoding ? '; charset=' + this.encoding : '');
 			this.headers['Content-Length'] = body.length;
@@ -326,14 +353,102 @@ AjaxRequest.prototype.send = function() {
 };
 
 /**
- * This method can be used to abort a request in progress
+ * Method called when the form associated with the AJAX request
+ * contains one or more files to upload. Performs the request
+ * by submitting the form through an IFRAME element
  * @type void
+ */
+AjaxRequest.prototype.doFormUpload = function() {
+	try {
+		// build iframe
+		var id = PHP2Go.uid('ajaxFrame');
+		if (PHP2Go.browser.ie) {
+			var ifr = document.createElement("<iframe id=\"%1\" name=\"%2\" />".assignAll(id, id));
+			ifr.src = this.secureUri;
+		} else {
+			var ifr = document.createElement('iframe');
+			ifr.id = id;
+			ifr.name = id;
+		}
+		ifr.style.position = 'absolute';
+		ifr.style.top = '-1000px';
+		ifr.style.left = '-1000px';
+		document.body.appendChild(ifr);
+		// configure form
+		var frm = this.form;
+		frm.target = id;
+		frm.method = this.method;
+		frm.enctype = frm.encoding = 'multipart/form-data';
+		frm.action = this.uri;
+		// add hidden params
+		var hp = [];
+		for (var n in this.params) {
+			var input = $N('input');
+			input.type = 'hidden';
+			input.name = n;
+			input.id = PHP2Go.uid('ajaxField' + this.transId + '-');
+			input.value = this.params[n];
+			frm.appendChild(input);
+			hp.push(input);
+		}
+		// upload callback
+		var self = this;
+		var uploadCallback = function(e) {
+			self.conn = {
+				status: 200,
+				statusText: 'OK',
+				readyState: 4,
+				responseText: '',
+				responseXML: null,
+				abort: $EF,
+				headers: {}
+			};
+			var doc = (PHP2Go.browser.ie ? ifr.contentWindow.document : (ifr.contentDocument || window.frames[id].document));
+			if (doc && doc.body) {
+				self.conn.responseText = doc.body.innerHTML;
+				self.conn.headers['Content-Type'] = 'text/html';
+				self.conn.headers['Content-Length'] = self.conn.responseText.length;
+				if (!self.conn.responseText.match(/\s*</)) {
+					try {
+						var json = eval('(' + resp.responseText + ')');
+						self.conn.json = json;
+						self.conn.headers['Content-Type'] = 'application/json';
+					} catch (e) { }
+				}
+			}
+			if (doc && doc.XMLDocument) {
+				self.conn.responseXML = doc.XMLDocument;
+				self.conn.headers['Content-Type'] = 'text/xml';
+			} else {
+				self.conn.responseXML = doc;
+			}
+			Event.removeListener(ifr, 'load', uploadCallback);
+			self.onStateChange();
+			setTimeout(function() { document.body.removeChild(ifr); }, 100);
+		};
+		// add load listener and submit form
+		frm.submit();
+		Event.addListener(ifr, 'load', uploadCallback);
+		// remove hidden fields
+		hp.walk(function(item, idx) {
+			frm.removeChild(item);
+		});
+	} catch (e) {
+		this.raise('onException', [e]);
+	}
+};
+
+/**
+ * This method can be used to abort a request in progress
+ * @type Boolean
  */
 AjaxRequest.prototype.abort = function() {
 	if (this.conn && this.conn.readyState >= 1 && this.conn.readyState < 4) {
 		this.conn.abort();
 		this.release();
+		return true;
 	}
+	return false;
 };
 
 /**
@@ -371,17 +486,20 @@ AjaxRequest.prototype.onStateChange = function() {
 				var resp = this.createResponse();
 				this.raise('onComplete', [resp]);
 				if (resp.success) {
+					// script responses
 					if ((resp.headers['Content-type'] || '').match(/^(text|application)\/(x-)?(java|ecma)script(;.*)?$/i)) {
 						try {
-							eval(resp.responseText);
+							PHP2Go.eval(resp.responseText);
 							this.raise('onSuccess', [resp]);
 						} catch(e) {
 							this.raise('onException', [e]);
 						}
 					} else {
 						this.raise('onSuccess', [resp]);
+						// json handler
 						if (resp.json)
 							this.raise('onJSONResult', [resp]);
+						// xml handler
 						if (resp.xmlRoot)
 							this.raise('onXMLResult', [resp]);
 					}
@@ -450,18 +568,25 @@ AjaxRequest.prototype.createResponse = function() {
 			return resp;
 		default :
 			resp.statusText = this.conn.statusText;
-			resp.headers = Ajax.parseHeaders(this.conn.getAllResponseHeaders());
+			resp.headers = (this.conn.headers || Ajax.parseHeaders(this.conn.getAllResponseHeaders()));
 			resp.responseText = this.conn.responseText;
 			resp.responseXML = this.conn.responseXML;
+			// catch Last-Modified header
+			if (this.ifModified && resp.headers['Last-Modified'])
+				Ajax.lastModified[this.uri] = resp.headers['Last-Modified'];
+			// eval JSON response
 			try {
-				if (resp.headers['X-JSON'])
-					resp.json = eval('(' + resp.headers['X-JSON'] + ')');
-				if ((resp.headers['Content-Type'] || '').match(/^application\/json/i))
+				if (this.conn.json) {
+					resp.json = this.conn.json;
+				} else if ((resp.headers['Content-Type'] || '').match(/^application\/json/i)) {
 					resp.json = eval('(' + resp.responseText + ')');
+				} else if (resp.headers['X-JSON']) {
+					resp.json = eval('(' + resp.headers['X-JSON'] + ')');
+				}
 			} catch(e) {}
 			if (resp.responseXML)
 				resp.xmlRoot = resp.responseXML.documentElement;
-			resp.success = (resp.status >= 200 && resp.status < 300);
+			resp.success = ((resp.status >= 200 && resp.status < 300) || resp.status == 304);
 			return resp;
 	}
 };
@@ -472,9 +597,11 @@ AjaxRequest.prototype.createResponse = function() {
  * @type void
  */
 AjaxRequest.prototype.release = function() {
-	this.conn.onreadystatechange = $EF;
-	delete this.conn;
-	Ajax.transactionCount--;
+	if (this.conn) {
+		this.conn.onreadystatechange = $EF;
+		delete this.conn;
+		Ajax.transactionCount--;
+	}
 };
 
 /**
@@ -534,6 +661,119 @@ AjaxResponse = function(transId) {
 };
 
 /**
+ * Parses and executes command definitions
+ * returned in the response in JSON format
+ */
+AjaxResponse.prototype.run = function() {
+	var skip = 0;
+	var json = (this.json || {});
+	var cmds = json.commands || [];
+	for (var i=0; i<cmds.length; i++) {
+		var item = cmds[i];
+		if (skip-- > 0)
+			continue;
+		switch (item.cmd) {
+			case 'value' :
+				(item.frm) ? ($FF(item.frm, item.fld).setValue(item.arg)) : ($F(item.id).setValue(item.arg));
+				break;
+			case 'combo' :
+				var combo = $F(item.id);
+				(!item.arg.value) && (item.arg.value = combo.getValue());
+				(item.arg.clear) && (combo.clearOptions());
+				for (var v in item.arg.options)
+					combo.addOption(v, item.arg.options[v]);
+				combo.setValue(item.arg.value);
+				break;
+			case 'enable' :
+				(item.frm) ? ($FF(item.frm, item.fld).enable()) : ($F(item.id).enable());
+				break;
+			case 'disable' :
+				(item.frm) ? ($FF(item.frm, item.fld).disable()) : ($F(item.id).disable());
+				break;
+			case 'focus' :
+				(item.frm) ? ($FF(item.frm, item.fld).focus()) : ($F(item.id).focus());
+				break;
+			case 'clear' :
+				(item.frm) ? ($FF(item.frm, item.fld).clear()) : ($F(item.id).clear());
+				break;
+			case 'reset' :
+				Form.reset($(item.id));
+				break;
+			case 'hide' :
+				$(item.id).hide();
+				break;
+			case 'show' :
+				$(item.id).show();
+				break;
+			case 'prop' :
+				var elm = $(item.id);
+				for (var p in item.arg)
+					elm.setAttribute(p, item.arg[p]);
+				break;
+			case 'style' :
+				var elm = $(item.id);
+				for (var p in item.arg)
+					elm.setStyle(p, item.arg[p]);
+				break;
+			case 'create' :
+				var elm = $N(item.arg.tag, $(item.arg.parent), item.arg.styles, item.arg.cont);
+				if (item.id)
+					elm.id = item.id;
+				for (var p in item.arg.attrs)
+					elm.setAttribute(p, item.arg.attrs[p]);
+				break;
+			case 'clear' :
+				$(item.id).clear();
+				break;
+			case 'update' :
+				$(item.id).update(item.arg.code, item.arg.eval, item.arg.dom);
+				break;
+			case 'insert' :
+				$(item.id).insertHTML(item.arg.code, item.arg.pos, item.arg.eval);
+				break;
+			case 'replace' :
+				$(item.id).replace(item.arg.code, item.arg.eval);
+				break;
+			case 'remove' :
+				$(item.id).remove();
+				break;
+			case 'addev' :
+				Event.addListener($(item.id), item.arg.type, item.arg.func, item.arg.capt);
+				break;
+			case 'remev' :
+				Event.removeListener($(item.id), item.arg.type, item.arg.func, item.arg.capt);
+				break;
+			case 'alert' :
+				alert(item.arg);
+				break;
+			case 'confirm' :
+				if (!confirm(item.arg.msg)) {
+					skip = item.arg.skip;
+					// skip all commands
+					if (!skip)
+						break;
+				}
+				break;
+			case 'redirect' :
+				window.location.href = item.arg;
+				return;
+			case 'eval' :
+				PHP2Go.eval(item.arg);
+				break;
+			case 'func' :
+				if (item.arg.delay > 0) {
+					setTimeout(function() {
+						item.id.apply(item.arg.scope, item.arg.params);
+					}, item.arg.delay);
+				} else {
+					item.id.apply(item.arg.scope, item.arg.params);
+				}
+				break;
+		}
+	}
+};
+
+/**
  * Extends AjaxRequest in order to populate a given container
  * with the response returned by the server. Optionally, 2
  * containers (success and failure) can be provided. 3 more
@@ -543,12 +783,12 @@ AjaxResponse = function(transId) {
  * and onUpdate (update event listener)
  * @constructor
  * @extends AjaxRequest
- * @param {String} url Request URL
+ * @param {String} uri Request URI
  * @param {Object} args Settings
  */
-AjaxUpdater = function(url, args) {
+AjaxUpdater = function(uri, args) {
 	args = args || {};
-	this.AjaxRequest(url, args);
+	this.AjaxRequest(uri, args);
 	/**
 	 * Success container
 	 * @type Object
@@ -617,6 +857,120 @@ AjaxUpdater.prototype.update = function(response) {
 		}
 	}
 	this.raise('onUpdate', [response]);
+};
+
+/**
+ * This class is able to interact with php2go.service.AjaxService
+ * class in order to call PHP functions or methods. If the returned
+ * response is a JSON string, the class will try to run commands
+ * and statements specified inside it
+ * @constructor
+ * @extends AjaxRequest
+ * @param {String} uri Request URI
+ * @param {Object} args Settings
+ */
+AjaxService = function(uri, args) {
+	this.AjaxRequest(uri, args);
+	this.bind('onJSONResult', this.parseResponse);
+	this.setHandler(args.handler);
+};
+AjaxService.extend(AjaxRequest, 'AjaxRequest');
+
+/**
+ * Changes the service handler ID
+ * @param {String} id Handler ID
+ * @type void
+ */
+AjaxService.prototype.setHandler = function(id) {
+	this.headers['X-Handler-ID'] = id || '';
+};
+
+/**
+ * Tries to parse and execute commands from
+ * the returned JSON string
+ * @param {AjaxResponse} response Response
+ */
+AjaxService.prototype.parseResponse = function(response) {
+	try {
+		response.run();
+	} catch(e) {
+		this.raise('onException', [e]);
+	}
+};
+
+/**
+ * This class is able to perform a periodic update, needed by
+ * any kind of polling. An instance of the AjaxUpdater class
+ * is created and executed at regular intervals
+ * @constructor
+ * @param {String} uri Request URI
+ * @param {Object} args Settings
+ */
+AjaxPeriodicalUpdater = function(uri, args) {
+	/**
+	 * Request URI
+	 * @type String
+	 */
+	this.uri = uri;
+	/**
+	 * Number of seconds between each request
+	 * @type Number
+	 */
+	this.frequency = args.frequency || 2;
+	/**
+	 * AjaxUpdater instance used to perform periodical requests
+	 * @type AjaxRequest
+	 */
+	this.updater = null;
+	/**
+	 * Updater arguments
+	 * @type Object
+	 */
+	this.updaterArgs = args;
+	/**
+	 * Called before each request is performed
+	 * @type Function
+	 */	 
+	this.onBeforeUpdate = args.onBeforeUpdate;
+	/**
+	 * @ignore
+	 */
+	this.timer = null;	
+	this.start();
+};
+
+/**
+ * Starts the periodical updater
+ */
+AjaxPeriodicalUpdater.prototype.start = function() {
+	this.updater = new AjaxUpdater(this.uri, this.updaterArgs);
+	this.updater.bind('onComplete', this.onUpdate, this);
+	this.onTimer();
+};
+
+/**
+ * Stops the periodical updater
+ */
+AjaxPeriodicalUpdater.prototype.stop = function() {
+	if (this.updater)
+		this.updater.abort();
+	clearTimeout(this.timer);
+};
+
+/**
+ * Executes an iteration by calling AjaxUpdater.send
+ */
+AjaxPeriodicalUpdater.prototype.onTimer = function() {
+	if (this.onBeforeUpdate)
+		this.onBeforeUpdate.apply(this);
+	this.updater.send();
+};
+
+/**
+ * Called when updater response is returned
+ */
+AjaxPeriodicalUpdater.prototype.onUpdate = function() {
+	this.timer = setTimeout(this.onTimer.bind(this), this.frequency * 1000);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'ajax.js'] = true;

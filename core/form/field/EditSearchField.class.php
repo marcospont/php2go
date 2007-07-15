@@ -30,7 +30,7 @@
 import('php2go.form.field.DbField');
 import('php2go.form.field.LookupField');
 import('php2go.template.Template');
-import('php2go.util.service.ServiceJSRS');
+import('php2go.service.JSRSService');
 
 /**
  * Default size of the search text input
@@ -51,7 +51,7 @@ define('EDITSEARCH_DEFAULT_LOOKUP_WIDTH', 250);
  * @package form
  * @subpackage field
  * @uses LookupField
- * @uses ServiceJSRS
+ * @uses JSRSService
  * @uses Template
  * @uses TypeUtils
  * @author Marcos Pont <mpont@users.sourceforge.net>
@@ -110,13 +110,13 @@ class EditSearchField extends DbField
 			$this->id, $this->name, $this->label, $this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['STYLE'], $this->attributes['DISABLED']
 		);
 		foreach ($this->filters as $value => $data) {
-			$filters .= sprintf("<option value=\"%s\"%s>%s</option>", $value, ($value == $requestFilter ? ' selected' : ''), $data[0]);
+			$filters .= sprintf("<option value=\"%s\"%s>%s</option>", $value, ($value == $requestFilter ? ' selected="selected"' : ''), $data[0]);
 			$masks[] = "'{$data[2]}'";
 		}
 		$filters .= "</select>";
 		$Tpl->assign('filters', $filters);
 		$Tpl->assign('masks', implode(',', $masks));
-		$Tpl->assign('search', sprintf("<input type=\"text\" id=\"%s_search\" name=\"%s_search\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s>&nbsp;",
+		$Tpl->assign('search', sprintf("<input type=\"text\" id=\"%s_search\" name=\"%s_search\" value=\"%s\" maxlength=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s />&nbsp;",
 			$this->id, $this->name, strval(HttpRequest::getVar($this->name . '_search')), $this->attributes['LENGTH'], $this->attributes['SIZE'], $this->label,
 			$this->attributes['SCRIPT'], $this->attributes['TABINDEX'], $this->attributes['STYLE'], $this->attributes['DISABLED'], $this->attributes['AUTOCOMPLETE']
 		));
@@ -217,9 +217,9 @@ class EditSearchField extends DbField
 	 */
 	function setAutoComplete($setting) {
 		if ($setting === TRUE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"ON\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"on\"";
 		elseif ($setting === FALSE)
-			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"OFF\"";
+			$this->attributes['AUTOCOMPLETE'] = " autocomplete=\"off\"";
 		else
 			$this->attributes['AUTOCOMPLETE'] = "";
 	}
@@ -286,7 +286,7 @@ class EditSearchField extends DbField
 	/**
 	 * Processes attributes and child nodes loaded from the XML specification
 	 *
-	 * @uses ServiceJSRS::registerHandler()
+	 * @uses JSRSService::registerHandler()
 	 * @param array $attrs Node attributes
 	 * @param array $children Node children
 	 */
@@ -306,14 +306,12 @@ class EditSearchField extends DbField
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EDITSEARCH_INVALID_DATAFILTER', (empty($id) ? '?' : $id)), E_USER_ERROR, __FILE__, __LINE__);
 				if ($mask != 'STRING' && !preg_match(PHP2GO_MASK_PATTERN, $mask))
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EDITSEARCH_INVALID_DATAFILTER_MASK', $id), E_USER_ERROR, __FILE__, __LINE__);
-				if ($mask == 'DATE')
-					$mask .= '-' . PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
 				if (isset($this->filters[$id]))
 					PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EDITSEARCH_DUPLICATED_DATAFILTER', $id), E_USER_ERROR, __FILE__, __LINE__);
 				$this->filters[$id] = array($label, $expression, $mask);
 			}
 			// initialize JSRS handler
-			$Service =& ServiceJSRS::getInstance();
+			$Service =& JSRSService::getInstance();
 			$Service->registerHandler(array($this, 'performSearch'), strtolower($this->id) . 'PerformSearch');
 			$this->_Form->postbackFields[] = $this->id;
 			// search input size
@@ -404,13 +402,15 @@ class EditSearchField extends DbField
 	function performSearch($filter, $term) {
 		if (isset($this->filters[$filter])) {
 			// builds the condition clause
+			if ($this->filters[$filter][2] == 'DATE')
+				$term = Date::toSqlDate($term);
 			$clause = sprintf($this->filters[$filter][1], $term);
 			if (empty($this->dataSource['CLAUSE']))
 				$this->dataSource['CLAUSE'] = $clause;
 			else
 				$this->dataSource['CLAUSE'] = "({$this->dataSource['CLAUSE']}) AND {$clause}";
 			// execute the query
-			@parent::processDbQuery(ADODB_FETCH_NUM, ServiceJSRS::debugEnabled());
+			@parent::processDbQuery(ADODB_FETCH_NUM, JSRSService::debugEnabled());
 			// build the results string
 			if ($this->_Rs->RecordCount() > 0) {
 				$lines = array();

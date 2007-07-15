@@ -297,7 +297,7 @@ class SocketClient extends PHP2Go
 			$this->stream = @$openFunc($this->host, $this->port, $errNo, $errMsg);
 		}
 		if (!$this->stream) {
-			$errDetail = ($errNo > 0 ? '<br>[Error ' . $errNo . '] - ' . $errMsg : '');
+			$errDetail = ($errNo > 0 ? '<br />[Error ' . $errNo . '] - ' . $errMsg : '');
 			$this->errorMsg = PHP2Go::getLangVal('ERR_CANT_OPEN_SOCKET', array($this->port, $this->host, $errDetail));
 			PHP2Go::raiseError($this->errorMsg, E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;

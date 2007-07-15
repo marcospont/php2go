@@ -164,7 +164,7 @@ class TabView extends Widget
 	 */
 	function render() {
 		if (empty($this->panels))
-			PHP2Go::raiseError(sprintf("At least one %s must be declared inside the %s widget!", "TabPanel", "TabView"), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_MISSING_CHILDREN', array('TabPanel', 'TabView')), E_USER_ERROR, __FILE__, __LINE__);
 		$orientationClasses = array(
 			TABVIEW_ORIENTATION_TOP => 'tabView',
 			TABVIEW_ORIENTATION_BOTTOM => 'tabViewBottom',
@@ -177,13 +177,16 @@ class TabView extends Widget
 		if ($attrs['orientation'] == TABVIEW_ORIENTATION_TOP || $attrs['orientation'] == TABVIEW_ORIENTATION_BOTTOM) {
 			$code .= sprintf("\n#%s .tabScrollContainer { width: %s; }", $attrs['id'], $attrs['width']);
 		} else {
-			$code .= sprintf("\n#%s.tabViewLeft .tabNavigationContainer, #%s.tabViewRight .tabNavigationContainer { width: %s; height: %s; }", $attrs['id'], $attrs['id'], $attrs['navigationWidth'], $attrs['contentHeight']);
+			$code .= sprintf("\n#%s.tabView%s .tabNavigationContainer { width: %s; height: %s; }", $attrs['id'], ucfirst($attrs['orientation']), $attrs['navigationWidth'], $attrs['contentHeight']);
 			$code .= sprintf("\n#%s .tabScrollContainer { height: %s; }", $attrs['id'], $attrs['contentHeight']);
+			$code .= sprintf("\n#%s .tabScrollArrow { width: %s; }", $attrs['id'], $attrs['navigationWidth']);
 		}
 		if ($attrs['orientation'] == TABVIEW_ORIENTATION_LEFT)
 			$code .= sprintf("\n#%s.tabViewLeft { padding-left: %s; }", $attrs['id'], $attrs['navigationWidth']);
-		if ($attrs['orientation'] == TABVIEW_ORIENTATION_RIGHT)
+		if ($attrs['orientation'] == TABVIEW_ORIENTATION_RIGHT) {
 			$code .= sprintf("\n#%s.tabViewRight { padding-right: %s; }", $attrs['id'], $attrs['navigationWidth']);
+			$code .= sprintf("\n#%s.tabViewRight .tabScrollContainer { right: %s; }", $attrs['id'], $attrs['navigationWidth']);
+		}
 		$code .= sprintf("\n#%s { width: %s; }", $attrs['id'], $attrs['width']);
 		$code .= "\n</style>";
 		$code .= sprintf("\n<div id=\"%s\" class=\"%s%s\">", $attrs['id'], $orientationClasses[$attrs['orientation']], (!empty($attrs['class']) ? " {$attrs['class']}" : ""));
@@ -229,8 +232,8 @@ class TabView extends Widget
 			$img1 = 'tabview_stop.gif';
 			$img2 = 'tabview_sbottom.gif';
 		}
-		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\"></button>", PHP2GO_ICON_PATH, $img1);
-		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\"></button>", PHP2GO_ICON_PATH, $img2);
+		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\" alt=\"\" /></button>", PHP2GO_ICON_PATH, $img1);
+		$code .= sprintf("\n    <button class=\"tabScrollArrow\"><img src=\"%s%s\" border=\"0\" alt=\"\" /></button>", PHP2GO_ICON_PATH, $img2);
 		$code .= "\n  </div>";
 		$code .= sprintf("\n  <div class=\"tabNavigationContainer\">");
 		$code .= sprintf("\n    <ul class=\"tabNavigation%s\">", (!empty($attrs['navigationClass']) ? " {$attrs['navigationClass']}" : ""));
@@ -241,7 +244,7 @@ class TabView extends Widget
 			$labelClass = $panel->getAttribute('labelClass');
 			if (!empty($labelClass))
 				$cssClasses[] = $labelClass;
-			$code .= sprintf("<li%s><a href=\"javascript:;\" title=\"%s\"%s><em>%s</em></a></li>", (!empty($cssClasses) ? " class=\"" . join(' ', $cssClasses) . "\"" : ""), $panel->getAttribute('caption'), ($panel->getAttribute('disabled') ? " disabled" : ""), $panel->getAttribute('caption'));
+			$code .= sprintf("<li%s><a href=\"javascript:;\" title=\"%s\"%s><em>%s</em></a></li>", (!empty($cssClasses) ? " class=\"" . join(' ', $cssClasses) . "\"" : ""), $panel->getAttribute('caption'), ($panel->getAttribute('disabled') ? " disabled=\"disabled\"" : ""), $panel->getAttribute('caption'));
 		}
 		$code .= "</ul>";
 		$code .= "\n  </div>";

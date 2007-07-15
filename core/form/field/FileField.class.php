@@ -58,7 +58,7 @@ class FileField extends FormField
 	 */
 	function display() {
 		(!$this->preRendered && parent::onPreRender());
-		print sprintf("<input type=\"file\" id=\"%s\" name=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s>",
+		print sprintf("<input type=\"file\" id=\"%s\" name=\"%s\" size=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s />",
 			$this->id, $this->name, $this->attributes['SIZE'], $this->label, $this->attributes['SCRIPT'],
 			$this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['STYLE'],
 			$this->attributes['READONLY'], $this->attributes['DISABLED'], $this->attributes['DATASRC'],

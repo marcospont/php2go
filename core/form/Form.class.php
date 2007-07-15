@@ -85,7 +85,7 @@ define('FORM_HELP_POPUP', 2);
  *
  * @package form
  * @uses HttpRequest
- * @uses ServiceJSRS
+ * @uses JSRSService
  * @uses Statement
  * @uses TypeUtils
  * @uses UserAgent
@@ -122,7 +122,7 @@ class Form extends Component
 	 *
 	 * @var string
 	 */
-	var $formMethod = 'POST';
+	var $formMethod = 'post';
 
 	/**
 	 * Form validation errors
@@ -389,8 +389,8 @@ class Form extends Component
 	 * @param string $method GET or POST
 	 */
 	function setFormMethod($method) {
-		$method = trim($method);
-		if (in_array(strtoupper($method), array('GET','POST')))
+		$method = trim(strtolower($method));
+		if (in_array($method, array('get', 'post')))
 			$this->formMethod = $method;
 		else
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_INVALID_FORM_METHOD', array($method, $this->formName)), E_USER_ERROR, __FILE__, __LINE__);
@@ -523,12 +523,12 @@ class Form extends Component
 		// custom header text
 		if ($headerText !== NULL) {
 			if (!empty($headerText))
-				$headerText = (!empty($headerStyle) ? sprintf("<div class='%s'>%s</div>", $headerStyle, $headerText) : $headerText . '<br>');
+				$headerText = (!empty($headerStyle) ? sprintf("<div class='%s'>%s</div>", $headerStyle, $headerText) : $headerText . '<br />');
 		}
 		// default header text
 		else {
 			$headerText = PHP2Go::getLangVal('ERR_FORM_ERRORS_SUMMARY');
-			$headerText = (!empty($headerStyle) ? sprintf("<div class='%s'>%s</div>", $headerStyle, $headerText) : $headerText . '<br>');
+			$headerText = (!empty($headerStyle) ? sprintf("<div class='%s'>%s</div>", $headerStyle, $headerText) : $headerText . '<br />');
 		}
 		$this->errorStyle = array('class' => $class, 'list_mode' => $listMode, 'header_text' => $headerText);
 	}
@@ -547,7 +547,7 @@ class Form extends Component
 	 */
 	function setHelpDisplayOptions($mode, $options=array()) {
 		if ($mode == FORM_HELP_INLINE || $mode == FORM_HELP_POPUP)
-			$this->helpOptions = array_merge((array)$options, array('mode' => $mode));
+			$this->helpOptions = array_merge($this->helpOptions, (array)$options, array('mode' => $mode));
 	}
 
 	/**
@@ -753,7 +753,7 @@ class Form extends Component
 	 */
 	function isPosted() {
 		if (!isset($this->isPosted)) {
-			if (HttpRequest::method() == $this->formMethod) {
+			if (strtolower(HttpRequest::method()) == strtolower($this->formMethod)) {
 				$signature = HttpRequest::getVar(FORM_SIGNATURE, strtolower($this->formMethod));
 				if ($signature !== NULL && $signature == $this->getSignature())
 					$this->isPosted = TRUE;
@@ -888,8 +888,8 @@ class Form extends Component
 	 */
 	function buildScriptCode() {
 		if (!empty($this->validatorCode) || !empty($this->beforeValidateCode) || array_key_exists('VALIDATEFUNC', (array)$this->rootAttrs)) {
-			$instance = $this->formName . '_validator';
-			$script = "\t{$instance} = new FormValidator('{$this->formName}');\n";
+			$instance = sprintf("%sValidator", strtolower($this->formName));
+			$script = "\tvar {$instance} = new FormValidator('{$this->formName}');\n";
 			// error summary settings
 			$summaryOptions = sprintf("%s, %s, %s, %s, \"%s\"",
 				$this->clientErrorOptions['mode'],
@@ -912,7 +912,7 @@ class Form extends Component
 			if (array_key_exists('VALIDATEFUNC', (array)$this->rootAttrs)) {
 				$matches = array();
 				$validateFunc = trim($this->rootAttrs['VALIDATEFUNC']);
-				if (preg_match("~^(\w+)(\((.*)\))?$~", $validateFunc, $matches)) {
+				if (preg_match("~^([\w\.]+)(\((.*)\))?$~", $validateFunc, $matches)) {
 					if (@$matches[3])
 						$script .= "\t{$instance}.onAfterValidate = function(validator) { return {$validateFunc}; };\n";
 					else
@@ -966,8 +966,8 @@ class Form extends Component
 				if (!$Field->dataBind)
 					$Field->onDataBind();
 			}
-			import('php2go.util.service.ServiceJSRS');
-			$Service =& ServiceJSRS::getInstance();
+			import('php2go.service.JSRSService');
+			$Service =& JSRSService::getInstance();
 			$Service->handleRequest();
 		}
 	}

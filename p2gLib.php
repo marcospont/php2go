@@ -157,8 +157,8 @@ function getPhp2GoOffset() {
  * @param string $handlersList Space separated list of handlers
  */
 function jsrsDispatch($handlersList) {
-	import('php2go.util.service.ServiceJSRS');
-	$Service = new ServiceJSRS();
+	import('php2go.service.JSRSService');
+	$Service = new JSRSService();
 	$handlersList = trim((string)$handlersList);
 	$handlers = explode(' ', $handlersList);
 	foreach ($handlers as $handler)
@@ -236,7 +236,7 @@ function __v(&$val) {
  * @param string $str Input string
  * @param string $nl New line string
  */
-function println($str, $nl='<br>') {
+function println($str, $nl='<br />') {
 	echo $str . $nl;
 }
 
@@ -250,6 +250,25 @@ function dumpVariable($var) {
 	print '<pre>';
 	var_dump($var);
 	print '</pre>';
+}
+
+/**
+ * Read a key from an array, and remove it
+ *
+ * @param array $array Input array
+ * @param string $key Key
+ * @param mixed $fallback Fallback return value
+ * @return mixed
+ */
+function consumeArray(&$array, $key, $fallback=NULL) {
+	if (is_array($array)) {
+		if (array_key_exists($key, $array)) {
+			$return = $array[$key];
+			unset($array[$key]);
+			return $return;
+		}
+	}
+	return $fallback;
 }
 
 /**
@@ -305,7 +324,7 @@ function dumpArray($arr, $return=TRUE, $stringLimit=200, $deep=FALSE, $i=0) {
  * @return string
  */
 function exportVariable($var, $formatted=FALSE) {
-	if (is_object($var) && !System::isPHP5() && method_exists($var, '__tostring'))
+	if (is_object($var) && !IS_PHP5 && method_exists($var, '__tostring'))
 		$export = $var->__toString();
 	else
 		$export = var_export($var, TRUE);
@@ -313,24 +332,6 @@ function exportVariable($var, $formatted=FALSE) {
 		return '<pre>' . $export . '</pre>';
 	else
 		return $export;
-}
-
-/**
- * Read a key from an array, and remove it
- *
- * @param array $array Input array
- * @param string $key Key
- * @return mixed
- */
-function consumeArray(&$array, $key) {
-	if (is_array($array)) {
-		if (array_key_exists($key, $array)) {
-			$return = $array[$key];
-			unset($array[$key]);
-			return $return;
-		}
-	}
-	return NULL;
 }
 
 /**

@@ -287,7 +287,7 @@ class DocumentHead
 	function addStyle($path, $media=NULL, $charset=NULL) {
 		$path = htmlentities($path);
 		if (!array_key_exists($path, $this->styleFiles)) {
-			$this->styleFiles[$path] = sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s>\n",
+			$this->styleFiles[$path] = sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s />\n",
 				$path, (!empty($media) ? " media=\"{$media}\"" : ''), (!empty($charset) ? " charset=\"{$charset}\"" : '')
 			);
 		}
@@ -326,7 +326,7 @@ class DocumentHead
 		$url = htmlentities($url);
 		if (!array_key_exists($url, $this->alternateLinks)) {
 			$this->alternateLinks[$url] = sprintf(
-				"<link rel=\"alternate\" type=\"%s\" href=\"%s\"%s>\n",
+				"<link rel=\"alternate\" type=\"%s\" href=\"%s\"%s />\n",
 				$type, $url, (!empty($title) ? " title=\"{$title}\"" : "")
 			);
 		}
@@ -346,17 +346,17 @@ class DocumentHead
 	 */
 	function display() {
 		// doctype, head tag
-		print "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n";
-		print "<html>\n<head>\n";
+		print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
+		print sprintf("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"%s\" lang=\"%s\">\n<head>\n", $this->language, $this->language);
 		// meta tags
-		print sprintf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", $this->charset);
+		print sprintf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\" />\n", $this->charset);
 		foreach($this->metaTagsHttp as $name => $content) {
 			if (!empty($content))
-				print sprintf("<meta http-equiv=\"%s\" content=\"%s\">\n", $name, htmlspecialchars($content));
+				print sprintf("<meta http-equiv=\"%s\" content=\"%s\" />\n", $name, htmlspecialchars($content));
 		}
 		foreach($this->metaTagsName as $name => $content) {
 			if (!empty($content))
-				print sprintf("<meta name=\"%s\" content=\"%s\">\n", $name, htmlspecialchars($content));
+				print sprintf("<meta name=\"%s\" content=\"%s\" />\n", $name, htmlspecialchars($content));
 		}
 		// title
 		print sprintf("<title>%s</title>\n", $this->title);
@@ -364,13 +364,13 @@ class DocumentHead
 		$baseUrl = PHP2Go::getConfigVal('BASE_URL', FALSE);
 		if (!empty($baseUrl)) {
 			$baseUrl = rtrim($baseUrl, '/') . '/';
-			print sprintf("<base href=\"%s\">\n", $baseUrl);
+			print sprintf("<base href=\"%s\" />\n", $baseUrl);
 		}
 		// style files
 		print join("", array_values($this->styleFiles));
 		// style blocks
 		if (!empty($this->styleCode))
-			print sprintf("<style type=\"text/css\">\n<!--\n%s//-->\n</style>\n", $this->styleCode);
+			print sprintf("<style type=\"text/css\">\n%s</style>\n", $this->styleCode);
 		// alternate links
 		print join("", array_values($this->alternateLinks));
 		// script files
@@ -380,7 +380,7 @@ class DocumentHead
 			foreach($this->scriptBlocks as $language => $scripts) {
 				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
-				print sprintf("<script language=\"%s\" type=\"text/%s\">\n<!--\n%s//-->\n</script>\n", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
+				print sprintf("<script language=\"%s\" type=\"text/%s\">\n%s</script>\n", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
 		}
 		// extra content
