@@ -34,7 +34,7 @@ import('php2go.service.ajax.AjaxResponse');
 /**
  * Handles AJAX remote function/method calls
  *
- * This class works together with the AjaxCall Javascript
+ * This class works together with the AjaxService Javascript
  * class in order to make possible a PHP function or method
  * call from the Javascript code. The function or method ID
  * is transferred through a special header - X-Handler-ID.
