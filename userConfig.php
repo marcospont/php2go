@@ -357,9 +357,9 @@ $P2G_USER_CFG['REPORTS'] = array(
 );
 
 /**
- * This config key tells PHP2Go if it needs load its
- * Javascript libraries from the jsrun folder (compressed)
- * or from the javascript folder (uncompressed).
+ * This config key tells PHP2Go if it needs to load its
+ * Javascript libraries from the 'jsrun' folder (compressed)
+ * or from the 'javascript' folder (uncompressed).
  *
  * Set it to FALSE when you need to track problems with
  * framework's JS libraries (patches are always welcome!).
