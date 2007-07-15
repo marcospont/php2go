@@ -184,8 +184,8 @@ class RuleValidator extends AbstractValidator
 			switch ($dataType) {
 				case 'DATE' :
 					$src = Date::dateToDays($source);
-					if ($peerType == RULE_PEER_VALUE)
-						$target = Date::parseFieldExpression($target);
+					if ($peerType == RULE_PEER_VALUE && $expr = Date::parseFieldExpression($target))
+						$target = $expr;
 					$trg = Date::dateToDays($target);
 					break;
 				case 'INTEGER' :

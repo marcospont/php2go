@@ -353,7 +353,7 @@ class FormRule extends PHP2Go
 					"\tfunction {$funcName}(element) {\n" . $funcBody . "\n\t}"
 				);
 			}
-			return sprintf("\t%s_validator.add('%s', RuleValidator, {%s});\n", $Form->formName, $this->_Field->validationName, implode(',', $args));
+			return sprintf("\t%sValidator.add('%s', RuleValidator, {%s});\n", strtolower($Form->formName), $this->_Field->validationName, implode(',', $args));
 		}
 		return '';
 	}
@@ -424,9 +424,10 @@ class FormRule extends PHP2Go
 			$this->value = $Form->resolveVariables($this->value);
 		}
 		// evaluate date expressions
-		$regs = array();
-		if ($this->compareType == 'DATE' && !empty($this->value) && !Date::isEuroDate($this->value, $regs) && !Date::isUsDate($this->value, $regs))
-			$this->value = Date::parseFieldExpression($this->value);
+		if ($this->compareType == 'DATE' && !empty($this->value)) {
+			if ($expr = Date::parseFieldExpression($this->value))
+				$this->value = $expr;
+		}
 	}
 
 	/**

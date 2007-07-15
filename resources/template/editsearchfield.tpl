@@ -1,12 +1,12 @@
 
 <fieldset id="{$id}" title="{$label}" style="border:0;padding:0;margin:0"{$style}>
-<input id="{$id}_lastfilter" name="{$id}_lastfilter" type="hidden" value=""/>
-<input id="{$id}_lastsearch" name="{$id}_lastsearch" type="hidden" value=""/>
+<input id="{$id}_lastfilter" name="{$id}_lastfilter" type="hidden" value="" />
+<input id="{$id}_lastsearch" name="{$id}_lastsearch" type="hidden" value="" />
 <table id="{$id}_top" cellpadding="0" cellspacing="0" border="0">
-  <tr><td valign="top" nowrap>
+  <tr><td valign="top" nowrap="nowrap">
     {$filters}&nbsp;{$search}&nbsp;
 <!-- if $btnImg neq '' -->
-	<a id="{$id}_button" name="{$id}_button" href="javascript:void(0)"{$labelStyle}><img src="{$btnImg}" alt="" border="0"></a>
+	<a id="{$id}_button" name="{$id}_button" href="javascript:void(0)"{$labelStyle}><img src="{$btnImg}" alt="" border="0" /></a>
 <!-- else -->
 	<button id="{$id}_button" name="{$id}_button" type="button"{$buttonStyle}{$tabIndex}{$disabled}>{$btnValue}</button>
 <!-- end if -->

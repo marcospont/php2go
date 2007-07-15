@@ -132,10 +132,11 @@ InputMask.ignoreCodes = '#33#34#35#36#37#38#39#40#45#127#4098#';
 InputMask.setup = function(fld, mask) {
 	fld = $(fld);
 	if (fld) {
-		if (mask instanceof Mask)
+		if (mask instanceof Mask) {
 			fld.inputMask = new InputMask(fld, mask);
-		else
+		} else {
 			fld.inputMask = new InputMask(fld, Mask.fromExpression(mask));
+		}
 	}
 };
 
@@ -328,9 +329,9 @@ Mask = function() {
  * @param {String} expr Mask expression
  * @type Mask
  */
-Mask.fromExpression = function(expr) {
+Mask.fromExpression = function(expr, d) {
 	var mask = new Mask();
-	mask.loadExpression(expr);
+	mask.loadExpression(expr, d);
 	return mask;
 };
 
@@ -363,14 +364,12 @@ Mask.fromMaskName = function(name) {
 			Mask.cache[name] = EmailMask; break;
 		case 'URL' :
 			Mask.cache[name] = URLMask; break;
-		case 'DATE-EURO' :
-			Mask.cache[name] = DateMask('EURO'); break;
-		case 'DATE-US' :
-			Mask.cache[name] = DateMask('US'); break;
-		case 'TIME-AMPM' :
-			Mask.cache[name] = TimeMask(true); break;
+		case 'DATE' :
+			Mask.cache[name] = DateMask; break;
 		case 'TIME' :
 			Mask.cache[name] = TimeMask(false); break;
+		case 'TIME-AMPM' :
+			Mask.cache[name] = TimeMask(true); break;
 		default :
 			var m = [];
 			if (m = /FLOAT(\-([1-9][0-9]*)\:([1-9][0-9]*))?/.exec(name))
@@ -393,8 +392,23 @@ Mask.fromMaskName = function(name) {
  */
 Mask.prototype.loadExpression = function(expr) {
 	var ex = PHP2Go.raiseException;
+	/**
+	 * Special mask chars:
+	 * # - numbers
+	 * A - lowercase and uppercase chars
+	 * L - lowercase chars
+	 * U - uppercase chars
+	 * W - word boundary (numbers, lower and upper chars, underscore)
+	 * P - number separators (dot and comma)
+	 */
 	var map = { '#': '0-9', 'A': 'a-zA-Z', 'L': 'a-z', 'P' : '\.\,', 'U': 'A-Z', 'W': '0-9A-Za-z_' };
 	var c, lit, cc = "", cm = "", state = 0, m;
+	/**
+	 * state=0 : normal mask parsing
+	 * state=1 : a character class [...] was parsed and waits for limit definition
+	 * state=2 : mask char sequence waiting for limit definition
+	 * limits can be defined by *, +, {max}, {min,} or {min,max}
+	 */
 	try {
 		for (var i=0; i<expr.length; i++) {
 			c = expr.charAt(i);
@@ -494,7 +508,7 @@ Mask.prototype.loadExpression = function(expr) {
 			// mask char
 			if (map[c]) {
 				if (state == 1) {
-					this.addField(cc, (c=='*'?0:1), -1);
+					this.addField(cc, 1, 1);
 					cc = ""; state = 0;
 				} else if (state == 2) {
 					if (c != cm.charAt(0)) {
@@ -509,7 +523,7 @@ Mask.prototype.loadExpression = function(expr) {
 			// literal
 			} else {
 				if (state == 1) {
-					this.addField(cc, (c=='*'?0:1), -1);
+					this.addField(cc, 1, 1);
 					cc = ""; state = 0;
 				} else if (state == 2) {
 					this.addField(map[cm.charAt(0)], cm.length, cm.length);
@@ -518,10 +532,8 @@ Mask.prototype.loadExpression = function(expr) {
 				this.addLiteral(c, (expr.charAt(i+1) == '?'));
 			}
 		}
-		// pending char class
 		if (state == 1)
 			this.addField(cc, 1, 1);
-		// pending mask char sequence
 		if (state == 2)
 			this.addField(map[cm.charAt(0)], cm.length, cm.length);
 	} catch(e) {
@@ -995,27 +1007,26 @@ var EmailMask = Mask.fromExpression("[W\\.\\-\\[\\]@]+");
  */
 var URLMask = Mask.fromExpression("[W\\.\\-\\[\\]@\\:=&;\\+\\/\\?%\\$\\#~]+");
 /**
- * Date mask. Accepts EURO (d/m/Y) and US (Y/m/d) formats
+ * Date mask
  * @param {String} format Date format
  * @type Mask
  */
-var DateMask = function(format) {
-	var mask = new Mask();
-	mask.loadExpression(format == 'US' ? '[#]{0,4}/[#]{0,2}/[#]{0,2}' : '[#]{0,2}/[#]{0,2}/[#]{0,4}');
-	mask.onBeforeChange = function(val) {
+var DateMask = Mask.fromExpression(Locale.date.mask);
+DateMask.onBeforeChange = function(val) {
+	var f = Locale.date.type;
+	if (f == 'EURO' || f == 'US')
 		return val.replace(/[-\.]/, '/');
-	};
-	mask.onBlur = function(fld) {
-		var m = [];
-		if (format == 'EURO') {
-			if (m = /^([0-9]{2}\/[0-9]{2}\/)([0-9]{2})$/.exec(fld.value))
-				fld.value = m[1] + (parseInt(m[2]) > 50 ? '19'+m[2] : '20'+m[2]);
-		} else {
-			if (m = /^([0-9]{2})(\/[0-9]{2}\/[0-9]{2})$/.exec(fld.value))
-				fld.value = (parseInt(m[1]) > 50 ? '19'+m[1] : '20'+m[1]) + m[2];
-		}
-	};
-	return mask;
+	return val.replace(/[\/\.]/, '-');
+};
+DateMask.onBlur = function(fld) {
+	var m = [], f = Locale.date.type;
+	if (f == 'EURO' || f == 'US') {
+		if (m = /^([0-9]{2}\/[0-9]{2}\/)([0-9]{2})$/.exec(fld.value))
+			fld.value = m[1] + (parseInt(m[2]) > 50 ? '19'+m[2] : '20'+m[2]);
+	} else {
+		if (m = /^([0-9]{2})(\-[0-9]{2}\-[0-9]{2})$/.exec(fld.value))
+			fld.value = (parseInt(m[1]) > 50 ? '19'+m[1] : '20'+m[1]) + m[2];
+	}
 };
 /**
  * Time mask

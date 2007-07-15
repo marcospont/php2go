@@ -317,7 +317,7 @@ class FormField extends Component
 			}
 			$required = ($this->required && !$this->disabled && $reqFlag ? "<span style=\"color:{$reqColor}\">{$reqText}</span>" : '');
 			if ($this->htmlType == 'SELECT' && $UserAgent->matchBrowser('ie'))
-				return sprintf("<label id=\"%s\" onClick=\"var target=$('%s');if(target && !target.disabled)target.focus();\"%s>%s%s</label>",
+				return sprintf("<label id=\"%s\" onclick=\"var target=$('%s');if(target && !target.disabled)target.focus();\"%s>%s%s</label>",
 						$this->getName() . '_label', $this->getFocusId(),
 						$this->_Form->getLabelStyle(), $label, $required
 				);
@@ -453,7 +453,7 @@ class FormField extends Component
 					$this->getName() . '_help',
 					$style, $this->attributes['HELP']);
 			} else {
-				return sprintf("<img id=\"%s\" src=\"%s\" alt=\"\" border=\"0\"%s/>",
+				return sprintf("<img id=\"%s\" src=\"%s\" alt=\"\" border=\"0\"%s />",
 					$this->getName() . '_help', $this->_Form->helpOptions['popup_icon'],
 					' ' . HtmlUtils::overPopup($this->_Form->Document, $this->attributes['HELP'], $this->_Form->helpOptions['popup_attrs']));
 			}
@@ -499,7 +499,7 @@ class FormField extends Component
 	 */
 	function setDisabled($setting=TRUE) {
 		if ($setting) {
-			$this->attributes['DISABLED'] = " disabled";
+			$this->attributes['DISABLED'] = " disabled=\"disabled\"";
 			$this->disabled = TRUE;
 		} else {
 			$this->attributes['DISABLED'] = "";
@@ -770,7 +770,7 @@ class FormField extends Component
 			$this->setRequired(FALSE);
 		// add required validation script
 		if ($this->required && !$this->isA('RangeField') && !$this->isA('DataGrid'))
-			$this->_Form->validatorCode .= sprintf("\t%s_validator.add('%s', RequiredValidator);\n", $this->_Form->formName, $this->validationName);
+			$this->_Form->validatorCode .= sprintf("\t%sValidator.add('%s', RequiredValidator);\n", strtolower($this->_Form->formName), $this->validationName);
 		// build and register valiadation rules script code
 		if (!empty($this->rules)) {
 			foreach ($this->rules as $Rule)
@@ -803,7 +803,7 @@ class FormField extends Component
 			}
 		}
 		foreach ($events as $name => $actions)
-			$this->attributes['SCRIPT'] .= " {$name}=\"" . str_replace('\"', '\'', implode(';', $actions)) . ";\"";
+			$this->attributes['SCRIPT'] .= " " . strtolower($name) . "=\"" . str_replace('\"', '\'', implode(';', $actions)) . ";\"";
 		foreach ($custom as $name => $actions) {
 			$actions = implode(';', $actions);
 			$this->customListeners[$name] = "function(args) {\n\t" . $actions . ";\n}";

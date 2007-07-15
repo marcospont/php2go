@@ -95,6 +95,19 @@ class HttpRequest extends PHP2Go
 	}
 
 	/**
+	 * Get raw post contents
+	 *
+	 * @return string
+	 * @static
+	 */
+	function rawPost() {
+		global $HTTP_RAW_POST_DATA;
+		if (isset($HTTP_RAW_POST_DATA))
+			return $HTTP_RAW_POST_DATA;
+		return file_get_contents('php://input');
+	}
+
+	/**
 	 * Read a cookie value
 	 *
 	 * If $paramName is missing, the full superglobal
@@ -248,11 +261,23 @@ class HttpRequest extends PHP2Go
 	/**
 	 * Get request headers
 	 *
+	 * The {@link apache_request_headers()} function will be used if
+	 * available (PHP running as Apache module).
+	 *
 	 * @return array
 	 * @static
 	 */
 	function getHeaders() {
-		return apache_request_headers();
+		if (function_exists('apache_request_headers'))
+			return apache_request_headers();
+		$headers = array();
+		foreach ($_SERVER as $key => $value) {
+			if (substr($key, 0, 5) == 'HTTP_') {
+				$name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+				$headers[$name] = $value;
+			}
+		}
+		return $headers;
 	}
 
 	/**
@@ -295,7 +320,8 @@ class HttpRequest extends PHP2Go
 	 */
 	function isAjax() {
 		$headers = HttpRequest::getHeaders();
-		return (array_key_exists('X-Requested-With', $headers));
+		$headers = array_change_key_case($headers, CASE_LOWER);
+		return (array_key_exists('x-requested-with', $headers));
 	}
 
 	/**

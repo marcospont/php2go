@@ -228,7 +228,7 @@ class DirectoryManager extends PHP2Go
 	 * $dir->open("photo/");
 	 * /* get JPEG images only {@*}
 	 * while ($entry = $dir->read("\.jpg")) {
-	 *   print $entry->getFullName() . '<br/>';
+	 *   print $entry->getFullName() . '<br />';
 	 * }
 	 * $dir->close();
 	 * </code>
@@ -406,7 +406,7 @@ class DirectoryManager extends PHP2Go
 		if (is_resource($this->currentHandle)) {
 			if ($entry = @readdir($this->currentHandle)) {
 				// ignore "." and ".." entries
-				if (ereg("^\.{1,2}", $entry)) {
+				if (preg_match("/^\.{1,2}/", $entry)) {
 					return $this->_readSimple($includeRegExp);
 				} elseif (!empty($includeRegExp)) {
 					if (preg_match('/' . $includeRegExp . '/', $entry))

@@ -64,6 +64,7 @@ class DatePickerField extends FormField
 	function DatePickerField(&$Form, $child=FALSE) {
 		parent::FormField($Form, $child);
 		$this->searchDefaults['DATATYPE'] = 'DATE';
+		$dateSettings = PHP2Go::getConfigVal('DATE_FORMAT_SETTINGS');
 		$this->options = array(
 			'cache' => TRUE,
 			'selectDefault' => FALSE,
@@ -71,9 +72,8 @@ class DatePickerField extends FormField
 			'showOthers' => FALSE,
 			'weekNumbers' => FALSE,
 			'electric' => TRUE,
-			'ifFormat' => (PHP2Go::getConfigVal('LOCAL_DATE_TYPE') == 'EURO' ? "%d/%m/%Y" : "%Y/%m/%d"),
+			'ifFormat' => $dateSettings['calendarFormat'],
 			'dateSep' => '#',
-			'range' => array(),
 			'statusFunc' => NULL
 		);
 	}
@@ -84,7 +84,7 @@ class DatePickerField extends FormField
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
 		print sprintf(
-			"<input id=\"%s\" name=\"%s\" type=\"hidden\" value=\"%s\" title=\"%s\"%s%s/><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td id=\"%s_calendar\"%s></td></tr></table>" .
+			"<input id=\"%s\" name=\"%s\" type=\"hidden\" value=\"%s\" title=\"%s\"%s%s /><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td id=\"%s_calendar\"%s></td></tr></table>" .
 			"<script type=\"text/javascript\">new DatePickerField(\"%s\", %s);</script>",
 			$this->id, $this->name, $this->value, $this->label, $this->attributes['SCRIPT'],
 			$this->attributes['DISABLED'], $this->id, $this->attributes['STYLE'],
@@ -122,15 +122,15 @@ class DatePickerField extends FormField
 	 */
 	function setShowTime($setting) {
 		$setting = (bool)$setting;
-		$dateType = PHP2Go::getConfigVal('LOCAL_DATE_TYPE');
+		$dateSettings = PHP2Go::getConfigVal('DATE_FORMAT_SETTINGS');
 		if ($setting) {
 			$this->searchDefaults['DATATYPE'] = 'DATETIME';
 			$this->options['showsTime'] = TRUE;
-			$this->options['ifFormat'] = ($dateType == 'EURO' ? "%d/%m/%Y %H:%M:%S" : "%Y/%m/%d %H:%M:%S");
+			$this->options['ifFormat'] = $dateSettings['calendarFormat'] . " %H:%M:%S";
 		} else {
 			$this->searchDefaults['DATATYPE'] = 'DATE';
 			$this->options['showsTime'] = FALSE;
-			$this->options['ifFormat'] = ($dateType == 'EURO' ? "%d/%m/%Y" : "%Y/%m/%d");
+			$this->options['ifFormat'] = $dateSettings['calendarFormat'];
 		}
 	}
 
@@ -215,8 +215,10 @@ class DatePickerField extends FormField
 	function onDataBind() {
 		parent::onDataBind();
 		$regs = array();
-		if (!$this->attributes['MULTIPLE'] && !empty($this->value) && !Date::isEuroDate($this->value, $regs) && !Date::isUsDate($this->value, $regs))
-			parent::setValue(Date::parseFieldExpression($this->value));
+		if (!$this->attributes['MULTIPLE'] && !empty($this->value)) {
+			if ($expr = Date::parseFieldExpression($this->value))
+				parent::setValue($expr);
+		}
 		if ($this->attributes['MULTIPLE'] && is_array($this->value))
 			$this->value = (!empty($this->value) ? join($this->options['dateSep'], $this->value) : "");
 		if ($this->_Form->isPosted())
@@ -230,27 +232,10 @@ class DatePickerField extends FormField
 		parent::onPreRender();
 		$this->_Form->Document->importStyle(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar-system.css");
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . "form/datepickerfield.js");
-		if ($this->attributes['MULTIPLE']) {
-			$multiple = array();
-			$list = (!empty($this->value) ? explode($this->options['dateSep'], $this->value) : array());
-			foreach ($list as $date) {
-				if ($this->options['showsTime'])
-					$multiple[] = date("F d, Y H:i:s", Date::dateToTime($date));
-				else
-					$multiple[] = date("F d, Y", Date::dateToTime($date));
-			}
-			$this->options['multiple'] = $list;//$multiple;
-		} else {
-			if (!empty($this->value)) {
-				if ($this->options['showsTime'])
-					$date = date("F d, Y H:i:s", Date::dateToTime($this->value));
-				else
-					$date = date("F d, Y", Date::dateToTime($this->value));
-			} else {
-				$date = NULL;
-			}
-			$this->options['date'] = $date;
-		}
+		if ($this->attributes['MULTIPLE'])
+			$this->options['multiple'] = (!empty($this->value) ? explode($this->options['dateSep'], $this->value) : array());
+		else
+			$this->options['date'] = $this->value;
 	}
 }
 ?>

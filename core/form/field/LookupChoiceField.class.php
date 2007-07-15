@@ -49,7 +49,7 @@ class LookupChoiceField extends LookupField
 	function display() {
 		ob_start();
 		parent::display();
-		print sprintf("<input type=\"text\" id=\"%s_filter\" name=\"%s_filter\" value=\"%s\" maxlenght=\"60\"%s%s%s%s><br>%s<script type=\"text/javascript\">%s_instance = new LookupChoiceField('%s');</script>",
+		print sprintf("<input type=\"text\" id=\"%s_filter\" name=\"%s_filter\" value=\"%s\" maxlength=\"60\"%s%s%s%s /><br />%s<script type=\"text/javascript\">%s_instance = new LookupChoiceField('%s');</script>",
 			$this->id, $this->name, PHP2Go::getLangVal('LOOKUP_CHOICE_FILTER_TIP'),
 			$this->attributes['TABINDEX'], $this->attributes['STYLE'], $this->attributes['DISABLED'],
 			(empty($this->attributes['WIDTH']) ? " size=\"25\"" : $this->attributes['WIDTH']),

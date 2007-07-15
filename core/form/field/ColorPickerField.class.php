@@ -64,7 +64,7 @@ class ColorPickerField extends FormField
 		if ($this->attributes['MODE'] == 'flat') {
 			$options = "{mode:\"flat\",container:\"{$this->id}_container\"}";
 			print sprintf(
-				"<input id=\"%s\" name=\"%s\" type=\"hidden\" value=\"%s\" title=\"%s\"%s%s%s%s>" .
+				"<input id=\"%s\" name=\"%s\" type=\"hidden\" value=\"%s\" title=\"%s\"%s%s%s%s />" .
 				"<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td id=\"%s_container\"></td></tr></table>" .
 				"<script type=\"text/javascript\">new ColorPickerField(\"%s\", %s);</script>",
 				$this->id, $this->name, $this->value, $this->label, $this->attributes['SCRIPT'],
@@ -75,8 +75,8 @@ class ColorPickerField extends FormField
 			$ua =& UserAgent::getInstance();
 			$options = "{mode:\"popup\",trigger:\"{$this->id}_button\"}";
 			print sprintf(
-				"<input id=\"%s\" name=\"%s\" type=\"text\" value=\"%s\" size=\"8\" maxlength=\"7\" title=\"%s\"%s%s%s%s%s%s%s>" .
-				"<button id=\"%s_button\" type=\"button\" %s style=\"cursor:pointer;%s;background:transparent;border:none;vertical-align:text-bottom\"><img src=\"%s\" border=\"0\" alt=\"\"/></button>" .
+				"<input id=\"%s\" name=\"%s\" type=\"text\" value=\"%s\" size=\"8\" maxlength=\"7\" title=\"%s\"%s%s%s%s%s%s%s />" .
+				"<button id=\"%s_button\" type=\"button\" %s style=\"cursor:pointer;%s;background:transparent;border:none;vertical-align:text-bottom\"><img src=\"%s\" border=\"0\" alt=\"\" /></button>" .
 				"<script type=\"text/javascript\">new ColorPickerField(\"%s\", %s);</script>",
 				$this->id, $this->name, $this->value, $this->label, $this->attributes['SCRIPT'], $this->attributes['TABINDEX'], $this->attributes['ACCESSKEY'],
 				$this->attributes['DISABLED'], $this->attributes['STYLE'], $this->attributes['DATASRC'], $this->attributes['DATAFLD'], $this->id,

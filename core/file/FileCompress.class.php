@@ -445,7 +445,7 @@ class FileCompress extends PHP2Go
 	function debug($str) {
 		$type = strtoupper($this->getClassName());
 		if ($this->debug) {
-			print $type . ' DEBUG : ' . $str . '<br>';
+			println("{$type} DEBUG : {$str}");
 			flush();
 		}
 	}

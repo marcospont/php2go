@@ -124,9 +124,12 @@ Element.getElementsByClassName = function(elm, clsName, tagName) {
 		if (document.getElementsByXPath)
 			return document.getElementsByXPath(".//*[contains(concat(' ', @class, ' '), ' " + clsName + " ')]", elm);
 		var re = new RegExp("(^|\\s)" + clsName + "(\\s|$)");
-		return $C(elm.getElementsByTagName(tagName || '*')).accept(function(item, idx) {
-			return (item.className && re.test(item.className));
-		}).map($E);
+		var res = [], elms = elm.getElementsByTagName(tagName || '*');
+		for (var i=0,s=elms.length; i<s; i++) {
+			if (elms[i].className && re.test(elms[i].className))
+				res.push($E(elms[i]));
+		}
+		return res;
 	}
 	return [];
 };
@@ -146,8 +149,8 @@ Element.getParentByTagName = function(elm, tag) {
 			if (elm.nodeName.equalsIgnoreCase(tag))
 				return $E(elm);
 		} while ((elm = elm.parentNode) != null);
-		return null;
 	}
+	return null;
 };
 
 /**
@@ -258,9 +261,9 @@ Element.isChildOf = function(elm, anc) {
 					return false;
 				p = p.parentNode || null;
 			}
-			return false;
 		}
 	}
+	return false;
 };
 
 /**
@@ -307,7 +310,7 @@ Element.hasAttribute = function(elm, attr) {
  * node and the reference node's next sibling
  * @param {Object} elm Element
  * @param {Object] ref Reference node
- * @type void
+ * @type Object
  */
 Element.insertAfter = function(elm, ref) {
 	if (elm = $(elm)) {
@@ -328,30 +331,30 @@ Element.insertAfter = function(elm, ref) {
  * @type Object
  */
 Element.getPosition = function(elm) {
-	var elm = $(elm), res = {x: -1, y: -1};
+	var elm = $(elm), p = {x: -1, y: -1};
 	if (elm) {
 		if (document.getBoxObjectFor) {
 			var box = document.getBoxObjectFor(elm);
 			var bl = parseInt(elm.getStyle('border-left-width'), 10);
 			var bt = parseInt(elm.getStyle('border-top-width'), 10);
-			res.x = box.x - (!isNaN(bl) ? bl : 0);
-			res.y = box.y - (!isNaN(bt) ? bt : 0);
+			p.x = box.x - (!isNaN(bl) ? bl : 0);
+			p.y = box.y - (!isNaN(bt) ? bt : 0);
 		} else {
-			res.x = elm.offsetLeft || parseInt(elm.style.left.replace('px', '') || '0', 10);
-			res.y = elm.offsetTop || parseInt(elm.style.top.replace('px', '') || '0', 10);
-			var p = elm.offsetParent;
-			while (p) {
-				res.x += p.offsetLeft;
-				res.y += p.offsetTop;
-            	p = p.offsetParent;
+			p.x = elm.offsetLeft || parseInt(elm.style.left.replace('px', '') || '0', 10);
+			p.y = elm.offsetTop || parseInt(elm.style.top.replace('px', '') || '0', 10);
+			var op = (elm.parentNode ? elm.offsetParent : null);
+			while (op) {
+				p.x += op.offsetLeft;
+				p.y += op.offsetTop;
+            	op = op.offsetParent;
 			}
 			if (PHP2Go.browser.opera || (PHP2Go.browser.khtml && elm.getStyle('position') == 'absolute')) {
-				res.x -= document.body.offsetLeft;
-				res.y -= document.body.offsetTop;
+				p.x -= document.body.offsetLeft;
+				p.y -= document.body.offsetTop;
 			}
 		}
 	}
-	return res;
+	return p;
 };
 
 /**
@@ -362,7 +365,7 @@ Element.getPosition = function(elm) {
  * @type Object
  */
 Element.getDimensions = function(elm) {
-	var elm = $(elm), d = {width: -1, height: -1};
+	var elm = $(elm), d = {width: 0, height: 0};
 	if (elm) {
 		if (elm.getStyle('display') != 'none') {
 			if (elm.offsetWidth && elm.offsetHeight) {
@@ -373,16 +376,12 @@ Element.getDimensions = function(elm) {
 				d.height = elm.style.pixelHeight;
 	    	}
 		} else {
-			var s = elm.style;
-			var old = { visibility : s.visibility, position : s.position };
-			s.visibility = 'hidden';
-			s.position = 'absolute';
-			s.display = (elm.tagName.equalsIgnoreCase('div') ? 'block' : '');
-			d.width = elm.clientWidth;
-			d.height = elm.clientHeight;
-			s.visibility = old.visibility;
-			s.position = old.position;
-			s.display = 'none';
+			elm.swapStyles({
+				position: 'absolute', visibility: 'hidden', display: (elm.tagName.equalsIgnoreCase('div') ? 'block' : '')
+			}, function() {
+				d.width = elm.clientWidth;
+				d.height = elm.clientHeight;
+			});
 		}
 	}
 	return d;
@@ -419,7 +418,7 @@ Element.isWithin = function(elm, p1, p2) {
  * @type Object
  */
 Element.getStyle = function(elm, prop) {
-	elm = $(elm);	
+	elm = $(elm);
 	if (elm && elm.style) {
 		var d = document, camel = prop.camelize(), val = null;
 		if (PHP2Go.browser.ie && (prop == 'float' || prop == 'cssFloat'))
@@ -444,23 +443,59 @@ Element.getStyle = function(elm, prop) {
 };
 
 /**
- * Set a style property of an element
+ * Set one or more style properties of an element
  * @param {Object} elm Element
- * @param {String} prop Property name
+ * @param {Object} prop Hash of properties or property name
  * @param {Object} value Property value
- * @type void
+ * @type Object
  */
 Element.setStyle = function(elm, prop, value) {
-	elm = $(elm), prop = prop.camelize();
-	if (elm) {
-		switch (prop) {
-			case 'opacity' :
-				elm.setOpacity(value);
-				break;
-			default :
-				elm.style[prop] = value;
+	if (elm = $(elm)) {
+		var props = prop;
+		if (typeof(prop) == 'string') {
+			props = {};
+			props[prop] = value;
+		}
+		for (var prop in props) {
+			switch (prop) {
+				case 'opacity' :
+					elm.setOpacity(props[prop]);
+					break;
+				case 'width' :
+				case 'height' :
+					elm.style[prop.camelize()] = props[prop];
+					if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute' && elm.getStyle('display') != 'none')
+						WCH.update(elm);
+					break;
+				default :
+					elm.style[prop.camelize()] = props[prop];
+					break;
+			}
 		}
 	}
+	return elm;
+};
+
+/**
+ * Swaps in/out style properties in order to call a given function
+ * @param {Object} elm Element
+ * @param {Object} props Style properties
+ * @param {Function} func Function to be called
+ * @type Object
+ */
+Element.swapStyles = function(elm, props, func) {
+	if (elm = $(elm)) {
+		for (var p in props) {
+			elm.style['old'+p] = elm.style[p];
+			elm.style[p.camelize()] = props[p];
+		}
+		func();
+		for (var p in props) {
+			elm.style[p.camelize()] = elm.style['old'+p];
+			elm.style['old'+p] = null;
+		}
+	}
+	return elm;
 };
 
 /**
@@ -472,7 +507,7 @@ Element.setStyle = function(elm, prop, value) {
 Element.getOpacity = function(elm) {
 	if (elm = $(elm)) {
 		var op = elm.getStyle('opacity');
-		if (op) 
+		if (op)
 			return parseFloat(op, 10);
 		var re = new RegExp("alpha\(opacity=(.*)\)");
 		if (op = re.exec(elm.getStyle('filter') || '') && op[1])
@@ -487,7 +522,7 @@ Element.getOpacity = function(elm) {
  * must be a decimal number between 0 and 1
  * @param {Object} elm Element
  * @param {Number} op Opacity level
- * @type void
+ * @type Object
  */
 Element.setOpacity = function(elm, op) {
 	if (elm = $(elm)) {
@@ -495,12 +530,15 @@ Element.setOpacity = function(elm, op) {
 		var s = elm.style;
 		s['opacity'] = s['-moz-opacity'] = s['-khtml-opacity'] = op;
 		if (PHP2Go.browser.ie) {
+			// force layout on the element
+			s['zoom'] = 1;
 			// remove current alpha value
-			s['filter'] = elm.getStyle('filter').replace(/alpha\([^\)]*\)/gi, '');
+			s['filter'] = (elm.getStyle('filter') || '').replace(/alpha\([^\)]*\)/gi, '');
 			// add new alpha value if not null
 			s['filter'] += (op ? 'alpha(opacity=' + Math.round(op*100) + ')' : '');
 		}
 	}
+	return elm;
 };
 
 /**
@@ -516,6 +554,33 @@ Element.classNames = function(elm) {
 		if (!elm._classNames)
 			elm._classNames = new CSSClasses(elm);
 		return elm._classNames;
+	}
+	return null;
+};
+
+/**
+ * Adds a CSS class on an element
+ * @param {Object} elm Element
+ * @param {String} cl CSS class
+ * @type void
+ */
+Element.addClass = function(elm, cl) {
+	if ((elm = $(elm)) && cl) {
+		elm.removeClass(cl);
+		elm.className = cl + ' ' + elm.className.trim();
+	}
+};
+
+/**
+ * Removes a CSS class from an element
+ * @param {Object} elm Element
+ * @param {String} cl CSS class
+ * @type void
+ */
+Element.removeClass = function(elm, cl) {
+	if ((elm = $(elm)) && cl) {
+		var re = new RegExp("^"+cl+"\\b\\s*|\\s*\\b"+cl+"\\b", 'g');
+		elm.className = elm.className.replace(re, '');
 	}
 };
 
@@ -543,14 +608,13 @@ Element.isVisible = function(elm) {
  * @type void
  */
 Element.show = function() {
-	$C(arguments).map($).walk(function(item, idx) {
-		if (item) {
-			var newDisplay = (item.tagName && item.tagName.match(/^div$/i) ? 'block' : '');
-			item.style.display = newDisplay;
-			if (PHP2Go.browser.ie && item.getStyle('position') == 'absolute')
-				WCH.attach(item);
-		}
-	});
+	var item, arg = arguments;
+	for (var i=0; i<arg.length; i++) {
+		item = $(arg[i]);
+		item.style.display = (item.tagName && item.tagName.equalsIgnoreCase('div') ? 'block' : '');
+		if (PHP2Go.browser.ie && item.getStyle('position') == 'absolute')
+			WCH.attach(item);
+	}
 };
 
 /**
@@ -560,31 +624,29 @@ Element.show = function() {
  * @type void
  */
 Element.hide = function() {
-	$C(arguments).map($).walk(function(item, idx) {
-		if (item) {
-			item.style.display = 'none';
-			if (PHP2Go.browser.ie && item.getStyle('position') == 'absolute')
-				WCH.detach(item);
-		}
-	});
+	var item, arg = arguments;
+	for (var i=0; i<arg.length; i++) {
+		item = $(arg[i]);
+		item.style.display = 'none';
+		if (PHP2Go.browser.ie && item.getStyle('position') == 'absolute')
+			WCH.detach(item);
+	}
 };
 
 /**
- * Alternates the display style property of
- * one or more elements from 'none' to the default
- * value
- * @param {Object} elm Element
+ * Alternates the display style property of one or
+ * more elements from 'none' to the default value
  * @type void
  */
 Element.toggleDisplay = function() {
-	$C(arguments).map($).walk(function(item, idx) {
-		if (item) {
-			if (item.getStyle('display') == 'none')
-				item.show();
-			else
-				item.hide();
-		}
-	});
+	var item, arg = arguments;
+	for (var i=0; i<arg.length; i++) {
+		item = $(arg[i]);
+		if (item.getStyle('display') == 'none')
+			item.show();
+		else
+			item.hide();
+	}
 };
 
 /**
@@ -592,15 +654,16 @@ Element.toggleDisplay = function() {
  * @param {Object} elm Element
  * @param {Number} x X coordinate
  * @param {Number} y Y coordinate
- * @type void
+ * @type Object
  */
 Element.moveTo = function(elm, x, y) {
 	if (elm = $(elm)) {
 		elm.setStyle('left', x + 'px');
 		elm.setStyle('top', y + 'px');
 		if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
-			WCH.update(elm);
+			WCH.update(elm, {position: {x: x, y: y}});
 	}
+	return elm;
 };
 
 /**
@@ -608,22 +671,23 @@ Element.moveTo = function(elm, x, y) {
  * @param {Object} elm Element
  * @param {Number} w Width
  * @param {Number} h Height
- * @type void
+ * @type Object
  */
 Element.resizeTo = function(elm, w, h) {
 	if (elm = $(elm)) {
 		elm.setStyle('width', w + 'px');
 		elm.setStyle('height', h + 'px');
 		if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
-			WCH.update(elm);
+			WCH.update(elm, {dimensions: {width: w, height: h}});
 	}
+	return elm;
 };
 
 /**
  * Remove HTML contents of an element
  * @param {Object} elm Element
  * @param {Boolean} useDom Whether to use DOM or not
- * @type void
+ * @type Object
  */
 Element.clear = function(elm, useDom) {
 	elm = $(elm), useDom = !!useDom;
@@ -635,6 +699,7 @@ Element.clear = function(elm, useDom) {
 			elm.innerHTML = '';
 		}
 	}
+	return elm;
 };
 
 /**
@@ -645,6 +710,31 @@ Element.clear = function(elm, useDom) {
 Element.empty = function(elm) {
 	if (elm = $(elm))
 		return elm.innerHTML.empty();
+	return true;
+};
+
+/**
+ * Collects the contents of all text nodes inside a given element
+ * @param {Object} elm Element
+ * @type String
+ */
+Element.getInnerText = function(elm) {
+	if (elm = $(elm)) {
+		if (elm.innerText)
+			return elm.innerText;
+		var s = '', cs = elm.childNodes;
+		for (var i=0; i<cs.length; i++) {
+			switch (cs[i].nodeType) {
+				case 1 :
+					s += Element.getInnerText(cs[i]);
+					break;
+				case 3 :
+					s += cs[i].nodeValue;
+					break;
+			}
+		}
+		return s;
+	}
 };
 
 /**
@@ -655,7 +745,7 @@ Element.empty = function(elm) {
  * @param {Object} elm Element
  * @param {Boolean} eval Whether to eval scripts. Defaults to false
  * @param {Boolean} useDom Whether to use DOM. Defaults to false
- * @type void
+ * @type Object
  */
 Element.update = function(elm, code, evalScripts, useDom) {
 	elm = $(elm), code = String(code), evalScripts = !!evalScripts, useDom = !!useDom;
@@ -700,7 +790,7 @@ Element.update = function(elm, code, evalScripts, useDom) {
 				while (div.firstChild)
 					elm.appendChild(div.removeChild(div.firstChild));
 				delete div;
-			} 
+			}
 			// default behaviour
 			else {
 				elm.innerHTML = stripped;
@@ -708,6 +798,7 @@ Element.update = function(elm, code, evalScripts, useDom) {
 			(evalScripts) && (code.evalScriptsDelayed());
 		}
 	}
+	return elm;
 };
 
 /**
@@ -719,7 +810,7 @@ Element.update = function(elm, code, evalScripts, useDom) {
  * @param {String} code HTML code
  * @param {String} pos Insertion position. Defaults to "bottom"
  * @param {Boolean} eval Whether to eval scripts. Defaults to false
- * @type void
+ * @type Object
  */
 Element.insertHTML = function(elm, code, pos, evalScripts) {
 	elm = $(elm), evalScripts = !!evalScripts;
@@ -762,6 +853,7 @@ Element.insertHTML = function(elm, code, pos, evalScripts) {
 		}
 		(evalScripts) && (code.evalScriptsDelayed());
 	}
+	return elm;
 };
 
 /**
@@ -812,9 +904,11 @@ if (PHP2Go.nativeElementExtension)
 /**
  * Document extensions
  */
-document.getElementsByClassName = function(clsName, tagName) {
-	return Element.getElementsByClassName(document, clsName, tagName);
-};
+if (!document.getElementsByClassName) {
+	document.getElementsByClassName = function(clsName, tagName) {
+		return Element.getElementsByClassName(document, clsName, tagName);
+	};
+}
 if (document.evaluate) {
 	document.getElementsByXPath = function(expr, parent) {
 		var res = [], qry = document.evaluate(expr, $(parent) || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -838,8 +932,9 @@ CSSClasses = function(elm) {
 	 */
 	this.elm = $(elm);
 	/**
-	 * Applies an iterator function
-	 * on the element class names
+	 * Implements the collection interface by
+	 * applying an iterator function on the
+	 * element's class names
 	 * @type void
 	 * @private
 	 */
@@ -850,11 +945,11 @@ CSSClasses = function(elm) {
 	};
 	/**
 	 * Verifies if the element contains a given class name
-	 * @param {String} cls Class name
+	 * @param {String} cl Class name
 	 * @type Boolean
 	 */
-	this.has = function(cls) {
-		var re = new RegExp("\s?"+cls+"\s?", 'i');
+	this.has = function(cl) {
+		var re = new RegExp("\s?"+cl+"\s?", 'i');
 		return re.test(this.elm.className);
 	};
 	/**
@@ -872,8 +967,9 @@ CSSClasses = function(elm) {
 	 */
 	this.add = function() {
 		var a = arguments, c = this.elm.className;
-		for (var i=0; i<a.length; i++)
-			c = a[i] + ' ' + c.trim();
+		for (var i=0; i<a.length; i++) {
+			(a[i]) && (c = a[i] + ' ' + c.trim());
+		}
 		this.set(c.trim());
 	};
 	/**
@@ -884,8 +980,10 @@ CSSClasses = function(elm) {
 	this.remove = function() {
 		var re, a = arguments, c = this.elm.className;
 		for (var i=0; i<a.length; i++) {
-			re = new RegExp("^"+a[i]+"\\b\\s*|\\s*\\b"+a[i]+"\\b", 'g');
-			c = c.replace(re, '');
+			if (a[i]) {
+				re = new RegExp("^"+a[i]+"\\b\\s*|\\s*\\b"+a[i]+"\\b", 'g');
+				c = c.replace(re, '');
+			}
 		}
 		this.set(c.trim());
 	};
@@ -908,7 +1006,7 @@ CSSClasses = function(elm) {
 		return this.elm.className;
 	};
 };
-Object.implement(CSSClasses.prototype, Collection);
+Object.extend(CSSClasses.prototype, Collection);
 
 /**
  * WCH stands for Windowed Controls Hider, which is a tool that
@@ -982,14 +1080,19 @@ var WCH = {
 	 * Update WCH of a given element. This method is
 	 * useful when the layer changes position or dimension
 	 * @param {Object} elm Element
+	 * @param {Object} opts Cached position and/or dimensions, to avoid calculations
 	 * @type void
 	 */
-	update : function(elm) {
+	update : function(elm, opts) {
 		if (elm.wchIframe || elm.wchList) {
 			if (elm.wchIframe) {
-				var pos = elm.getPosition();
+				opts = opts || {};
+				var pos = opts.position || elm.getPosition();
+				var dim = opts.dimensions || elm.getDimensions();
 				elm.wchIframe.style.left = pos.x;
 				elm.wchIframe.style.top = pos.y;
+				elm.wchIframe.style.width = dim.width;
+				elm.wchIframe.style.height = dim.height;
 			} else {
 				this.detach(elm);
 				this.attach(elm);
@@ -1029,14 +1132,22 @@ Event.onDOMReady = function(fn) {
 		var run = function() {
 			if (!arguments.callee.done) {
 				arguments.callee.done = true;
-				if (self.timer) {
-					clearInterval(self.timer);
-					self.timer = null;
-				}
 				self.queue.walk(function(item, idx) {
 					item();
 				});
 				self.queue = null;
+				// mozilla, opera9
+				if (d.removeEventListener)
+					d.removeEventListener('DOMContentLoaded', run, false);
+				// msie
+				var defer = $('defer_script');
+				if (defer)
+					defer.remove();
+				// safari, opera8
+				if (self.timer) {
+					clearInterval(self.timer);
+					self.timer = null;
+				}
 			}
 		};
 		// mozilla, opera9
@@ -1224,10 +1335,10 @@ Event.prototype.char = function() {
  * @type Object
  */
 Event.prototype.position = function() {
-	var b = document.body, e = document.documentElement;
+	var e = document.documentElement || document.body;
 	return {
-		x : this.clientX + (b.scrollLeft ? b.scrollLeft : e.scrollLeft),
-		y : this.clientY + (b.scrollTop ? b.scrollTop : e.scrollTop)
+		x : this.pageX || (this.clientX + e.scrollLeft),
+		y : this.pageY || (this.clientY + e.scrollTop)
 	};
 };
 
@@ -1285,7 +1396,7 @@ $EV = function(e) {
 	e = e || window.event;
 	if (!e || PHP2Go.nativeEventExtension)
 		return e;
-	Object.implement(e, Event.prototype);
+	Object.extend(e, Event.prototype);
 	return e;
 };
 

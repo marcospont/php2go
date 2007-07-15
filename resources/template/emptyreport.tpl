@@ -6,7 +6,7 @@
     <td align="center" class="{$report.style.filter}">
       {$emptyMsg}
 <!-- if $report.search_sent -->
-      <br><br><input type="button" name="btn_back" id="report_btn_back" class="{$report.style.button}" value="{$backLink}" title="{$backLink}" onClick="location.replace('{$report.base_uri}')">
+      <br /><br /><input type="button" name="btn_back" id="report_btn_back" class="{$report.style.button}" value="{$backLink}" title="{$backLink}" onclick="location.replace('{$report.base_uri}')" />
 <!-- end if -->
     </td>
   </tr>

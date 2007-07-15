@@ -172,7 +172,7 @@ class Pop3 extends SocketClient
 			// wait for server's response
 			if ($response = $this->_readResponse()) {
 				if ($this->debug)
-					print('POP3 DEBUG --- FROM SERVER : ' . $response . '<br>');
+					println('POP3 DEBUG --- FROM SERVER : ' . $response);
 				if (ereg("<([^>+])>", $response, $matches))
 					$this->banner = $matches[1];
 				$this->state = POP3_AUTH_STATE;
@@ -665,8 +665,8 @@ class Pop3 extends SocketClient
 		$this->resetError();
 		if (parent::write($data) && $responseMessage = $this->_readResponse()) {
 			if ($this->debug) {
-				print('POP3 DEBUG --- FROM CLIENT : ' . htmlspecialchars($data) . '<br>');
-				print('POP3 DEBUG --- FROM SERVER : ' . htmlspecialchars($responseMessage) . '<br>');
+				println('POP3 DEBUG --- FROM CLIENT : ' . htmlspecialchars($data));
+				println('POP3 DEBUG --- FROM SERVER : ' . htmlspecialchars($responseMessage));
 			}
 			if (ereg("^\+OK", $responseMessage)) {
 				$responseMessage = trim(substr($responseMessage, 3));

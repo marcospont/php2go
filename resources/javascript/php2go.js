@@ -121,7 +121,7 @@ var PHP2Go = {
 		for (var i=0; i<scripts.length; i++) {
 			if (scripts[i].src) {
 				this.included[scripts[i].src] = true;
-				mt = scripts[i].src.match(/(.*)php2go\.js(\?locale=([^&]+)(&charset=(.*))?)?/);
+				mt = scripts[i].src.match(/(.*)php2go\.js(\?locale=([^&]+)(&date=(.*))?(&charset=(.*))?)?/);
 				if (mt) {
 					this.baseUrl = mt[1];
 					break;
@@ -136,7 +136,7 @@ var PHP2Go = {
 		this.include(this.baseUrl + 'structures.js');
 		this.include(this.baseUrl + 'dom.js');
 		this.include(this.baseUrl + 'compat.js');
-		this.include(this.baseUrl + 'lang.php?locale=' + mt[3], (mt[5] ? mt[5] : null));
+		this.include(this.baseUrl + 'locale.php?locale=' + mt[3] + (mt[4] ? mt[4] : ''), (mt[7] ? mt[7] : null));
 		this.loaded = true;
 	},
 	/**
@@ -149,7 +149,7 @@ var PHP2Go = {
 		if (typeof(Error) == 'function') {
 			var e = new Error(msg);
 			if (!e.message)
-				e.message = expr;
+				e.message = msg;
 			if (name)
 				e.name = name;
 			throw e;
@@ -177,9 +177,10 @@ var PHP2Go = {
 	 *
 	 * <br>Properties:
 	 * <ul><li>ie (Boolean)</li><li>ie7 (Boolean)</li><li>ie6 (Boolean)</li><li>
-	 * ie5 (Boolean)</li><li>opera (Boolean)</li><li>khtml (Boolean)</li><li>mozilla
-	 * (Boolean)</li><li>gecko (Boolean)</li><li>windows (Boolean)</li><li>linux (Boolean)</li><li>
-	 * mac (Boolean)</li><li>unix (Boolean)</li><li>os (String)</li></ul>
+	 * ie5 (Boolean)</li><li>opera (Boolean)</li><li>khtml (Boolean)</li><li>safari
+	 * (Boolean)</li><li>mozilla (Boolean)</li><li>gecko (Boolean)</li><li>windows
+	 * (Boolean)</li><li>linux (Boolean)</li><li>mac (Boolean)</li><li>unix
+	 * (Boolean)</li><li>os (String)</li></ul>
 	 *
 	 * @type Object
 	 */
@@ -190,7 +191,8 @@ var PHP2Go = {
 		bw.ie6 = bw.ie && /msie 6/i.test(ua);
 		bw.ie5 = bw.ie && /msie 5\.0/i.test(ua);
 		bw.opera = /opera/i.test(ua);
-		bw.khtml = /konqueror|safari|khtml/i.test(ua);
+		bw.khtml = /konqueror|safari|webkit|khtml/i.test(ua);
+		bw.safari = /safari|webkit/i.test(ua);
 		bw.mozilla = !bw.ie && !bw.opera && !bw.khtml && /mozilla/i.test(ua);
 		bw.gecko = /gecko/i.test(ua);
 		bw.windows = bw.linux = bw.mac = bw.unix = false;
@@ -225,6 +227,18 @@ var PHP2Go = {
 			case 'GOET' : return (a >= b);
 			default : return false;
 		}
+	},
+	/**
+	 * Evaluates a Javascript string in global context
+	 * @param {String} Javascript string
+	 */
+	eval : function(str) {
+		if (window.execScript)
+			window.execScript(str);
+		else if (this.browser.safari)
+			window.setTimeout(str, 0);
+		else
+			eval.call(window, str);
 	}
 };
 
@@ -240,18 +254,16 @@ try {
 }
 
 /**
- * Makes all properties and methods of src
- * available to dst. That can be used to
- * add behaviours from a class to another,
- * without establishing inheritance relationship
+ * Makes all properties and methods of src available to dst
  * @param {Object} dst Target
  * @param {Object} src Source
- * @type void
+ * @type Object
  * @addon
  */
-Object.implement = function(dst, src) {
+Object.extend = function(dst, src) {
 	for (p in src)
 		dst[p] = src[p];
+	return dst;
 };
 
 /**
@@ -271,9 +283,9 @@ Object.serialize = function(obj) {
 	if (obj === window || obj === document) return;
 	var buf = [];
 	for (var p in obj) {
-		if (obj[p] == '') continue;
-		if (obj[p] && obj[p].ownerDocument === document) continue;
 		try {
+			if (obj[p] == '') continue;
+			if (obj[p] && obj[p].ownerDocument === document) continue;
 			var v = Object.serialize(obj[p]);
 			if (typeof(v) != 'undefined')
 				buf.push(p + ":" + v);
@@ -556,12 +568,8 @@ String.prototype.evalScripts = function() {
 		var matches = this.match(ra) || [];
 		return $C(matches).map(function(item) {
 			var match = item.match(ro);
-			if (match) {
-				if (window.execScript)
-					window.execScript(match[1]);
-				else
-					eval(match[1]);
-			}
+			if (match)
+				PHP2Go.eval(match[1]);
 		});
 	} catch(e) {
 		var tmp, self = this, sp = this.indexOf("<script"), ep1 = 0, ep2 = 0;
@@ -570,7 +578,7 @@ String.prototype.evalScripts = function() {
 			ep1 = tmp.indexOf(">");
 			ep2 = tmp.indexOf("</script>");
 			if (ep1 != -1 && ep2 != -1) {
-				eval(tmp.substr(ep1+1, ep2-ep1-1));
+				PHP2Go.eval(tmp.substr(ep1+1, ep2-ep1-1));
 				self = (sp ? self.substr(0, sp-1) : '') + tmp.substr(ep2+9);
 				sp = self.indexOf("<script");
 			} else {
@@ -629,26 +637,17 @@ String.prototype.serialize = function() {
  * @addon
  */
 Date.fromString = function(str) {
-	var mt, d, m, y, dt = new Date();
-	if (mt = str.match(new RegExp("^([0-9]{1,2})(\/|\.|\-)([0-9]{1,2})(\/|\.|\-)([0-9]{4})(?: ([0-9]{2})\:([0-9]{2})\:?([0-9]{2})?)?"))) {
-		dt.setDate(parseInt(mt[1], 10));
-		dt.setMonth(parseInt(mt[3], 10)-1);
-		dt.setYear(mt[5]);
-		(mt[6]) && (dt.setHours(parseInt(mt[6], 10)));
-		(mt[7]) && (dt.setMinutes(parseInt(mt[7], 10)));
-		(mt[8]) && (dt.setSeconds(parseInt(mt[8], 10)));
-		return dt;
-	} else if (mt = str.match(new RegExp("^([0-9]{4})(?:\/|\.|\-)([0-9]{1,2})(?:\/|\.|\-)([0-9]{1,2})(?: ([0-9]{2})\:([0-9]{2})\:?([0-9]{2})?)?"))) {
-		dt.setDate(parseInt(mt[5], 10));
-		dt.setMonth(parseInt(mt[3], 10)-1);
-		dt.setYear(mt[1]);
-		(mt[6]) && (dt.setHours(parseInt(mt[6], 10)));
-		(mt[7]) && (dt.setMinutes(parseInt(mt[7], 10)));
-		(mt[8]) && (dt.setSeconds(parseInt(mt[8], 10)));
-		return dt;
-	} else {
-		return dt;
+	var mt, dt = new Date();
+	var loc = Locale.date, re = loc.regexp;
+	if (mt = str.match(re)) {
+		dt.setDate(parseInt(mt[loc.matches[0]], 10));
+		dt.setMonth(parseInt(mt[loc.matches[1]], 10)-1);
+		dt.setYear(mt[loc.matches[2]]);
+		(mt[7]) && (dt.setHours(parseInt(mt[7], 10)));
+		(mt[8]) && (dt.setMinutes(parseInt(mt[8], 10)));
+		(mt[9]) && (dt.setSeconds(parseInt(mt[9], 10)));
 	}
+	return dt;
 };
 
 /**
@@ -661,27 +660,29 @@ Date.fromString = function(str) {
  */
 Date.toDays = function(date) {
 	var d, m, y, c;
-	if (mt = date.match(new RegExp("^([0-9]{1,2})(\/|\.|\-)([0-9]{1,2})(\/|\.|\-)([0-9]{4})"))) {
-		d = parseInt(mt[1], 10), m = parseInt(mt[3], 10), y = mt[5];
-	} else if (mt = date.match(new RegExp("^([0-9]{4})(?:\/|\.|\-)([0-9]{1,2})(?:\/|\.|\-)([0-9]{1,2})"))) {
-		d = parseInt(m[5], 10), m = parseInt(mt[3], 10), y = mt[1];
+	var loc = Locale.date;
+	var re = loc.regexp;
+	if (mt = date.match(re)) {
+		d = parseInt(mt[loc.matches[0]], 10);
+		m = parseInt(mt[loc.matches[1]], 10);
+		y = mt[loc.matches[2]];
+		c = parseInt(y.substring(0, 2), 10);
+		y = y.substring(2);
+		if (m > 2) {
+			m -= 3;
+		} else {
+			m += 9;
+			if (y) {
+				y--;
+			} else {
+				y = 99;
+				c--;
+			}
+		}
+		return (Math.floor((146097*c)/4)+Math.floor((1461*y)/4)+Math.floor((153*m+2)/5)+d+1721119);
 	} else {
 		return 0;
 	}
-	c = parseInt(y.substring(0, 2));
-	y = y.substring(2);
-	if (m > 2) {
-		m -= 3;
-	} else {
-		m += 9;
-		if (y) {
-			y--;
-		} else {
-			y = 99;
-			c--;
-		}
-	}
-	return (Math.floor((146097*c)/4)+Math.floor((1461*y)/4)+Math.floor((153*m+2)/5)+d+1721119);
 };
 
 /**
@@ -1093,10 +1094,10 @@ var Window = {
 	 * @type Number
 	 */
 	scroll : function() {
-		var w = window, e = document.documentElement, b = document.body;
+		var w = window, e = (document.documentElement || document.body);
 		return {
-			x : (w.pageXOffset || (e && e.scrollLeft ? e.scrollLeft : (b && b.scrollLeft ? b.scrollLeft : 0))),
-			y : (w.pageYOffset || (e && e.scrollTop ? e.scrollTop : (b && b.scrollTop ? b.scrollTop : 0)))
+			x : (w.pageXOffset || e.scrollLeft || 0),
+			y : (w.pageYOffset || e.scrollTop || 0)
 		};
 	}
 };
@@ -1326,10 +1327,18 @@ $ = function() {
 };
 
 /**
- * Special function that's used as an empty function
+ * Empty function
  * @type void
  */
 $EF = function() {
+};
+
+/**
+ * Identity function
+ * @type Object
+ */
+$IF = function(x) {
+	return x;
 };
 
 /**
@@ -1366,7 +1375,7 @@ $C = function(o, assoc) {
 	} else {
 		o.each = Array.prototype.each;
 	}
-	Object.implement(o, Collection);
+	Object.extend(o, Collection);
 	return o;
 };
 
@@ -1402,21 +1411,18 @@ $E = function(elm) {
  * element can be initialized with a set of style
  * properties and initial HTML contents
  * @param {String} name Tag name
- * @param {Object} parent Element parent node
- * @param {Object} styleProps Element style properties
- * @param {String} innerHTML Element inner HTML
+ * @param {Object} parent Parent node
+ * @param {Object} style Style properties
+ * @param {String} innerHTML Inner HTML
+ * @param {Object} attrs Attributes
  * @type Object
  */
-$N = function(name, parent, style, html) {
+$N = function(name, parent, style, html, attrs) {
 	var elm = $E(document.createElement(name.toLowerCase()));
-	if (style) {
-		for (p in style)
-			elm.style[p] = style[p];
-	}
-	if (parent)
-		elm = parent.appendChild(elm);
-	if (html)
-		elm.innerHTML = html;
+	elm.setStyle(style);
+	(parent) && (parent.appendChild(elm));
+	(html) && (elm.innerHTML = html);
+	(attrs) && (Object.extend(elm, attrs));
 	return elm;
 };
 

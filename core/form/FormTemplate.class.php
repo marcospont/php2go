@@ -164,7 +164,7 @@ class FormTemplate extends Form
 		if (isset($this->errorPlaceHolder) && ($errors = parent::getFormErrors())) {
 			if ($this->clientErrorOptions['showAll']) {
 				$mode = @$this->errorStyle['list_mode'];
-				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br>", $errors));
+				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br />", $errors));
 				$this->Template->assign('errorDisplay', " style=\"display:block\"");
 				$this->Template->assign($this->errorPlaceHolder, @$this->errorStyle['header_text'] . $errors);
 			} else {
@@ -239,10 +239,10 @@ class FormTemplate extends Form
 	function _buildFormStart() {
 		$target = (isset($this->actionTarget) ? " target=\"" . $this->actionTarget . "\"" : '');
 		$enctype = ($this->hasUpload ? " enctype=\"multipart/form-data\"" : '');
-		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\">", $this->formName, FORM_SIGNATURE, parent::getSignature());
+		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\" />", $this->formName, FORM_SIGNATURE, parent::getSignature());
 		return sprintf("<form id=\"%s\" name=\"%s\" action=\"%s\" method=\"%s\" style=\"display:inline\"%s%s>%s\n",
 			$this->formName, $this->formName, $this->formAction,
-			$this->formMethod, $target, $enctype, $signature
+			strtolower($this->formMethod), $target, $enctype, $signature
 		);
 	}
 

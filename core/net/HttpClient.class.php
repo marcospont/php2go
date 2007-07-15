@@ -823,7 +823,7 @@ class HttpClient extends SocketClient
 			parent::writeLine();
 		}
 		if ($this->debug)
-			print('HTTP DEBUG --- FROM SERVER : ' . $rawHeaders . '<br>');
+			println('HTTP DEBUG --- FROM SERVER : ' . $rawHeaders);
 		if ($getBody) {
 			$body = '';
 			if (strtolower($this->getResponseHeader('Transfer-Encoding')) != 'chunked' && !$this->keepAlive)

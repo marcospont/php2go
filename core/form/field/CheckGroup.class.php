@@ -95,14 +95,14 @@ class CheckGroup extends GroupField
 		for ($i=0, $s=$this->optionCount; $i<$s; $i++) {
 			if ($hasValue) {
 				if ($arrayValue)
-					$this->optionAttributes[$i]['SELECTED'] = (in_array($this->optionAttributes[$i]['VALUE'], $this->value) ? ' checked' : '');
+					$this->optionAttributes[$i]['SELECTED'] = (in_array($this->optionAttributes[$i]['VALUE'], $this->value) ? ' checked="checked"' : '');
 				else
-					$this->optionAttributes[$i]['SELECTED'] = (!strcasecmp($this->optionAttributes[$i]['VALUE'], $this->value) ? ' checked' : '');
+					$this->optionAttributes[$i]['SELECTED'] = (!strcasecmp($this->optionAttributes[$i]['VALUE'], $this->value) ? ' checked="checked"' : '');
 			} else {
 				$this->optionAttributes[$i]['SELECTED'] = '';
 			}
 			$accessKey = TypeUtils::ifNull($this->optionAttributes[$i]['ACCESSKEY'], $this->accessKey);
-			$input = sprintf("<input type=\"checkbox\" id=\"%s\" name=\"%s\" title=\"%s\" value=\"%s\"%s%s%s%s%s%s%s%s>",
+			$input = sprintf("<input type=\"checkbox\" id=\"%s\" name=\"%s\" title=\"%s\" value=\"%s\"%s%s%s%s%s%s%s%s />",
 				"{$this->id}_{$i}", $groupName, $this->label, $this->optionAttributes[$i]['VALUE'],
 				($accessKey ? " accesskey=\"{$accessKey}\"" : ''), $this->attributes['TABINDEX'],
 				$this->optionAttributes[$i]['SCRIPT'], $this->attributes['STYLE'],

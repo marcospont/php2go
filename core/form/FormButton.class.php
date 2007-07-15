@@ -118,12 +118,12 @@ class FormButton extends Component
 		if ($this->attributes['IMG'] != '') {
 			if ($this->attributes['TYPE'] == 'SUBMIT') {
 				// builds an IMAGE input
-				print sprintf("<input id=\"%s\" name=\"%s\" type=\"image\" value=\"%s\" src=\"%s\" border=\"0\"%s%s%s%s%s%s>",
+				print sprintf("<input id=\"%s\" name=\"%s\" type=\"image\" value=\"%s\" src=\"%s\"%s%s%s%s%s%s />",
 					$this->id, $this->name, $this->value, $this->attributes['IMG'], $this->attributes['ALTHTML'], $this->attributes['SCRIPT'],
 					$this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'], $this->attributes['DISABLED'], $this->attributes['STYLE']
 				);
 			} else {
-				$btnScript = ($this->disabled ? " onClick=\"return false;\"" : $this->attributes['SCRIPT']);
+				$btnScript = ($this->disabled ? " onclick=\"return false;\"" : $this->attributes['SCRIPT']);
 				// image dimensions
 				$size = @getimagesize($this->attributes['IMG']);
 				if (!empty($size)) {
@@ -140,7 +140,7 @@ class FormButton extends Component
 				);
 			}
 		} else {
-			print sprintf("<input id=\"%s\" name=\"%s\" type=\"%s\" value=\"%s\"%s%s%s%s%s%s>",
+			print sprintf("<input id=\"%s\" name=\"%s\" type=\"%s\" value=\"%s\"%s%s%s%s%s%s />",
 				$this->id, $this->name, strtolower($this->attributes['TYPE']), $this->value, $this->attributes['ALTHTML'],
 				$this->attributes['SCRIPT'], $this->attributes['STYLE'], $this->attributes['ACCESSKEY'],
 				$this->attributes['TABINDEX'], $this->attributes['DISABLED']
@@ -302,7 +302,7 @@ class FormButton extends Component
 	 */
 	function setDisabled($setting=TRUE) {
 		if ($setting) {
-			$this->attributes['DISABLED'] = " disabled";
+			$this->attributes['DISABLED'] = " disabled=\"disabled\"";
 			$this->disabled = TRUE;
 		} else {
 			$this->attributes['DISABLED'] = "";
@@ -470,7 +470,7 @@ class FormButton extends Component
 		foreach ($events as $event => $action) {
 			if (!empty($action)) {
 				$action = implode(';', $action);
-				$script .= " {$event}=\"" . str_replace('\"', '\'', $action) . ";\"";
+				$script .= " " . strtolower($event) . "=\"" . str_replace('\"', '\'', $action) . ";\"";
 			}
 		}
 		$this->attributes['SCRIPT'] = $script;

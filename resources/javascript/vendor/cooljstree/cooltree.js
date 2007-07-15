@@ -193,15 +193,15 @@ function CTreeNode(treeView, parentNode , text, url, target){
 			s += '<td nowrap=\"1\"><a class="'+this.treeView.fmt.nstyle(ll)+'" href="'+this.url+'" target="'+this.target+'" onclick="CTExpand(\''+n+'\','+this.index+')">'+this.text+'</a></td></tr></table>';
         return s;
 	}
-	this.moveTo=function(x, y){if (this.treeView.ns4)this.el.moveTo(x,y);else{this.el.style.left=x;this.el.style.top=y;}}
+	this.moveTo=function(x, y){if (this.treeView.ns4)this.el.moveTo(x,y);else{this.el.style.left=x+'px';this.el.style.top=y+'px';}}
 	this.show=function(sh){if (this.visible == sh)return;this.visible=sh;var vis=this.treeView.ns4 ? (sh ? 'show': 'hide') : (sh ? 'visible': 'hidden');if (this.treeView.ns4)this.el.visibility=vis;else this.el.style.visibility=vis;}
 	this.hideChildren=function(){this.show(false);for (var i=0;i < this.children.length;i++)this.children[i].hideChildren();}
 	this.draw=function(){var ll=this.treeView.fmt.left;this.moveTo(this.treeView.fmt.left, this.treeView.currTop);this.show(true);var w = this.getW();if (ll+ w> this.treeView.maxWidth)this.treeView.maxWidth=ll+w;this.treeView.currTop += this.getH();if (this.treeView.currTop > this.treeView.maxHeight)this.treeView.maxHeight=this.treeView.currTop;if (this.expanded && this.hasChildren())for (var i=0;i < this.children.length;i++)this.children[i].draw();}
 }
 function CTreeBack(aleft, atop, color, name){
 	this.bw=new bw_check();this.ns4=this.bw.ns4;this.left=aleft;this.top=atop;this.name=name;this.color=color;this.t=unescape('%43%4f%4f%4C%6A%73%54%72%65%65');
-	this.moveTo=function(x, y){if (this.ns4)this.el.moveTo(x,y);else{this.el.style.left=x;this.el.style.top=y;this.el2.style.left=x;}};
-	this.resize=function(w,h){if (this.ns4){this.el.resizeTo(w,h);}else{this.el.style.width=w;this.el.style.height=h;if (this.r) this.el2.style.top=h+this.top-5;}};
+	this.moveTo=function(x, y){if (this.ns4)this.el.moveTo(x,y);else{this.el.style.left=x+'px';this.el.style.top=y+'px';this.el2.style.left=x+'px';}};
+	this.resize=function(w,h){if (this.ns4){this.el.resizeTo(w,h);}else{this.el.style.width=w+'px';this.el.style.height=h+'px';if (this.r) this.el2.style.top=(h+this.top-5)+'px';}};
 	this.init=function(){if (this.r)if (!this.ns4) {var bgc=this.color == ""? "" : " background-color:"+this.color+";";document.write('<div id="'+this.name+'c" style="'+bgc+'position:absolute;z-index:0;top:'+this.top+'px;left:'+this.left+'px;">'+'&nbsp;<span style="font-size:7px;color:#d0d0d0;">&nbsp;</span>'+'</div>');this.el2=document.all? document.all[this.name+'c'] : document.getElementById(this.name+'c');}if(this.ns4){var bgc=this.color == ""? "" : ' bgcolor="'+this.color+'" ';document.write('<layer '+bgc+' top="'+this.top+'" left="'+this.left+'" id="'+this.name+'" z-index="0">'+ '</layer>');this.el=document.layers[this.name];} else {var bgc=this.color == ""? "" : " background-color:"+this.color+";";document.write('<div id="'+this.name+'" style="'+bgc+'position:absolute;z-index:0;top:'+this.top+'px;left:'+this.left+'px">'+ '</div>');this.el=document.all? document.all[this.name] : document.getElementById(this.name);}};this.r=1;
 	this.init();
 }

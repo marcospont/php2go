@@ -78,7 +78,7 @@ class MemoField extends EditableField
 			print sprintf("
 <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">
   <tr><td><textarea id=\"%s\" name=\"%s\" cols=\"%s\" rows=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s>%s</textarea></td></tr>
-  <tr><td align=\"right\"><span%s>%s</span>&nbsp;<input type=\"text\" id=\"%s_count\" name=\"%s_count\" size=\"5\" value=\"%s\" disabled%s></td></tr>
+  <tr><td align=\"right\"><span%s>%s</span>&nbsp;<input type=\"text\" id=\"%s_count\" name=\"%s_count\" size=\"5\" value=\"%s\" disabled=\"disabled\"%s /></td></tr>
 </table><script type=\"text/javascript\">new MemoField('%s', %s);</script>",
 				$this->id, $this->name, $this->attributes['COLS'], $this->attributes['ROWS'], $this->label,
 				$this->attributes['SCRIPT'], $this->attributes['ACCESSKEY'],  $this->attributes['TABINDEX'],

@@ -213,20 +213,19 @@ class OpenSSLCertificate extends PHP2Go
 	 *
 	 * The $fmt argument represents the date format
 	 * to be applied on the initial validity timestamp.
-	 * If this parameter is missing, the LOCAL_DATE_FORMAT
-	 * configuration entry will be used.
+	 * If this parameter is missing, local date format
+	 * will be used.
 	 *
 	 * @param string $fmt Date format
 	 * @return string
 	 */
 	function getIssueDate($fmt='') {
 		if (isset($this->validFrom)) {
-			if (!empty($fmt)) {
-				return date($fmt, $this->validFrom);
-			} else {
-				$Conf =& Conf::getInstance();
-				return date($Conf->getConfig('LOCAL_DATE_FORMAT'), $this->validFrom);
+			if (empty($fmt)) {
+				$settings = PHP2Go::getConfigVal('DATE_FORMAT_SETTINGS');
+				$fmt = $settings['format'];
 			}
+			return date($fmt, $this->validFrom);
 		}
 		return NULL;
 	}
@@ -236,18 +235,18 @@ class OpenSSLCertificate extends PHP2Go
 	 *
 	 * The $fmt argument represents the date format
 	 * to be applied on the expiration timestamp. If
-	 * missing, the LOCAL_DATE_FORMAT configuration
-	 * entry will be used.
+	 * missing, local date format will be used.
 	 *
 	 * @param string $fmt Date format
 	 * @return string
 	 */
 	function getExpiryDate($fmt='') {
-		$Conf =& Conf::getInstance();
 		if (isset($this->validTo)) {
-			if (!empty($fmt))
-				return date($fmt, $this->validTo);
-			return date($Conf->getConfig('LOCAL_DATE_FORMAT', $this->validTo));
+			if (empty($fmt)) {
+				$settings = PHP2Go::getConfigVal('DATE_FORMAT_SETTINGS');
+				$fmt = $settings['format'];
+			}
+			return date($fmt, $this->validTo);
 		}
 		return NULL;
 	}
@@ -255,15 +254,12 @@ class OpenSSLCertificate extends PHP2Go
 	/**
 	 * Validates the certificate's expiration timestamp
 	 *
-	 * @uses Date::isPast()
 	 * @return bool
 	 */
 	function isValid() {
 		if (isset($this->validTo)) {
-			import('php2go.datetime.Date');
-			$Conf =& Conf::getInstance();
-			$expiryDate = date($Conf->getConfig('LOCAL_DATE_FORMAT'), $this->validTo);
-			return (!Date::isPast($expiryDate));
+			$now = time();
+			return ($now > $this->validTo);
 		}
 		return TRUE;
 	}
@@ -284,10 +280,10 @@ class OpenSSLCertificate extends PHP2Go
 	 */
 	function __toString() {
 		return sprintf("X.509 Certificate object{\n Name: %s\n Owner: %s\n Hash: %s\n SerialNumber: %s\n Version: %s\n Issuer: %s\n NotBefore: %s\n NotAfter: %s\n}",
-					$this->getName(), $this->ownerDN->__toString(),
-					$this->getHash(), $this->getSerialNumber(),
-					$this->getVersion(), $this->issuerDN->__toString(),
-					$this->getIssueDate(), $this->getExpiryDate()
+			$this->getName(), $this->ownerDN->__toString(),
+			$this->getHash(), $this->getSerialNumber(),
+			$this->getVersion(), $this->issuerDN->__toString(),
+			$this->getIssueDate(), $this->getExpiryDate()
 		);
 	}
 
@@ -311,12 +307,12 @@ class OpenSSLCertificate extends PHP2Go
 		fclose($fp);
 		// read certificate
 		if (!is_resource($this->handle = @openssl_x509_read($this->contents))) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br /><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 		// parse certificate
 		if (!is_array($info = @openssl_x509_parse($this->handle))) {
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_OPENSSL_READ_CERT', '<br /><i>OpenSSL Error:</i> ' . openssl_error_string()), E_USER_ERROR, __FILE__, __LINE__);
 			return FALSE;
 		}
 		// populate class properties

@@ -27,10 +27,6 @@
  * @version $Id$
  */
 
-import('php2go.data.DataSet');
-import('php2go.util.Statement');
-import('php2go.xml.XmlDocument');
-
 /**
  * AND operator
  */
@@ -90,6 +86,7 @@ define('QUERY_BUILDER_OP_ALL', 2);
  * @package db
  * @uses Db
  * @uses DataSet
+ * @uses QueryParser
  * @uses TypeUtils
  * @uses XmlDocument
  * @author Marcos Pont <mpont@users.sourceforge.net>
@@ -137,7 +134,7 @@ class QueryBuilder extends PHP2Go
 	 *
 	 * @var string
 	 */
-	var $condition;
+	var $groupcond;
 
 	/**
 	 * Order clause
@@ -147,18 +144,25 @@ class QueryBuilder extends PHP2Go
 	var $orderby;
 
 	/**
-	 * Limit settings
+	 * Limit
 	 *
-	 * @var array
+	 * @var mixed
 	 */
-	var $limit = array();
+	var $limit;
+
+	/**
+	 * Top (limit)
+	 *
+	 * @var mixed
+	 */
+	var $top;
 
 	/**
 	 * Uppercase all SQL keywords inside the query
 	 *
 	 * @var bool
 	 */
-	var $upCaseWords = TRUE;
+	var $upCaseWords = FALSE;
 
 	/**
 	 * Class constructor
@@ -177,8 +181,25 @@ class QueryBuilder extends PHP2Go
 		$this->tables = $tables;
 		$this->clause = $clause;
 		$this->groupby = $groupby;
-		$this->condition = '';
+		$this->groupcond = '';
 		$this->orderby = $orderby;
+		$this->limit = '';
+		$this->top = '';
+	}
+
+	/**
+	 * Builds a query from a full SQL string
+	 *
+	 * @param string $sql SQL query
+	 * @return QueryBuilder
+	 * @static
+	 */
+	function createFromSql($sql) {
+		import('php2go.db.QueryParser');
+		$Parser = new QueryParser($sql);
+		$Query = new QueryBuilder($Parser->parts['fields'], $Parser->parts['tables'], $Parser->parts['clause'], $Parser->parts['groupby'], $Parser->parts['orderby']);
+		$Query->setLimit($Parser->parts['limit']);
+		return $Query;
 	}
 
 	/**
@@ -188,18 +209,6 @@ class QueryBuilder extends PHP2Go
 	 */
 	function setDistinct($setting=TRUE) {
 		$this->distinct = (bool)$setting;
-	}
-
-	/**
-	 * Adds one or more fields in the SQL query
-	 *
-	 * @param string $fields Field name or comma separated list of fields
-	 */
-	function addFields($fields) {
-    	if (empty($this->fields))
-        	$this->fields = $fields;
-		else
-        	$this->fields .= ', ' . $fields;
 	}
 
 	/**
@@ -217,9 +226,30 @@ class QueryBuilder extends PHP2Go
 	}
 
 	/**
+	 * Adds one or more fields in the SQL query
+	 *
+	 * @param string $fields Field name or comma separated list of fields
+	 */
+	function addFields($fields) {
+    	if (empty($this->fields))
+        	$this->fields = $fields;
+		else
+        	$this->fields .= ', ' . $fields;
+	}
+
+	/**
+	 * Set query table
+	 *
+	 * @param string $tableName Table name
+	 */
+	function setTable($tableName) {
+		$this->tables = $tableName;
+	}
+
+	/**
 	 * Adds a table in the SQL query
 	 *
-	 * @param string $tableName
+	 * @param string $tableName Table name
 	 */
 	function addTable($tableName) {
 		if (empty($this->tables))
@@ -249,7 +279,7 @@ class QueryBuilder extends PHP2Go
 	 * @param int $action How to parenthize the new condition operand with existent operands
 	 * @return bool
 	 */
-	function addClause($clause, $operator = QUERY_BUILDER_AND, $action = QUERY_BUILDER_OP_NONE) {
+	function addClause($clause, $operator=QUERY_BUILDER_AND, $action=QUERY_BUILDER_OP_NONE) {
 		if (empty($clause)) {
 			return FALSE;
 		} elseif (empty($this->clause)) {
@@ -309,15 +339,23 @@ class QueryBuilder extends PHP2Go
 	/**
 	 * Set grouping clause
 	 *
-	 * @param string $groupby Group by column or columns
+	 * @param string $by Group by column or columns
 	 * @param string $condition Group by condition (without HAVING keyword)
 	 */
-	function setGroup($groupby='', $condition='') {
-		$this->groupby = $groupby;
-		if (trim($groupby) == '')
-			$this->condition = '';
-		else if (trim($condition) != '')
-			$this->condition = $condition;
+	function setGroup($by='', $condition='') {
+		$this->groupby = $by;
+		if (trim($by) == '')
+			$this->groupcond = '';
+		elseif (trim($condition) != '')
+			$this->groupcond = $condition;
+	}
+
+	/**
+	 * Clears the grouping clause
+	 */
+	function clearGroup() {
+		$this->groupby = '';
+		$this->groupcond = '';
 	}
 
 	/**
@@ -358,14 +396,34 @@ class QueryBuilder extends PHP2Go
 	}
 
 	/**
-	 * Defines limit settings
+	 * Clears the order by clause
+	 */
+	function clearOrder() {
+		$this->orderby = '';
+	}
+
+	/**
+	 * Set limit settings
 	 *
-	 * @param int $rows Number of rows
+	 * @param int $limit Limit clause (string) or number of rows
 	 * @param int $offset Starting offset
 	 */
-	function setLimit($rows, $offset=NULL) {
-		$this->limit['rows'] = (int)$rows;
-		$this->limit['offset'] = (int)$offset;
+	function setLimit($limit, $offset=NULL) {
+		if (is_numeric($limit) && is_numeric($offset)) {
+			$this->limit = array(
+				'rows' => intval($limit),
+				'offset' => intval($offset)
+			);
+		} elseif (is_string($limit) || is_numeric($limit)) {
+			$this->limit = strval($limit);
+		}
+	}
+
+	/**
+	 * Clears limit settings
+	 */
+	function clearLimit() {
+		$this->limit = '';
 	}
 
 	/**
@@ -393,13 +451,15 @@ class QueryBuilder extends PHP2Go
 	 * $qry->loadFromXml('my_xml_query.xml');
 	 * $dataset =& $qry->createDataSet();
 	 * while ($row = $dataset->fetch()) {
-	 *   print $row->getField('name') . '<br/>';
+	 *   print $row->getField('name') . '<br />';
 	 * }
 	 * </code>
 	 *
 	 * @param string $xmlFile XML file path
 	 */
 	function loadFromXml($xmlFile) {
+		import('php2go.util.Statement');
+		import('php2go.xml.XmlDocument');
 		$Doc = new XmlDocument();
 		$Doc->parseXml($xmlFile);
 		$Root =& $Doc->getRoot();
@@ -410,11 +470,11 @@ class QueryBuilder extends PHP2Go
 			$candidates = array('FIELDS', 'TABLES', 'CLAUSE', 'GROUPBY', 'ORDERBY');
 			foreach ($candidates as $candidate) {
 				if ($children[$candidate]) {
-					$propName = strtolower($candidate);
 					$value = $children[$candidate]->value;
 					if (!empty($value)) {
 						if (preg_match("/~[^~]+~/", $value))
 							$value = Statement::evaluate($value);
+						$propName = strtolower($candidate);
 						$this->{$propName} = $value;
 					}
 				}
@@ -431,8 +491,10 @@ class QueryBuilder extends PHP2Go
 		$this->tables = '';
 		$this->clause = '';
 		$this->groupby = '';
-		$this->condition = '';
+		$this->groupcond = '';
 		$this->orderby = '';
+		$this->limit = '';
+		$this->top = '';
 	}
 
 	/**
@@ -443,9 +505,9 @@ class QueryBuilder extends PHP2Go
 	function displayQuery($preFormatted=TRUE) {
 		$sql = $this->_formatReserved($this->_buildQuery(TRUE));
 		if ($preFormatted)
-			print '<pre>' . $sql . '</pre><br>';
+			println("<pre>{$sql}</pre>");
 		else
-        	print $sql . '<br>';
+			println($sql);
 	}
 
 	/**
@@ -474,11 +536,22 @@ class QueryBuilder extends PHP2Go
 	 * @return ADORecordSet
 	 */
 	function &executeQuery($bindVars=array(), $connectionId=NULL) {
+		if (empty($this->fields) || empty($this->tables)) {
+			$null = NULL;
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_QUERY_ELEMENTS'), E_USER_ERROR, __FILE__, __LINE__);
+			return $null;
+		}
 		$Db =& Db::getInstance($connectionId);
-		if (@$this->limit['rows'] > 0)
-			$Rs =& $Db->limitQuery($this->getQuery(), $this->limit['rows'], $this->limit['offset'], TRUE, $bindVars);
+		$sql = $this->_formatReserved($this->_buildQuery(FALSE, TRUE));
+		$limitMatches = array();
+		if (is_string($this->limit) && preg_match("/([0-9]+)(?:\s*(?:,|offset)\s*([0-9]+))?/", $this->limit, $limitMatches))
+			$Rs =& $Db->limitQuery($sql, $limitMatches[1], @$limitMatches[2]);
+		elseif (is_array($this->limit) && $this->limit['rows'] > 0)
+			$Rs =& $Db->limitQuery($sql, $this->limit['rows'], $this->limit['offset'], TRUE, $bindVars);
+		elseif (!empty($this->top))
+			$Rs =& $Db->limitQuery($sql, $this->top, 0, TRUE, $bindVars);
 		else
-			$Rs =& $Db->query($this->getQuery(), TRUE, $bindVars);
+			$Rs =& $Db->query($sql, TRUE, $bindVars);
 		return $Rs;
 	}
 
@@ -494,34 +567,60 @@ class QueryBuilder extends PHP2Go
 	 * @return DataSet
 	 */
 	function &createDataSet($params=array()) {
-		$DataSet =& DataSet::factory('db', $params);
-		if (@$this->limit['rows'] > 0)
-			$DataSet->loadSubSet($this->limit['offset'], $this->limit['rows'], $this->getQuery(), $bindVars);
+		if (empty($this->fields) || empty($this->tables)) {
+			$null = NULL;
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_MISSING_QUERY_ELEMENTS'), E_USER_ERROR, __FILE__, __LINE__);
+			return $null;
+		}
+		import('php2go.data.DataSet');
+		$Dataset = DataSet::factory('db', $params);
+		$sql = $this->_formatReserved($this->_buildQuery(FALSE, TRUE));
+		$limitMatches = array();
+		if (is_string($this->limit) && preg_match("/([0-9]+)(?:\s*(?:,|offset)\s*([0-9]+))?/", $this->limit, $limitMatches))
+			$Dataset->loadSubSet(@$limitMatches[2], $limitMatches[1], $sql);
+		elseif (is_array($this->limit) && $this->limit['rows'] > 0)
+			$Dataset->loadSubSet($this->limit['offset'], $this->limit['rows'], $sql);
+		elseif (!empty($this->top))
+			$Dataset->loadSubSet(0, $this->top, $sql);
 		else
-			$DataSet->load($this->getQuery());
-		return $DataSet;
+			$Dataset->load($sql);
+		return $Dataset;
 	}
 
 	/**
 	 * Internal method used to build the SQL query
 	 *
 	 * @param bool $isDisplay Indicates if the query will be displayed
+	 * @param bool $isExecute Indicates if the query will be executed
 	 * @return string
 	 * @access private
 	 */
-	function _buildQuery($isDisplay=FALSE) {
-		$char = ($isDisplay) ? "\r\n\t" : ' ';
-		$sql = "SELECT " . $char . ($this->distinct ? "DISTINCT " : "") . $this->fields;
-		$sql .= $char . "FROM " . $char . eregi_replace("JOIN[ ]", "JOIN$char", $this->tables);
+	function _buildQuery($isDisplay=FALSE, $isExecute=FALSE) {
+		$c1 = ($isDisplay ? "\r\n" : ' ');
+		$c2 = ($isDisplay ? "\t" : '');
+		$sql = $c1 . 'SELECT ';
+		// add "top N" limit clause
+		if (!$isExecute && !empty($this->top) && empty($this->limit))
+			$sql .= ' TOP ' . $this->top;
+		// add fields
+		$sql .= $c1 . $c2 . ($this->distinct ? 'DISTINCT ' : '') . $this->fields;
+		// add tables
+		$sql .= $c1 . 'FROM ' . $c1 . $c2 . preg_replace("/JOIN\s/i", "JOIN" . $c1 . $c2, $this->tables);
+		// add condition clause
 		if (trim($this->clause) != '')
-			$sql .= $char . "WHERE " . $char . $this->clause;
+			$sql .= $c1 . 'WHERE ' . $c1 . $c2 . $this->clause;
+		// add group by clause
 		if (trim($this->groupby) != '') {
-			$sql .= $char . "GROUP BY " . $char . $this->groupby;
-			if (!empty($this->condition))
-				$sql .= " HAVING " . $this->condition;
+			$sql .= $c1 . 'GROUP BY ' . $c1 . $c2 . $this->groupby;
+			if (!empty($this->groupcond))
+				$sql .= ' HAVING ' . $this->groupcond;
 		}
+		// add order by clause
 		if (trim($this->orderby) != '')
-			$sql .= $char . "ORDER BY " . $char . $this->orderby;
+			$sql .= $c1 . 'ORDER BY ' . $c1 . $c2 . $this->orderby;
+		// add "limit M offset N" limit clause
+		if (!$isExecute && is_string($this->limit) && !empty($this->limit) && empty($this->top))
+			$sql .= $c1 . 'LIMIT' . $c1 . $c2 . $this->limit;
 		return $sql;
 	}
 
@@ -534,20 +633,20 @@ class QueryBuilder extends PHP2Go
 	 */
     function _formatReserved($sql) {
 		$reservedWordsUp = 	array("ALL","AND","AS","ASC","AVG","BETWEEN","BY","CASE","CAST","CHAR","COUNT","CURRENT","CURRENT_DATE","CURRENT_TIME","CURRENT_TIMESTAMP","CURRENT_USER","CURSOR","DATE","DEC","" .
-							"DESC","DISTINCT","ELSE","END","EXISTS","FALSE","FROM","FLOAT","GROUP","HAVING","IN","INNER","INTERSECT","INTERVAL","IS","JOIN","LAST","LEFT","LIKE","MAX","MIN","MONTH","" .
-							"NATURAL","NEXT","NOT","NULL","NULLIF","NUMERIC","OF","ON","ONLY","OR","ORDER","OUTER","RETURNING","RIGHT","SELECT","SMALLINT","SUBSTRING","SUM","THEN","TRIM","TRUE","UNION","UPPER","" .
+							"DESC","DISTINCT","ELSE","END","EXISTS","FALSE","FROM","FLOAT","GROUP","HAVING","IN","INNER","INTERSECT","INTERVAL","IS","JOIN","LAST","LEFT","LIKE","LIMIT","MAX","MIN","MONTH","" .
+							"NATURAL","NEXT","NOT","NULL","NULLIF","NUMERIC","OF","OFFSET","ON","ONLY","OR","ORDER","OUTER","RETURNING","RIGHT","SELECT","SMALLINT","SUBSTRING","SUM","THEN","TOP","TRIM","TRUE","UNION","UPPER","" .
 							"USING","VARYING","WHEN","WHERE","WITH");
 		$reservedWordsLow =	array("all","and","as","asc","avg","between","by","case","cast","char","count","current","current_date","current_time","current_timestamp","current_user","cursor","date","dec","" .
-							"desc","distinct","else","end","exists","false","from","float","group","having","in","inner","intersect","interval","is","join","last","left","like","max","min","month","" .
-							"natural","next","not","null","nullif","numeric","of","on","only","or","order","outer","returning","right","select","smallint","substring","sum","then","trim","true","union","upper","" .
+							"desc","distinct","else","end","exists","false","from","float","group","having","in","inner","intersect","interval","is","join","last","left","like","limit","max","min","month","" .
+							"natural","next","not","null","nullif","numeric","of","offset","on","only","or","order","outer","returning","right","select","smallint","substring","sum","then","top","trim","true","union","upper","" .
 							"using","varying","when","where","with");
 		if ($this->upCaseWords) {
 			while (list(, $word) = each($reservedWordsUp)) {
-				$sql = substr(eregi_replace('[[:space:]]' . $word . '[[:space:]]', ' ' . $word  . ' ', ' ' . $sql), 1);
+				$sql = preg_replace("/\b{$word}\b/i", $word, $sql);
 			}
 		} else {
 			while (list(, $word) = each($reservedWordsLow)) {
-				$sql = substr(eregi_replace('[[:space:]]' . $word . '[[:space:]]', ' ' . $word  . ' ', ' ' . $sql), 1);
+				$sql = preg_replace("/\b{$word}\b/i", $word, $sql);
 			}
 		}
 		return $sql;
