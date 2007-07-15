@@ -1,0 +1,14 @@
+.slideShowImg {
+	position: absolute;
+	margin: 0;
+	padding: 0;
+	left: 0;
+	top: 0;
+}
+.slideShowInput {
+	font-family: Verdana;
+	font-size: 11px;
+	color: #000;
+	text-align: right;
+	margin-left: 5px;
+}

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE form SYSTEM "..\..\docs\dtd\php2go_forms.dtd">
+<form method="POST" action="~REQUEST_URI~">
+	<!-- CSS classes for inputs and labels; form width and label align (FormBasic only) -->
+	<style input="input_style" label="label_style" fieldset="fieldset_style" sectiontitle="legend_style" width="800" labelwidth="0.15"/>
+	<!--
+		CSS class for errors, header text and header style for the error summary;
+		Display options (client/server) for error summary
+	-->
+	<errors
+		style="error_style" listmode="FORM_ERROR_BULLET_LIST"
+		headertext="" headerstyle="error_header" tplplaceholder="error"
+		clientmode="FORM_CLIENT_ERROR_DHTML" clientcontainer="form_client_errors"
+	/>
+	<section id="section" name="Form validated on server">
+		<!-- an EDITFIELD using DATE mask and containing 2 rules to validate the input value -->
+		<editfield name="Edit1" label="Date" size="12" length="10" mask="DATE" required="T">
+			<!--
+				comparison rule, using GOET operator (greater or equal than)
+				the comparison value (VALUE attribute) used variable substitution (~var~) and PHP code (#php_code#)
+			-->
+			<rule type="GOET" value="01/01/~#date('Y')#~" message="Date must be greater or equal than first day of current year"/>
+			<!--
+				comparision rule, using LOET operator (less or equal than)
+			-->
+			<rule type="LOET" value="TODAY-3M"/>
+		</editfield>
+		<!-- an EDITFIELD (TEXT input) containing a REGEX rule (test the field value against a pattern) -->
+		<editfield name="Edit2" label="Edit" size="20" required="T" autotrim="T" upper="T">
+			<rule type="REGEX" value="^[0-9]{3}\-[a-zA-Z]{5}$"/>
+		</editfield>
+		<combofield name="Combo1" label="Combo 1" multiple="T" size="5" width="180" required="T">
+			<option value="1" caption="Angelina Jolie"/>
+			<option value="2" caption="Salma Hayek"/>
+			<option value="3" caption="Denise Richards"/>
+			<option value="4" caption="Paris Hilton"/>
+			<option value="5" caption="Alicia Silverstone"/>
+			<option value="6" caption="Christina Aguilera"/>
+			<option value="7" caption="Beyoncé Knowles"/>
+			<option value="8" caption="Katie Holmes"/>
+			<option value="9" caption="Britney Spears"/>
+			<option value="10" caption="Jennifer Love Hewitt"/>
+		</combofield>
+		<!--
+			a FILEFIELD with file upload configuration settings
+			if you use server validation (Form::isPosted and Form::isValid), the upload operation
+			will be done automatically, unless you set UPLOADONVALIDATE to "F"
+		-->
+		<filefield name="File1" label="File 1" size="20" uploadonvalidate="T" maxfilesize="100K" allowedtypes="image/jpeg,image/pjpeg,image/gif,image/png" savefunction="uploadHandler" savemode="0777" savepath="../tmp/"/>
+		<!--
+			a simple SUBMIT button
+			switch the two lines to see the default HTML button or the image button
+		-->
+		<!--<button name="send" value="Send" type="submit"/>-->
+		<button name="send" img="../common/send.gif" type="SUBMIT"/>
+	</section>
+</form>
