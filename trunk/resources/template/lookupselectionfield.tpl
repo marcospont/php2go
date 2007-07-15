@@ -6,7 +6,7 @@
   <tr><td align="center" valign="top">{$button1}</td></tr>
   <tr><td align="center" valign="top">{$button2}</td></tr>
   <tr><td align="center" valign="top">{$button3}</td></tr>
-</table><input type="hidden" id="{$addedName}" name="{$addedName}"><input type="hidden" id="{$removedName}" name="{$removedName}">
+</table><input type="hidden" id="{$addedName}" name="{$addedName}" /><input type="hidden" id="{$removedName}" name="{$removedName}" />
 <script type="text/javascript">
 {$id}_instance = new LookupSelectionField('{$id}', '{$availableId}', '{$selectedId}', '{$addedName}', '{$removedName}', '{$separator}');
 <!-- loop var=$customListeners item="listener" key="event" -->

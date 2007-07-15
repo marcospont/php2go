@@ -1,7 +1,7 @@
 PHP2Go Web Development Framework - CONFIGURATION
 =================================================
 
-	Version 0.5.6 - May 2007
+	Version 0.5.7 - July 2007
 	--------------------------------
 	http://www.php2go.com.br
 
@@ -81,7 +81,11 @@ PHP2Go Web Development Framework - CONFIGURATION
 		$P2G_USER_CFG['CITY'] string
 			Stores the local city name. It's also used in the printDate method (class Date), and it's optional.
 		$P2G_USER_CFG['LOCAL_DATE_FORMAT'] string
-			Specifies the date format used in the system. You may choose one of the following values: "d/m/Y" or "Y/m/d".
+			Specifies the date format to be used by your application. 
+			You must choose one of the following values: 'EURO', 'US' or 'SQL'
+				EURO: DD/MM/YYYY - most widely used (Europe, South America)
+				US: MM/DD/YYYY - used on US and Canada
+				SQL: YYYY-MM-DD - ISO8601 format
 		$P2G_USER_CFG['LOCAL_TIME_ZONE'] string
 			Specifies the local time zone to be used by some date functions. Accepts hour offsets, universal, north american or military time zone identifiers.
 
@@ -330,8 +334,8 @@ PHP2Go Web Development Framework - CONFIGURATION
 		----------------------------
 
 		$P2G_USER_CFG['USE_COMPRESSED_JS'] bool
-			Tells PHP2Go to load its JS libraries from the resources/jsrun folder (compressed, value
-			TRUE) or from the resources/javascript folder (uncompressed, value FALSE)
+			Tells PHP2Go to load its JS libraries from the 'resources/jsrun' folder (compressed, value
+			TRUE) or from the 'resources/javascript' folder (uncompressed, value FALSE)
 
 		Include path:
 		----------------------------

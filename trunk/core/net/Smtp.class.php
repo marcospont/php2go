@@ -106,7 +106,7 @@ class Smtp extends SocketClient
 		} else {
 			$greeting = $this->_readData();
 			if ($this->debug)
-				print('SMTP DEBUG --- FROM SERVER : ' . $greeting . '<br>');
+				println('SMTP DEBUG --- FROM SERVER : ' . $greeting);
 			return TRUE;
 		}
 	}
@@ -290,7 +290,7 @@ class Smtp extends SocketClient
 					$line = '.' . $line;
 				}
 				if ($this->debug)
-					print('SMTP DEBUG --- FROM CLIENT : ' . htmlspecialchars($line) . '<br>');
+					println('SMTP DEBUG --- FROM CLIENT : ' . htmlspecialchars($line));
 				parent::write($line . SMTP_CRLF);
 			}
 		}
@@ -552,8 +552,8 @@ class Smtp extends SocketClient
 		$expected = !is_array($expected) ? array($expected) : $expected;
 		if (parent::write($data) && $this->_readResponse($responseCode, $responseMessage)) {
 			if ($this->debug) {
-				print('SMTP DEBUG --- FROM CLIENT : ' . htmlspecialchars($data) . '<br>');
-				print('SMTP DEBUG --- FROM SERVER : ' . htmlspecialchars($responseCode . ' - ' . $responseMessage) . '<br>');
+				println('SMTP DEBUG --- FROM CLIENT : ' . htmlspecialchars($data));
+				println('SMTP DEBUG --- FROM SERVER : ' . htmlspecialchars($responseCode . ' - ' . $responseMessage));
 			}
 			if (in_array($responseCode, $expected)) {
 				return TRUE;

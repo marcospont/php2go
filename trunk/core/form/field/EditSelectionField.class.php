@@ -197,7 +197,7 @@ class EditSelectionField extends FormField
 	 */
 	function setTableWidth($tableWidth) {
 		if ($tableWidth)
-			$this->attributes['TABLEWIDTH'] = " width='" . $tableWidth . "'";
+			$this->attributes['TABLEWIDTH'] = " width=\"" . $tableWidth . "\"";
 		else
 			$this->attributes['TABLEWIDTH'] = "";
 	}
@@ -274,8 +274,8 @@ class EditSelectionField extends FormField
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/editselectionfield.js');
 		$this->attributes['BUTTONS'] = array();
 		$buttonMessages = PHP2Go::getLangVal('EDIT_SELECTION_BUTTON_TITLES');
-		$imgActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" title=\"%s\" onClick=\"%s.%s(%s);\" style=\"cursor:pointer;background-color:transparent;border:none\"%s%s><img src=\"%s\" alt=\"\" border=\"0\"></button>";
-		$btnActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" style=\"width:25px\" title=\"%s\" onClick=\"%s.%s(%s);\"%s%s%s> %s </button>";
+		$imgActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" title=\"%s\" onclick=\"%s.%s(%s);\" style=\"cursor:pointer;background-color:transparent;border:none\"%s%s><img src=\"%s\" alt=\"\" border=\"0\" /></button>";
+		$btnActCode = "<button id=\"%s\" name=\"%s\" type=\"button\" style=\"width:25px\" title=\"%s\" onclick=\"%s.%s(%s);\"%s%s%s> %s </button>";
 		$addOptions = sprintf("{upper: %s, lower: %s, trim: %s, capitalize: %s}",
 			($this->_EditField->attributes['UPPER'] == 'T' ? 'true' : 'false'),
 			($this->_EditField->attributes['LOWER'] == 'T' ? 'true' : 'false'),

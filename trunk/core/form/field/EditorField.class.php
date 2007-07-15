@@ -96,7 +96,7 @@ class EditorField extends FormField
 		$Tpl->assign('resizeMode', $this->attributes['RESIZEMODE']);
 		$Tpl->assign('width', (isset($this->attributes['WIDTH']) ? $this->attributes['WIDTH'] : EDITOR_DEFAULT_WIDTH));
 		$Tpl->assign('height', (isset($this->attributes['HEIGHT']) ? $this->attributes['HEIGHT'] : EDITOR_DEFAULT_HEIGHT));
-		$Tpl->assign('hiddenField', sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s>",
+		$Tpl->assign('hiddenField', sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s />",
 				$this->id, $this->name, htmlspecialchars($this->value), $this->label, $this->attributes['DATASRC'], $this->attributes['DATAFLD']));
 		$Tpl->assign(PHP2Go::getLangVal('EDITOR_VARS'));
 		$Tpl->assign('fontNames', array(
@@ -146,7 +146,7 @@ class EditorField extends FormField
 	 */
 	function setReadonly($setting=TRUE) {
 		if (TypeUtils::isTrue($setting)) {
-			$this->attributes['READONLY'] = " readonly";
+			$this->attributes['READONLY'] = " readonly=\"readonly\"";
 			$this->readOnly = TRUE;
 		} else {
 			$this->attributes['READONLY'] = "";

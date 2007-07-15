@@ -118,6 +118,7 @@ class ReportSimpleSearch extends AbstractList
 		parent::AbstractList();
 		$this->maskFunctions = array();
 		$this->searchSent = FALSE;
+		$this->addMaskFunction('DATE', 'Date::toSqlDate');
 		$this->_checkRequest();
 	}
 

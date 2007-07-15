@@ -10,7 +10,7 @@
     <!-- end if -->
       <table cellpadding="{$tablePadding}" cellspacing="{$tableSpacing}" width="100%"{$sectionTableStyle}>
         <!-- if ($compatMode eq true && $sectionName is not empty) -->
-        <tr><td colspan="2">&nbsp;&nbsp;<span{$sectionTitleStyle}>{$sectionName}</span><br><hr noshade/></td></tr>
+        <tr><td colspan="2">&nbsp;&nbsp;<span{$sectionTitleStyle}>{$sectionName}</span><br /><hr /></td></tr>
         <!-- end if -->
         <!-- start block : section_item -->
         <!-- if $itemType eq 'field' -->
@@ -25,8 +25,7 @@
         </tr>
         <!-- else if $itemType eq 'button_group' -->
         <tr>
-          <td>&nbsp;</td>
-          <td><table cellpadding="0" cellspacing="0"  border="0" width="100%">
+          <td colspan="2"><table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
               <!-- start block : loop_button_group -->
               <td width="{$btnW}" align="center">{$button}</td>
@@ -39,7 +38,7 @@
       </table>
     <!-- if $compatMode eq false -->
     </fieldset>
-    <!-- end if --><br>
+    <!-- end if --><br />
     <!-- end block : loop_section -->
   </td></tr>
 </table>

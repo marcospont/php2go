@@ -216,7 +216,7 @@ ColorPicker.prototype.build = function() {
 	} else {
 		html += "<div id=\""+this.id+"_hl\" class=\"pickerHighlight\" style=\"float:left;width:100px\">&nbsp;</div>";
 	}
-	html += "<input id=\""+this.id+"_rgb\" class=\"pickerRGB\" type=\"text\""+(this.mode=='popup'?' readonly':'')+" value=\""+this.curColor+"\" maxlength=\"7\">";
+	html += "<input id=\""+this.id+"_rgb\" class=\"pickerRGB\" type=\"text\""+(this.mode=='popup'?" readonly=\"readonly\"":'')+" value=\""+this.curColor+"\" maxlength=\"7\">";
 	html += "</td></tr>";
 	html += "</table>";
 	picker.id = this.id + '_div';

@@ -1396,6 +1396,7 @@ class TemplateParser extends PHP2Go
 			$widgets[$widgetData['path']] = TRUE;
 			return $this->_compilePHPBlock(
 				'$newWidget = Widget::factory("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'$newWidget->attributes[\'localVars\'] =& $block[$instance][\'vars\']; ' .
 				'if ($widget) { ' .
 					'$newWidget->setParent($widget); ' .
 				'} ' .
@@ -1426,6 +1427,7 @@ class TemplateParser extends PHP2Go
 				'array_push($outputStack, array($widget)); ' .
 				'$lastIndex = sizeof($outputStack) - 1; ' .
 				'$widget = Widget::factory("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
+				'$widget->attributes[\'localVars\'] =& $block[$instance][\'vars\']; ' .				
 				'if ($outputStack[$lastIndex][0]) { ' .
 				'$widget->setParent($outputStack[$lastIndex][0]); ' .
 				'} ' .
@@ -1652,7 +1654,6 @@ class TemplateParser extends PHP2Go
 		}
 		$path = substr($props['path'], 1, -1);
 		unset($props['path']);
-		$props['vars'] = '$block[$instance][\'vars\']';
 		$output = 'array(';
 		foreach ($props as $key => $value)
 			$output .= '\'' . $key . '\'=>' . $value . ',';

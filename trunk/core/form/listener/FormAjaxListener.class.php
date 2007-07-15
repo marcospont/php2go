@@ -205,10 +205,11 @@ class FormAjaxListener extends FormEventListener
 		}
 		foreach ($this->params as $name => $value) {
 			switch ($name) {
-				case 'method' :
-				case 'contentType' :
 				case 'body' :
+				case 'contentType' :
 				case 'form' :
+				case 'handler' :
+				case 'method' :
 				case 'throbber' :
 					$value = trim($value);
 					$buf .= "\t\tparams.{$name} = '{$value}';\n";
@@ -290,6 +291,8 @@ class FormAjaxListener extends FormEventListener
 		if (!empty($this->eventName)) {
 			if ($this->class == 'AjaxUpdater')
 				return (isset($this->params['container']) || isset($this->params['success']));
+			if ($this->class == 'AjaxService')
+				return (isset($this->params['handler']));
 			return TRUE;
 		}
 		return FALSE;

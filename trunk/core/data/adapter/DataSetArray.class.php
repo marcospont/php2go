@@ -80,14 +80,6 @@ class DataSetArray extends DataAdapter
 	var $Iterator;
 
 	/**
-	 * Holds the record type (array, object, string, int, float, ...)
-	 *
-	 * @var string
-	 * @access private
-	 */
-	var $recordType;
-
-	/**
 	 * Class constructor
 	 *
 	 * @param array $params Configuration parameters
@@ -110,8 +102,7 @@ class DataSetArray extends DataAdapter
 				$this->Iterator =& $DataList->iterator();
 				$this->absolutePosition = 0;
 				$this->recordCount = sizeof($arr);
-				$this->fields = $this->Iterator->next();
-				$this->_setFieldProperties();
+				$this->_parseFields($this->Iterator->next());
 				$this->eof = FALSE;
 			}
 			return TRUE;
@@ -140,8 +131,7 @@ class DataSetArray extends DataAdapter
 					$this->totalRecordCount = sizeof($content);
 					$DataList = new AbstractList($subSet);
 					$this->Iterator =& $DataList->iterator();
-					$this->fields = $this->Iterator->next();
-					$this->_setFieldProperties();
+					$this->_parseFields($this->Iterator->next());
 					$this->eof = FALSE;
 				} else {
 					$this->recordCount = 0;
@@ -160,14 +150,9 @@ class DataSetArray extends DataAdapter
 	 * @return mixed
 	 */
 	function getField($fieldId) {
-		switch ($this->recordType) {
-			case 'object' :
-				return (array_key_exists($fieldId, get_object_vars($this->fields)) ? $this->fields->{$fieldId} : NULL);
-			case 'array' :
-				return (array_key_exists($fieldId, $this->fields) ? $this->fields[$fieldId] : NULL);
-			default :
-				return NULL;
-		}
+		if (array_key_exists($fieldId, $this->fields))
+			return $this->fields[$fieldId];
+		return NULL;
 	}
 
 	/**
@@ -180,7 +165,7 @@ class DataSetArray extends DataAdapter
 		if (is_object($this->Iterator) && TypeUtils::isInteger($index)) {
 			if ($this->Iterator->moveToIndex($index)) {
 				$this->absolutePosition = $this->Iterator->getCurrentIndex();
-				$this->fields = $this->Iterator->next();
+				$this->_parseFields($this->Iterator->next());
 				$this->eof = FALSE;
 				return TRUE;
 			}
@@ -195,7 +180,7 @@ class DataSetArray extends DataAdapter
 	 */
 	function moveNext() {
 		if (is_object($this->Iterator) && $this->Iterator->hasNext()) {
-			$this->fields = $this->Iterator->next();
+			$this->_parseFields($this->Iterator->next());
 			$this->absolutePosition = $this->Iterator->getCurrentIndex();
 			return TRUE;
 		}
@@ -210,7 +195,7 @@ class DataSetArray extends DataAdapter
 	 */
 	function movePrevious() {
 		if (is_object($this->Iterator) && $this->getAbsolutePosition() > 0) {
-			$this->fields = $this->Iterator->previous();
+			$this->_parseFields($this->Iterator->previous());
 			$this->absolutePosition = $this->Iterator->getCurrentIndex();
 			if ($this->eof())
 				$this->eof = FALSE;
@@ -235,17 +220,23 @@ class DataSetArray extends DataAdapter
 	 * {@link recordType}, {@link fieldNames} and
 	 * {@link fieldCount}.
 	 *
+	 * @param array $row Data set row
 	 * @access private
 	 */
-	function _setFieldProperties() {
-		$this->recordType = gettype($this->fields);
-		if ($this->recordType == 'array') {
+	function _parseFields($row) {
+		if (is_array($row)) {
+			$this->fields = $row;
+			$this->fieldNames = array_keys($row);
+			$this->fieldCount = sizeof($this->fieldNames);
+		} elseif (is_object($row)) {
+			if (method_exists($row, 'toArray'))
+				$this->fields = $row->toArray();
+			else
+				$this->fields = get_object_vars($row);
 			$this->fieldNames = array_keys($this->fields);
 			$this->fieldCount = sizeof($this->fieldNames);
-		} elseif ($this->recordType == 'object') {
-			$this->fieldNames = array_keys(get_object_vars($this->fields));
-			$this->fieldCount = sizeof($this->fieldNames);
 		} else {
+			$this->fields = $row;
 			$this->fieldNames = array(0);
 			$this->fieldCount = 1;
 		}

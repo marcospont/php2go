@@ -117,9 +117,9 @@ class CollapsiblePanel extends Widget
 		$code .= sprintf("\n    <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%%\"%s><tr>", (!empty($attrs['captionClass']) ? " class=\"{$attrs['captionClass']}\"" : ""));
 		$code .= sprintf("\n      <td id=\"%s_caption\" align=\"left\">%s</td>", $attrs['id'], $attrs['caption']);
 		if (!empty($attrs['collapsedTip']) && !empty($attrs['expandedTip']))
-			$code .= sprintf("\n      <td style=\"vertical-align:middle;\" align=\"right\"><span id=\"%s_tip\" style=\"margin-right:4px;\">%s</span><img id=\"%s_icon\" src=\"%s\" style=\"border:0\"></td>", $attrs['id'], ($attrs['collapsed'] ? $attrs['collapsedTip'] : $attrs['expandedTip']), $attrs['id'], ($attrs['collapsed'] ? $attrs['expandIcon'] : $attrs['collapseIcon']));
+			$code .= sprintf("\n      <td style=\"vertical-align:middle;\" align=\"right\"><span id=\"%s_tip\" style=\"margin-right:4px;\">%s</span><img id=\"%s_icon\" src=\"%s\" style=\"border:0\" alt=\"\" /></td>", $attrs['id'], ($attrs['collapsed'] ? $attrs['collapsedTip'] : $attrs['expandedTip']), $attrs['id'], ($attrs['collapsed'] ? $attrs['expandIcon'] : $attrs['collapseIcon']));
 		else
-			$code .= sprintf("\n      <td style=\"vertical-align:middle;\" align=\"right\"><img id=\"%s_icon\" src=\"%s\" style=\"border:0\"></td>", $attrs['id'], ($attrs['collapsed'] ? $attrs['expandIcon'] : $attrs['collapseIcon']));
+			$code .= sprintf("\n      <td style=\"vertical-align:middle;\" align=\"right\"><img id=\"%s_icon\" src=\"%s\" style=\"border:0\" alt=\"\" /></td>", $attrs['id'], ($attrs['collapsed'] ? $attrs['expandIcon'] : $attrs['collapseIcon']));
 		$code .= "\n    </tr></table>";
 		$code .= "\n  </div>";
 		$code .= sprintf("\n  <div id=\"%s_content\"%s style=\"display:%s;\">", $attrs['id'], (!empty($attrs['contentClass']) ? " class=\"{$attrs['contentClass']}\"" : ""), ($attrs['collapsed'] ? "none" : "block"));

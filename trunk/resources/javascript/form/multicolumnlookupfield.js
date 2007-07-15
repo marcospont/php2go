@@ -219,7 +219,6 @@ MultiColumnLookupField.prototype.importOptions = function(str, lsep, csep, pos) 
 						cell.noWrap = true;
 						cell.innerHTML = item;
 					});
-					//Element.update(row, "<td nowrap>" + opt.join("</td><td nowrap>") + "</td>");
 					Event.addListener(row, 'mouseover', function(e) { self.cellHoverHandler($EV(e)); });
 					Event.addListener(row, 'mouseout', function(e) { self.cellHoverHandler($EV(e)); });
 					Event.addListener(row, 'click', function(e) {
@@ -360,7 +359,7 @@ MultiColumnLookupField.prototype.keyHandler = function(e) {
 			}
 			break;
 		default :
-			if (!e.ctrlKey && !e.altKey && k != 32 && (key < 112 || key > 123))
+			if (!e.ctrlKey && !e.altKey && k != 32 && (k < 112 || k > 123))
 				$EV(e).stop();
 			break;
 	}

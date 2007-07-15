@@ -27,6 +27,7 @@
 }
 .tabNavigation li a[disabled] {
 	color: #999;
+	cursor: default;
 }
 .tabNavigation li a em {
 	padding: 5px;
@@ -35,9 +36,8 @@
 }
 .tabScrollContainer {
 	position: absolute;
-	left: 0;
 	top: 0;
-	z-index: 2;
+	z-index: 10;
 }
 .tabScrollArrow {
 	position: absolute;
@@ -53,9 +53,10 @@
 	background-color: #fff;
 	border: 1px solid #000;
 	zoom: 1;
+	padding: 5px;
 }
 .tabContainer div {
-	padding: 5px;
+	overflow: auto;
 	display: none;
 }
 .tabContainer div.tabViewVisible {
@@ -63,6 +64,10 @@
 }
 .tabContainer div.tabViewLoading {
 	visibility: hidden;
+}
+/* tob, bottom and left orientation */
+.tabView .tabScrollContainer, .tabViewBottom .tabScrollContainer, .tabViewLeft .tabScrollContainer {
+	left: 0;
 }
 /* top and bottom orientation */
 .tabView .tabScrollArrow, .tabViewBottom .tabScrollArrow {

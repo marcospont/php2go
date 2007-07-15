@@ -39,7 +39,7 @@ import('php2go.form.Form');
  * Example:
  * <code>
  * /* layout.tpl {@*}
- * <table width='779' cellpadding='0' cellspacing='0' border='0'>
+ * <table width="779" cellpadding="0" cellspacing="0" border="0">
  *   <tr><td>
  *     {$main}
  *   </td></tr>
@@ -307,7 +307,7 @@ class FormBasic extends Form
 			$this->_Template->assign('_ROOT.errorDisplay', " style=\"display:block\"");
 			if ($this->clientErrorOptions['showAll']) {
 				$mode = @$this->errorStyle['list_mode'];
-				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br>", $errors));
+				$errors = ($mode == FORM_ERROR_BULLET_LIST ? "<ul><li>" . implode("</li><li>", $errors) . "</li></ul>" : implode("<br />", $errors));
 				$this->_Template->assign('_ROOT.errorTitle', @$this->errorStyle['header_text']);
 				$this->_Template->assign('_ROOT.errorMessages', $errors);
 			} else {
@@ -363,7 +363,7 @@ class FormBasic extends Form
 								if ($this->helpOptions['mode'] == FORM_HELP_POPUP)
 									$this->_Template->assign('popupHelp', "&nbsp;" . $helpCode);
 								else
-									$this->_Template->assign('inlineHelp', "<br>" . $helpCode);
+									$this->_Template->assign('inlineHelp', "<br />" . $helpCode);
 							}
 						}
 					}
@@ -407,7 +407,7 @@ class FormBasic extends Form
 							if ($this->helpOptions['mode'] == FORM_HELP_POPUP)
 								$this->_Template->assign('popupHelp', "&nbsp;" . $helpCode);
 							else
-								$this->_Template->assign('inlineHelp', "<br>" . $helpCode);
+								$this->_Template->assign('inlineHelp', "<br />" . $helpCode);
 						}
 					}
 				}
@@ -442,10 +442,10 @@ class FormBasic extends Form
 	function _buildFormStart() {
 		$target = (isset($this->actionTarget) ? " target=\"" . $this->actionTarget . "\"" : '');
 		$enctype = ($this->hasUpload ? " enctype=\"multipart/form-data\"" : '');
-		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\">", $this->formName, FORM_SIGNATURE, parent::getSignature());
+		$signature = sprintf("\n<input type=\"hidden\" id=\"%s_signature\" name=\"%s\" value=\"%s\" />", $this->formName, FORM_SIGNATURE, parent::getSignature());
 		return sprintf("<form id=\"%s\" name=\"%s\" action=\"%s\" method=\"%s\" style=\"display:inline\"%s%s>%s\n",
 			$this->formName, $this->formName, $this->formAction,
-			$this->formMethod, $target, $enctype, $signature
+			strtolower($this->formMethod), $target, $enctype, $signature
 		);
 	}
 
@@ -458,10 +458,6 @@ class FormBasic extends Form
 	 */
 	function _loadGlobalSettings($settings) {
 		parent::_loadGlobalSettings($settings);
-		if (is_array(@$settings['ERRORS'])) {
-			$showAll = (array_key_exists('SHOW_ALL', $settings['ERRORS']) ? (bool)$settings['ERRORS']['SHOW_ALL'] : TRUE);
-			$this->setErrorDisplayOptions(@constant($settings['ERRORS']['CLIENT_MODE']), $showAll);
-		}
 		if (is_array(@$settings['BASIC'])) {
 			$basic = $settings['BASIC'];
 			(isset($basic['FIELDSET_STYLE'])) && $this->setFieldsetStyle($basic['FIELDSET_STYLE']);
@@ -469,8 +465,12 @@ class FormBasic extends Form
 			(isset($basic['ALIGN'])) && $this->setFormAlign($basic['ALIGN']);
 			(isset($basic['WIDTH'])) && $this->setFormWidth($basic['WIDTH']);
 			(isset($basic['LABEL_ALIGN'])) && $this->setLabelAlign($basic['LABEL_ALIGN']);
-			(isset($basic['LABEL_WIDTH'])) && $this->setLabelWidth($basic['LABEL_WIDTH']);
-			(isset($basic['TABLE_PADDING']) && isset($basic['TABLE_SPACING'])) && $this->setFormTableProperties($basic['TABLE_PADDING'], $basic['TABLE_SPACING']);
+			(array_key_exists('LABEL_WIDTH', $basic)) && $this->setLabelWidth($basic['LABEL_WIDTH']);
+			(array_key_exists('TABLE_PADDING', $basic) && array_key_exists('TABLE_SPACING', $basic)) && $this->setFormTableProperties($basic['TABLE_PADDING'], $basic['TABLE_SPACING']);
+		}
+		if (is_array(@$settings['ERRORS'])) {
+			$showAll = (array_key_exists('SHOW_ALL', $settings['ERRORS']) ? (bool)$settings['ERRORS']['SHOW_ALL'] : TRUE);
+			$this->setErrorDisplayOptions(@constant($settings['ERRORS']['CLIENT_MODE']), $showAll);
 		}
 	}
 
@@ -490,17 +490,14 @@ class FormBasic extends Form
 			(isset($attrs['FIELDSET']))	&& ($this->fieldSetStyle = $attrs['FIELDSET']);
 			(isset($attrs['SECTIONTITLE'])) && ($this->sectionTitleStyle = $attrs['SECTIONTITLE']);
 			(isset($attrs['WIDTH'])) && ($this->formWidth = intval($attrs['WIDTH']));
-			(isset($attrs['ALIGN']) && in_array(strtoupper($attrs['ALIGN']), array('LEFT', 'CENTER', 'RIGHT'))) && ($this->formAlign = strtolower($attrs['ALIGN']));
+			(isset($attrs['ALIGN']) && in_array(strtolower($attrs['ALIGN']), array('left', 'center', 'right'))) && ($this->formAlign = strtolower($attrs['ALIGN']));
+			(isset($attrs['LABELALIGN']) && in_array(strtolower($attrs['LABELALIGN']), array('left', 'center', 'right'))) && ($this->labelAlign = strtolower($attrs['LABELALIGN']));
+			(array_key_exists('LABELWIDTH', $attrs)) && ($this->labelW = floatval($attrs['LABELWIDTH']));
 			(array_key_exists('TABLEPADDING', $attrs)) && ($this->tblCPadding = intval($attrs['TABLEPADDING']));
 			(array_key_exists('TABLESPACING', $attrs)) && ($this->tblCPadding = intval($attrs['TABLESPACING']));
-			(array_key_exists('LABELWIDTH', $attrs)) && ($this->labelW = floatval($attrs['LABELWIDTH']));
-			(isset($attrs['LABELALIGN']) && in_array(strtoupper($attrs['LABELALIGN']), array('LEFT', 'CENTER', 'RIGHT'))) && ($this->labelAlign = strtolower($attrs['LABELALIGN']));
 		} elseif ($tag == 'ERRORS') {
-			$mode = @constant($attrs['CLIENTMODE']);
-			if ($mode) {
-				$showAll = (isset($attrs['SHOWALL']) ? resolveBooleanChoice($attrs['SHOWALL']) : TRUE);
-				$this->setErrorDisplayOptions($mode, $showAll);
-			}
+			$showAll = (isset($attrs['SHOWALL']) ? resolveBooleanChoice($attrs['SHOWALL']) : TRUE);
+			$this->setErrorDisplayOptions(@constant($attrs['CLIENTMODE']), $showAll);
 		}
 	}
 }

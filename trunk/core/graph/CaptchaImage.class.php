@@ -268,7 +268,7 @@ class CaptchaImage extends PHP2Go
 	 * @access private
 	 */
 	function &_createImage() {
-		$ttfTable = array('cour', 'georgia', 'trebuc', 'verdana', 'times', 'comic', 'arial', 'tahoma');
+		$ttfTable = array('cour', 'georgia', 'trebuc', 'verdana', 'times', 'comic', 'arial');
 		$ttfCount = sizeof($ttfTable);
 		// define the CAPTCHA string
 		$this->text = StringUtils::randomString($this->textLength, FALSE);

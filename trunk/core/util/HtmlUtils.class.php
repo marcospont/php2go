@@ -155,7 +155,7 @@ class HtmlUtils extends PHP2Go
 	function image($src, $alt='', $wid=0, $hei=0, $hspace=-1, $vspace=-1, $align='', $id='', $swpImage='', $cssClass='') {
 		if (empty($id))
 			$id = PHP2Go::generateUniqueId('htmlimage');
-		return sprintf ("<img id=\"%s\" src=\"%s\" alt=\"%s\" border=\"0\"%s%s%s%s%s%s%s>",
+		return sprintf ("<img id=\"%s\" src=\"%s\" alt=\"%s\" border=\"0\"%s%s%s%s%s%s%s />",
 			$id, htmlentities($src), $alt,
 			($wid > 0 ? " width=\"{$wid}\"" : ""),
 			($hei > 0 ? " height=\"{$hei}\"" : ""),
@@ -172,9 +172,9 @@ class HtmlUtils extends PHP2Go
 	 *
 	 * Examples:
 	 * <code>
-	 * HtmlUtils::button('BUTTON', 'btnGo', 'Go', "onClick=go();");
+	 * HtmlUtils::button('BUTTON', 'btnGo', 'Go', "onclick='go();'");
 	 * HtmlUtils::button('SUBMIT', 'btnSubmit', 'Send');
-	 * HtmlUtils::button('BUTTON', 'btnBack', 'Back', "onClick=history.back();");
+	 * HtmlUtils::button('BUTTON', 'btnBack', 'Back', "onclick='history.back();'");
 	 * </code>
 	 *
 	 * @param string $type Button type
@@ -214,7 +214,7 @@ class HtmlUtils extends PHP2Go
 	 * Example:
 	 * <code>
 	 * $window = HtmlUtils::window('page.php', 48, 600, 400);
-	 * $link = HtmlUtils::anchor('javascript:;', 'Open me', 'Open me', '', array('onClick'=>$window));
+	 * $link = HtmlUtils::anchor('javascript:;', 'Open me', 'Open me', '', array('onclick'=>$window));
 	 * </code>
 	 *
 	 * @param string $url Window URL
@@ -431,14 +431,14 @@ class HtmlUtils extends PHP2Go
 	}
 
 	/**
-	 * Transforms new lines into <br> tags
+	 * Transforms new lines into <br /> tags
 	 *
 	 * @param string $str Input text
 	 * @return string Processed text
 	 * @static
 	 */
 	function newLineToBr($str) {
-		return str_replace("\n", "<br>\n", $str);
+		return str_replace("\n", "<br />\n", $str);
 	}
 
 	/**
@@ -524,17 +524,17 @@ class HtmlUtils extends PHP2Go
 										%s%shspace=\"0\" vspace=\"0\" border=\"0\" nojava=\"True\" controls=\"ImageWindow\" console=\"_master\" autostart=\"%d\" loop=\"%s\">",
 				$src, ($wid > 0 ? " width=\"" . $wid . "\"" : ""), ($hei > 0 ? " height=\"" . $hei . "\"" : ""), ($flags['AUTO_START']) ? 1 : 0, ($flags['LOOP'] ? "TRUE" : "FALSE"));
 			if ($flags['CONTROLS']) {
-				$movieCode .= sprintf("<br><embed name=\"realVideo\" src=\"%s\" type=\"audio/x-pn-realaudio\" pluginspage=\"http://www.real.com/player\"
+				$movieCode .= sprintf("<br /><embed name=\"realVideo\" src=\"%s\" type=\"audio/x-pn-realaudio\" pluginspage=\"http://www.real.com/player\"
 											  %s%shspace=\"0\" vspace=\"0\" border=\"0\" nojava=\"True\" controls=\"ControlPanel\" console=\"rVideo\" autostart=\"%d\" loop=\"%s\">",
 					$src, ($wid > 0 ? " width=\"" . $wid . "\"" : ""), " height=\"35\"", ($flags['AUTO_START']) ? 1 : 0, ($flags['LOOP'] ? "TRUE" : "FALSE"));
 			}
 			if ($flags['CLIP_STATUS']) {
-				$movieCode .= sprintf("<br><embed name=\"realVideo\" src=\"%s\" type=\"audio/x-pn-realaudio\" pluginspage=\"http://www.real.com/player\"
+				$movieCode .= sprintf("<br /><embed name=\"realVideo\" src=\"%s\" type=\"audio/x-pn-realaudio\" pluginspage=\"http://www.real.com/player\"
 											  %s%shspace=\"0\" vspace=\"0\" border=\"0\" nojava=\"True\" controls=\"StatusBar\" console=\"rVideo\">",
 					$src, ($wid > 0 ? " width=\"" . $wid . "\"" : ""), " height=\"30\"");
 			}
 			if ($flags['CLIP_INFO']) {
-				$movieCode .= sprintf("<br><embed name=\"realVideo\" src=\"%s\" type=\"audio/x-pn-realaudio\" pluginspage=\"http://www.real.com/player\"
+				$movieCode .= sprintf("<br /><embed name=\"realVideo\" src=\"%s\" type=\"audio/x-pn-realaudio\" pluginspage=\"http://www.real.com/player\"
 											  %s%shspace=\"0\" vspace=\"0\" border=\"0\" nojava=\"True\" controls=\"TACCtrl\" console=\"rVideo\">",
 					$src, ($wid > 0 ? " width=\"" . $wid . "\"" : ""), " height=\"32\"");
 			}
@@ -765,7 +765,7 @@ class HtmlUtils extends PHP2Go
 	 * @static
 	 */
 	function refresh($url, $time=1) {
-		echo "<meta http-equiv=\"refresh\" content=\"", $time, "; url=", htmlentities($url), "\">";
+		echo "<meta http-equiv=\"refresh\" content=\"", $time, "; url=", htmlentities($url), "\" />";
 	}
 
 	/**

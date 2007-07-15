@@ -74,7 +74,7 @@ class GoogleMap extends Widget
 	function loadResources(&$Head) {
 		$apiKey = PHP2Go::getConfigVal('WIDGETS.GOOGLE_MAPS_KEY', FALSE);
 		if (!$apiKey)
-			PHP2Go::raiseError(sprintf("A entrada de configuração %s não foi encontrada!", "WIDGETS.GOOGLE_MAPS_KEY"), E_USER_ERROR, __FILE__, __LINE__);
+			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CONFIG_ENTRY_NOT_FOUND', 'WIDGETS.GOOGLE_MAPS_KEY'), E_USER_ERROR, __FILE__, __LINE__);
 		$Head->addScript("http://maps.google.com/maps?file=api&v=2&key=" . $apiKey, '');
 	}
 
