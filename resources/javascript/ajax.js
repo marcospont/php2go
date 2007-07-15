@@ -907,12 +907,35 @@ AjaxService.prototype.parseResponse = function(response) {
  * @param {Object} args Settings
  */
 AjaxPeriodicalUpdater = function(uri, args) {
+	/**
+	 * Request URI
+	 * @type String
+	 */
 	this.uri = uri;
+	/**
+	 * Number of seconds between each request
+	 * @type Number
+	 */
 	this.frequency = args.frequency || 2;
+	/**
+	 * AjaxUpdater instance used to perform periodical requests
+	 * @type AjaxRequest
+	 */
 	this.updater = null;
+	/**
+	 * Updater arguments
+	 * @type Object
+	 */
 	this.updaterArgs = args;
-	this.timer = null;
+	/**
+	 * Called before each request is performed
+	 * @type Function
+	 */	 
 	this.onBeforeUpdate = args.onBeforeUpdate;
+	/**
+	 * @ignore
+	 */
+	this.timer = null;	
 	this.start();
 };
 
