@@ -121,6 +121,7 @@ class QueryParser extends PHP2Go
 		$tokenStack = 0;
 		$parenStack = 0;
 		$selectParen = -1;
+		$selectParenStack = array();
 		$offsets = array(
 			'fields' => -1,
 			'tables' => -1,
@@ -151,7 +152,7 @@ class QueryParser extends PHP2Go
 					if ($tokenStack == 0 && !$this->parts['fields'])
 						$offsets['fields'] = $offset+6;
 					// save parenthesis stack value for the last select command
-					$selectParen = $parenStack;
+					$selectParenStack[] = $selectParen = $parenStack;
 					// increase token stack
 					$tokenStack++;
 					break;
@@ -170,6 +171,13 @@ class QueryParser extends PHP2Go
 					$parenStack++;
 					break;
 				case ')' :
+					if ($parenStack == $selectParen && !empty($selectParenStack)) {
+						array_pop($selectParenStack);
+						if (!empty($selectParenStack))
+							$selectParen = $selectParenStack[sizeof($selectParenStack)-1];
+						else
+							$selectParen = -1;
+					}
 					$parenStack--;
 					break;
 				case 'where' :
