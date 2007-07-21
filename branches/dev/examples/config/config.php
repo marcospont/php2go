@@ -40,8 +40,8 @@
  * For more details on how to fill this entry, please consult INSTALL.txt.
  */
 $port = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != 80 ? ':' . $_SERVER['SERVER_PORT'] : '');
-$url = 'http://' . $_SERVER['SERVER_NAME'] . $port . '/';
-$url .= basename(dirname(dirname(dirname(__FILE__)))) . '/';
+$url = 'http://' . $_SERVER['SERVER_NAME'] . $port;
+$url .= dirname(dirname($_SERVER['PHP_SELF'])) . '/';
 $P2G_USER_CFG['ABSOLUTE_URI'] = $url;
 
 /**
