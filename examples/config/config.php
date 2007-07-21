@@ -40,9 +40,7 @@
  * For more details on how to fill this entry, please consult INSTALL.txt.
  */
 $port = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != 80 ? ':' . $_SERVER['SERVER_PORT'] : '');
-$url = 'http://' . $_SERVER['SERVER_NAME'] . $port;
-$url .= dirname(dirname($_SERVER['PHP_SELF'])) . '/';
-$P2G_USER_CFG['ABSOLUTE_URI'] = $url;
+$P2G_USER_CFG['ABSOLUTE_URI'] = 'http://' . $_SERVER['SERVER_NAME'] . $port . preg_replace("~/examples/([a-z]+/)?[a-z]+\.php~", "", $_SERVER['PHP_SELF']);;
 
 /**
  * Language/locale settings
