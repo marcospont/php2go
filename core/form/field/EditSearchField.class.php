@@ -322,7 +322,7 @@ class EditSearchField extends DbField
 			else
 				$this->setSize(EDITSEARCH_DEFAULT_SIZE);
 			// search input maxlength
-			if ($attrs['LENGTH'])
+			if (array_key_exists('LENGTH', $attrs))
 				$this->setLength($attrs['LENGTH']);
 			else
 				$this->setLength($this->attributes['SIZE']);

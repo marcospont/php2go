@@ -96,7 +96,7 @@ class Date extends PHP2Go
 				Date::isSqlDate($date, $regs);
 				break;
 		}
-		if (!empty($regs) && $regs[2] >= 0 && $regs[2] <= 999 && checkdate($regs[2], $regs[1], $regs[3])) {
+		if (!empty($regs) && $regs[2] >= 0 && $regs[2] <= 9999 && checkdate($regs[2], $regs[1], $regs[3])) {
 			array_shift($regs);
 			return $regs;
 		}
