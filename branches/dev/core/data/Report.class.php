@@ -1215,7 +1215,7 @@ class Report extends PagedDataSet
 					for ($j=0; $j<$Node->getChildrenCount(); $j++) {
 						$Child =& $Node->getChild($j);
 						$attrs = $Child->getAttributes();
-						if ($attrs['LABEL'])
+						if (isset($attrs['LABEL']))
 							$attrs['LABEL'] = resolveI18nEntry($attrs['LABEL']);
 						$this->_SimpleSearch->addFilter($attrs);
 					}
