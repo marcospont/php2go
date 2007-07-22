@@ -318,8 +318,8 @@ class Init
 		// language
 		$conf = $this->_Conf->getConfig('LANGUAGE');
 		if (!empty($conf)) {
-			if (is_array($conf)) {
-				$userDefined = FALSE;
+			$userDefined = FALSE;
+			if (is_array($conf)) {				
 				$default = (isset($conf['DEFAULT']) ? $conf['DEFAULT'] : PHP2GO_DEFAULT_LANGUAGE);
 				$param = (!empty($conf['REQUEST_PARAM']) ? $conf['REQUEST_PARAM'] : NULL);
 				$supported = (isset($conf['AVAILABLE']) ? (array)$conf['AVAILABLE'] : array_keys($this->_localeTable));
