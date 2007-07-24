@@ -1132,9 +1132,8 @@ Event.onDOMReady = function(fn) {
 		var run = function() {
 			if (!arguments.callee.done) {
 				arguments.callee.done = true;
-				self.queue.walk(function(item, idx) {
-					item();
-				});
+				for (var i=0; i<self.queue.length; i++)
+					self.queue[i]();
 				self.queue = null;
 				// mozilla, opera9
 				if (d.removeEventListener)
@@ -1150,6 +1149,8 @@ Event.onDOMReady = function(fn) {
 				}
 			}
 		};
+		// initialize queue
+		this.queue = [];
 		// mozilla, opera9
 		if (d.addEventListener)
 			d.addEventListener('DOMContentLoaded', run, false);
@@ -1174,7 +1175,6 @@ Event.onDOMReady = function(fn) {
 		}
 		// other browsers
 		this.addLoadListener(run);
-		this.queue = [];
 	}
 	this.queue.push(fn);
 };
