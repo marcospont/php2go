@@ -51,7 +51,8 @@ $P2G_LANGUAGE['ERR_TYPES'] = array(
 	128 => "Upozorn&#283;ní p&#345;eklada&#269;e",
 	256 => "U&#382;ivatelská chyba",
 	512 => "U&#382;ivatelské upozorn&#283;ní",
-	1024 => "U&#382;ivatelská poznámka"
+	1024 => "U&#382;ivatelská poznámka",
+	4096 => "Catchable Fatal Error"
 );
 $P2G_LANGUAGE['ERR_ABSOLUTE_URI_NOT_FOUND'] = "Záznam 'ABSOLUTE_URI' nebyl zadán v konfigura&#269;ním poli!";
 $P2G_LANGUAGE['ERR_CONFIG_ENTRY_NOT_FOUND'] = "Záznam <I>%s</I> nebyl v globálním konfigura&#269;ním poli nastaven!";
