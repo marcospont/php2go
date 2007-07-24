@@ -32,10 +32,12 @@
  */
 define('E_DATABASE_ERROR', 0);
 /**
- * Define strict errors constant when not available
+ * Define missing error level constants
  */
 if (!defined('E_STRICT'))
 	define('E_STRICT', 2048);
+if (!defined('E_RECOVERABLE_ERROR'))
+	define('E_RECOVERABLE_ERROR', 4096);
 
 /**
  * Base error class

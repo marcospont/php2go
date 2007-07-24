@@ -51,7 +51,8 @@ $P2G_LANGUAGE['ERR_TYPES'] = array(
 	128 => "Alerta do Compilador",
 	256 => "Erro de Usuário",
 	512 => "Alerta de Usuário",
-	1024 => "Aviso de Usuário"
+	1024 => "Aviso de Usuário",
+	4096 => "Erro Fatal Recuperável"
 );
 $P2G_LANGUAGE['ERR_ABSOLUTE_URI_NOT_FOUND'] = "A variável 'ABSOLUTE_URI' não foi informada na tabela geral de configurações!";
 $P2G_LANGUAGE['ERR_CONFIG_ENTRY_NOT_FOUND'] = "A variável <I>%s</I> não foi informada na tabela geral de configurações!";
