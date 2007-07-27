@@ -767,7 +767,7 @@ FormValidator.prototype.run = function(e) {
 		}
 	}
 	// execute onAfterValidate event trigger function
-	if (!this.onAfterValidate(this)) {
+	if (res && !this.onAfterValidate(this)) {
 		res = false;
 		(e && e.preventDefault());
 	}
