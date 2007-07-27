@@ -239,6 +239,16 @@ var PHP2Go = {
 			window.setTimeout(str, 0);
 		else
 			eval.call(window, str);
+	},
+	/**
+	 * Parses the value of a style property
+	 * @param {String} val Property value
+	 * @type Number
+	 */
+	toPixels : function(val) {
+		if (val && val.slice(-2) == 'px')
+			return parseFloat(val, 10);
+		return 0;
 	}
 };
 

@@ -174,6 +174,31 @@ Element.recursivelyCollect = function(elm, prop) {
 };
 
 /**
+ * Recursively sums the values of a given property
+ * on all ancestors of a given node
+ * @param {Object} elm Element
+ * @param {String} prop Property name
+ * @type Number
+ */
+Element.recursivelySum = function(elm, prop) {
+	var res = 0;
+	if (elm = $(elm)) {
+		while (elm) {
+			if (elm.getComputedStyle('position') == 'fixed')
+				return 0;
+			var val = elm[prop];
+			if (val) {
+				res += val - 0;
+			}
+			if (elm == document.body)
+				break;
+			elm = elm.parentNode;
+		}
+	}
+	return res;
+};
+
+/**
  * Collects element's parent nodes
  * @param {Object} elm Base element
  * @type Array
@@ -331,26 +356,48 @@ Element.insertAfter = function(elm, ref) {
  * @type Object
  */
 Element.getPosition = function(elm) {
-	var elm = $(elm), p = {x: -1, y: -1};
+	var elm = $(elm), p = {x: 0, y: 0};
 	if (elm) {
-		if (document.getBoxObjectFor) {
+		var b = PHP2Go.browser, db = document.body || document.documentElement;
+		// native and target box type
+		var nbt = 2, tbt = 0;
+		if (elm.getBoundingClientRect) {
+			var bcr = elm.getBoundingClientRect();
+			p.x = bcr.left - 2;
+			p.y = bcr.top - 2;
+		} else if (document.getBoxObjectFor) {
+			nbt = 1;
 			var box = document.getBoxObjectFor(elm);
-			var bl = parseInt(elm.getStyle('border-left-width'), 10);
-			var bt = parseInt(elm.getStyle('border-top-width'), 10);
-			p.x = box.x - (!isNaN(bl) ? bl : 0);
-			p.y = box.y - (!isNaN(bt) ? bt : 0);
-		} else {
-			p.x = elm.offsetLeft || parseInt(elm.style.left.replace('px', '') || '0', 10);
-			p.y = elm.offsetTop || parseInt(elm.style.top.replace('px', '') || '0', 10);
-			var op = (elm.parentNode ? elm.offsetParent : null);
-			while (op) {
-				p.x += op.offsetLeft;
-				p.y += op.offsetTop;
-            	op = op.offsetParent;
+			p.x = box.x - elm.recursivelySum('scrollLeft');
+			p.y = box.y - elm.recursivelySum('scrollTop');
+		} else if (elm.offsetParent) {
+			if (elm.parentNode != db) {
+				p.x -= Element.recursivelySum((b.opera ? db : elm), 'scrollLeft');
+				p.y -= Element.recursivelySum((b.opera ? db : elm), 'scrollTop');
 			}
-			if (PHP2Go.browser.opera || (PHP2Go.browser.khtml && elm.getStyle('position') == 'absolute')) {
-				p.x -= document.body.offsetLeft;
-				p.y -= document.body.offsetTop;
+			var cur = elm, end = (b.safari && elm.style.getPropertyValue('position') == 'absolute' && elm.parentNode == db ? db : db.parentNode);
+			do {
+				var l = elm.offsetLeft;
+				if (!b.opera || l > 0)
+					p.x += (isNaN(l) ? 0 : l);
+				var t = elm.offsetTop;
+				p.y += (isNaN(t) ? 0 : t);
+				cur = cur.offsetParent;
+			} while (cur != end && cur != null);
+		} else if (elm.x && elm.y) {
+			p.x += (isNaN(elm.x) ? 0 : elm.x);
+			p.y += (isNan(elm.y) ? 0 : elm.y);
+		}
+		var extents = ['padding', 'border', 'margin'];
+		if (nbt > tbt) {
+			for (var i=tbt; i<nbt; i++) {
+				p.x -= PHP2Go.toPixels(elm.getComputedStyle(extents[i] + '-left'));
+				p.y -= PHP2Go.toPixels(elm.getComputedStyle(extents[i] + '-top'));
+			}
+		} else if (tbt > nbt) {
+			for (var i=tbt; i>nbt; --i) {
+				p.x -= PHP2Go.toPixels(elm.getComputedStyle(extents[i-1] + '-left'));
+				p.y -= PHP2Go.toPixels(elm.getComputedStyle(extents[i-1] + '-top'));
 			}
 		}
 	}
@@ -367,7 +414,7 @@ Element.getPosition = function(elm) {
 Element.getDimensions = function(elm) {
 	var elm = $(elm), d = {width: 0, height: 0};
 	if (elm) {
-		if (elm.getStyle('display') != 'none') {
+		if (elm.getComputedStyle('display') != 'none') {
 			if (elm.offsetWidth && elm.offsetHeight) {
 	        	d.width = elm.offsetWidth;
 	        	d.height = elm.offsetHeight;
@@ -405,6 +452,52 @@ Element.isWithin = function(elm, p1, p2) {
 	return false;
 };
 
+if (PHP2Go.browser.ie) {
+	/**
+	 * Retrieves the computed value of a given style property
+	 * @param {Object} elm Element
+	 * @param {String} prop Property name
+	 * @type String
+	 */
+	Element.getComputedStyle = function(elm, prop) {
+		elm = $(elm);
+		if (elm && elm.currentStyle)
+			return elm.currentStyle[prop.camelize()];
+		return null;
+	};
+	/**
+	 * Gets all computed styles of a given element
+	 * @param {Object} elm Element
+	 * @type Object
+	 */
+	Element.getComputedStyles = function(elm) {
+		if (elm = $(elm))
+			return elm.currentStyle;
+		return null;
+	};
+} else {
+	/**
+	 * @ignore
+	 */
+	Element.getComputedStyle = function(elm, prop) {
+		var d = document, cs, elm = $(elm);
+		if (elm && d.defaultView && d.defaultView.getComputedStyle) {
+			if (cs = d.defaultView.getComputedStyle(elm, null))
+				return cs[prop.camelize()];
+		}
+		return null;
+	};
+	/**
+	 * @ignore
+	 */
+	Element.getComputedStyles = function(elm) {
+		var d = document, elm = $(elm);
+		if (elm && d.defaultView && d.defaultView.getComputedStyle)
+			return d.defaultView.getComputedStyle(elm, null);
+		return null;
+	};
+}
+
 /**
  * Gets a style property of a given element.
  * If the property is not found in the element's
@@ -418,23 +511,17 @@ Element.isWithin = function(elm, p1, p2) {
  * @type Object
  */
 Element.getStyle = function(elm, prop) {
-	elm = $(elm);
+	var val = null, elm = $(elm);
 	if (elm && elm.style) {
-		var d = document, camel = prop.camelize(), val = null;
+		var d = document, camel = prop.camelize();
 		if (PHP2Go.browser.ie && (prop == 'float' || prop == 'cssFloat'))
 			camel = 'styleFloat';
 		else if (prop == 'float')
 			camel = 'cssFloat';
 		val = elm.style[camel];
-		if (!val) {
-			if (d.defaultView && d.defaultView.getComputedStyle) {
-				var cs = d.defaultView.getComputedStyle(elm, null);
-				(cs) && (val = cs.getPropertyValue(prop));
-			} else if (elm.currentStyle) {
-				val = elm.currentStyle[camel];
-			}
-		}
-		if (PHP2Go.browser.opera && ['left', 'top', 'right', 'bottom'].contains(prop) && Element.getStyle(elm, 'position') == 'static')
+		if (!val)
+			val = elm.getComputedStyle(prop);
+		if (PHP2Go.browser.opera && ['left', 'top', 'right', 'bottom'].contains(prop) && elm.getComputedStyle('position') == 'static')
 			val = null;
 		(val == 'auto') && (val = null);
 		(prop == 'opacity' && val) && (val = parseFloat(val, 10));
@@ -506,16 +593,22 @@ Element.swapStyles = function(elm, props, func) {
  */
 Element.getOpacity = function(elm) {
 	if (elm = $(elm)) {
-		var op = elm.getStyle('opacity');
-		if (op)
-			return parseFloat(op, 10);
-		var re = new RegExp("alpha\(opacity=(.*)\)");
-		if (op = re.exec(elm.getStyle('filter') || '') && op[1])
-			return (parseFloat(op[1], 10) / 100);
-		return 1.0;
+		var op = 1;
+		if (PHP2Go.browser.ie) {
+			var mt = [];
+			if (mt = Element.getOpacity.re.exec(elm.getStyle('filter') || ''))
+				op = (parseFloat(mt[1], 10) / 100);
+		} else {
+			op = parseFloat(elm.style.opacity || elm.style.MozOpacity || elm.style.KhtmlOpacity || 1, 10);
+		}
+		return (op >= 0.999999 ? 1 : op);
 	}
 	return null;
 };
+/**
+ * @ignore
+ */
+Element.getOpacity.re = /alpha\(opacity=(.*)\)/;
 
 /**
  * Set an element's opacity level. The opacity level
@@ -526,20 +619,26 @@ Element.getOpacity = function(elm) {
  */
 Element.setOpacity = function(elm, op) {
 	if (elm = $(elm)) {
-		op = (isNaN(op) || op >= 1 ? null : (op < 0.00001 ? 0 : op));
-		var s = elm.style;
-		s['opacity'] = s['-moz-opacity'] = s['-khtml-opacity'] = op;
-		if (PHP2Go.browser.ie) {
-			// force layout on the element
-			s['zoom'] = 1;
-			// remove current alpha value
-			s['filter'] = (elm.getStyle('filter') || '').replace(/alpha\([^\)]*\)/gi, '');
-			// add new alpha value if not null
-			s['filter'] += (op ? 'alpha(opacity=' + Math.round(op*100) + ')' : '');
+		op = (isNaN(op) || op >= 1 ? 1 : (op < 0.00001 ? 0 : op));
+		var s = elm.style, b = PHP2Go.browser;
+		if (b.ie) {
+			s.zoom = 1;
+			s.filter = (elm.getStyle('filter') || '').replace(Element.setOpacity.re, '');
+			s.filter += (op ? 'alpha(opacity=' + Math.round(op*100) + ')' : '');
+		} else if (b.mozilla) {
+			s.opacity = s.MozOpacity = op;
+		} else if (b.khtml) {
+			s.opacity = s.KhtmlOpacity = op;
+		} else {
+			s.opacity = op;
 		}
 	}
 	return elm;
 };
+/**
+ * @ignore
+ */
+Element.setOpacity.re = /alpha\([^\)]*\)/gi;
 
 /**
  * Return the element CSS class names.
@@ -612,7 +711,7 @@ Element.show = function() {
 	for (var i=0; i<arg.length; i++) {
 		item = $(arg[i]);
 		item.style.display = (item.tagName && item.tagName.equalsIgnoreCase('div') ? 'block' : '');
-		if (PHP2Go.browser.ie && item.getStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && item.getComputedStyle('position') == 'absolute')
 			WCH.attach(item);
 	}
 };
@@ -628,7 +727,7 @@ Element.hide = function() {
 	for (var i=0; i<arg.length; i++) {
 		item = $(arg[i]);
 		item.style.display = 'none';
-		if (PHP2Go.browser.ie && item.getStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && item.getComputedStyle('position') == 'absolute')
 			WCH.detach(item);
 	}
 };
@@ -642,7 +741,7 @@ Element.toggleDisplay = function() {
 	var item, arg = arguments;
 	for (var i=0; i<arg.length; i++) {
 		item = $(arg[i]);
-		if (item.getStyle('display') == 'none')
+		if (item.getComputedStyle('display') == 'none')
 			item.show();
 		else
 			item.hide();
@@ -660,7 +759,7 @@ Element.moveTo = function(elm, x, y) {
 	if (elm = $(elm)) {
 		elm.setStyle('left', x + 'px');
 		elm.setStyle('top', y + 'px');
-		if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && elm.getComputedStyle('position') == 'absolute')
 			WCH.update(elm, {position: {x: x, y: y}});
 	}
 	return elm;
@@ -677,7 +776,7 @@ Element.resizeTo = function(elm, w, h) {
 	if (elm = $(elm)) {
 		elm.setStyle('width', w + 'px');
 		elm.setStyle('height', h + 'px');
-		if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && elm.getComputedStyle('position') == 'absolute')
 			WCH.update(elm, {dimensions: {width: w, height: h}});
 	}
 	return elm;
@@ -1048,7 +1147,7 @@ var WCH = {
 				if (PHP2Go.browser.ie6)
 					wch.style.filter = 'progid:DXImageTransform.Microsoft.Alpha(style=0,opacity=0);';
 				// fix low z-indexes
-				if (elm.getStyle('z-index') <= 2)
+				if (elm.getComputedStyle('z-index') <= 2)
 					elm.setStyle('z-index', 1000);
 			} else {
 				wch = elm.wchIframe;
@@ -1058,7 +1157,7 @@ var WCH = {
 			wch.style.height = dim.height;
 			wch.style.top = pos.y;
 			wch.style.left = pos.x;
-			wch.style.zIndex = elm.getStyle('z-index') - 1;
+			wch.style.zIndex = elm.getComputedStyle('z-index') - 1;
 		}
 	},
 	/**
@@ -1278,7 +1377,8 @@ if (PHP2Go.browser.ie)
 Event.prototype.element = function() {
 	var elm = (this.target || this.srcElement);
 	if (elm.nodeType) {
-		while (elm.nodeType != 1) elm = elm.parentNode;
+		while (elm.nodeType != 1)
+			elm = elm.parentNode;
 	}
 	return elm;
 };
@@ -1396,8 +1496,7 @@ $EV = function(e) {
 	e = e || window.event;
 	if (!e || PHP2Go.nativeEventExtension)
 		return e;
-	Object.extend(e, Event.prototype);
-	return e;
+	return Object.extend(e, Event.prototype);
 };
 
 /**
