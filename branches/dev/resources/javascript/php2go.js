@@ -64,6 +64,10 @@ var PHP2Go = {
 	/**
 	 * @ignore
 	 */
+	methodRegistry : [],
+	/**
+	 * @ignore
+	 */
 	scriptRegExpAll : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'img'),
 	/**
 	 * @ignore
@@ -239,6 +243,22 @@ var PHP2Go = {
 			window.setTimeout(str, 0);
 		else
 			eval.call(window, str);
+	},
+	/**
+	 * Builds a reference to an object's method.
+	 * Can be used to bind events to methods.
+	 * @param {Object} obj Object
+	 * @param {String} method Method name
+	 * @type Function
+	 */
+	method : function(obj, method) {
+		var r = this.methodRegistry;
+		for (var i=0; i<r.length; i++) {
+			if (r[i][0] == obj && r[i][1] == method)
+				return r[i][2];
+		}
+		r[i] = [obj, method, function() { obj[method].apply(obj, arguments); }];
+		return r[i][2];
 	},
 	/**
 	 * Parses the value of a style property
