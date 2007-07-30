@@ -122,7 +122,7 @@ Element.getElementsByTagName = function(elm, tag) {
 Element.getElementsByClassName = function(elm, clsName, tagName) {
 	if (elm = $(elm)) {
 		if (document.getElementsByXPath)
-			return document.getElementsByXPath(".//*[contains(concat(' ', @class, ' '), ' " + clsName + " ')]", elm);
+			return document.getElementsByXPath(".//%1[contains(concat(' ', @class, ' '), ' %2 ')]".assignAll(tagName || '*', clsName), elm);
 		var re = new RegExp("(^|\\s)" + clsName + "(\\s|$)");
 		var res = [], elms = elm.getElementsByTagName(tagName || '*');
 		for (var i=0,s=elms.length; i<s; i++) {
@@ -551,7 +551,7 @@ Element.setStyle = function(elm, prop, value) {
 				case 'width' :
 				case 'height' :
 					elm.style[prop.camelize()] = props[prop];
-					if (PHP2Go.browser.ie && elm.getStyle('position') == 'absolute' && elm.getStyle('display') != 'none')
+					if (PHP2Go.browser.ie && elm.getComputedStyle('position') == 'absolute' && elm.getComputedStyle('display') != 'none')
 						WCH.update(elm);
 					break;
 				default :
@@ -1142,22 +1142,23 @@ var WCH = {
 			elm.wchList = list;
 		} else {
 			var wch, pos = elm.getPosition(), dim = elm.getDimensions();
+			var zi = elm.getComputedStyle('z-index');
 			if (!elm.wchIframe) {
 				wch = elm.wchIframe = $N('iframe', elm.parentNode, {position: 'absolute'});
 				if (PHP2Go.browser.ie6)
 					wch.style.filter = 'progid:DXImageTransform.Microsoft.Alpha(style=0,opacity=0);';
 				// fix low z-indexes
-				if (elm.getComputedStyle('z-index') <= 2)
-					elm.setStyle('z-index', 1000);
+				if (zi <= 2)
+					zi = elm.style.zIndex = 1000;
+				wch.style.zIndex = zi - 1;
 			} else {
 				wch = elm.wchIframe;
 			}
-			wch.style.display = 'block';
-			wch.style.width = dim.width;
-			wch.style.height = dim.height;
-			wch.style.top = pos.y;
-			wch.style.left = pos.x;
-			wch.style.zIndex = elm.getComputedStyle('z-index') - 1;
+			wch.style.display = '';
+			wch.style.width = dim.width + 'px';
+			wch.style.height = dim.height + 'px';
+			wch.style.top = pos.y + 'px';
+			wch.style.left = pos.x + 'px';
 		}
 	},
 	/**
