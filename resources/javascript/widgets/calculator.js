@@ -554,10 +554,9 @@ Calculator.prototype.showAt = function(tgr, trg, align) {
 	this.pendingOp = "";
 	this.lastOp = "";
 	// register event listener
-	var self = this;
-	Event.addListener(document, 'keydown', self.keyDownHandler, true);
-	Event.addListener(document, 'keypress', self.keyPressHandler, true);
-	Event.addListener(document, 'mousedown', self.mouseDownHandler, true);
+	Event.addListener(document, 'keydown', PHP2Go.method(this, 'keyDownHandler'), true);
+	Event.addListener(document, 'keypress', PHP2Go.method(this, 'keyPressHandler'), true);
+	Event.addListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 };
 
 /**
@@ -569,10 +568,9 @@ Calculator.prototype.hide = function() {
 	this.trigger = null;
 	this.container.hide();
 	// unregister event listener
-	var c = this;
-	Event.removeListener(document, 'keydown', c.keyDownHandler, true);
-	Event.removeListener(document, 'keypress', c.keyPressHandler, true);
-	Event.removeListener(document, 'mousedown', c.mouseDownHandler, true);
+	Event.removeListener(document, 'keydown', PHP2Go.method(this, 'keyDownHandler'), true);
+	Event.removeListener(document, 'keypress', PHP2Go.method(this, 'keyPressHandler'), true);
+	Event.removeListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'widgets/calculator.js'] = true;

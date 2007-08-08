@@ -64,10 +64,6 @@ var PHP2Go = {
 	/**
 	 * @ignore
 	 */
-	methodRegistry : [],
-	/**
-	 * @ignore
-	 */
 	scriptRegExpAll : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'img'),
 	/**
 	 * @ignore
@@ -252,13 +248,11 @@ var PHP2Go = {
 	 * @type Function
 	 */
 	method : function(obj, method) {
-		var r = this.methodRegistry;
-		for (var i=0; i<r.length; i++) {
-			if (r[i][0] == obj && r[i][1] == method)
-				return r[i][2];
-		}
-		r[i] = [obj, method, function() { obj[method].apply(obj, arguments); }];
-		return r[i][2];
+		if (!obj._methods)
+			obj._methods = {};
+		if (!obj._methods[method])
+			obj._methods[method] = function() { obj[method].apply(obj, arguments); };
+		return obj._methods[method];
 	},
 	/**
 	 * Parses the value of a style property

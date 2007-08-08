@@ -394,7 +394,7 @@ ColorPicker.prototype.showPopupAt = function(trg) {
 	pop.onSelect = this.onSelect;
 	if (pop.style.display == 'none')
 		pop.show();
-	Event.addListener(document, 'mousedown', this.mouseDownHandler.bind(this));
+	Event.addListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'));
 };
 
 /**
@@ -407,7 +407,7 @@ ColorPicker.prototype.hidePopup = function() {
 		pop.onClose();
 	pop.trigger = null;
 	pop.hide();
-	Event.removeListener(document, 'mousedown', this.mouseDownHandler.bind(this));
+	Event.removeListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'));
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'widgets/colorpicker.js'] = true;
