@@ -273,7 +273,7 @@ EditorField.prototype.setupEvents = function() {
 	$C(this.divEmoticons.getElementsByTagName('img')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function(event) {
 			self.focus();
-			self.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+item.src+"' border='0' alt=''>");
+			self.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+item.src+"' border='0' alt=''/>");
 		});
 	});
 	// form submission
@@ -613,6 +613,7 @@ EditorField.prototype.setResizing = function(e, b) {
 	var self = this, r = this.resizer;
 	var cont = $(this.name + '_container');
 	var box = $(this.name + '_resizeBox');
+	var rh = PHP2Go.method(this, 'resizeHandler');
 	if (b) {
 		var dim = cont.getDimensions();
 		box.resizeTo(dim.width, dim.height);
@@ -622,15 +623,15 @@ EditorField.prototype.setResizing = function(e, b) {
 		r.mode = this.config.resizeMode;
 		r.point = {x:e.screenX,y:e.screenY};
 		r.size = {w:parseInt(box.style.width, 10),h:parseInt(box.style.height, 10)};
-		Event.addListener(document, 'mousemove', this.resizeHandler.bind(this));
-		Event.addListener(document, 'mouseup', this.resizeHandler.bind(this));
+		Event.addListener(document, 'mousemove', rh);
+		Event.addListener(document, 'mouseup', rh);
 	} else {
 		box.style.display = 'none';
 		cont.style.display = 'block';
 		this.document.designMode = 'on';
 		r.resizing = false;
-		Event.removeListener(document, 'mousemove', this.resizeHandler.bind(this));
-		Event.removeListener(document, 'mouseup', this.resizeHandler.bind(this));
+		Event.removeListener(document, 'mousemove', rh);
+		Event.removeListener(document, 'mouseup', rh);
 	}
 };
 
