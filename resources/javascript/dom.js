@@ -551,7 +551,7 @@ Element.setStyle = function(elm, prop, value) {
 				case 'width' :
 				case 'height' :
 					elm.style[prop.camelize()] = props[prop];
-					if (PHP2Go.browser.ie && elm.getComputedStyle('position') == 'absolute' && elm.getComputedStyle('display') != 'none')
+					if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && elm.getComputedStyle('position') == 'absolute' && elm.getComputedStyle('display') != 'none')
 						WCH.update(elm);
 					break;
 				default :
@@ -711,7 +711,7 @@ Element.show = function() {
 	for (var i=0; i<arg.length; i++) {
 		item = $(arg[i]);
 		item.style.display = (item.tagName && item.tagName.equalsIgnoreCase('div') ? 'block' : '');
-		if (PHP2Go.browser.ie && item.getComputedStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
 			WCH.attach(item);
 	}
 };
@@ -727,7 +727,7 @@ Element.hide = function() {
 	for (var i=0; i<arg.length; i++) {
 		item = $(arg[i]);
 		item.style.display = 'none';
-		if (PHP2Go.browser.ie && item.getComputedStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
 			WCH.detach(item);
 	}
 };
@@ -759,7 +759,7 @@ Element.moveTo = function(elm, x, y) {
 	if (elm = $(elm)) {
 		elm.setStyle('left', x + 'px');
 		elm.setStyle('top', y + 'px');
-		if (PHP2Go.browser.ie && elm.getComputedStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && elm.getComputedStyle('position') == 'absolute')
 			WCH.update(elm, {position: {x: x, y: y}});
 	}
 	return elm;
@@ -776,7 +776,7 @@ Element.resizeTo = function(elm, w, h) {
 	if (elm = $(elm)) {
 		elm.setStyle('width', w + 'px');
 		elm.setStyle('height', h + 'px');
-		if (PHP2Go.browser.ie && elm.getComputedStyle('position') == 'absolute')
+		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && elm.getComputedStyle('position') == 'absolute')
 			WCH.update(elm, {dimensions: {width: w, height: h}});
 	}
 	return elm;
@@ -1150,7 +1150,6 @@ var WCH = {
 				// fix low z-indexes
 				if (zi <= 2)
 					zi = elm.style.zIndex = 1000;
-				wch.style.zIndex = zi - 1;
 			} else {
 				wch = elm.wchIframe;
 			}
@@ -1159,6 +1158,7 @@ var WCH = {
 			wch.style.height = dim.height + 'px';
 			wch.style.top = pos.y + 'px';
 			wch.style.left = pos.x + 'px';
+			wch.style.zIndex = zi - 1;
 		}
 	},
 	/**
