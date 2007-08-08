@@ -278,12 +278,15 @@ MultiColumnLookupField.prototype.toggleDisplay = function() {
 	if (!this.tblContainer.isVisible()) {
 		var b = document.body, c = this.container;
 		var t = this.tbl, tc = this.tblContainer;
-		var ss = (PHP2Go.browser.ie ? 18 : 16);
+		var ss = 16;
 		// adjust table container style
-		tc.style.left = c.getPosition().x;
+		tc.style.left = c.getPosition().x + 'px';
 		tc.style.height = this.height + 'px';
-		tc.style.zIndex = 2;
-		tc.show();
+		tc.style.zIndex = 1000;
+		tc.swapStyles({ visibility: 'hidden' }, function() {
+			tc.show();
+			tc.style.width = (t.offsetWidth + ss) + 'px';
+		});
 		// minimum width
 		if (t.offsetWidth < c.offsetWidth) {
 			tc.style.width = c.offsetWidth;
@@ -301,8 +304,8 @@ MultiColumnLookupField.prototype.toggleDisplay = function() {
 		// move to selected option
 		if (this.selectedIndex >= 1)
 			this.tbl.rows[this.selectedIndex].scrollIntoView(false);
-		// add document listener
-		Event.addListener(document, 'mousedown', this.mouseDownHandler.bind(this), true);
+		// add document listener		
+		Event.addListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 	} else {
 		this.tblContainer.hide();
 	}
@@ -322,7 +325,7 @@ MultiColumnLookupField.prototype.hide = function() {
 				this.selectedIndex = this.fld.selectedIndex;
 			}
 		}
-		Event.removeListener(document, 'mousedown', this.mouseDownHandler.bind(this), true);
+		Event.removeListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 	}
 };
 
