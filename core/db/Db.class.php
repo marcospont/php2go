@@ -779,15 +779,15 @@ class Db extends PHP2Go
 	 * to the rules of the active driver.
 	 *
 	 * @todo Verify how database drivers quote identifiers
-	 * @param string $alias Alias
+	 * @param string $identifier Identifier
 	 * @return Quoted alias
 	 */
-	function quoteIdentifier($alias) {
+	function quoteIdentifier($identifier) {
 		switch ($this->AdoDb->dataProvider) {
 			case 'mysql' :
-				return "`{$alias}`";
+				return "`{$identifier}`";
 			default :
-				return "\"{$alias}\"";
+				return "\"{$identifier}\"";
 		}
 	}
 
