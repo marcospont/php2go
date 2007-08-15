@@ -1392,29 +1392,43 @@ class Report extends PagedDataSet
 			if (preg_match("/~[^~]+~/", $value))
 				$this->_dataSource[$element] = $this->_evaluateStatement($value);
 		}
-		// show data source debug
+		// debug flag
+		$this->adapter->setParameter('debug', $this->debug);
+		// datasource debug
 		if ($this->debug) {
-			print('REPORT DEBUG --- DATASOURCE ELEMENTS :');
+			println('<b>REPORT DEBUG</b><br/>');
+			println('ORIGINAL DATA SOURCE');
 			dumpVariable($this->_dataSource);
-			$this->adapter->setParameter('debug', TRUE);
-		} else {
-			$this->adapter->setParameter('debug', FALSE);
-		}
+		}		
+		// determine search clause and order by clause
+		$searchClause = $this->_SimpleSearch->getSearchClause();
+		$orderClause = $this->_orderByClause();
+		// search and order debug
+		if ($this->debug) {
+			if (!empty($searchClause)) {
+				println('SEARCH CLAUSE');
+				dumpVariable($searchClause);				
+			}
+			if (!empty($orderClause)) {
+				println('ORDER CLAUSE');
+				dumpVariable($orderClause);
+			}
+		}		
 		// check if the data source uses a stored procedure
 		if ($this->_dataSource['PROCEDURE'] != '') {
 			$isProcedure = TRUE;
 			$cursorName = @$this->_dataSource['CURSORNAME'];
 			$this->_sqlCode = trim($this->_dataSource['PROCEDURE']);
 			if (ereg(':CLAUSE', $this->_dataSource['PROCEDURE']))
-				$this->_bindVars['CLAUSE'] = $this->_SimpleSearch->getSearchClause();
-			$this->_bindVars['ORDER'] = $this->_orderByClause();
+				$this->_bindVars['CLAUSE'] = $searchClause;
+			$this->_bindVars['ORDER'] = $orderClause;
 		// build an SQL query based on the data source elements
 		} else {
 			$isProcedure = FALSE;
 			$cursorName = NULL;
 			$Query = new QueryBuilder($this->_dataSource['FIELDS'], $this->_dataSource['TABLES'], $this->_dataSource['CLAUSE'], $this->_dataSource['GROUPBY']);
-			$Query->addClause($this->_SimpleSearch->getSearchClause());
-			$Query->setOrder($this->_orderByClause());
+			$Query->addClause($searchClause);
+			$Query->setOrder($orderClause);
 			$this->_sqlCode = $Query->getQuery();
 		}
 		// load data onto the internal DB adapter
@@ -2325,17 +2339,18 @@ class Report extends PagedDataSet
 	 * @return string
 	 */
 	function _orderByClause() {
+		$Db =& Db::getInstance(@$this->params['connectionId']);
 		$orderMembers = array();
 		// 1) order by grouping columns
 		if (isset($this->group)) {
 			foreach ($this->group as $field)
-				$orderMembers[] = "\"{$field}\"";
+				$orderMembers[] = $Db->quoteIdentifier($field);
 		}
 		// 2) order by user requested column
 		// If the user requested sort column is on the first position of the default
 		// orderby clause, it is removed from the default clause
 		if (isset($this->_order) && !in_array($this->_order, $this->unsortable) && !in_array($this->_order, $this->hidden)) {
-			$orderMembers[] = "\"{$this->_order}\" " . ($this->_orderType == 'd' ? ' DESC' : ' ASC');
+			$orderMembers[] = $Db->quoteIdentifier($this->_order) . ($this->_orderType == 'd' ? ' DESC' : ' ASC');
 			$matches = array();
 			if (preg_match("/^\s*{$this->_order}(\s*(asc|desc)?\s*,?)?/is", $this->_dataSource['ORDERBY'], $matches)) {
 				$this->_dataSource['ORDERBY'] = preg_replace('/' . $matches[0] . '/', '', $this->_dataSource['ORDERBY']);
