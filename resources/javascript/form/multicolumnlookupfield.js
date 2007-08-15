@@ -81,7 +81,7 @@ MultiColumnLookupField.prototype.setup = function() {
 	c.style.border = '1px solid ThreeDShadow';
 	c.style.display = 'block';
 	Event.addLoadListener(function() {
-		c.style.width = (t.offsetWidth + b.offsetWidth + (PHP2Go.browser.ie?2:0)) + 'px';
+		c.style.width = (t.offsetWidth + b.offsetWidth) + 'px';
 	});
 	// setup event listeners
 	Event.addListener(self.btn, 'focus', function(e) { self.raiseEvent('focus'); });
