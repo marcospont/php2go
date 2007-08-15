@@ -194,6 +194,7 @@
 			 * create and configure the HTML document
 			 */
 			$doc = new Document('layout.tpl');
+			$doc->addScript(PHP2GO_JAVASCRIPT_PATH . 'widgets/dialog.js');
 			$doc->setFocus('people_form');
 			$doc->setTitle('PHP2Go Examples - AJAX + Forms');
 			/**

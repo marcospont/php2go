@@ -18,14 +18,16 @@
 		text-align: center;
 	}
 	#msg {
-		display:none;
-		margin:5px;
-		padding:4px;
-		border:1px solid #bbb;
+		display: none;
+		margin: 5px;
+		padding: 4px;
+		border: 1px solid #bbb;
 		background-color: #b5edbc;
 	}
 	#overall {
 		width: 780px;
+		text-align: left;
+		margin-top: 40px;
 	}
 	#form_layer {
 		float: left;
@@ -52,6 +54,18 @@
 		width: auto;
 		text-align: right;
 		padding: 4px;
+	}
+	.confDialog {
+		border: 1px solid #000;
+		background-color: #ff0000;
+		color: #fff;
+		font-weight: bold;
+		padding: 6px;
+	}
+	.confDialog div {
+		padding: 3px;
+		line-height: 18px;
+		text-align: center;
 	}
 </style>
 
@@ -88,43 +102,78 @@
 	}
 
 	/**
+	 * Shows delete confirmation dialog
+	 */
+	function showDeletePersonDialog(id) {
+		confDialog.setButtonAction(0, function() { deletePerson(id); });
+		confDialog.setContents('This person will be removed. Continue?');
+		confDialog.open();
+	}
+	
+	/**
 	 * Routine used to request the deletion of a given person
 	 */
 	function deletePerson(id) {
-		// display confirmation dialog
-		if (confirm('Are you sure?')) {
-			// hide message
-			$('msg').hide();
-			// create/send request
-			var service = new AjaxService(document.location.pathname, {
-				params: { id_people: id, current_loaded: $('id_people').value },
-				handler: 'deleteRecord',
-				throbber: 'throbber_save'
-			});
-			service.send();
-		}
+		// hide message
+		$('msg').hide();
+		// create/send request
+		var service = new AjaxService(document.location.pathname, {
+			params: { id_people: id, current_loaded: $('id_people').value },
+			handler: 'deleteRecord',
+			throbber: 'throbber_save'
+		});
+		confDialog.close();		
+		service.send();		
 	}
-
-    /**
-     * Used to verify if at least one checkbox is checked
-     */
-	function verifyPersonBoxes() {
+	
+	/**
+	 * Shows delete confirmation dialog
+	 */
+	function showDeletePeopleDialog() {
 		// verify if at least one box is checked
 		var val = $V('list_form', 'chk[]');
-		if (!val) {
-			alert('Please select at least one person!');
-			return false;
+		if (val) {
+			confDialog.setButtonAction(0, function() { deletePeople(val); });
+			confDialog.setContents('You\'re about to delete ' + val.length + ' person record(s).<br/>Click Ok to proceed. Otherwise, click Cancel.');
+			confDialog.open();
 		}
-		// display confirmation dialog
-		if (!confirm('Are you sure you want to delete ' + val.length + ' person record(s)?'))
-			return false;
+    }
+    
+    /**
+     * Executes an AJAX service to delete the selected people
+     */
+    function deletePeople(val) {
 		// reset form if we're deleting the record being edited
 		if (val.indexOf($('id_people').value) != -1) {
 			$('id_people').value = '';
 			Form.reset($('people_form'));
 		}
-		return true;
+		var service = new AjaxService(document.location.pathname, {
+			form: 'list_form',
+			handler: 'multiple',
+			throbber: 'throbber_save'
+		});
+		confDialog.close();
+		service.send();		
     }
+    
+
+	/**
+	 * Setup confirmation dialog
+	 */
+	var confDialog = null;
+    Event.addLoadListener(function() {
+    	confDialog = new ModalDialog({
+    		contentsClass: 'confDialog',    		
+    		opacity: 0.4,
+    		overlayColor: '#333',
+    		buttons: [
+    			['Ok'],
+    			['Cancel', function() { this.close(); }, true]
+    		]
+    	});
+    	confDialog.setup();
+    });
 	
 </script>
 
@@ -137,6 +186,7 @@
 </div>
 
 <!-- page layout -->
+<center>
 <div id="overall">
   <div id="msg"></div>
   <div id="form_layer">{$form}</div>
@@ -150,24 +200,13 @@
       <div id="operations">
         <select id="operation" name="operation">
           <option value="delete" selected="selected">Delete selected</option>
-        </select>&nbsp;<button id="btn_operation" name="btn_operation" type="submit" onclick="return verifyPersonBoxes();">Ok</button>
+        </select>&nbsp;<button id="btn_operation" name="btn_operation" type="button" onclick="showDeletePeopleDialog();">Ok</button>
       </div><br style="clear:both;" />
       <div id="list_container">
         {$list}
       </div>
     </fieldset>
     </form>
-    <script type="text/javascript">
-		/**
-		 * Prepares the 'list_form' form to be submitted through an AJAX call
-		 */
-		Form.ajaxify($('list_form'), function() {
-			var ajax = new AjaxService(document.location.pathname, {
-				handler: 'multiple',
-				throbber: 'throbber_save'
-			});
-			return ajax;
-		});
-    </script>
   </div>
 </div>
+</center>
