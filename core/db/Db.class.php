@@ -771,16 +771,35 @@ class Db extends PHP2Go
 	function bind($statement, &$value, $varName, $type=FALSE, $maxLen=4000, $isOutput=FALSE) {
 		return $this->AdoDb->Parameter($statement, $value, $varName, $isOutput, $maxLen, $type);
 	}
+	
+	/**
+	 * Correctly quotes an identifier
+	 * 
+	 * Adds quotes to a database identifier according
+	 * to the rules of the active driver.
+	 *
+	 * @todo Verify how database drivers quote identifiers
+	 * @param string $alias Alias
+	 * @return Quoted alias
+	 */
+	function quoteIdentifier($alias) {
+		switch ($this->AdoDb->dataProvider) {
+			case 'mysql' :
+				return "`{$alias}`";
+			default :
+				return "\"{$alias}\"";
+		}
+	}
 
 	/**
 	 * Correctly quotes a string
 	 *
-	 * Add and escape quotes inside a string according to the
+	 * Adds and escapes quotes inside a string according to the
 	 * rules of the active database driver.
 	 *
 	 * @param string $str Input string
 	 * @param bool $magicQuotes If $str comes from the request, set this to get_magic_quotes_gpc()
-	 * @return unknown
+	 * @return Quoted string
 	 */
 	function quoteString($str, $magicQuotes=FALSE) {
 		return $this->AdoDb->qstr($str, $magicQuotes);
