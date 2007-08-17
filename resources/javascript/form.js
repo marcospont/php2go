@@ -115,7 +115,7 @@ var Form = {
 					el.value.clear();
 			});
 			if (form.validator)
-				form.validator.clearSummary();
+				form.validator.clearErrors();
 		}
 	},
 	/**
