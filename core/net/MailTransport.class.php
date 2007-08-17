@@ -287,7 +287,7 @@ class MailTransport extends PHP2Go
 	 * @return bool
 	 */
 	function _sendmailSend() {
-		$sendmailString = sprintf("%s -oi -f %s -F %s -t", $this->params['sendmail'], $this->_Message->getFrom(), $this->_Message->getFromName());
+		$sendmailString = sprintf("%s -oi -f %s -F '%s' -t", $this->params['sendmail'], $this->_Message->getFrom(), $this->_Message->getFromName());
 		if (!@$sendmail = popen($sendmailString, "w")) {
 			$this->errorMessage = PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', $sendmailString);
 			if ($this->throwErrors)
