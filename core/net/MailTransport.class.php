@@ -287,15 +287,25 @@ class MailTransport extends PHP2Go
 	 * @return bool
 	 */
 	function _sendmailSend() {
+		$debug = (array_key_exists('debug', $this->params) ? (bool)$this->params['debug'] : FALSE);
 		$sendmailString = sprintf("%s -oi -f %s -F '%s' -t", $this->params['sendmail'], $this->_Message->getFrom(), $this->_Message->getFromName());
+		if ($debug)
+			println('SENDMAIL DEBUG --- SENDMAIL STRING : ' . $sendmailString);
 		if (!@$sendmail = popen($sendmailString, "w")) {
 			$this->errorMessage = PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', $sendmailString);
 			if ($this->throwErrors)
 				PHP2Go::raiseError($this->errorMessage, E_USER_WARNING, __FILE__, __LINE__);
 			return FALSE;
 		} else {
-			fputs($sendmail, $this->_getMessageHeaders());
+			$headers = $this->_getMessageHeaders();
+			if ($debug)
+				println('SENDMAIL DEBUG --- HEADERS : ' . htmlspecialchars($headers));
+			fputs($sendmail, $headers);
+			if ($debug)
+				println('SENDMAIL DEBUG --- BODY : ' . htmlspecialchars($this->_Message->body));
 			fputs($sendmail, $this->_Message->body);
+			if ($debug)
+				println('SENDMAIL DEBUG --- RESULT : ' . htmlspecialchars($sendmail));
 			$result = pclose($sendmail) >> 8 & 0xFF;
 			if ($result != 0) {
 				$this->errorMessage = PHP2Go::getLangVal('ERR_CANT_EXECUTE_COMMAND', $sendmailString);
