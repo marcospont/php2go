@@ -608,7 +608,7 @@ Array.prototype.serialize = function() {
 /**
  * Add Collection class methods
  */
-Object.extend(Array.prototype, Collection);
+Object.extend(Array.prototype, Collection, false);
 
 PHP2Go.included[PHP2Go.baseUrl + 'structures.js'] = true;
 

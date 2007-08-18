@@ -247,12 +247,17 @@ try {
  * Makes all properties and methods of src available to dst
  * @param {Object} dst Target
  * @param {Object} src Source
+ * @param {Boolean} ov Override existent properties
  * @type Object
  * @addon
  */
-Object.extend = function(dst, src) {
-	for (p in src)
+Object.extend = function(dst, src, ov) {
+	ov = Object.ifUndef(ov, true);
+	for (p in src) {
+		if (!ov && dst[p])
+			continue;
 		dst[p] = src[p];
+	}
 	return dst;
 };
 
@@ -1482,7 +1487,7 @@ $C = function(o, assoc) {
 	} else {
 		o.each = Array.prototype.each;
 	}
-	Object.extend(o, Collection);
+	Object.extend(o, Collection, false);
 	return o;
 };
 
