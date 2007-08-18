@@ -297,7 +297,7 @@ InputMask.prototype.update = function(e, isBlur) {
 	// call field's onchange handler
 	if (this.fld.value != this.lastValue && this.fld.onchange) {
 		var evt = {};
-		if (typeof(e) != 'undefined') {
+		if (!Object.isUndef(e)) {
 			for (var p in e)
 				evt[p] = e[p];
 		}

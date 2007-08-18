@@ -105,7 +105,7 @@ StringList = function(str, sep) {
 	 * @type void
 	 */
 	this.importOptions = function(sel, idx) {
-		idx = PHP2Go.ifUndef(idx, 0);
+		idx = Object.ifUndef(idx, 0);
 		if (sel.options) {
 			for (i=idx; i<sel.options.length; i++) {
 				this.add(sel.options[i].value);

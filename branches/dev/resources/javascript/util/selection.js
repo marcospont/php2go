@@ -188,8 +188,8 @@ Selection.prototype.getParentByTagNames = function(tags) {
 Selection.prototype.selectElement = function(elm, collapse, start) {
 	var range, sel, b = this.doc.body;
 	if (elm) {
-		collapse = PHP2Go.ifUndef(collapse, false);
-		start = PHP2Go.ifUndef(start, true);
+		collapse = Object.ifUndef(collapse, false);
+		start = Object.ifUndef(start, true);
 		if (b.createTextRange) {
 			range = b.createTextRange();
 			try {

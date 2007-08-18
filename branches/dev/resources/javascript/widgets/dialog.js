@@ -238,7 +238,7 @@ Dialog.prototype.setupContents = function() {
 			btn.index = i;
 			Event.addListener(btn, 'click', function(e) {
 				var idx = $EV(e).element().index;
-				if (typeof(self.buttons[idx].fn) == 'function')
+				if (Object.isFunc(self.buttons[idx].fn))
 					self.buttons[idx].fn.apply(self);
 			});
 			if (this.buttons[i].def)
@@ -283,7 +283,7 @@ Dialog.prototype.setButtonAction = function(idx, fn) {
 Dialog.prototype.setContents = function(contents) {
 	this.contents = contents || this.contents;
 	if (this.contents) {
-		if (typeof(this.contents) == 'string')
+		if (Object.isString(this.contents))
 			this.contentEl.update(this.contents);
 		else if (this.contents.tagName)
 			this.contents.setParentNode(this.contentEl);

@@ -65,7 +65,7 @@ Element.extend = function(obj) {
 	};
 	for (var p in Element) {
 		v = Element[p];
-		if (typeof(v) == 'function' && p != 'extend' && !obj[p]) {
+		if (Object.isFunc(v) && p != 'extend' && !obj[p]) {
 			try {
 				obj[p] = cache(v);
 			} catch (e) { /*Logger.exception(e);*/ }
@@ -219,7 +219,7 @@ Element.getParentNodes = function(elm) {
 Element.getChildNodes = function(elm) {
 	var res = [];
 	if (elm = $(elm) && (elm = elm.firstChild)) {
-		while (elm && elm.nodeType != 1)
+		while (!Object.isElement(elm))
 			elm = elm.nextSibling;
 		if (elm) {
 			elm = $E(elm);
@@ -391,13 +391,13 @@ Element.getPosition = function(elm) {
 		var extents = ['padding', 'border', 'margin'];
 		if (nbt > tbt) {
 			for (var i=tbt; i<nbt; i++) {
-				p.x -= PHP2Go.toPixels(elm.getComputedStyle(extents[i] + '-left'));
-				p.y -= PHP2Go.toPixels(elm.getComputedStyle(extents[i] + '-top'));
+				p.x -= Object.toPixels(elm.getComputedStyle(extents[i] + '-left'));
+				p.y -= Object.toPixels(elm.getComputedStyle(extents[i] + '-top'));
 			}
 		} else if (tbt > nbt) {
 			for (var i=tbt; i>nbt; --i) {
-				p.x -= PHP2Go.toPixels(elm.getComputedStyle(extents[i-1] + '-left'));
-				p.y -= PHP2Go.toPixels(elm.getComputedStyle(extents[i-1] + '-top'));
+				p.x -= Object.toPixels(elm.getComputedStyle(extents[i-1] + '-left'));
+				p.y -= Object.toPixels(elm.getComputedStyle(extents[i-1] + '-top'));
 			}
 		}
 	}
@@ -539,7 +539,7 @@ Element.getStyle = function(elm, prop) {
 Element.setStyle = function(elm, prop, value) {
 	if (elm = $(elm)) {
 		var props = prop;
-		if (typeof(prop) == 'string') {
+		if (Object.isString(prop)) {
 			props = {};
 			props[prop] = value;
 		}

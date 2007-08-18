@@ -207,7 +207,7 @@ var Form = {
 	 */
 	ajaxify : function(form, ajax) {
 		form = $(form);
-		if (form && typeof(ajax) == 'function') {
+		if (form && Object.isFunc(ajax)) {
 			form.ajax = ajax;
 			Event.addListener(form, 'submit', function(e) {
 				var evt = $EV(e), frm = null;
@@ -659,7 +659,7 @@ SelectField.prototype.setFirstOption = function(value, text) {
  */
 SelectField.prototype.addOption = function(value, text, pos) {
 	var i, f = this.fld;
-	pos = Math.abs(PHP2Go.ifUndef(pos, f.options.length));
+	pos = Math.abs(Object.ifUndef(pos, f.options.length));
 	if (f.add) {
 		if (pos < f.options.length) {
 			try { // insert before (W3C standard)
@@ -715,7 +715,7 @@ SelectField.prototype.importOptions = function(str, lsep, csep, pos, val) {
  */
 SelectField.prototype.removeOption = function(idx) {
 	var i, f = this.fld, idx = Math.abs(idx);
-	var r = (typeof(f.remove) == 'function');
+	var r = Object.isFunc(f.remove);
 	if (idx >= f.options.length)
 		return;
 	// DOM browsers
@@ -741,8 +741,8 @@ SelectField.prototype.removeOption = function(idx) {
  */
 SelectField.prototype.removeSelectedOptions = function(func, idx) {
 	var i, c, j, k, f = this.fld;
-	var r = (typeof(f.remove) == 'function');
-	func = func || $EF, idx = PHP2Go.ifUndef(idx, 0);
+	var r = Object.isFunc(f.remove);
+	func = func || $EF, idx = Object.ifUndef(idx, 0);
 	for (i=idx; i<f.options.length; i++) {
 		if (f.options[i].selected == true) {
 			// DOM browsers
@@ -1015,7 +1015,7 @@ ComponentField.prototype.raiseEvent = function(name, args) {
 	for (var i=0; i<funcs.length; i++) {
 		funcs[i](args);
 	}
-	if (this.fld && typeof(this.fld['on'+name]) == 'function')
+	if (this.fld && Object.isFunc(this.fld['on'+name]))
 		this.fld['on'+name]();
 };
 
@@ -1058,7 +1058,7 @@ CheckboxController = function(frm, name, opts) {
 	 * Enabler function. Receives "false" when all boxes are unchecked, and true otherwise
 	 * @type Function
 	 */
-	this.enabler = (typeof(opts.enabler) == 'function' ? opts.enabler : null);
+	this.enabler = (Object.isFunc(opts.enabler) ? opts.enabler : null);
 	if (this.group && (this.all||this.none||this.toggle||this.invert||this.enabler))
 		this.setupEvents();
 };
@@ -1259,7 +1259,7 @@ var FieldSelection = {
 	collapse : function(elm, toStart) {
 		elm = $(elm);
 		if (elm && !elm.disabled) {
-			toStart = PHP2Go.ifUndef(toStart, true);
+			toStart = Object.ifUndef(toStart, true);
 			if (elm.createTextRange) {
 				var range = elm.createTextRange();
 				range.collapse(toStart);

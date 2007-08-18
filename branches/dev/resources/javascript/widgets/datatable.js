@@ -193,9 +193,9 @@ DataTable.prototype.addSortType = function(type, valueFunc, compareFunc, rowFunc
 	if (!this.sortTypes[type]) {
 		this.sortTypes[type] = {
 			type : type,
-			rowFunc : (typeof(rowFunc) == 'function' ? rowFunc : this._getRowValue),
-			valueFunc : (typeof(valueFunc) == 'function' ? valueFunc : $IF),
-			compareFunc : (typeof(compareFunc) == 'function' ? compareFunc : this._compare)
+			rowFunc : (Object.isFunc(rowFunc) ? rowFunc : this._getRowValue),
+			valueFunc : (Object.isFunc(valueFunc) ? valueFunc : $IF),
+			compareFunc : (Object.isFunc(compareFunc) ? compareFunc : this._compare)
 		};
 	}
 };
@@ -439,7 +439,7 @@ DataTable.prototype.selectHandler = function(e) {
  */
 DataTable.prototype.selectRow = function(idx, b, r) {
 	if (this.tbody) {
-		b = !!b, r = PHP2Go.ifUndef(r, true);
+		b = !!b, r = Object.ifUndef(r, true);
 		var row = this.tbody.rows[idx];
 		if (row) {
 			if (this.attributes.multiple) {
