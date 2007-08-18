@@ -88,6 +88,67 @@ Element.watch = function(elm, property, func) {
 };
 
 /**
+ * Checks if an element has a given attribute
+ * @param {Object} elm Element
+ * @param {String} attr Attribute name
+ * @type Boolean
+ */
+Element.hasAttribute = function(elm, attr) {
+	if (elm = $(elm)) {
+		if (elm.hasAttribute)
+			return elm.hasAttribute(attr);
+		var node = elm.getAttributeNode(attr);
+		return (node && node.specified);
+	}
+	return false;
+};
+
+/**
+ * Recursively collects elements associated by the 'prop' property
+ *
+ * The property 'prop' must point to a single DOM element.
+ * Returns an array of extended elements.
+ * @param {Object} elm Base element
+ * @param {String} prop Property
+ * @type Array
+ */
+Element.recursivelyCollect = function(elm, prop) {
+	var res = [];
+	if (elm = $(elm)) {
+		while (elm = elm[prop]) {
+			if (elm.nodeType == 1)
+				res.push($E(elm));
+		}
+	}
+	return res;
+};
+
+/**
+ * Recursively sums the values of a given property
+ * on all ancestors of a given node
+ * @param {Object} elm Element
+ * @param {String} prop Property name
+ * @type Number
+ */
+Element.recursivelySum = function(elm, prop) {
+	var res = 0;
+	if (elm = $(elm)) {
+		while (elm) {
+			if (elm.getComputedStyle('position') == 'fixed')
+				return 0;
+			var val = elm[prop];
+			if (val) {
+				res += val - 0;
+			}
+			if (elm == document.body)
+				break;
+			elm = elm.parentNode;
+		}
+	}
+	return res;
+};
+
+/**
  * Cross-browser implementation of getElementsByTagName.
  * Returns an Array object containing the found elements
  * @param {Object} elm Base element
@@ -143,51 +204,6 @@ Element.getParentByTagName = function(elm, tag) {
 };
 
 /**
- * Recursively collects elements associated by the 'prop' property
- *
- * The property 'prop' must point to a single DOM element.
- * Returns an array of extended elements.
- * @param {Object} elm Base element
- * @param {String} prop Property
- * @type Array
- */
-Element.recursivelyCollect = function(elm, prop) {
-	var res = [];
-	if (elm = $(elm)) {
-		while (elm = elm[prop]) {
-			if (elm.nodeType == 1)
-				res.push($E(elm));
-		}
-	}
-	return res;
-};
-
-/**
- * Recursively sums the values of a given property
- * on all ancestors of a given node
- * @param {Object} elm Element
- * @param {String} prop Property name
- * @type Number
- */
-Element.recursivelySum = function(elm, prop) {
-	var res = 0;
-	if (elm = $(elm)) {
-		while (elm) {
-			if (elm.getComputedStyle('position') == 'fixed')
-				return 0;
-			var val = elm[prop];
-			if (val) {
-				res += val - 0;
-			}
-			if (elm == document.body)
-				break;
-			elm = elm.parentNode;
-		}
-	}
-	return res;
-};
-
-/**
  * Collects element's parent nodes
  * @param {Object} elm Base element
  * @type Array
@@ -196,6 +212,28 @@ Element.getParentNodes = function(elm) {
 	if (elm = $(elm))
 		return elm.recursivelyCollect('parentNode');
 	return [];
+};
+
+/**
+ * Sets the parent of an element. Stores the old parent
+ * in a property called oldParent and move the node
+ * to the child nodes of the new parent
+ * @param {Object} elm Element
+ * @param {Object} par New parent
+ * @type Object
+ */
+Element.setParentNode = function(elm, par) {
+	elm = $(elm), par = $(par);
+	if (elm && par) {
+		if (elm.parentNode) {
+			if (elm.parentNode == par)
+				return elm;
+			elm.oldParent = elm.parentNode;
+			elm = elm.parentNode.removeChild(elm);
+		}
+		elm = par.appendChild(elm);
+	}
+	return elm;
 };
 
 /**
@@ -278,62 +316,6 @@ Element.isChildOf = function(elm, anc) {
 		}
 	}
 	return false;
-};
-
-/**
- * Sets the parent of an element. Stores the old parent
- * in a property called oldParent and move the node
- * to the child nodes of the new parent
- * @param {Object} elm Element
- * @param {Object} par New parent
- * @type Object
- */
-Element.setParentNode = function(elm, par) {
-	elm = $(elm), par = $(par);
-	if (elm && par) {
-		if (elm.parentNode) {
-			if (elm.parentNode == par)
-				return elm;
-			elm.oldParent = elm.parentNode;
-			elm = elm.parentNode.removeChild(elm);
-		}
-		elm = par.appendChild(elm);
-	}
-	return elm;
-};
-
-/**
- * Checks if an element has a given attribute
- * @param {Object} elm Element
- * @param {String} attr Attribute name
- * @type Boolean
- */
-Element.hasAttribute = function(elm, attr) {
-	if (elm = $(elm)) {
-		if (elm.hasAttribute)
-			return elm.hasAttribute(attr);
-		var node = elm.getAttributeNode(attr);
-		return (node && node.specified);
-	}
-	return false;
-};
-
-/**
- * Insert a node after a given reference node. That
- * means the new node is inserted between the reference
- * node and the reference node's next sibling
- * @param {Object} elm Element
- * @param {Object] ref Reference node
- * @type Object
- */
-Element.insertAfter = function(elm, ref) {
-	if (elm = $(elm)) {
-		if (ref.nextSibling)
-			ref.parentNode.insertBefore(elm, ref.nextSibling);
-		else
-			ref.parentNode.appendChild(elm);
-	}
-	return elm;
 };
 
 /**
@@ -439,6 +421,30 @@ Element.isWithin = function(elm, p1, p2) {
 		return (ex1<p2.x && ex2>p1.x && ey1<p2.y && ey2>p1.y);
 	}
 	return false;
+};
+
+/**
+ * Collects the contents of all text nodes inside a given element
+ * @param {Object} elm Element
+ * @type String
+ */
+Element.getInnerText = function(elm) {
+	if (elm = $(elm)) {
+		if (elm.innerText)
+			return elm.innerText;
+		var s = '', cs = elm.childNodes;
+		for (var i=0; i<cs.length; i++) {
+			switch (cs[i].nodeType) {
+				case 1 :
+					s += Element.getInnerText(cs[i]);
+					break;
+				case 3 :
+					s += cs[i].nodeValue;
+					break;
+			}
+		}
+		return s;
+	}
 };
 
 if (PHP2Go.browser.ie) {
@@ -775,27 +781,34 @@ Element.resizeTo = function(elm, w, h) {
 };
 
 /**
- * Collects the contents of all text nodes inside a given element
+ * Scrolls the window to the element's position
  * @param {Object} elm Element
- * @type String
+ * @type Object
  */
-Element.getInnerText = function(elm) {
+Element.scrollTo = function(elm) {
 	if (elm = $(elm)) {
-		if (elm.innerText)
-			return elm.innerText;
-		var s = '', cs = elm.childNodes;
-		for (var i=0; i<cs.length; i++) {
-			switch (cs[i].nodeType) {
-				case 1 :
-					s += Element.getInnerText(cs[i]);
-					break;
-				case 3 :
-					s += cs[i].nodeValue;
-					break;
-			}
-		}
-		return s;
+		var pos = elm.getPosition();
+		window.scrollTo(pos.x, pos.y);
 	}
+	return elm;
+};
+
+/**
+ * Insert a node after a given reference node. That
+ * means the new node is inserted between the reference
+ * node and the reference node's next sibling
+ * @param {Object} elm Element
+ * @param {Object] ref Reference node
+ * @type Object
+ */
+Element.insertAfter = function(elm, ref) {
+	if (elm = $(elm)) {
+		if (ref.nextSibling)
+			ref.parentNode.insertBefore(elm, ref.nextSibling);
+		else
+			ref.parentNode.appendChild(elm);
+	}
+	return elm;
 };
 
 /**
