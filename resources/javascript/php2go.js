@@ -390,8 +390,22 @@ if (!Function.prototype.apply) {
 Function.prototype.bind = function(obj) {
 	var self = this;
 	return function() {
-		self.apply(obj, arguments);
+		return self.apply(obj, arguments);
 	}
+};
+
+/**
+ * Encapsulates the pattern of converting the
+ * first argument of the function into its 'this' value
+ * @type Function
+ */
+Function.prototype.methodize = function() {
+	if (this._methodized)
+		return this._methodized;
+	var self = this;
+	return this._methodized = function() {
+		return self.apply(null, [this].concat($A(arguments)));
+	};
 };
 
 /**
@@ -591,11 +605,17 @@ String.prototype.capitalize = function() {
  * @type String
  */
 String.prototype.escapeHTML = function() {
-	var d = document;
-	var dv = d.createElement('div');
-	dv.appendChild(d.createTextNode(this));
-	return dv.innerHTML;
+	var self = arguments.callee;
+	self.text.data = this;
+	return self.div.innerHTML;
 };
+Object.extend(String.prototype.escapeHTML, {
+	div: document.createElement('div'),
+	text: document.createTextNode('')
+});
+with (String.prototype.escapeHTML)
+	div.appendChild(text);
+
 
 /**
  * Remove extra spaces from the string
@@ -705,6 +725,14 @@ String.prototype.assignAll = function() {
  */
 String.prototype.serialize = function() {
 	return "'" + this.replace('\\', '\\\\').replace("'", '\\\'') + "'";
+};
+
+/**
+ * Converts the string into an array
+ * @type Array
+ */
+String.prototype.toArray = function() {
+	return this.split('');
 };
 
 /**
