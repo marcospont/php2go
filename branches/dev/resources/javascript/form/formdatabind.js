@@ -231,7 +231,7 @@ FormDataBind.prototype.saveRecord = function() {
 			var self = this;
 			var saveValues = $C(this.form.elements).filter(function(item, idx) {
 				if (!item.name || !item.type)
-					throw $continue;
+					return null;
 				if (item.type == 'radio') {
 					if (item.checked)
 						return item.name + '|' + item.value;

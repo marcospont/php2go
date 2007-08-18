@@ -74,7 +74,7 @@ var Form = {
 		if (form) {
 			$C(form.elements).walk(function(el, idx) {
 				if (el.auxiliary == true || ((!el.type || !el.name) && !el.component) || (el.type && (/^submit|reset|button$/.test(el.type))))
-					throw $continue;
+					return;
 				var key = (el.name || el.id);
 				if (!res.containsKey(key))
 					res.data[key] = Form.getField(form, key);
