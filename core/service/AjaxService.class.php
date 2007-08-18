@@ -48,6 +48,14 @@ import('php2go.service.ajax.AjaxResponse');
 class AjaxService extends AbstractService
 {
 	/**
+	 * Detects ajax calls performed using an iframe
+	 *
+	 * @var bool
+	 * @access private
+	 */
+	var $isIframe = FALSE;
+	
+	/**
 	 * Class constructor
 	 *
 	 * @return AjaxService
@@ -76,12 +84,24 @@ class AjaxService extends AbstractService
 	 * @return bool
 	 */
 	function acceptRequest() {
+		$this->isIframe = FALSE;
 		$method = strtolower(HttpRequest::method());
 		$headers = array_change_key_case(HttpRequest::getHeaders(), CASE_LOWER);
+		// normal ajax call
 		if (array_key_exists('x-requested-with', $headers)) {
 			$this->handlerId = @$headers['x-handler-id'];
 			$this->handlerParams = $this->_decodeParams(($method == 'post' ? $_POST : $_GET));
 			return TRUE;
+		// file upload ajax call
+		} elseif (is_array($_FILES)) {			
+			$params = array_change_key_case($_POST, CASE_LOWER);
+			$ajax = consumeArray($params, 'x-requested-with');
+			if ($ajax) {
+				$this->isIframe = TRUE;
+				$this->handlerId = consumeArray($params, 'x-handler-id');
+				$this->handlerParams = $this->_decodeParams($params);
+				return TRUE;
+			}
 		}
 		return FALSE;
 	}
@@ -94,7 +114,7 @@ class AjaxService extends AbstractService
 	 */
 	function sendResponse($response) {
 		if (TypeUtils::isInstanceOf($response, 'AjaxResponse')) {
-			$response->render();
+			$response->render($this->isIframe);
 		} else {
 			$response = (string)$response;
 			print $response;
