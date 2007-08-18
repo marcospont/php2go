@@ -151,7 +151,7 @@ FormDataBind.prototype.navigate = function(elm) {
 		} else if (elm.name == 'navLast') {
 			this.rs.MoveLast();
 		}
-		setTimeout(this.showRecCount.bind(this), 100);
+		this.showRecCount.bind(this).delay(100);
 	}
 };
 
@@ -345,7 +345,7 @@ FormDataBind.prototype.applyFilter = function() {
 	} else {
 		this.db.Filter = '';
 		this.db.Reset();
-		setTimeout(this.showRecCount.bind(this), 100);
+		this.showRecCount.bind(this).delay(100);
 		alert(Lang.search.emptySearch);
 		(filter.isEmpty() ? filter.focus() : term.focus());
 	}
@@ -382,11 +382,11 @@ FormDataBind.prototype.moveToRecord = function(recordNum) {
 	if (target) {
 		if (target < this.rs.RecordCount) {
 			this.rs.AbsolutePosition = target;
-			setTimeout(this.showRecCount.bind(this), 100);
+			this.showRecCount.bind(this).delay(100);
 		} else {
 			if (recordNum != null) {
 				this.rs.AbsolutePosition = this.rs.RecordCount;
-				setTimeout(this.showRecCount.bind(this), 100);
+				this.showRecCount.bind(this).delay(100);
 			} else {
 				alert(Lang.dataBind.gotoInvalid);
 				gotoField.clear();

@@ -369,10 +369,10 @@ TabView.prototype._initArrows = function() {
 	var ar = this.arrows = ac.getElementsByClassName('tabScrollArrow');
 	var self = this, ns = this.navScroll, dim = ns.getDimensions(), al = Event.addListener;
 	var functions = {
-		left : function() { (ns.scrollLeft > 0) && (ns.scrollLeft -= 5); self._updateArrows(); (ns.scrollLeft > 0) && (self.timeout = setTimeout(functions.left, 20)); },
-		right : function() { ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (ns.scrollLeft += 5); self._updateArrows(); ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (self.timeout = setTimeout(functions.right, 20)); },
-		top : function() { (ns.scrollTop > 0) && (ns.scrollTop -= 5); self._updateArrows(); (ns.scrollTop > 0) && (setTimeout(functions.top, 20)); },
-		bottom : function() { ((ns.scrollTop+dim.height) < ns.scrollHeight) && (ns.scrollTop += 5); self._updateArrows(); ((ns.scrollTop+dim.height) < ns.scrollHeight) && (setTimeout(functions.bottom, 20)); },
+		left : function() { (ns.scrollLeft > 0) && (ns.scrollLeft -= 5); self._updateArrows(); (ns.scrollLeft > 0) && (self.timeout = functions.left.delay(20)); },
+		right : function() { ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (ns.scrollLeft += 5); self._updateArrows(); ((ns.scrollLeft+dim.width) < ns.scrollWidth) && (self.timeout = functions.right.delay(20)); },
+		top : function() { (ns.scrollTop > 0) && (ns.scrollTop -= 5); self._updateArrows(); (ns.scrollTop > 0) && (self.timeout = functions.top.delay(20)); },
+		bottom : function() { ((ns.scrollTop+dim.height) < ns.scrollHeight) && (ns.scrollTop += 5); self._updateArrows(); ((ns.scrollTop+dim.height) < ns.scrollHeight) && (self.timeout = functions.bottom.delay(20)); },
 		clear: function() { clearTimeout(self.timeout); }
 	};
 	if (this.attributes.orientation == 'top' || this.attributes.orientation == 'bottom') {

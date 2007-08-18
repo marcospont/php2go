@@ -465,10 +465,7 @@ EditorField.prototype.changeMode = function(b) {
 		this.textarea.hide();
 		this.iframe.show();
 	}
-	var self = this;
-	setTimeout(function() {
-		self.focus();
-	}, 5);
+	this.focus.bind(this).delay(5);
 };
 
 /**
