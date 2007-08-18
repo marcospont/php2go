@@ -424,7 +424,7 @@ AjaxRequest.prototype.doFormUpload = function() {
 			}
 			Event.removeListener(ifr, 'load', uploadCallback);
 			self.onStateChange();
-			setTimeout(function() { document.body.removeChild(ifr); }, 100);
+			(function() { document.body.removeChild(ifr); }).delay(100);
 		};
 		// add load listener and submit form
 		frm.submit();
@@ -970,7 +970,7 @@ AjaxPeriodicalUpdater.prototype.onTimer = function() {
  * Called when updater response is returned
  */
 AjaxPeriodicalUpdater.prototype.onUpdate = function() {
-	this.timer = setTimeout(this.onTimer.bind(this), this.frequency * 1000);
+	this.timer = this.onTimer.bind(this).delay(this.frequency * 1000);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'ajax.js'] = true;

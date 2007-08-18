@@ -420,6 +420,20 @@ Function.prototype.extend = function(parent, propName) {
 };
 
 /**
+ * Calls the function after a given number of miliseconds.
+ * The first argument must be the delay. The others will be
+ * used as arguments to the function call. Returns the
+ * timeout handle.
+ * @type Number
+ */
+Function.prototype.delay = function() {
+	var self = this, args = $A(arguments), ms = args.shift();
+	return window.setTimeout(function() {
+		return self.apply(self, args);
+	}, ms);
+};
+
+/**
  * Removes blank chars from the start and
  * from the end of the string
  * @type String
@@ -666,7 +680,7 @@ String.prototype.evalScriptsDelayed = function(t) {
 		window.timeoutArg = self;
 		setTimeout("window.timeoutArg.evalScripts();window.timeoutArg=null;", t);
 	} else {
-		setTimeout(function() { self.evalScripts(); }, t);
+		this.evalScripts.bind(this).delay(t);
 	}
 };
 

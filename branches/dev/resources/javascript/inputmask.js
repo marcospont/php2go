@@ -938,9 +938,8 @@ var CurrencyMask = function() {
 	mask.onKeyDown = function(f, c, k) {
 		if (k == 110 || k == 194 || k == 188 || k == 190)
 			return false;
-		var self = this;
 		clearTimeout(this.timeout);
-		this.timeout = setTimeout(function() { self.applyFormat(f, k); }, 40);
+		this.timeout = this.applyFormat.bind(this).delay(40, f, k);
 		return true;
 	};
 	mask.applyFormat = function(f, k) {
