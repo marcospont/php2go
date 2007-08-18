@@ -377,11 +377,14 @@ AjaxRequest.prototype.doFormUpload = function() {
 		// configure form
 		var frm = this.form;
 		frm.target = id;
-		frm.method = this.method;
+		frm.method = 'post';
 		frm.enctype = frm.encoding = 'multipart/form-data';
 		frm.action = this.uri;
 		// add hidden params
 		var hp = [];
+		this.params['X-Requested-With'] = 'XMLHttpRequest';
+		if (this.headers['X-Handler-ID'])
+			this.params['X-Handler-ID'] = this.headers['X-Handler-ID'];
 		for (var n in this.params) {
 			var input = $N('input');
 			input.type = 'hidden';
@@ -392,9 +395,9 @@ AjaxRequest.prototype.doFormUpload = function() {
 			hp.push(input);
 		}
 		// upload callback
-		var self = this;
+		var ajax = this;
 		var uploadCallback = function(e) {
-			self.conn = {
+			ajax.conn = {
 				status: 200,
 				statusText: 'OK',
 				readyState: 4,
@@ -405,25 +408,24 @@ AjaxRequest.prototype.doFormUpload = function() {
 			};
 			var doc = (PHP2Go.browser.ie ? ifr.contentWindow.document : (ifr.contentDocument || window.frames[id].document));
 			if (doc && doc.body) {
-				self.conn.responseText = doc.body.innerHTML;
-				self.conn.headers['Content-Type'] = 'text/html';
-				self.conn.headers['Content-Length'] = self.conn.responseText.length;
-				if (!self.conn.responseText.match(/\s*</)) {
+				var container = (doc.body.getElementsByTagName('textarea') || []);
+				ajax.conn.responseText = (container ? container[0].value : doc.body.innerHTML);
+				ajax.conn.headers['Content-Type'] = 'text/html';
+				ajax.conn.headers['Content-Length'] = ajax.conn.responseText.length;
+				if (!ajax.conn.responseText.match(/^\s*</)) {
 					try {
-						var json = eval('(' + resp.responseText + ')');
-						self.conn.json = json;
-						self.conn.headers['Content-Type'] = 'application/json';
+						var json = eval('(' + ajax.conn.responseText + ')');
+						ajax.conn.json = json;
+						ajax.conn.headers['Content-Type'] = 'application/json';
 					} catch (e) { }
 				}
 			}
 			if (doc && doc.XMLDocument) {
-				self.conn.responseXML = doc.XMLDocument;
-				self.conn.headers['Content-Type'] = 'text/xml';
-			} else {
-				self.conn.responseXML = doc;
+				ajax.conn.responseXML = doc.XMLDocument;
+				ajax.conn.headers['Content-Type'] = 'text/xml';
 			}
 			Event.removeListener(ifr, 'load', uploadCallback);
-			self.onStateChange();
+			ajax.onStateChange();
 			(function() { document.body.removeChild(ifr); }).delay(100);
 		};
 		// add load listener and submit form
