@@ -1426,8 +1426,7 @@ $ = function() {
 		return elm;
 	}
 	// multiple arguments
-	var res = [];
-	for (var i=0; i<a.length; i++) {
+	for (var i=0, res=[], len=a.length; i<len; i++) {
 		elm = a[i];
 		if (typeof(elm) == 'string')
 			elm = (d.getElementById ? $E(d.getElementById(elm)) : (d.all ? $E(d.all[elm]) : null));
