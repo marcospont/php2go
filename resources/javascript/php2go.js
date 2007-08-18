@@ -76,30 +76,6 @@ var PHP2Go = {
 	 */
 	nativeElementExtension : !!window.HTMLElement,
 	/**
-	 * Check all arguments to see if all of them
-	 * are defined. If one of the passed values
-	 * is undefined, the function returns false.
-	 * @type Boolean
-	 */
-	def : function() {
-		var i, a = arguments;
-		for (i=0; i<a.length; i++) {
-			if (typeof(a[i]) != '' && typeof(a[i]) != 'undefined')
-				return false;
-		}
-		return true;
-	},
-	/**
-	 * Return a default value 'def' when a given
-	 * object 'obj' is undefined
-	 * @param {Object} obj Object to test
-	 * @param {Object} def Default value to return when o is undefined
-	 * @return The given object or the default value
-	 */
-	ifUndef : function(obj, def) {
-		return (typeof(obj) != 'undefined' ? obj : def);
-	},
-	/**
 	 * Includes a given JS libray
 	 * @param {String} lib Library path
 	 * @param {String} charset Library charset
@@ -146,14 +122,14 @@ var PHP2Go = {
 	 * @return void
 	 */
 	raiseException : function(msg, name) {
-		if (typeof(Error) == 'function') {
+		if (Object.isFunc(window.Error)) {
 			var e = new Error(msg);
 			if (!e.message)
 				e.message = msg;
 			if (name)
 				e.name = name;
 			throw e;
-		} else if (typeof(msg) == 'string') {
+		} else if (Object.isString(msg)) {
 			throw msg;
 		}
 	},
@@ -253,16 +229,6 @@ var PHP2Go = {
 		if (!obj._methods[method])
 			obj._methods[method] = function() { obj[method].apply(obj, arguments); };
 		return obj._methods[method];
-	},
-	/**
-	 * Parses the value of a style property
-	 * @param {String} val Property value
-	 * @type Number
-	 */
-	toPixels : function(val) {
-		if (val && val.slice(-2) == 'px')
-			return parseFloat(val, 10);
-		return 0;
 	}
 };
 
@@ -318,6 +284,82 @@ Object.serialize = function(obj) {
 	return '{' + buf.join(', ') + '}';
 };
 
+/**
+ * Checks if a given object is undefined
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isUndef = function(obj) {
+	return (typeof obj == 'undefined');
+};
+
+/**
+ * Tests a given object and returns a default value when it's undefined
+ * @param {Object} obj Object
+ * @param {Object} def Fallback value
+ * @type Object
+ */
+Object.ifUndef = function(obj, def) {
+	return (typeof obj == 'undefined' ? def : obj);
+};
+
+/**
+ * Checks if the given object is a DOM node
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isElement = function(obj) {
+	return (obj && obj.nodeType == 1);
+};
+
+/**
+ * Checks if a given object is an array
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isArray = function(obj) {
+	return (obj && obj.constructor === Array);
+};
+
+/**
+ * Checks if a given object is a function
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isFunc = function(obj) {
+	return (typeof obj == 'function');
+};
+
+/**
+ * Checks if a given object is a string
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isString = function(obj) {
+	return (typeof obj == 'string');	
+};
+
+/**
+ * Checks if a given object is a number
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isNumber = function(obj) {
+	return (typeof obj == 'number');
+};
+
+/**
+ * Parses the value of a style property
+ * @param {String} val Property value
+ * @type Number
+ */
+Object.toPixels = function(val) {
+	if (val && val.slice(-2) == 'px')
+		return parseFloat(val, 10);
+	return 0;
+};
+
+
 if (!Function.prototype.apply) {
 	/**
 	 * Applies the function on a given object, using
@@ -361,7 +403,7 @@ Function.prototype.bind = function(obj) {
  * @type void
  */
 Function.prototype.extend = function(parent, propName) {
-	if (typeof(parent) == 'function') {
+	if (Object.isFunc(parent)) {
 		// inheritance
 		var f = function() {};
 		f.prototype = parent.prototype;
@@ -422,8 +464,7 @@ String.prototype.wrap = function(l, r) {
  * @type String
  */
 String.prototype.cut = function(p1, p2) {
-	p2 = PHP2Go.ifUndef(p2, this.length);
-	return this.substr(0, p1) + this.substr(p2);
+	return this.substr(0, p1) + this.substr(p2 || this.length);
 };
 
 /**
@@ -433,7 +474,7 @@ String.prototype.cut = function(p1, p2) {
  * @type String
  */
 String.prototype.insert = function(val, at) {
-	at = PHP2Go.ifUndef(at, 0);
+	at = at || 0;
 	return this.substr(0, at) + val + this.substr(at);
 };
 
@@ -721,7 +762,7 @@ Math.truncate = function(num, prec) {
 	return (Math.round(num * Math.pow(10, prec)) / Math.pow(10, prec));
 };
 
-if (typeof(window.isFinite) != 'function') {
+if (!Object.isFunc(window.isFinite)) {
 	/**
 	 * @ignore
 	 */
@@ -910,7 +951,7 @@ var Logger = {
 	 */
 	log : function(text, color) {
 		(!this.container) && (this.initialize());
-		(typeof(text) != 'string') && (text = Object.serialize(text));
+		(!Object.isString(text)) && (text = Object.serialize(text));
 		this.output.insertHTML("<pre style='padding:0;margin:0;color:" + (color || 'white') + "'>" + String(text).escapeHTML() + "</pre>", "bottom");
 	},
 	/**
@@ -988,7 +1029,7 @@ var Window = {
 		// sanitize parameters
 		wid = wid || screen.width, hei = hei || screen.availHeight;
 		x = Math.abs(x), y = Math.abs(y);
-		type = PHP2Go.ifUndef(type, 255), ret = !!ret;
+		type = Object.ifUndef(type, 255), ret = !!ret;
 		// build props string
 		var props =
 			(type & 1 ? 'toolbar,' : '') + (type & 2 ? 'location,' : '') +
@@ -1038,7 +1079,7 @@ var Window = {
 		var ep = el.getPosition();
 		var ed = el.getDimensions();
 		var ws = Window.scroll();
-		if (typeof(w.screenLeft) != 'undefined') {
+		if (!Object.isUndef(w.screenLeft)) {
 			// window left offset + element X position + element width - window scroll X
 			x = (w.screenLeft + ep.x + ed.width) - ws.x;
 			// window top offset + element Y position - window scroll Y
@@ -1071,7 +1112,7 @@ var Window = {
 	 * @type void
 	 */
 	write : function(wnd, html, close) {
-		close = PHP2Go.ifUndef(close, true);
+		close = Object.ifUndef(close, true);
 		if (wnd.document) {
 			if (!wnd.writing) {
 				wnd.document.open();
@@ -1213,7 +1254,7 @@ var Report = {
 		if (fld.value != '') {
 			pg = parseInt(fld.value, 10);
 			if (pg > 0 && pg <= total) {
-				if (typeof(handler) == 'function')
+				if (Object.isFunc(handler))
 					handler({from: curr, to: pg});
 				if (frm.action.indexOf('?') == -1)
 					frm.action = frm.action+'?page='+pg;
@@ -1250,7 +1291,7 @@ Widget = function(attrs, func) {
 	 */
 	this.listeners = {};
 	this.loadAttributes(attrs);
-	if (typeof(func) == 'function')
+	if (Object.isFunc(func))
 		func(this);
 };
 
@@ -1275,7 +1316,7 @@ Widget.init = function(name, attrs, setupFunc) {
  */
 Widget.prototype.hasAttributes = function() {
 	for (var i=0; i<arguments.length; i++) {
-		if (typeof(this.attributes[arguments[i]]) == 'undefined')
+		if (Object.isUndef(this.attributes[arguments[i]]))
 			return false;
 	}
 	return true;

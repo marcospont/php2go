@@ -115,7 +115,7 @@ AutoCompleteField.prototype.setup = function() {
 	op.delay = op.delay || 0.3;
 	op.maxChoices = op.maxChoices || 10;
 	op.minChars = op.minChars || 2;
-	op.ignoreCase = PHP2Go.ifUndef(op.ignoreCase, true);
+	op.ignoreCase = Object.ifUndef(op.ignoreCase, true);
 	op.fullSearch = !!op.fullSearch;
 	op.autoSelect = !!op.autoSelect;
 	op.incremental = !!op.incremental;
@@ -165,7 +165,7 @@ AutoCompleteField.prototype.getValue = function() {
  * @type void
  */
 AutoCompleteField.prototype.setValue = function(val) {
-	(this.incremental && typeof(val) == 'array') && (val = val.split(this.separator + ' '));
+	(this.incremental && Object.isArray(val)) && (val = val.split(this.separator + ' '));
 	this.fld.value = val;
 };
 
@@ -429,7 +429,7 @@ AutoCompleteField.prototype.choiceHoverHandler = function(e) {
  */
 AutoCompleteField.prototype.choiceClickHandler = function(e) {
 	var elm = e.findElement('li');
-	if (elm && typeof(elm.index) != 'undefined') {
+	if (elm && !Object.isUndef(elm.index)) {
 		this.chooseByIndex(elm.index);
 		e.stop();
 	}

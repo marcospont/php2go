@@ -674,7 +674,7 @@ FormValidator.prototype.setErrorDisplayOptions = function(mode, target, showAll,
  * @type void
  */
 FormValidator.prototype.add = function(field, validator, args) {
-	if (this.frm && typeof(validator) == 'function') {
+	if (this.frm && Object.isFunc(validator)) {
 		// setup arguments
 		args = args || {};
 		args.form = this.frm;

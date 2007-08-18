@@ -377,8 +377,8 @@ FormDataBind.prototype.applySort = function(ascending) {
  * @type void
  */
 FormDataBind.prototype.moveToRecord = function(recordNum) {
-	var gotoField = $FF(this.formName, 'actGotoField');
-	var target = parseInt(PHP2Go.ifUndef(recordNum, gotoField.getValue()), 10);
+	var gotoField = $FF(this.formName, 'actGotoField');	
+	var target = parseInt(Object.ifUndef(recordNum, gotoField.getValue()), 10);
 	if (target) {
 		if (target < this.rs.RecordCount) {
 			this.rs.AbsolutePosition = target;
@@ -471,8 +471,8 @@ FormDataBind.prototype.disableNavigation = function(act) {
  */
 FormDataBind.prototype.showRecCount = function(current, count) {
 	this.rs = this.db.recordset;
-	current = PHP2Go.ifUndef(current, this.rs.AbsolutePosition);
-	count = PHP2Go.ifUndef(count, this.rs.RecordCount);
+	current = Object.ifUndef(current, this.rs.AbsolutePosition);
+	count = Object.ifUndef(count, this.rs.RecordCount);
 	var trg = $(this.formName + '_recCount');
 	if (current > 0)
 		trg.update("Registro" + "&nbsp;&nbsp;" + current + "/" + count);

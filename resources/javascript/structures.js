@@ -352,7 +352,7 @@ Array.valueOf = function(iterable) {
 		return [];
 	if (iterable.toArray)
 		return iterable.toArray();
-	if (typeof(iterable.length) == 'undefined')
+	if (Object.isUndef(iterable.length))
 		iterable = [iterable];
 	var res = [];
 	for (var i=0; i<iterable.length; i++)

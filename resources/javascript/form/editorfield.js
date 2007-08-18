@@ -163,7 +163,7 @@ EditorField.prototype.setup = function() {
 EditorField.prototype.setupOptions = function() {
 	var self = this;
 	var def = function(v, d) {
-		self.config[v] = PHP2Go.ifUndef(self.config[v], d);
+		self.config[v] = Object.ifUndef(self.config[v], d);
 	};
 	def('readOnly', false);
 	def('styleSheet', null);
@@ -340,9 +340,9 @@ EditorField.prototype.getValueAsText = function() {
 EditorField.prototype.getBrokenImages = function() {
 	var imgs = this.document.body.getElementsByTagName('img');
 	var bi = $C(imgs).filter(function(item, idx) {
-		if (typeof(item.fileSize) != 'undefined')
+		if (!Object.isUndef(item.fileSize))
 			return (item.fileSize == -1);
-		if (typeof(item.naturalWidth) != 'undefined')
+		if (!Object.isUndef(item.naturalWidth))
 			return (item.naturalWidth == 0);
 		return (!item.complete);
 	});
