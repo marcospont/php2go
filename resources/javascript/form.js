@@ -362,6 +362,7 @@ Field.prototype.getValue = function() {
  * @type void
  */
 Field.prototype.setValue = function(val) {
+	val = val || '';
 	this.fld.value = val;
 	if (this.fld.onchange)
 		this.fld.onchange();
