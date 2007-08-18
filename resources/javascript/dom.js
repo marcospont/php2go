@@ -55,21 +55,10 @@ if (!window.Element) {
  * @type void
  */
 Element.extend = function(obj) {
-	var v, cache = function(v) {
-    	return this[v] = this[v] || function() {
-			var a = [this];
-			for (var i=0; i<arguments.length; i++)
-				a.push(arguments[i]);
-      		return v.apply(null, a);
-    	}
-	};
 	for (var p in Element) {
-		v = Element[p];
-		if (Object.isFunc(v) && p != 'extend' && !obj[p]) {
-			try {
-				obj[p] = cache(v);
-			} catch (e) { /*Logger.exception(e);*/ }
-		}
+		var v = Element[p];
+		if (Object.isFunc(v) && p != 'extend' && !(p in obj))
+			obj[p] = v.methodize();
 	}
 };
 
@@ -217,13 +206,13 @@ Element.getParentNodes = function(elm) {
  * @type Array
  */
 Element.getChildNodes = function(elm) {
-	var res = [];
-	if (elm = $(elm) && (elm = elm.firstChild)) {
-		while (!Object.isElement(elm))
-			elm = elm.nextSibling;
-		if (elm) {
-			elm = $E(elm);
-			return [elm].concat(elm.getNextSiblings());
+	var res = [], fc = null;
+	if (elm = $(elm) && (fc = elm.firstChild)) {
+		while (!Object.isElement(fc))
+			fc = fc.nextSibling;
+		if (fc) {
+			fc = $E(fc);
+			return [fc].concat(fc.getNextSiblings());
 		}
 	}
 	return res;
@@ -259,7 +248,7 @@ Element.getNextSiblings = function(elm) {
 Element.getSiblings = function(elm) {
 	if (elm = $(elm)) {
 		var rc = elm.recursivelyCollect;
-		return rc('previousSibling').reverse.concat(rc('nextSibling'));
+		return rc('previousSibling').reverse().concat(rc('nextSibling'));
 	}
 	return [];
 };
@@ -707,12 +696,13 @@ Element.isVisible = function(elm) {
  * @type void
  */
 Element.show = function() {
-	var item, arg = arguments;
-	for (var i=0; i<arg.length; i++) {
-		item = $(arg[i]);
-		item.style.display = (item.tagName && item.tagName.equalsIgnoreCase('div') ? 'block' : '');
-		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
-			WCH.attach(item);
+	var item = null;
+	for (var i=0; i<arguments.length; i++) {
+		if (item = $(arguments[i])) {
+			item.style.display = (item.tagName.equalsIgnoreCase('div') ? 'block' : '');
+			if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
+				WCH.attach(item);
+		}
 	}
 };
 
@@ -723,12 +713,13 @@ Element.show = function() {
  * @type void
  */
 Element.hide = function() {
-	var item, arg = arguments;
-	for (var i=0; i<arg.length; i++) {
-		item = $(arg[i]);
-		item.style.display = 'none';
-		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
-			WCH.detach(item);
+	var item = null;
+	for (var i=0; i<arguments.length; i++) {
+		if (item = $(arguments[i])) {
+			item.style.display = 'none';
+			if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
+				WCH.detach(item);
+		}
 	}
 };
 
@@ -738,13 +729,14 @@ Element.hide = function() {
  * @type void
  */
 Element.toggleDisplay = function() {
-	var item, arg = arguments;
-	for (var i=0; i<arg.length; i++) {
-		item = $(arg[i]);
-		if (item.getComputedStyle('display') == 'none')
-			item.show();
-		else
-			item.hide();
+	var item = null;
+	for (var i=0; i<arguments.length; i++) {
+		if (item = $(arguments[i])) {
+			if (item.getComputedStyle('display') == 'none')
+				item.show();
+			else
+				item.hide();
+		}
 	}
 };
 
@@ -783,6 +775,160 @@ Element.resizeTo = function(elm, w, h) {
 };
 
 /**
+ * Collects the contents of all text nodes inside a given element
+ * @param {Object} elm Element
+ * @type String
+ */
+Element.getInnerText = function(elm) {
+	if (elm = $(elm)) {
+		if (elm.innerText)
+			return elm.innerText;
+		var s = '', cs = elm.childNodes;
+		for (var i=0; i<cs.length; i++) {
+			switch (cs[i].nodeType) {
+				case 1 :
+					s += Element.getInnerText(cs[i]);
+					break;
+				case 3 :
+					s += cs[i].nodeValue;
+					break;
+			}
+		}
+		return s;
+	}
+};
+
+/**
+ * Inserts HTML code inside an element. The 'position' argument
+ * allows to define where the HTML contents must be inserted :
+ * "before" the element, on the "top" or on the "bottom" of the
+ * element or "after" the element
+ * @param {Object} elm Element
+ * @param {String} ins HTML or element to insert
+ * @param {String} pos Insertion position. Defaults to "bottom"
+ * @param {Boolean} eval Whether to eval scripts. Defaults to false
+ * @type Object
+ */
+Element.insert = function(elm, ins, position, evalScripts) {
+	elm = $(elm), evalScripts = !!evalScripts, position = position || 'bottom';
+	if (elm) {
+		var pos = Element.insertion[position];
+		if (pos) {
+			if (Object.isElement(ins)) {
+				pos.insert(elm, ins);
+				return elm;
+			}
+			ins = String(ins);
+			if (!document.createRange || PHP2Go.browser.opera) {
+				var tag = elm.tagName.toUpperCase();
+				var tran = Element.translation;
+				if (tag in tran.tags) {
+					var frag = tran.createFromHTML(tag, ins.stripScripts());
+					(position == 'top' || position == 'bottom') && (frag.reverse());
+					frag.walk(function(item, idx) {
+						pos.insert(elm, item);
+					});
+				} else {
+					elm.insertAdjacentHTML(pos.adjacency, ins.stripScripts());
+				}
+			} else {
+				var rng = elm.ownerDocument.createRange();
+				pos.initializeRange(elm, rng);
+				pos.insert(elm, rng.createContextualFragment(ins.stripScripts()));
+			}
+			(evalScripts) && (ins.evalScriptsDelayed());			
+		}
+	}
+	return elm;
+};
+
+/**
+ * Set the HTML contents of a given element.
+ * By setting 'useDom' to true, a temporary div
+ * element will be created and its child nodes will
+ * be copied to the target element.
+ * @param {Object} elm Element
+ * @param {Object} upd HTML or element to update with
+ * @param {Boolean} evalScripts Whether to eval scripts. Defaults to false
+ * @param {Boolean} useDom Whether to use DOM. Defaults to false
+ * @type Object
+ */
+Element.update = function(elm, upd, evalScripts, useDom) {
+	elm = $(elm), evalScripts = !!evalScripts, useDom = !!useDom;
+	if (elm) {
+		if (Object.isElement(upd))
+			return elm.clear().insert(upd);
+		upd = String(upd);
+		if (upd.empty())
+			return elm.clear(useDom);
+		var tag = elm.tagName.toUpperCase();
+		var tran = Element.translation;
+		if (PHP2Go.browser.ie && tag in tran.tags) {
+			while (elm.firstChild)
+				elm.removeChild(elm.firstChild);
+			var frag = tran.createFromHTML(tag, upd.stripScripts());
+			frag.walk(function(item, idx) {
+				elm.appendChild(item);
+			});			
+		} else if (useDom) {
+			var div = document.createElement('div');
+			div.innerHTML = upd.stripScripts();
+			while (elm.firstChild)
+				elm.removeChild(elm.firstChild);
+			while (div.firstChild)
+				elm.appendChild(div.removeChild(div.firstChild));
+			delete div;			
+		} else {
+			elm.innerHTML = upd.stripScripts();
+		}
+		(evalScripts) && (upd.evalScriptsDelayed());
+	}
+	return elm;
+};
+
+/**
+ * Replace an element with the given HTML code
+ * @param {Object} elm Element
+ * @param {Object} rep Replacement code or element
+ * @param {Boolean} eval Whether to eval scripts. Defaults to false
+ * @type void
+ */
+Element.replace = function(elm, rep, evalScripts) {
+	elm = $(elm), evalScripts = !!evalScripts;
+	if (elm) {
+		if (Object.isElement(rep)) {
+			elm.parentNode.replaceChild(rep, elm);
+			return elm;
+		}
+		rep = String(rep);
+		if (elm.outerHTML) {			
+			var tag = elm.tagName.toUpperCase();
+			var tran = Element.translation;
+			if (tag in tran.tags) {
+				var parent = elm.parentNode;
+				var next = elm.nextSibling;
+				while (next && !Object.isElement(next))
+					next = next.nextSibling;
+				var frag = tran.createFromHTML(tag, rep.stripScripts());
+				parent.removeChild(elm);
+				if (next)
+					frag.walk(function(item, idx) { parent.insertBefore(item, next); });
+				else
+					frag.walk(function(item, idx) { parent.appendChild(item); });				
+			} else {			
+				elm.outerHTML = rep.stripScripts();
+			}
+		} else {
+			var rng = elm.ownerDocument.createRange();
+			rng.selectNode(elm);
+			elm.parentNode.replaceChild(rng.createContextualFragment(rep.stripScripts()), elm);
+		}
+		(evalScripts) && (rep.evalScriptsDelayed());
+	}
+	return elm;	
+};
+
+/**
  * Remove HTML contents of an element
  * @param {Object} elm Element
  * @param {Boolean} useDom Whether to use DOM or not
@@ -813,171 +959,6 @@ Element.empty = function(elm) {
 };
 
 /**
- * Collects the contents of all text nodes inside a given element
- * @param {Object} elm Element
- * @type String
- */
-Element.getInnerText = function(elm) {
-	if (elm = $(elm)) {
-		if (elm.innerText)
-			return elm.innerText;
-		var s = '', cs = elm.childNodes;
-		for (var i=0; i<cs.length; i++) {
-			switch (cs[i].nodeType) {
-				case 1 :
-					s += Element.getInnerText(cs[i]);
-					break;
-				case 3 :
-					s += cs[i].nodeValue;
-					break;
-			}
-		}
-		return s;
-	}
-};
-
-/**
- * Set the HTML contents of a given element.
- * By setting 'useDom' to true, a temporary div
- * element will be created and its child nodes will
- * be copied to the target element.
- * @param {Object} elm Element
- * @param {Boolean} eval Whether to eval scripts. Defaults to false
- * @param {Boolean} useDom Whether to use DOM. Defaults to false
- * @type Object
- */
-Element.update = function(elm, code, evalScripts, useDom) {
-	elm = $(elm), code = String(code), evalScripts = !!evalScripts, useDom = !!useDom;
-	if (elm) {
-		if (code.empty()) {
-			elm.clear(useDom);
-		} else {
-			var stripped = code.stripScripts();
-			// special handling of table-related elements on IE
-			if (PHP2Go.browser.ie && elm.tagName.match(/^(table|tbody|tr|td)$/i)) {
-				var depth, div = $N('div');
-				switch (elm.tagName.toLowerCase()) {
-					case 'table' :
-						div.innerHTML = '<table>' + stripped + '</table>';
-						depth = 1;
-						break;
-					case 'tbody' :
-						div.innerHTML = '<table><tbody>' + stripped + '</tbody></table>';
-						depth = 2;
-						break;
-					case 'tr' :
-						div.innerHTML = '<table><tbody><tr>' + stripped + '</tr></tbody></table>';
-						depth = 3;
-						break;
-					case 'td' :
-						div.innerHTML = '<table><tbody><tr><td>' + stripped + '</td></tr></tbody></table>';
-						depth = 4;
-						break;
-				}
-				while (elm.firstChild)
-					elm.removeChild(elm.firstChild);
-				for (var i=0; i<depth; i++)
-					div = div.firstChild;
-				for (var i=0; i<div.childNodes.length; i++)
-					elm.appendChild(div.childNodes[i]);
-			}
-			// update contents using DOM
-			else if (useDom) {
-				var div = $N('div', null, {}, stripped);
-				while (elm.firstChild)
-					elm.removeChild(elm.firstChild);
-				while (div.firstChild)
-					elm.appendChild(div.removeChild(div.firstChild));
-				delete div;
-			}
-			// default behaviour
-			else {
-				elm.innerHTML = stripped;
-			}
-			(evalScripts) && (code.evalScriptsDelayed());
-		}
-	}
-	return elm;
-};
-
-/**
- * Inserts HTML code inside an element. The 'position' argument
- * allows to define where the HTML contents must be inserted :
- * "before" the element, on the "top" or on the "bottom" of the
- * element or "after" the element
- * @param {Object} elm Element
- * @param {String} code HTML code
- * @param {String} pos Insertion position. Defaults to "bottom"
- * @param {Boolean} eval Whether to eval scripts. Defaults to false
- * @type Object
- */
-Element.insertHTML = function(elm, code, pos, evalScripts) {
-	elm = $(elm), evalScripts = !!evalScripts;
-	var html = String(code).stripScripts();
-	if (elm) {
-		if (elm.insertAdjacentHTML) {
-			var map = {
-				'before' : 'BeforeBegin',
-				'top' : 'AfterBegin',
-				'bottom' : 'BeforeEnd',
-				'after' : 'AfterEnd'
-			};
-			elm.insertAdjacentHTML(map[pos] || 'BeforeEnd', html);
-		} else {
-			var fgm, rng = elm.ownerDocument.createRange();
-			switch (pos) {
-				case 'before' :
-					rng.setStartBefore(elm);
-					fgm = rng.createContextualFragment(html);
-					elm.parentNode.insertBefore(fgm, elm);
-					break;
-				case 'top' :
-					rng.selectNodeContents(elm);
-					rng.collapse(true);
-					fgm = rng.createContextualFragment(html);
-					elm.insertBefore(fgm, elm.firstChild);
-					break;
-				case 'after' :
-					rng.setStartAfter(elm);
-					fgm = rng.createContextualFragment(html);
-					elm.parentNode.insertBefore(fgm, elm.nextSibling);
-					break;
-				default :
-					rng.selectNodeContents(elm);
-					rng.collapse(true);
-					fgm = rng.createContextualFragment(html);
-					elm.appendChild(fgm);
-					break;
-			}
-		}
-		(evalScripts) && (code.evalScriptsDelayed());
-	}
-	return elm;
-};
-
-/**
- * Replace an element with the given HTML code
- * @param {Object} elm Element
- * @param {String} code HTML code to replace the element
- * @param {Boolean} eval Whether to eval scripts. Defaults to false
- * @type void
- */
-Element.replace = function(elm, code, evalScripts) {
-	elm = $(elm), evalScripts = !!evalScripts;
-	var html = code.stripScripts();
-	if (elm) {
-		if (elm.outerHTML) {
-			elm.outerHTML = html;
-		} else {
-			var rng = document.createRange();
-			rng.selectNodeContents(elm);
-			elm.parentNode.replaceChild(rng.createContextualFragment(html), elm);
-		}
-		(evalScripts) && (code.evalScriptsDelayed());
-	}
-};
-
-/**
  * Remove the element from its parent node
  * @param {Object} elm Element
  * @type Object
@@ -986,6 +967,76 @@ Element.remove = function(elm) {
 	elm = $(elm);
 	if (elm && elm.parentNode)
 		return elm.parentNode.removeChild(elm);
+};
+
+/**
+ * @ignore
+ */
+Element.insertion = {
+	before : {
+		adjacency : 'BeforeBegin',
+		initializeRange : function(elm, rng) {
+			rng.setStartBefore(elm);
+		},
+		insert : function(elm, ins) {
+			elm.parentNode.insertBefore(ins, elm);
+		}
+	},
+	top : {
+		adjacency : 'AfterBegin',
+		initializeRange : function(elm, rng) {
+			rng.selectNodeContents(elm);
+			rng.collapse(true);
+		},
+		insert : function(elm, ins) {
+			elm.insertBefore(ins, elm.firstChild);
+		}
+	},
+	bottom : {
+		adjacency : 'BeforeEnd',
+		insert : function(elm, ins) {
+			elm.appendChild(ins);
+		}
+	},
+	after : {
+		adjacency : 'AfterEnd',
+		initializeRange : function(elm, rng) {
+			rng.setStartAfter(elm);
+		},
+		insert : function(elm, ins) {
+			elm.parentNode.insertBefore(ins, elm.nextSibling);
+		}
+	}
+};
+
+/**
+ * @ignore
+ */
+Element.insertion.bottom.initializeRange = Element.insertion.top.initializeRange;
+
+/**
+ * @ignore
+ */
+Element.translation = {
+	tags : {
+	    TABLE : ['<table>', '</table>', 1],	    
+	    TBODY : ['<table><tbody>', '</tbody></table>', 2],
+	    THEAD : ['<table><tbody>', '</tbody></table>', 2],
+	    TFOOT : ['<table><tbody>', '</tbody></table>', 2],
+	    TR : ['<table><tbody><tr>', '</tr></tbody></table>', 3],
+	    TH : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
+	    TD : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
+	    SELECT : ['<select>', '</select>', 1] 		
+	},
+	div : document.createElement('div'),
+	createFromHTML : function(tn, html) {
+		var self = Element.translation, t = self.tags[tn];
+		self.div.innerHTML = t[0] + html + t[1];
+		var div = self.div;
+		for (var i=0; i<t[2]; i++)
+			div = div.firstChild;
+		return $A(div.childNodes);
+	}	
 };
 
 /**

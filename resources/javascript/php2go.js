@@ -999,7 +999,7 @@ var Logger = {
 	log : function(text, color) {
 		(!this.container) && (this.initialize());
 		(!Object.isString(text)) && (text = Object.serialize(text));
-		this.output.insertHTML("<pre style='padding:0;margin:0;color:" + (color || 'white') + "'>" + String(text).escapeHTML() + "</pre>", "bottom");
+		this.output.insert("<pre style='padding:0;margin:0;color:" + (color || 'white') + "'>" + String(text).escapeHTML() + "</pre>", "bottom");
 	},
 	/**
 	 * Logs an info message

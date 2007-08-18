@@ -66,7 +66,7 @@
 				// iterate through the array elements
 				// the iterator function receives the item and its index
 				[1,2,3,4,5,6,7,8,9,10].walk(function(item, idx) {
-					elm.insertHTML("This is item idx " + idx + " : " + item + '<br />', 'bottom');
+					elm.insert("This is item idx " + idx + " : " + item + '<br />', 'bottom');
 				});
 				break;
 
@@ -79,7 +79,7 @@
 				['a', 'b', 'c'].map(function(item, idx) {
 					return item.toUpperCase();
 				}).walk(function(item, idx) {
-					elm.insertHTML(item + '<br />', 'bottom');
+					elm.insert(item + '<br />', 'bottom');
 				});
 				break;
 
@@ -255,8 +255,8 @@
 				// clear inner HTML contents
 				elm.clear();
 				// add 2 HTML blocks in different positions
-				elm.insertHTML("<pre>loading...</pre>", "top");
-				elm.insertHTML("<b>please wait</b>", "bottom");
+				elm.insert("<pre>loading...</pre>", "top");
+				elm.insert("<b>please wait</b>", "bottom");
 				// redefine HTML contents after 1 second
 				setTimeout(function() {
 					elm.update("done.");
@@ -292,7 +292,7 @@
 	  <option value="set_style">setStyle</option>
 	  <option value="toggle_display">toggleDisplay</option>
 	  <option value="move">move</option>
-	  <option value="add_html">update, insertHTML</option>
+	  <option value="add_html">update, insert</option>
 	</select>&nbsp;
 	<button id="exec" type="button" onclick="executeDHTML($V('frm', 'dhtml'))">Execute</button><br /><br />
 	<div id="buffer"></div><br />
