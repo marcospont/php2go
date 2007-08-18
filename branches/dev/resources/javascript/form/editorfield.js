@@ -374,8 +374,8 @@ EditorField.prototype.insertHTML = function(html) {
 		frag = range.createContextualFragment(html);
 		last = frag.lastChild;
 		range.insertNode(frag);
-		this.selection.selectElement(last);
-		this.selection.collapse(last && last.nodeName.equalsIgnoreCase('br'));
+		sel.selectElement(last);
+		sel.collapse(last && last.nodeName.equalsIgnoreCase('br'));
 	}
 };
 

@@ -731,7 +731,7 @@ AjaxResponse.prototype.run = function() {
 				$(item.id).update(item.arg.code, item.arg.eval, item.arg.dom);
 				break;
 			case 'insert' :
-				$(item.id).insertHTML(item.arg.code, item.arg.pos, item.arg.eval);
+				$(item.id).insert(item.arg.code, item.arg.pos, item.arg.eval);
 				break;
 			case 'replace' :
 				$(item.id).replace(item.arg.code, item.arg.eval);
@@ -842,7 +842,7 @@ AjaxUpdater.prototype.update = function(response) {
 	if (response.success) {
 		if (this.success) {
 			if (this.insert)
-				this.success.insertHTML(resp, this.insert, true);
+				this.success.insert(resp, this.insert, true);
 			else
 				this.success.update(resp, true);
 			if (this.success.getStyle('display') == 'none')
@@ -851,7 +851,7 @@ AjaxUpdater.prototype.update = function(response) {
 	} else {
 		if (this.failure) {
 			if (this.insert)
-				this.failure.insertHTML(resp, this.insert, true);
+				this.failure.insert(resp, this.insert, true);
 			else
 				this.failure.update(resp, true);
 			if (this.failure.getStyle('display') == 'none')
