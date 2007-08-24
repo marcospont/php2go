@@ -686,7 +686,7 @@ class FormField extends Component
 	 */
 	function onDataBind() {
 		$this->dataBind = TRUE;
-		if (!$this->composite || $this->isA('RangeField') || $this->isA('DataGrid')) {
+		if (!$this->composite || $this->isA('DataGrid') || $this->isA('RangeField')) {
 			$magicq = (System::getIni('magic_quotes_gpc') == 1);
 			if ($this->_Form->isPosted()) {
 				// 1) submitted value
