@@ -371,7 +371,21 @@ class EditSearchField extends DbField
 					$this->dataSource['CLAUSE'] = "({$this->dataSource['CLAUSE']}) AND {$clause}";
 				@parent::processDbQuery(ADODB_FETCH_NUM);
 				$this->_LookupField->setRecordSet($this->_Rs);
+				return;
 			}
+		}
+		if (!$this->_LookupField->dataBind)
+			$this->_LookupField->onDataBind();
+		$request = ($_SERVER['REQUEST_METHOD'] == 'GET' ? $_GET : $_POST);
+		$lookupValue = $this->_LookupField->getValue();
+		if (!StringUtils::isEmpty($lookupValue) && !array_key_exists('C', $request) && !array_key_exists('F', $request)) {
+			$clause = sprintf("%s = %s", $this->dataSource['KEYFIELD'], $lookupValue);
+			if (empty($this->dataSource['CLAUSE']))
+				$this->dataSource['CLAUSE'] = $clause;
+			else
+				$this->dataSource['CLAUSE'] = "({$this->dataSource['CLAUSE']}) AND {$clause}";
+			@parent::processDbQuery(ADODB_FETCH_NUM);
+			$this->_LookupField->setRecordSet($this->_Rs);
 		}
 	}
 
