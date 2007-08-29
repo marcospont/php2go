@@ -229,7 +229,7 @@ FormDataBind.prototype.saveRecord = function() {
 			this.form.submit();
 		} else {
 			var self = this;
-			var saveValues = $C(this.form.elements).filter(function(item, idx) {
+			var saveValues = $C(this.form.elements).valid(function(item, idx) {
 				if (!item.name || !item.type)
 					return null;
 				if (item.type == 'radio') {
@@ -377,7 +377,7 @@ FormDataBind.prototype.applySort = function(ascending) {
  * @type void
  */
 FormDataBind.prototype.moveToRecord = function(recordNum) {
-	var gotoField = $FF(this.formName, 'actGotoField');	
+	var gotoField = $FF(this.formName, 'actGotoField');
 	var target = parseInt(Object.ifUndef(recordNum, gotoField.getValue()), 10);
 	if (target) {
 		if (target < this.rs.RecordCount) {
