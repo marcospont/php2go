@@ -161,28 +161,63 @@ Element.getElementsByTagName = function(elm, tag) {
 	return [];
 };
 
-/**
- * Return all elements that has a given class name, using
- * the element 'elm' as search base
- * @param {Object} elm Base element
- * @param {String} clsName CSS class name
- * @param {String} tagName Tag name. Defaults to "*"
- * @type Array
- */
-Element.getElementsByClassName = function(elm, clsName, tagName) {
-	if (elm = $(elm)) {
-		if (document.getElementsByXPath)
-			return document.getElementsByXPath(".//%1[contains(concat(' ', @class, ' '), ' %2 ')]".assignAll(tagName || '*', clsName), elm);
-		var re = new RegExp("(^|\\s)" + clsName + "(\\s|$)");
-		var res = [], elms = elm.getElementsByTagName(tagName || '*');
-		for (var i=0,s=elms.length; i<s; i++) {
-			if (elms[i].className && re.test(elms[i].className))
-				res.push($E(elms[i]));
+if (document.evaluate) {
+	/**
+	 * Search for all elements that match the given set of class names
+	 * @param {Object} elm Base element
+	 * @param {String} clsName CSS class names (one or more, space separated)
+	 * @type Array
+	 */
+	Element.getElementsByClassName = function(elm, clsNames) {
+		clsNames = (clsNames + '').trim();
+		if (elm = $(elm) && !clsNames.empty()) {
+			clsNames = clsNames.split(/\s+/);
+			var cond = clsNames.valid(function(item, idx) {
+				return (item.empty() ? null : "[contains(concat(' ', @class, ' '), ' " + item + " ')]");
+			}).join('');
+			return (cond ? document.getElementsByXPath('.//*' + cond, elm) : []);
 		}
+		return [];
+	};
+	/**
+	 * @ignore
+	 */
+	document.getElementsByXPath = function(expr, parent) {
+		alert(expr);
+		var res = [], qry = document.evaluate(expr, $(parent) || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+		for (var i=0,s=qry.snapshotLength; i<s; i++)
+			res.push($E(qry.snapshotItem(i)));
 		return res;
-	}
-	return [];
-};
+	};
+} else {
+	/**
+	 * @ignore
+	 */
+	Element.getElementsByClassName = function(elm, clsNames) {
+		clsNames = (clsNames + '').trim();
+		if (elm = $(elm) && !clsNames.empty()) {
+			var clsStr = ' ' + clsNames + ' ', clsList = clsNames.split(/\s+/);
+			var res = [], elms = elm.getElementsByTagName('*');
+			for (var i=0,ch; ch=elms[i]; i++) {
+				if (
+					ch.className && (cn = ' ' + ch.className + ' ') &&
+					( cn.find(clsStr) || clsList.every(function(item, idx) { return (!item.empty() && cn.find(item)); }) )
+				) {
+					res.push($E(ch));
+				}
+			}
+			return res;
+		}
+		return [];
+	};
+}
+
+// define document.getElementsByClassName only when undefined
+if (!document.getElementsByClassName) {
+	document.getElementsByClassName = function(clsNames) {
+		return Element.getElementsByClassName(document, clsNames);
+	};
+}
 
 /**
  * Finds an ancestor whose tag name is 'tag',
@@ -636,20 +671,19 @@ Element.setOpacity = function(elm, op) {
 Element.setOpacity.re = /alpha\([^\)]*\)/gi;
 
 /**
- * Return the element CSS class names.
- * This method returns an instance of the
- * CSSClasses class; through them it's possible
- * to query, add and remove CSS class names
+ * Checks if the element contains a given CSS class
  * @param {Object} elm Element
- * @type CSSClasses
+ * @param {String} cl CSS class
+ * @type Boolean
  */
-Element.classNames = function(elm) {
+Element.hasClass = function(elm, cl) {
 	if (elm = $(elm)) {
-		if (!elm._classNames)
-			elm._classNames = new CSSClasses(elm);
-		return elm._classNames;
+		var ec = elm.className, cl = cl + '';
+		return (
+			(ec.length > 0 && ec == cl) ||
+			(ec.match(new RegExp("(^|\\s)" + cl + "(\\s|$)")))
+		);
 	}
-	return null;
 };
 
 /**
@@ -659,9 +693,11 @@ Element.classNames = function(elm) {
  * @type void
  */
 Element.addClass = function(elm, cl) {
-	if ((elm = $(elm)) && cl) {
-		elm.removeClass(cl);
-		elm.className = cl + ' ' + elm.className.trim();
+	if (elm = $(elm)) {
+		cl += '';
+		if (!elm.hasClass(cl)) {
+			elm.className += (elm.className ? ' ' : '') + cl;
+		}
 	}
 };
 
@@ -672,9 +708,22 @@ Element.addClass = function(elm, cl) {
  * @type void
  */
 Element.removeClass = function(elm, cl) {
-	if ((elm = $(elm)) && cl) {
-		var re = new RegExp("^"+cl+"\\b\\s*|\\s*\\b"+cl+"\\b", 'g');
+	if (elm = $(elm)) {
+		var re = new RegExp("^"+cl+"\\b\\s*|\\s*\\b"+cl+"\\b", 'g'), cl = cl + '';
 		elm.className = elm.className.replace(re, '');
+	}
+};
+
+/**
+ * Adds/removes a CSS class on an element
+ * @param {Object} elm Element
+ * @param {String} cl CSS class
+ * @type void
+ */
+Element.toggleClass = function(elm, cl) {
+	if (elm = $(elm)) {
+		cl += '';
+		elm[elm.hasClass(cl) ? 'removeClass' : 'addClass'](cl);
 	}
 };
 
@@ -696,53 +745,42 @@ Element.isVisible = function(elm) {
 };
 
 /**
- * Shows all elements passed in the argument list.
- * The display style property is changed to "" or to
- * the old value stored in the element
+ * Shows an element
+ * @param {Object} elm Element
  * @type void
  */
-Element.show = function() {
-	var item = null;
-	for (var i=0; i<arguments.length; i++) {
-		if (item = $(arguments[i])) {
-			item.style.display = (item.tagName.equalsIgnoreCase('div') ? 'block' : '');
-			if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
-				WCH.attach(item);
-		}
+Element.show = function(elm) {
+	if (elm = $(elm)) {
+		elm.style.display = (elm.tagName.equalsIgnoreCase('div') ? 'block' : '');
+		if (PHP2Go.browser.wch && elm.getComputedStyle('position') == 'absolute')
+			WCH.attach(elm);
 	}
 };
 
 /**
- * Hides all elements passed in the argument list.
- * Changes the display style property of the
- * elements to 'none'
+ * Hides an element
+ * @param {Object} elm Element
  * @type void
  */
-Element.hide = function() {
-	var item = null;
-	for (var i=0; i<arguments.length; i++) {
-		if (item = $(arguments[i])) {
-			item.style.display = 'none';
-			if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && item.getComputedStyle('position') == 'absolute')
-				WCH.detach(item);
-		}
+Element.hide = function(elm) {
+	if (elm = $(elm)) {
+		elm.style.display = 'none';
+		if (PHP2Go.browser.wch && elm.getComputedStyle('position') == 'absolute')
+			WCH.detach(elm);
 	}
 };
 
 /**
- * Alternates the display style property of one or
- * more elements from 'none' to the default value
+ * Toggles the display property of an element
+ * @param {Object} elm Element
  * @type void
  */
-Element.toggleDisplay = function() {
-	var item = null;
-	for (var i=0; i<arguments.length; i++) {
-		if (item = $(arguments[i])) {
-			if (item.getComputedStyle('display') == 'none')
-				item.show();
-			else
-				item.hide();
-		}
+Element.toggleDisplay = function(elm) {
+	if (elm = $(elm)) {
+		if (elm.style.display == 'none')
+			elm.show();
+		else
+			elm.hide();
 	}
 };
 
@@ -757,7 +795,7 @@ Element.moveTo = function(elm, x, y) {
 	if (elm = $(elm)) {
 		elm.setStyle('left', x + 'px');
 		elm.setStyle('top', y + 'px');
-		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && elm.getComputedStyle('position') == 'absolute')
+		if (PHP2Go.browser.wch && elm.getComputedStyle('position') == 'absolute')
 			WCH.update(elm, {position: {x: x, y: y}});
 	}
 	return elm;
@@ -774,7 +812,7 @@ Element.resizeTo = function(elm, w, h) {
 	if (elm = $(elm)) {
 		elm.setStyle('width', w + 'px');
 		elm.setStyle('height', h + 'px');
-		if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && elm.getComputedStyle('position') == 'absolute')
+		if (PHP2Go.browser.wch && elm.getComputedStyle('position') == 'absolute')
 			WCH.update(elm, {dimensions: {width: w, height: h}});
 	}
 	return elm;
@@ -849,7 +887,7 @@ Element.insert = function(elm, ins, position, evalScripts) {
 				pos.initializeRange(elm, rng);
 				pos.insert(elm, rng.createContextualFragment(ins.stripScripts()));
 			}
-			(evalScripts) && (ins.evalScriptsDelayed());			
+			(evalScripts) && (ins.evalScriptsDelayed());
 		}
 	}
 	return elm;
@@ -882,7 +920,7 @@ Element.update = function(elm, upd, evalScripts, useDom) {
 			var frag = tran.createFromHTML(tag, upd.stripScripts());
 			frag.walk(function(item, idx) {
 				elm.appendChild(item);
-			});			
+			});
 		} else if (useDom) {
 			var div = document.createElement('div');
 			div.innerHTML = upd.stripScripts();
@@ -890,7 +928,7 @@ Element.update = function(elm, upd, evalScripts, useDom) {
 				elm.removeChild(elm.firstChild);
 			while (div.firstChild)
 				elm.appendChild(div.removeChild(div.firstChild));
-			delete div;			
+			delete div;
 		} else {
 			elm.innerHTML = upd.stripScripts();
 		}
@@ -914,7 +952,7 @@ Element.replace = function(elm, rep, evalScripts) {
 			return elm;
 		}
 		rep = String(rep);
-		if (elm.outerHTML) {			
+		if (elm.outerHTML) {
 			var tag = elm.tagName.toUpperCase();
 			var tran = Element.translation;
 			if (tag in tran.tags) {
@@ -927,8 +965,8 @@ Element.replace = function(elm, rep, evalScripts) {
 				if (next)
 					frag.walk(function(item, idx) { parent.insertBefore(item, next); });
 				else
-					frag.walk(function(item, idx) { parent.appendChild(item); });				
-			} else {			
+					frag.walk(function(item, idx) { parent.appendChild(item); });
+			} else {
 				elm.outerHTML = rep.stripScripts();
 			}
 		} else {
@@ -938,7 +976,7 @@ Element.replace = function(elm, rep, evalScripts) {
 		}
 		(evalScripts) && (rep.evalScriptsDelayed());
 	}
-	return elm;	
+	return elm;
 };
 
 /**
@@ -1032,14 +1070,14 @@ Element.insertion.bottom.initializeRange = Element.insertion.top.initializeRange
  */
 Element.translation = {
 	tags : {
-	    TABLE : ['<table>', '</table>', 1],	    
+	    TABLE : ['<table>', '</table>', 1],
 	    TBODY : ['<table><tbody>', '</tbody></table>', 2],
 	    THEAD : ['<table><tbody>', '</tbody></table>', 2],
 	    TFOOT : ['<table><tbody>', '</tbody></table>', 2],
 	    TR : ['<table><tbody><tr>', '</tr></tbody></table>', 3],
 	    TH : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
 	    TD : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
-	    SELECT : ['<select>', '</select>', 1] 		
+	    SELECT : ['<select>', '</select>', 1]
 	},
 	div : document.createElement('div'),
 	createFromHTML : function(tn, html) {
@@ -1049,7 +1087,7 @@ Element.translation = {
 		for (var i=0; i<t[2]; i++)
 			div = div.firstChild;
 		return $A(div.childNodes);
-	}	
+	}
 };
 
 /**
@@ -1063,113 +1101,6 @@ if (!PHP2Go.nativeElementExtension && document.createElement('div').__proto__) {
 }
 if (PHP2Go.nativeElementExtension)
 	Element.extend(HTMLElement.prototype);
-
-/**
- * Document extensions
- */
-if (!document.getElementsByClassName) {
-	document.getElementsByClassName = function(clsName, tagName) {
-		return Element.getElementsByClassName(document, clsName, tagName);
-	};
-}
-if (document.evaluate) {
-	document.getElementsByXPath = function(expr, parent) {
-		var res = [], qry = document.evaluate(expr, $(parent) || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-		for (var i=0,s=qry.snapshotLength; i<s; i++)
-			res.push($E(qry.snapshotItem(i)));
-		return res;
-	};
-}
-
-
-/**
- * This class provide methods to query, add or remove
- * CSS class names from the className property of an element
- * @constructor
- * @base Collection
- */
-CSSClasses = function(elm) {
-	/**
-	 * Holds the HTML element used by the class
-	 * @type Object
-	 */
-	this.elm = $(elm);
-	/**
-	 * Implements the collection interface by
-	 * applying an iterator function on the
-	 * element's class names
-	 * @type void
-	 * @private
-	 */
-	this.each = function(iterator) {
-		var list = this.elm.className.trim().split(/\s+/);
-		for (var i=0; i<list.length; i++)
-			iterator(list[i]);
-	};
-	/**
-	 * Verifies if the element contains a given class name
-	 * @param {String} cl Class name
-	 * @type Boolean
-	 */
-	this.has = function(cl) {
-		var re = new RegExp("\s?"+cl+"\s?", 'i');
-		return re.test(this.elm.className);
-	};
-	/**
-	 * Set the entire value of the className property
-	 * @param {String} clsNames Class names
-	 * @type void
-	 */
-	this.set = function(clsNames) {
-		this.elm.className = clsNames;
-	};
-	/**
-	 * Add one or more class names
-	 * to the element classes
-	 * @type void
-	 */
-	this.add = function() {
-		var a = arguments, c = this.elm.className;
-		for (var i=0; i<a.length; i++) {
-			(a[i]) && (c = a[i] + ' ' + c.trim());
-		}
-		this.set(c.trim());
-	};
-	/**
-	 * Remove one or more class names
-	 * from the element classes
-	 * @type void
-	 */
-	this.remove = function() {
-		var re, a = arguments, c = this.elm.className;
-		for (var i=0; i<a.length; i++) {
-			if (a[i]) {
-				re = new RegExp("^"+a[i]+"\\b\\s*|\\s*\\b"+a[i]+"\\b", 'g');
-				c = c.replace(re, '');
-			}
-		}
-		this.set(c.trim());
-	};
-	/**
-	 * Toggle the CSS class of the element.
-	 * The provided parameter is the alternative
-	 * value. The primary value is the original
-	 * value of "class" attribute in the element
-	 * @param {String} Alternative CSS class
-	 * @type void
-	 */
-	this.toggle = function(alt) {
-		(this.has(alt)) ? (this.remove(alt)) : (this.add(alt));
-	};
-	/**
-	 * Builds a string representation of the object
-	 * @type String
-	 */
-	this.toString = function() {
-		return this.elm.className;
-	};
-};
-Object.extend(CSSClasses.prototype, Collection);
 
 /**
  * WCH stands for Windowed Controls Hider, which is a tool that
