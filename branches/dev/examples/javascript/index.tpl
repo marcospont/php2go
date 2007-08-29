@@ -95,7 +95,7 @@
 					// apply a function, collecting false return values
 					"Reject (>2 == false) : " + base.reject(function(item, idx) { return (item>2); }) + "<br />" +
 					// apply a function, ignoring null return values
-					"Filter (>2 == null) : " + base.filter(function(item, idx) { return (item>2?null:item); }) + "<br />" +
+					"Valid (>2 == null) : " + base.valid(function(item, idx) { return (item>2?null:item); }) + "<br />" +
 					// filter array values by a given regexp
 					"Grep ^[345]$ : " + base.grep("^[345]$").serialize() + "<br />" +
 					// search for a value in the collection
@@ -183,7 +183,7 @@
 			 */
 			case "elements_by_class" :
 				elm.clear();
-				elm.update(document.getElementsByClassName('test'));
+				elm.update($('overall').getElementsByClassName('test'));
 				break;
 			/**
 			 * find a parent element by tag name
@@ -266,7 +266,7 @@
 	}
 </script>
 
-<table width="779" align="center" cellpadding="4" cellspacing="0" border="0">
+<table id="overall" width="779" align="center" cellpadding="4" cellspacing="0" border="0">
   <tr><td>
   <form id="frm" method="post" action="">
     <h3>Base Classes &amp; Core extensions</h3>
@@ -297,8 +297,8 @@
 	<button id="exec" type="button" onclick="executeDHTML($V('frm', 'dhtml'))">Execute</button><br /><br />
 	<div id="buffer"></div><br />
 	<div id="tglcls" class="test"
-		onmouseover="$(this).classNames().toggle('myclass')"
-		onmouseout="$(this).classNames().toggle('myclass')"
+		onmouseover="$(this).toggleClass('myclass')"
+		onmouseout="$(this).toggleClass('myclass')"
 	>Hover me to toggle my CSS class</div>
 	<div id="absolute">I'm absolute!</div>
   </form>

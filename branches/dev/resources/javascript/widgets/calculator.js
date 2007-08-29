@@ -198,13 +198,11 @@ Calculator.prototype.build = function() {
 	// event listeners
 	Event.addListener(table, 'mouseover', function(e) {
 		e = (e||window.event);
-		var elm = $E(e.target||e.srcElement);
-		elm.classNames().add('calcButtonHilite');
+		Element.addClass(e.target || e.srcElement, 'calcButtonHilite');
 	});
 	Event.addListener(table, 'mouseout', function(e) {
 		e = (e||window.event);
-		var elm = $E(e.target||e.srcElement);
-		elm.classNames().remove('calcButtonHilite');
+		Element.removeClass(e.target || e.srcElement, 'calcButtonHilite');
 	});
 	$C(table.getElementsByTagName('button')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function() {

@@ -296,16 +296,14 @@ TabView.prototype.setActiveTab = function(tab) {
  * @access private
  */
 TabView.prototype._changeActiveState = function(tab, state) {
-	var nc = tab.labelEl.classNames();
-	var ec = tab.contentEl.classNames();
 	if (state) {
-		(!nc.has('tabViewSelected')) && (nc.add('tabViewSelected'));
-		(!ec.has('tabViewVisible')) && (ec.add('tabViewVisible'));
+		tab.labelEl.addClass('tabViewSelected');
+		tab.contentEl.addClass('tabViewVisible');
 		tab.labelEl.scrollIntoView(false);
 		tab.raiseEvent('activate');
 	} else {
-		nc.remove('tabViewSelected');
-		ec.remove('tabViewVisible');
+		tab.labelEl.removeClass('tabViewSelected');
+		tab.contentEl.removeClass('tabViewVisible');
 		tab.raiseEvent('deactivate');
 	}
 	tab.attributes.active = state;
@@ -325,12 +323,12 @@ TabView.prototype._loadContents = function(tab) {
 		async: true
 	});
 	tab.attributes.loaded = false;
-	tab.contentEl.classNames().add('tabViewLoading');
+	tab.contentEl.addClass('tabViewLoading');
 	self.busy = true;
 	self._changeActiveState(tab, true);
 	self.raiseEvent('beforeload', [tab, request]);
 	request.bind('onUpdate', function() {
-		tab.contentEl.classNames().remove('tabViewLoading');
+		tab.contentEl.removeClass('tabViewLoading');
 		tab.attributes.loaded = true;
 		self.raiseEvent('afterload', [tab]);
 		self.raiseEvent('afterchange', [self.activeTab, tab]);
