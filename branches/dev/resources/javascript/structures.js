@@ -47,12 +47,10 @@ var Collection = {
 	 * of the collection. Returns true if at least
 	 * one member satisfy the filter.
 	 * @param {Function} filter Filter function
-	 * @param {Object} scope Filter scope
 	 * @type Boolean
 	 */
-	any : function(filter, scope) {
-		filter = (filter ? filter.bind(scope) : $IF);
-		var res = true;
+	some : function(filter) {
+		var res = false;
 		this.walk(function(item, idx) {
 			if (res = !!filter(item, idx))
 				throw $break;
@@ -64,16 +62,14 @@ var Collection = {
 	 * of the collection. Returns true if all
 	 * member satisfy the filter.
 	 * @param {Function} filter Filter function
-	 * @param {Object} scope Filter scope
 	 * @type Boolean
 	 */
-	all : function(filter, scope) {
-		filter = (filter ? filter.bind(scope) : $IF);
+	every : function(filter) {
 		var res = true;
 		this.walk(function(item, idx) {
 			res = res && !!filter(item, idx);
 			if (!res)
-				throw $break;			
+				throw $break;
 		});
 		return res;
 	},
@@ -82,12 +78,10 @@ var Collection = {
 	 * elements of the collection. Returns back
 	 * an array of elements that satisfy the filter
 	 * @param {Function} filter Filter function
-	 * @param {Object} scope Filter scope
 	 * @return Array of members that satisfy the filter
 	 * @type Array
 	 */
-	accept : function(filter, scope) {
-		filter = filter.bind(scope);
+	accept : function(filter) {
 		var res = [];
 		this.walk(function(item, idx) {
 			if (filter(item, idx))
@@ -100,12 +94,10 @@ var Collection = {
 	 * elements, returning back an array of elements
 	 * that DON'T satisfy the filter
 	 * @param {Function} filter Filter function
-	 * @param {Object} scope Filter scope
 	 * @return Array of members that don't satisfy the filter
 	 * @type Array
 	 */
-	reject : function(filter, scope) {
-		filter = filter.bind(scope);
+	reject : function(filter) {
 		var res = [];
 		this.walk(function(item, idx) {
 			if (!filter(item, idx))
@@ -118,11 +110,9 @@ var Collection = {
 	 * element, pushing the not null return values to
 	 * a resulting array
 	 * @param {Function} filter Filter function
-	 * @param {Object} scope Filter scope
 	 * @type Array
 	 */
-	filter : function(filter, scope) {
-		filter = (filter ? filter.bind(scope) : $IF);
+	valid : function(filter) {
 		var res = [], v = null;
 		this.walk(function(item, idx) {
 			v = filter(item, idx);
@@ -186,7 +176,7 @@ var Collection = {
 	 * collection elements. The iterator function is
 	 * called with the passed memo as first parameter.
 	 * Every iteration must return the new value of 'memo'
-	 * @param {Object} memo Object to inject collection members	 
+	 * @param {Object} memo Object to inject collection members
 	 * @param {Function} iterator Iterator function
 	 * @type Object
 	 */
@@ -312,7 +302,7 @@ var Hash = {
 		delete this.data[key];
 	},
 	/**
-	 * Searches for a given value and 
+	 * Searches for a given value and
 	 * returns back its key
 	 * @param {Object} value Search value
 	 * @type Object
@@ -328,7 +318,7 @@ var Hash = {
 		return key;
 	},
 	/**
-	 * Searches for a given key and 
+	 * Searches for a given key and
 	 * returns back its value
 	 * @param {String} key Search key
 	 * @type Object
@@ -484,7 +474,7 @@ if (PHP2Go.browser.opera) {
 			}
 		}
 		return res;
-	};	
+	};
 }
 
 if (!Array.prototype.indexOf) {
@@ -609,6 +599,8 @@ Array.prototype.serialize = function() {
  * Add Collection class methods
  */
 Object.extend(Array.prototype, Collection, false);
+if (Array.prototype.filter)
+	Array.prototype.accept = Array.prototype.filter;
 
 PHP2Go.included[PHP2Go.baseUrl + 'structures.js'] = true;
 
