@@ -96,6 +96,21 @@ Ajax.getTransport = function() {
 };
 
 /**
+ * Binds an AJAX global event listener. The event name is case-sensitive,
+ * and the supported events are: onLoading, onLoaded, onIteractive, onComplete,
+ * onSuccess, onJSONResult, onXMLResult, onFailure and onException. More than
+ * one global listener can be bound to a single event
+ * @param {String} name Event name
+ * @param {Function} func Listener function
+ * @param {Object} scope Listener scope
+ * @type void
+ */
+Ajax.bind = function(name, func, scope) {
+	Ajax.listeners[name] = Ajax.listeners[name] || [];
+	Ajax.listeners[name].push([func, scope || null]);
+};
+
+/**
  * Utility method that transforms a string of
  * HTTP headers in an associative hash
  * @type Hash
@@ -118,8 +133,13 @@ Ajax.parseHeaders = function(str) {
 Ajax.lastModified = {};
 
 /**
- * Holds the current active transaction count
- * @type Number
+ * Global AJAX event listeners
+ * @type Object
+ */
+Ajax.listeners = {};
+
+/**
+ * @ignore
  */
 Ajax.transactionCount = 0;
 
@@ -130,12 +150,12 @@ Ajax.transactionCount = 0;
  * More than one listener can be bound to a single event name
  * @param {String} name Event name
  * @param {Function} func Listener function
- * @param {Object} scope Listener scope. Defaults to 'this'
+ * @param {Object} scope Listener scope
  * @type void
  */
 Ajax.prototype.bind = function(name, func, scope) {
 	this.listeners[name] = this.listeners[name] || [];
-	this.listeners[name].push([func, scope || this]);
+	this.listeners[name].push([func, scope || null]);
 };
 
 /**
@@ -146,10 +166,9 @@ Ajax.prototype.bind = function(name, func, scope) {
  */
 Ajax.prototype.raise = function(name, args) {
 	args = args || [];
-	var listeners = this.listeners[name] || [];
-	listeners.walk(function(item, idx) {
-		item[0].apply(item[1], args);
-	});
+	var listeners = (Ajax.listeners[name] || []).concat(this.listeners[name] || []);
+	for (var i=0; i<listeners.length; i++)
+		listeners[i][0].apply(listeners[i][1] || this, args);
 };
 
 /**
@@ -932,12 +951,12 @@ AjaxPeriodicalUpdater = function(uri, args) {
 	/**
 	 * Called before each request is performed
 	 * @type Function
-	 */	 
+	 */
 	this.onBeforeUpdate = args.onBeforeUpdate;
 	/**
 	 * @ignore
 	 */
-	this.timer = null;	
+	this.timer = null;
 	this.start();
 };
 
