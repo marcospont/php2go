@@ -64,11 +64,11 @@ var PHP2Go = {
 	/**
 	 * @ignore
 	 */
-	scriptRegExpAll : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'img'),
+	scriptRegExpAll : new RegExp('<script[^>]*>([\\S\\s]*?)<\/script>', 'img'),
 	/**
 	 * @ignore
 	 */
-	scriptRegExpOne : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'im'),
+	scriptRegExpOne : new RegExp('<script[^>]*>([\\S\\s]*?)<\/script>', 'im'),
 	/**
 	 * Indicates if it was possible to add
 	 * methods in the HTMLElement class prototype
@@ -153,10 +153,10 @@ var PHP2Go = {
 	 *
 	 * <br>Properties:
 	 * <ul><li>ie (Boolean)</li><li>ie7 (Boolean)</li><li>ie6 (Boolean)</li><li>
-	 * ie5 (Boolean)</li><li>opera (Boolean)</li><li>khtml (Boolean)</li><li>safari
-	 * (Boolean)</li><li>mozilla (Boolean)</li><li>gecko (Boolean)</li><li>windows
-	 * (Boolean)</li><li>linux (Boolean)</li><li>mac (Boolean)</li><li>unix
-	 * (Boolean)</li><li>os (String)</li></ul>
+	 * ie5 (Boolean)</li><li>wch (Boolean)</li><li>opera (Boolean)</li><li>khtml
+	 * (Boolean)</li><li>safari (Boolean)</li><li>mozilla (Boolean)</li><li>gecko
+	 * (Boolean)</li><li>windows (Boolean)</li><li>linux (Boolean)</li><li>mac
+	 * (Boolean)</li><li>unix (Boolean)</li><li>os (String)</li></ul>
 	 *
 	 * @type Object
 	 */
@@ -166,6 +166,7 @@ var PHP2Go = {
 		bw.ie7 = bw.ie && /msie 7/i.test(ua);
 		bw.ie6 = bw.ie && /msie 6/i.test(ua);
 		bw.ie5 = bw.ie && /msie 5\.0/i.test(ua);
+		bw.wch = bw.ie && !bw.ie7;
 		bw.opera = /opera/i.test(ua);
 		bw.khtml = /konqueror|safari|webkit|khtml/i.test(ua);
 		bw.safari = /safari|webkit/i.test(ua);
@@ -341,7 +342,7 @@ Object.isFunc = function(obj) {
  * @type Boolean
  */
 Object.isString = function(obj) {
-	return (typeof obj == 'string');	
+	return (typeof obj == 'string');
 };
 
 /**
@@ -453,12 +454,28 @@ Function.prototype.delay = function() {
 };
 
 /**
+ * Left trim regular expression
+ * @type RegExp
+ */
+String.leftTrim = /^\s*/;
+/**
+ * Right trim regular expression
+ * @type RegExp
+ */
+String.rightTrim = /\s*$/;
+/**
+ * Empty regular expression
+ * @type RegExp
+ */
+String.blank = /^\s*$/;
+
+/**
  * Removes blank chars from the start and
  * from the end of the string
  * @type String
  */
 String.prototype.trim = function() {
-	return this.replace(/^\s*/, "").replace(/\s*$/, "");
+	return this.replace(String.leftTrim, "").replace(String.rightTrim, "");
 };
 
 /**
@@ -466,7 +483,7 @@ String.prototype.trim = function() {
  * @type Boolean
  */
 String.prototype.empty = function() {
-	return /^\s*$/.test(this);
+	return String.blank.test(this);
 };
 
 /**
@@ -623,7 +640,7 @@ with (String.prototype.escapeHTML)
 
 
 /**
- * Remove extra spaces from the string
+ * Replace one or more blank chars by a single space in the string
  * @type String
  */
 String.prototype.stripSpaces = function() {
@@ -1041,10 +1058,11 @@ var Logger = {
 	exception : function(e) {
 		var info = '[' + e.name + '] - ' + e.message;
 		if (e.stack) {
-			info += "\n" + e.stack.split("\n").filter(function(item, idx) {
+			info += "\n" + e.stack.split("\n").valid(function(item, idx) {
 				var where = item.split('@');
 				if (where[1] && where[1] != ':0')
 					return 'at ' + where[1];
+				return null;
 			}).join("\n");
 		}
 		this.log(info, 'red');
