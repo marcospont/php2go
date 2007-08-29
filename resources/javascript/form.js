@@ -193,7 +193,7 @@ var Form = {
 	serialize : function(form, fld) {
 		fld = fld || [];
 		this.updateCheckboxes(form);
-		return this.getFields(form).filter(function(el) {
+		return this.getFields(form).valid(function(el) {
 			if (fld.empty() || fld.contains(el.key))
 				return el.value.serialize();
 		}).join('&');
@@ -572,7 +572,7 @@ SelectField.extend(Field, 'Field');
  */
 SelectField.prototype.getValue = function() {
 	if (this.multiple) {
-		var res = $C(this.fld.options).filter(function(el) {
+		var res = $C(this.fld.options).valid(function(el) {
 			if (el.selected == true)
 				return el.value;
 			return null;
@@ -828,7 +828,7 @@ GroupField.extend(Field, 'Field');
  * @type Object
  */
 GroupField.prototype.getValue = function() {
-	var v = this.grp.filter(function(el) {
+	var v = this.grp.valid(function(el) {
 		if (el.checked)
 			return el.value;
 		return null;
@@ -958,7 +958,7 @@ GroupField.prototype.focus = function() {
  */
 GroupField.prototype.serialize = function() {
 	var self = this, nm = this.name.replace(/\[\]$/, '');
-	var v = this.grp.filter(function(el) {
+	var v = this.grp.valid(function(el) {
 		if (el.checked && !el.disabled) {
 			if (self.multiple)
 				return nm + '[]=' + el.value.urlEncode();

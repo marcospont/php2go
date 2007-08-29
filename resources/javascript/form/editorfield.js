@@ -339,7 +339,7 @@ EditorField.prototype.getValueAsText = function() {
  */
 EditorField.prototype.getBrokenImages = function() {
 	var imgs = this.document.body.getElementsByTagName('img');
-	var bi = $C(imgs).filter(function(item, idx) {
+	var bi = $C(imgs).valid(function(item, idx) {
 		if (!Object.isUndef(item.fileSize))
 			return (item.fileSize == -1);
 		if (!Object.isUndef(item.naturalWidth))

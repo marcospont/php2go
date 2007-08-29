@@ -149,9 +149,9 @@ AutoCompleteField.prototype.getValue = function() {
 	if (this.options.incremental) {
 		if (this.fld.value.trim() == '')
 			return null;
-		var res = this.fld.value.split(this.options.separator).filter(function(item, idx) {
+		var res = this.fld.value.split(this.options.separator).valid(function(item, idx) {
 			var val = item.trim();
-			return (val != '' ? val : null);
+			return (val.empty() ? null : val);
 		});
 		return (res.empty() ? null : res);
 	}
