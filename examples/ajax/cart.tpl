@@ -9,7 +9,7 @@
       </tr>
       <!-- loop var=$cart->items item="item" key="id" -->
       <tr>
-        <td><a href="javascript:;" onclick="removeFromCart({$id})"><img src="remove.gif" border="0" alt=""></a></td>
+        <td><a href="javascript:;" onclick="removeFromCart({$id})"><img src="remove.gif" border="0" alt="" /></a></td>
         <td>{$item.desc}</td>
         <td>{$item.price|decimal_currency}</td>
         <td>

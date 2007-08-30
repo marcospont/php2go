@@ -702,7 +702,7 @@ class MailMessage extends PHP2Go
 	 *
 	 * Example:
 	 * <code>
-	 * $msg->setHtmlBody('<html><body><img src='cid:logo' border='0' alt=''><br />Hello World!</body></html>');
+	 * $msg->setHtmlBody('<html><body><img src='cid:logo' border='0' alt='' /><br />Hello World!</body></html>');
 	 * $msg->addEmbeddedFile('images/logo.gif', 'logo');
 	 * </code>
 	 *
