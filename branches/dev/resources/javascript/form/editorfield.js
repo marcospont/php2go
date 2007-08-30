@@ -755,7 +755,7 @@ EditorField.prototype.insertImage = function() {
 		src = prompt(Lang.editor.insertImage, "");
 		if (src != null && src != "") {
 			if (sel.getType() == 'None') {
-				this.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+src+"' alt='' style='border:none'>");
+				this.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+src+"' alt='' style='border:none' />");
 			} else {
 				doc.execCommand('insertimage', false, src);
 			}
