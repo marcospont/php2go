@@ -136,7 +136,7 @@ class EditorField extends FormField
 	 * @return string
 	 */
 	function getFocusId() {
-		return "{$this->id}_composition";
+		return "{$this->id}_iframe";
 	}
 
 	/**
