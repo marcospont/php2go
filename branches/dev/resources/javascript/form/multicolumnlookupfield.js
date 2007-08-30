@@ -376,10 +376,9 @@ MultiColumnLookupField.prototype.keyHandler = function(e) {
  * @type void
  */
 MultiColumnLookupField.prototype.mouseDownHandler = function(e) {
-	var e = $EV(e), t = $E(e.element());
-	if (!t.isChildOf(this.container)) {
+	var e = $EV(e);
+	if (!e.target.isChildOf(this.container))
 		this.hide();
-	}
 };
 
 /**
@@ -389,7 +388,7 @@ MultiColumnLookupField.prototype.mouseDownHandler = function(e) {
  * @type void
  */
 MultiColumnLookupField.prototype.cellHoverHandler = function(e) {
-	var elm = e.element();
+	var elm = e.target;
 	if (elm && elm.parentNode.index) {
 		var p = elm.parentNode;
 		if (e.type == 'mouseover') {
@@ -406,7 +405,7 @@ MultiColumnLookupField.prototype.cellHoverHandler = function(e) {
  * @type void
  */
 MultiColumnLookupField.prototype.cellClickHandler = function(e) {
-	var elm = e.element();
+	var elm = e.target;
 	if (elm && elm.parentNode.index) {
 		this.setValueByIndex(elm.parentNode.index);
 		this.hide();

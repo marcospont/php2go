@@ -170,10 +170,10 @@ if (document.evaluate) {
 	 */
 	Element.getElementsByClassName = function(elm, clsNames) {
 		clsNames = (clsNames + '').trim();
-		if (elm = $(elm) && !clsNames.empty()) {
+		if ((elm = $(elm)) && !clsNames.empty()) {
 			clsNames = clsNames.split(/\s+/);
 			var cond = clsNames.valid(function(item, idx) {
-				return (item.empty() ? null : "[contains(concat(' ', @class, ' '), ' " + item + " ')]");
+				return (item.empty() ? null : "[contains(concat(' ', @class, ' '), ' %1 ')]".assignAll(item));
 			}).join('');
 			return (cond ? document.getElementsByXPath('.//*' + cond, elm) : []);
 		}
@@ -183,7 +183,6 @@ if (document.evaluate) {
 	 * @ignore
 	 */
 	document.getElementsByXPath = function(expr, parent) {
-		alert(expr);
 		var res = [], qry = document.evaluate(expr, $(parent) || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 		for (var i=0,s=qry.snapshotLength; i<s; i++)
 			res.push($E(qry.snapshotItem(i)));
@@ -195,7 +194,7 @@ if (document.evaluate) {
 	 */
 	Element.getElementsByClassName = function(elm, clsNames) {
 		clsNames = (clsNames + '').trim();
-		if (elm = $(elm) && !clsNames.empty()) {
+		if ((elm = $(elm)) && !clsNames.empty()) {
 			var clsStr = ' ' + clsNames + ' ', clsList = clsNames.split(/\s+/);
 			var res = [], elms = elm.getElementsByTagName('*');
 			for (var i=0,ch; ch=elms[i]; i++) {
@@ -212,7 +211,9 @@ if (document.evaluate) {
 	};
 }
 
-// define document.getElementsByClassName only when undefined
+/**
+ * Define document.getElementsByClassName only when undefined
+ */
 if (!document.getElementsByClassName) {
 	document.getElementsByClassName = function(clsNames) {
 		return Element.getElementsByClassName(document, clsNames);
@@ -1348,35 +1349,44 @@ Event.removeListener = function(elm, type, fn, capt) {
 };
 
 /**
- * The event listeners are cached, so that they can be
- * detached when the window is unloaded. This is necessary
- * to avoid memory leaks in MS Internet Explorer
- * @ignore
+ * Extends an event object by adding properties and
+ * methods that are not available in the browser's engine
+ * @param {Event} ev Event
+ * @type Event
  */
-Event.flushCache = function() {
-	Event.cache.walk(function(item, idx) {
-		Event.removeListener.apply(this, item);
-	});
-	delete Event.cache;
-	try {
-		window.onload = $EF;
-		window.onunload = $EF;
-	} catch(e) {}
-};
-if (PHP2Go.browser.ie)
-	Event.addListener(window, 'unload', Event.flushCache);
+Event.extend = function() {
+	function relatedTarget(ev) {
+		switch (ev.type) {
+			case 'mouseover' : return $E(ev.fromElement);
+			case 'mouseout' : return $E(ev.toElement);
+			default : return null;
+		}
+	}
+	return function(ev) {
+		var proto = Event.prototype;
+		proto.stopPropagation = function() { this.cancelBubble = true; };
+		proto.preventDefault = function() { this.returnValue = false; };
+		ev = Object.extend(ev, proto);
+		ev.target = $E(ev.target || ev.srcElement);
+		ev.relatedTarget = relatedTarget(ev);
+		var pos = ev.position();
+		ev.pageX = pos.x;
+		ev.pageY = pos.y;
+		return ev;
+	}
+}();
 
 /**
  * Returns the element that originated the event
  * @type Object
  */
 Event.prototype.element = function() {
-	var elm = (this.target || this.srcElement);
+	var elm = this.target;
 	if (elm.nodeType) {
 		while (elm.nodeType != 1)
 			elm = elm.parentNode;
 	}
-	return elm;
+	return $E(elm);
 };
 
 /**
@@ -1397,15 +1407,10 @@ Event.prototype.findElement = function(tag) {
  * @type Boolean
  */
 Event.prototype.isRelated = function(elm) {
-	elm = $(elm);
-	var related = this.relatedTarget;
-	if (!related) {
-		if (this.type == 'mouseout')
-			related = this.toElement;
-		else if (this.type == 'mouseover')
-			related = this.fromElement;
+	if (elm = $(elm)) {
+		var rel = this.relatedTarget;
+		return (rel && (rel == elm || rel.isChildOf(elm)));
 	}
-	return (related && (related == elm || $(related).isChildOf(elm)));
 };
 
 /**
@@ -1438,28 +1443,6 @@ Event.prototype.position = function() {
 	};
 };
 
-if (!Event.prototype.preventDefault) {
-	/**
-	 * Implementation of the preventDefault method
-	 * for browsers that doesn't support it
-	 * @type void
-	 */
-	Event.prototype.preventDefault = function() {
-		this.returnValue = false;
-	};
-}
-
-if (!Event.prototype.stopPropagation) {
-	/**
-	 * Implementation of the stopPropagation method
-	 * for browsers that doesn't support it
-	 * @type void
-	 */
-	Event.prototype.stopPropagation = function() {
-		this.cancelBubble = true;
-	};
-}
-
 /**
  * Suspends the propagation of the event
  * and cancel its default behaviour
@@ -1490,9 +1473,11 @@ Event.addLoadListener(function() {
  */
 $EV = function(e) {
 	e = e || window.event;
-	if (!e || PHP2Go.nativeEventExtension)
+	if (!e || PHP2Go.nativeEventExtension || e._extended)
 		return e;
-	return Object.extend(e, Event.prototype);
+	e = Event.extend(e);
+	e._extended = $EF;
+	return e;
 };
 
 /**
@@ -1504,6 +1489,23 @@ $K = function(e) {
 	e = (e || window.event);
 	return (e.keyCode || e.which);
 };
+
+if (window.attachEvent) {
+	/**
+	 * @ignore
+	 */
+	function flushCache() {
+		Event.cache.walk(function(item, idx) {
+			Event.removeListener.apply(this, item);
+		});
+		delete Event.cache;
+		try {
+			window.onload = $EF;
+			window.onunload = $EF;
+		} catch(e) { }
+	}
+	window.attachEvent('onunload', flushCache);
+}
 
 PHP2Go.included[PHP2Go.baseUrl + 'dom.js'] = true;
 

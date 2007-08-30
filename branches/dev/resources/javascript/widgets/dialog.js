@@ -237,7 +237,7 @@ Dialog.prototype.setupContents = function() {
 			});
 			btn.index = i;
 			Event.addListener(btn, 'click', function(e) {
-				var idx = $EV(e).element().index;
+				var idx = $EV(e).target.index;
 				if (Object.isFunc(self.buttons[idx].fn))
 					self.buttons[idx].fn.apply(self);
 			});
@@ -551,7 +551,7 @@ ModalDialog.prototype.tabDelimBlurHandler = function() {
  */
 ModalDialog.prototype.keyHandler = function(e) {
 	var e = $EV(e);
-	if (Element.isChildOf(e.element(), this.el))
+	if (e.target.isChildOf(this.el))
 		return;
 	if (e.key() != 9) {
 		e.stop();

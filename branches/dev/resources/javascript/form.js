@@ -212,7 +212,7 @@ var Form = {
 			Event.addListener(form, 'submit', function(e) {
 				var evt = $EV(e), frm = null;
 				evt.stop();
-				frm = Element.getParentByTagName(evt.element(), 'form');
+				frm = evt.findElement('form');
 				if (frm) {
 					var ajax = frm.ajax();
 					ajax.form = frm.id;

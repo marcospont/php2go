@@ -94,7 +94,7 @@ FormDataBind.prototype.setup = function() {
  * @type void
  */
 FormDataBind.prototype.clickHandler = function(e) {
-	var elm = $EV(e).element();
+	var elm = $EV(e).target;
 	if (elm.name && !elm.disabled) {
 		switch (elm.name) {
 			case 'navFirst' :

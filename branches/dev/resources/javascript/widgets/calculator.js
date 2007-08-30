@@ -343,7 +343,7 @@ Calculator.prototype.buttonHandler = function(sender) {
  */
 Calculator.prototype.mouseDownHandler = function(e) {
 	var c = Calculator.singleton;
-	var t = $E($EV(e).element());
+	var t = $EV(e).target;
 	if (!t.isChildOf(c.trigger) && !t.isChildOf(c.container))
 		c.hide();
 };

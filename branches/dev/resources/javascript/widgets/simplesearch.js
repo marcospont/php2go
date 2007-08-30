@@ -361,7 +361,7 @@ ReportSimpleSearch.prototype.addFilter = function(verbose) {
  * @type void
  */
 ReportSimpleSearch.prototype.removeFilter = function(e) {
-	var f = this.filters, elm = $E($EV(e).element());
+	var f = this.filters, elm = $EV(e).target;
 	// remove filter
 	f.remove(f.indexOf(elm.getParentByTagName('a').id));
 	if (f.length == 0)
