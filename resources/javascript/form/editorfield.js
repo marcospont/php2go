@@ -700,7 +700,7 @@ EditorField.prototype.showHideEmoticons = function(ev) {
 	var emo = this.divEmoticons;
 	if (emo.getStyle('display') == 'none') {
 		// set emoticons div position and display it
-		var elm = $E(ev.element());
+		var elm = ev.target;
 		var pos = elm.getPosition();
 		emo.setStyle('left', (pos.x-(emo.getDimensions().width-elm.parentNode.offsetWidth+3)) + 'px');
 		emo.setStyle('top', (pos.y+elm.parentNode.offsetHeight-2) + 'px');

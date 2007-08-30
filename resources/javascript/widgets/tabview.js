@@ -348,9 +348,9 @@ TabView.prototype._loadContents = function(tab) {
 TabView.prototype._clickHandler = function(e) {
 	if (!this.busy) {
 		var elm = this.root, e = $EV(e);
-		var trg = e.element(), tabs = this.tabs;
+		var trg = e.target, tabs = this.tabs;
 		for (var i=0; i<tabs.length; i++) {
-			if (Element.isChildOf(trg, tabs[i].labelEl)) {
+			if (trg.isChildOf(tabs[i].labelEl)) {
 				this.setActiveTab(tabs[i]);
 				break;
 			}

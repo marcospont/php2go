@@ -372,7 +372,7 @@ ColorPicker.prototype.rgbToHex = function(s) {
  */
 ColorPicker.prototype.mouseDownHandler = function(e) {
 	var pop = ColorPicker.popup;
-	var t = $E($EV(e).element());
+	var t = $EV(e).target;
 	if (!t.isChildOf(pop.trigger) && !t.isChildOf(pop))
 		this.hidePopup();
 };

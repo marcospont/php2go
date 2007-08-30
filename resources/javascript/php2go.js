@@ -1140,7 +1140,7 @@ var Window = {
 	openFromEvent : function(e, url, wid, hei, type, tit, ret) {
 		e = $EV(e), wid = wid || 800, hei = hei || 600;
 		var w = window, b = document.body, x, y;
-		var el = $E(e.element());
+		var el = e.target;
 		var ep = el.getPosition();
 		var ed = el.getDimensions();
 		var ws = Window.scroll();
