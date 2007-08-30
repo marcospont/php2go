@@ -342,7 +342,7 @@ class Form extends Component
 		else {
 			$this->Document =& $Document;
 			$this->formName = $formName;
-			$this->formAction = HttpRequest::basePath();
+			$this->setFormAction(HttpRequest::basePath());
 			$this->formMethod = "POST";
 			$this->clientErrorOptions = array(
 				'mode' => FORM_CLIENT_ERROR_ALERT,
@@ -354,9 +354,9 @@ class Form extends Component
 				'popup_attrs' => 'BGCOLOR,"#000000",FGCOLOR,"#ffffff"'
 			);
 			if ($this->isPosted() && ($savedUrl = @$_SESSION['PHP2GO_BACK_URL'][$this->formName]) !== NULL) {
-				$this->backUrl = $savedUrl;
+				$this->setBackUrl($savedUrl);
 			} else {
-				$this->backUrl = HttpRequest::referer();
+				$this->setBackUrl(HttpRequest::referer());
 				$_SESSION['PHP2GO_BACK_URL'][$this->formName] =& $this->backUrl;
 			}
 			$this->icons = array(
@@ -402,7 +402,7 @@ class Form extends Component
 	 * @param string $action Action URI
 	 */
 	function setFormAction($action) {
-		$this->formAction = $action;
+		$this->formAction = htmlentities(html_entity_decode($action));
 	}
 
 	/**
@@ -804,8 +804,8 @@ class Form extends Component
 			parent::onPreRender();
 			if (!$this->formConstruct)
 				$this->processXml();
-			$this->backUrl = $this->resolveVariables($this->backUrl);
-			$this->formAction = $this->resolveVariables($this->formAction);
+			$this->setBackUrl($this->resolveVariables($this->backUrl));
+			$this->setFormAction($this->resolveVariables($this->formAction));
 			$this->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form.js');
 		}
 	}
@@ -1181,9 +1181,9 @@ class Form extends Component
 		switch ($tag) {
 			case 'FORM' :
 				(isset($attrs['METHOD'])) && ($this->setFormMethod($attrs['METHOD']));
-				(isset($attrs['ACTION'])) && ($this->formAction = $attrs['ACTION']);
+				(isset($attrs['ACTION'])) && ($this->setFormAction($attrs['ACTION']));
 				(isset($attrs['TARGET'])) && ($this->actionTarget = $attrs['TARGET']);
-				(isset($attrs['BACKURL'])) && ($this->backUrl = $attrs['BACKURL']);
+				(isset($attrs['BACKURL'])) && ($this->setBackUrl($attrs['BACKURL']));
 				(array_key_exists('ACCESSKEYHIGHLIGHT', $attrs)) && ($this->accessKeyHighlight = resolveBooleanChoice($attrs['ACCESSKEYHIGHLIGHT']));
 				break;
 			case 'STYLE' :
