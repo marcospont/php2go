@@ -194,6 +194,7 @@ var PHP2Go = {
 			case 'FLOAT' : a = parseFloat(a, 10), b = parseFloat(b, 10); break;
 			case 'CURRENCY' : a = parseFloat(a, 10), b = parseFloat(b, 10); break;
 			case 'DATE' : a = Date.toDays(a), b = Date.toDays(b); break;
+			case 'STRING' : a = a || '', b = b || ''; break;
 		}
 		switch (op) {
 			case 'EQ' : return (a == b);

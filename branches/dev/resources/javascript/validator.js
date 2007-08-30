@@ -563,7 +563,7 @@ RuleValidator.prototype.validate = function() {
 		case 'REQIFGOET' :
 		case 'REQIFLT' :
 		case 'REQIFLOET' :
-			return (!f.isEmpty() || p.isEmpty() || !PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
+			return (!f.isEmpty() || !PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
 	}
 };
 
