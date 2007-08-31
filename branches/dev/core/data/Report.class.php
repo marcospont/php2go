@@ -1115,6 +1115,7 @@ class Report extends PagedDataSet
 				$this->_Document->addScript(PHP2GO_JAVASCRIPT_PATH . "widgets/simplesearch.js");
 			if (parent::getTotalRecordCount() > 0 || @$this->emptyTemplate['disabled'] === TRUE) {
 				$this->_buildContent();
+				$this->Template->onPreRender();
 			} else {
 				$this->Template = new Template(isset($this->emptyTemplate['file']) ? $this->emptyTemplate['file'] : PHP2GO_TEMPLATE_PATH . 'emptyreport.tpl');
 				$this->Template->parse();
@@ -1399,7 +1400,7 @@ class Report extends PagedDataSet
 			println('<b>REPORT DEBUG</b><br/>');
 			println('ORIGINAL DATA SOURCE');
 			dumpVariable($this->_dataSource);
-		}		
+		}
 		// determine search clause and order by clause
 		$searchClause = $this->_SimpleSearch->getSearchClause();
 		$orderClause = $this->_orderByClause();
@@ -1407,13 +1408,13 @@ class Report extends PagedDataSet
 		if ($this->debug) {
 			if (!empty($searchClause)) {
 				println('SEARCH CLAUSE');
-				dumpVariable($searchClause);				
+				dumpVariable($searchClause);
 			}
 			if (!empty($orderClause)) {
 				println('ORDER CLAUSE');
 				dumpVariable($orderClause);
 			}
-		}		
+		}
 		// check if the data source uses a stored procedure
 		if ($this->_dataSource['PROCEDURE'] != '') {
 			$isProcedure = TRUE;
