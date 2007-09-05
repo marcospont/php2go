@@ -835,7 +835,7 @@ class Date extends PHP2Go
 	 * @static
 	 */
 	function daysToDate($days, $format=NULL) {
-		if (empty($format) || !in_array($format, 'EURO', 'US', 'SQL'))
+		if (empty($format) || !in_array($format, array('EURO', 'US', 'SQL')))
 			$format = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 		$days = intval($days);
         $days -= 1721119;
