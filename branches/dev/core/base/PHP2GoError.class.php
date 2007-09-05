@@ -348,7 +348,7 @@ class PHP2GoError extends PHP2Go
 		if (!empty($errData['TRACE'])) {
 			$stackTrace .= "<br /><b>STACK TRACE</b><pre>";
 			foreach ($errData['TRACE'] as $element)
-				$stackTrace .= "\tat {$element['FUNCTION']}(" . htmlspecialchars($element['ARGS']) . "})\n\t\ton {$element['FILE']}, {$element['LINE']}\n";
+				$stackTrace .= "\tat {$element['FUNCTION']}(" . htmlspecialchars($element['ARGS']) . ")\n\t\ton {$element['FILE']}, {$element['LINE']}\n";
 			$stackTrace .= "</pre>";
 		}
 		print ("
