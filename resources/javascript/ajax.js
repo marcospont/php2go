@@ -706,16 +706,36 @@ AjaxResponse.prototype.run = function() {
 				combo.setValue(item.arg.value);
 				break;
 			case 'enable' :
-				(item.frm) ? ($FF(item.frm, item.fld).enable()) : ($F(item.id).enable());
+				var fld = null, elm = null;
+				if (item.frm && (fld = $FF(item.frm, item.fld))) {
+					fld.enable();
+				} else if (fld = $F(item.id)) {
+					fld.enable();
+				} else if (elm = $(item.id)) {
+					elm.disabled = false;
+				}
 				break;
 			case 'disable' :
-				(item.frm) ? ($FF(item.frm, item.fld).disable()) : ($F(item.id).disable());
+				var fld = null, elm = null;
+				if (item.frm && (fld = $FF(item.frm, item.fld))) {
+					fld.disable();
+				} else if (fld = $F(item.id)) {
+					fld.disable();
+				} else if (elm = $(item.id)) {
+					elm.disabled = true;
+				}
 				break;
 			case 'focus' :
 				(item.frm) ? ($FF(item.frm, item.fld).focus()) : ($F(item.id).focus());
 				break;
 			case 'clear' :
-				(item.frm) ? ($FF(item.frm, item.fld).clear()) : ($F(item.id).clear());
+				if (item.frm) {
+					var fld = $FF(item.frm, item.fld);
+					(fld) && (fld.clear());
+				} else {
+					var fld = $F(item.id) || $(item.id);
+					(fld) && (fld.clear());
+				}
 				break;
 			case 'reset' :
 				Form.reset($(item.id));
