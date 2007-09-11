@@ -355,7 +355,7 @@ class PHP2GoError extends PHP2Go
 			<table cellpadding=\"6\" cellspacing=\"0\" style=\"border:1px solid red;background-color:#efefef;width:auto;\">
 				<tr><td>
 					<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\" width=\"100%\">
-						<tr><td width=\"20\" valign=\"top\" rowspan=\"4\"><img src=\"" . PHP2Go::getConfigVal('ABSOLUTE_URI', FALSE) . "resources/icon/error.gif\" hspace=\"3\" /></td><td style=\"font-family:Arial;font-weight:bold;font-size:14px;color:red;\">PHP2Go - {$errData['TYPE']}</td></tr>
+						<tr><td width=\"20\" valign=\"top\" rowspan=\"4\"><img src=\"" . PHP2Go::getConfigVal('ABSOLUTE_URI', FALSE) . "resources/icon/error.gif\" hspace=\"3\" alt=\"\"/></td><td style=\"font-family:Arial;font-weight:bold;font-size:14px;color:red;\">PHP2Go - {$errData['TYPE']}</td></tr>
 						<tr><td style=\"font-family:Arial;font-size:12px;\"><b>{$errData['MESSAGE']}</b></td></tr>
 						<tr><td style=\"font-family:Arial;font-size:12px;\">{$extra}{$location}</td></tr>
 						<tr><td style=\"font-family:Arial;font-size:12px;\">{$stackTrace}</td></tr>
