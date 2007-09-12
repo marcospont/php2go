@@ -74,12 +74,12 @@ Dialog = function(opts) {
 	 * Left offset, when using relative positioning
 	 * @type Number
 	 */
-	this.left = opts.left || 0;
+	this.left = opts.left || null;
 	/**
 	 * Top offset, when using relative positioning
 	 * @type Number
 	 */
-	this.top = opts.top || 0;
+	this.top = opts.top || null;
 	/**
 	 * Dialog z-index
 	 * @type Number
@@ -187,21 +187,21 @@ Dialog.prototype.setup = function() {
 		this.el = $N('div', this.parent, {
 			position: 'absolute',
 			display: 'none',
-			zIndex: this.zIndex			
+			zIndex: this.zIndex
 		}, '', { id: this.id });
 		this.tabDelim.start = $N('span', this.el, null, '', { tabIndex: 0 });
 		var contentRoot = $N('div', this.el, (this.contentsClass ? {} : {
 			backgroundColor: '#fff',
 			color: '#000',
 			border: '1px solid #000',
-			padding: '5px'			
-		}), '', { 
-			id: this.id + '_content', 
-			className: this.contentsClass 
+			padding: '5px'
+		}), '', {
+			id: this.id + '_content',
+			className: this.contentsClass
 		});
 		this.contentEl = $N('div', contentRoot);
 		this.setupContents();
-		this.tabDelim.end = $N('span', this.el, null, '', { tabIndex: 0 });		
+		this.tabDelim.end = $N('span', this.el, null, '', { tabIndex: 0 });
 	}
 };
 
@@ -233,7 +233,8 @@ Dialog.prototype.setupContents = function() {
 			var styles = (this.buttonsClass ? {} : {marginLeft: '5px', marginRight: '5px'});
 			var btn = this.buttons[i].el = $N('button', parent, styles, this.buttons[i].text, {
 				id: this.id + '_btn' + i,
-				className: this.buttonsClass
+				className: this.buttonsClass,
+				type: 'button'
 			});
 			btn.index = i;
 			Event.addListener(btn, 'click', function(e) {
@@ -289,7 +290,7 @@ Dialog.prototype.setContents = function(contents) {
 			this.contents.setParentNode(this.contentEl);
 		else if (this.contents.toString)
 			this.contentEl.update(this.contents.toString());
-	}	
+	}
 };
 
 /**
@@ -346,20 +347,22 @@ Dialog.prototype.show = function() {
  * @type void
  */
 Dialog.prototype.place = function() {
-	var offset;
-	if (!this.relative) {
-		var parDim, elDim = this.el.getDimensions();
-		if (this.parent == document.body) {
-			parDim = Window.size();
-			offset = Window.scroll();
+	var elDim, parDim, offset;
+	if (this.relative) {
+		if (this.left !== null || this.top !== null) {
+			offset = (this.parent == document.body ? {x: 0, y: 0} : this.parent.getPosition());
+			this.el.moveTo(offset.x + (this.left||0), offset.y + (this.top||0));
 		} else {
+			elDim = this.el.getDimensions();
 			parDim = this.parent.getDimensions();
 			offset = this.parent.getPosition();
+			this.el.moveTo((((parDim.width-elDim.width)/2)+offset.x), (((parDim.height-elDim.height)/2)+offset.y));
 		}
-		this.el.moveTo((((parDim.width-elDim.width)/2)+offset.x), (((parDim.height-elDim.height)/2)+offset.y));
 	} else {
-		offset = (this.parent == document.body ? {x: 0, y: 0} : this.parent.getPosition());
-		this.el.moveTo(offset.x + this.left, offset.y + this.top);
+		elDim = this.el.getDimensions();
+		parDim = Window.size();
+		offset = Window.scroll();
+		this.el.moveTo((((parDim.width-elDim.width)/2)+offset.x), (((parDim.height-elDim.height)/2)+offset.y));
 	}
 };
 
