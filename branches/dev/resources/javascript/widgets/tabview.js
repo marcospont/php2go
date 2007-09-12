@@ -346,8 +346,10 @@ TabView.prototype._loadContents = function(tab) {
  * @access private
  */
 TabView.prototype._clickHandler = function(e) {
+	e = $EV(e);
+	e.stop();
 	if (!this.busy) {
-		var elm = this.root, e = $EV(e);
+		var elm = this.root;
 		var trg = e.target, tabs = this.tabs;
 		for (var i=0; i<tabs.length; i++) {
 			if (trg.isChildOf(tabs[i].labelEl)) {
