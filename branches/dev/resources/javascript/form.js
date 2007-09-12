@@ -250,9 +250,10 @@ var Form = {
 					rel.disabled = chk.disabled;
 				}
 			}
-			$C(form.elements).accept(function(item) {
-				return (item.type == 'checkbox');
-			}).walk(updateHidden);
+			for (var i=0,l=form.elements.length; i<l; i++) {
+				if (form.elements[i].type == 'checkbox')
+					updateHidden(form.elements[i]);
+			}
 		}
 	}
 };
