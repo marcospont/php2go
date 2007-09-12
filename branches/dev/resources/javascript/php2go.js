@@ -1552,7 +1552,10 @@ $N = function(name, parent, style, html, attrs) {
 	elm.setStyle(style);
 	(parent) && (parent.appendChild(elm));
 	(html) && (elm.innerHTML = html);
-	(attrs) && (Object.extend(elm, attrs));
+	if (attrs) {
+		for (var name in attrs)
+			elm.setAttribute(name, attrs[name]);
+	}
 	return elm;
 };
 
