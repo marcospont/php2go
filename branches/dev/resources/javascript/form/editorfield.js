@@ -646,9 +646,9 @@ EditorField.prototype.resizeHandler = function(e) {
 	var box = $(this.name + '_resizeBox');
 	if (e.type == 'mousemove') {
 		if (/horizontal|both/i.test(r.mode))
-			box.style.width = Math.max(r.size.w + dx, r.minWidth);
+			box.style.width = Math.max(r.size.w + dx, r.minWidth) + 'px';
 		if (/vertical|both/i.test(r.mode))
-			box.style.height = Math.max(r.size.h + dy, r.minHeight);
+			box.style.height = Math.max(r.size.h + dy, r.minHeight) + 'px';
 	} else {
 		this.setResizing(e, false);
 		this.resizeTo(r.size.w+dx, r.size.h+dy);
@@ -671,22 +671,16 @@ EditorField.prototype.resizeTo = function(w, h) {
 	var setw = (w && !isNaN(w) && /horizontal|both/i.test(this.config.resizeMode));
 	var seth = (h && !isNaN(h) && /vertical|both/i.test(this.config.resizeMode));
 	if (setw || seth) {
-		var cont = $(this.name + '_container');
-		var cd = cont.getDimensions();
-		var ifr = this.iframe;
-		var id = ifr.getDimensions();
+		var cont = $(this.name + '_container'), cd = cont.getDimensions();
+		var txt = this.textarea, ifr = this.iframe, dim = (this.textMode ? txt : ifr).getDimensions();
 		var dx = (w - cd.width), dy = (h - cd.height);
-		if (PHP2Go.browser.gecko) {
-			dx -= 4;
-			dy -= 4;
-		}
 		if (setw) {
 			cont.style.width = w + 'px';
-			ifr.style.width = (id.width+dx) + 'px';
+			txt.style.width = ifr.style.width = (dim.width+dx-(PHP2Go.browser.gecko?4:0)) + 'px';
 		}
 		if (seth) {
 			cont.style.height = h + 'px';
-			ifr.style.height = (id.height+dy) + 'px';
+			txt.style.height = ifr.style.height = (dim.height+dy-(PHP2Go.browser.gecko?4:0)) + 'px';
 		}
 	}
 };
@@ -700,10 +694,10 @@ EditorField.prototype.showHideEmoticons = function(ev) {
 	var emo = this.divEmoticons;
 	if (emo.getStyle('display') == 'none') {
 		// set emoticons div position and display it
-		var elm = ev.target;
-		var pos = elm.getPosition();
-		emo.setStyle('left', (pos.x-(emo.getDimensions().width-elm.parentNode.offsetWidth+3)) + 'px');
-		emo.setStyle('top', (pos.y+elm.parentNode.offsetHeight-2) + 'px');
+		var elm = ev.findElement('a');
+		var pos = elm.getPosition(Element.PADDING_BOX);
+		var dim = elm.getDimensions();
+		emo.moveTo((pos.x+dim.width-emo.getDimensions().width), (pos.y+dim.height));
 		emo.show();
 	} else {
 		emo.hide();
