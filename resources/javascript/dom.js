@@ -198,11 +198,10 @@ if (document.evaluate) {
 			var clsStr = ' ' + clsNames + ' ', clsList = clsNames.split(/\s+/);
 			var res = [], elms = elm.getElementsByTagName('*');
 			for (var i=0,ch; ch=elms[i]; i++) {
-				if (
-					ch.className && (cn = ' ' + ch.className + ' ') &&
-					( cn.find(clsStr) || clsList.every(function(item, idx) { return (!item.empty() && cn.find(item)); }) )
-				) {
-					res.push($E(ch));
+				if (ch.className) {
+					var cn = ' ' + ch.className + ' ';
+					if (cn.find(clsStr) || clsList.every(function(item, idx) { return (!item.empty() && cn.find(' ' + item + ' ')); }))
+						res.push($E(ch));
 				}
 			}
 			return res;
@@ -355,19 +354,41 @@ Element.isChildOf = function(elm, anc) {
 };
 
 /**
+ * Content box
+ * @type Number
+ */
+Element.CONTENT_BOX = 0;
+/**
+ * Padding box
+ * @type Number
+ */
+Element.PADDING_BOX = 1;
+/**
+ * Border box
+ * @type Number
+ */
+Element.BORDER_BOX = 2;
+/**
+ * Margin box
+ * @type Number
+ */
+Element.MARGIN_BOX = 3;
+
+/**
  * Retrieve an object containing left and top
  * offsets for a given element. This method
  * returns an object containing 2 properties:
  * x (left offset) and y (top offset)
  * @param {Object} elm Element
+ * @param {Number} tbt Box type (0, 1, 2 or 3)
  * @type Object
  */
-Element.getPosition = function(elm) {
+Element.getPosition = function(elm, tbt) {
 	var elm = $(elm), p = {x: 0, y: 0};
 	if (elm) {
 		var b = PHP2Go.browser, db = document.body || document.documentElement;
 		// native and target box type
-		var nbt = 2, tbt = 0;
+		var nbt = 2, tbt = Object.ifUndef(tbt, 0);
 		if (elm.getBoundingClientRect) {
 			var bcr = elm.getBoundingClientRect();
 			p.x = bcr.left - 2;
@@ -395,16 +416,17 @@ Element.getPosition = function(elm) {
 			p.x += (isNaN(elm.x) ? 0 : elm.x);
 			p.y += (isNan(elm.y) ? 0 : elm.y);
 		}
+		var tp = Object.toPixels;
 		var extents = ['padding', 'border', 'margin'];
 		if (nbt > tbt) {
 			for (var i=tbt; i<nbt; i++) {
-				p.x -= Object.toPixels(elm.getComputedStyle(extents[i] + '-left'));
-				p.y -= Object.toPixels(elm.getComputedStyle(extents[i] + '-top'));
+				p.x -= tp(elm.getComputedStyle(extents[i] + '-left'));
+				p.y -= tp(elm.getComputedStyle(extents[i] + '-top'));
 			}
 		} else if (tbt > nbt) {
 			for (var i=tbt; i>nbt; --i) {
-				p.x -= Object.toPixels(elm.getComputedStyle(extents[i-1] + '-left'));
-				p.y -= Object.toPixels(elm.getComputedStyle(extents[i-1] + '-top'));
+				p.x -= tp(elm.getComputedStyle(extents[i-1] + '-left'));
+				p.y -= tp(elm.getComputedStyle(extents[i-1] + '-top'));
 			}
 		}
 	}
@@ -416,9 +438,10 @@ Element.getPosition = function(elm) {
  * The results are returned as an object,
  * containing 2 properties: width and height
  * @param {Object} elm Element
+ * @param {Number} tbt Box type (0, 1, 2 or 3)
  * @type Object
  */
-Element.getDimensions = function(elm) {
+Element.getDimensions = function(elm, tbt) {
 	var elm = $(elm), d = {width: 0, height: 0};
 	if (elm) {
 		if (elm.getComputedStyle('display') != 'none') {
@@ -436,6 +459,21 @@ Element.getDimensions = function(elm) {
 				d.width = elm.clientWidth;
 				d.height = elm.clientHeight;
 			});
+		}
+		if (tbt >= 0 && tbt <= 3) {
+			var nbt = (document.getBoxObjectFor ? 1 : 2);
+			var tp = Object.toPixels, extents = ['padding', 'border', 'margin'];
+			if (nbt > tbt) {
+				for (var i=tbt; i<nbt; i++) {
+					d.width -= tp(elm.getComputedStyle(extents[i] + '-left')) + tp(elm.getComputedStyle(extents[i] + '-right'));
+					d.height -= tp(elm.getComputedStyle(extents[i] + '-top')) + tp(elm.getComputedStyle(extents[i] + '-bottom'));
+				}
+			} else if (tbt > nbt) {
+				for (var i=tbt; i>nbt; --i) {
+					d.width -= tp(elm.getComputedStyle(extents[i-1] + '-left')) + tp(elm.getComputedStyle(extents[i-1] + '-right'));
+					d.height -= tp(elm.getComputedStyle(extents[i-1] + '-top')) + tp(elm.getComputedStyle(extents[i-1] + '-bottom'));
+				}
+			}
 		}
 	}
 	return d;
