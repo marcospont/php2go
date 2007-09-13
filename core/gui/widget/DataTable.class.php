@@ -43,6 +43,8 @@
  * # orderDescIcon : descending order icon
  * # selectable : whether to make the table rows selectable
  * # multiple : enable multiple selection or not
+ * # scrollable : whether to add vertical scroll bar when needed
+ * # maxHeight : allows to determine a maximum height for the table body
  * # headerClass : CSS class for the table header
  * # rowClass : CSS class for the table rows
  * # alternateRowClass : CSS class for alternate (odd) rows
@@ -124,6 +126,7 @@ class DataTable extends Widget
 			'orderDescIcon' => PHP2GO_ICON_PATH . 'order_desc.gif',
 			'selectable' => FALSE,
 			'multiple' => FALSE,
+			'scrollable' => FALSE,
 			'headerClass' => 'dataTableHeader',
 			'rowClass' => '',
 			'alternateRowClass' => '',
@@ -169,6 +172,8 @@ class DataTable extends Widget
 			'orderDescIcon' => $attrs['orderDescIcon'],
 			'selectable' => $attrs['selectable'],
 			'multiple' => $attrs['multiple'],
+			'scrollable' => $attrs['scrollable'],
+			'maxHeight' => @$attrs['maxHeight'],
 			'headerClass' => $attrs['headerClass'],
 			'rowClass' => $attrs['rowClass'],
 			'alternateRowClass' => $attrs['alternateRowClass'],
