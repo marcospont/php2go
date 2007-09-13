@@ -531,9 +531,9 @@ Calculator.prototype.showAt = function(tgr, trg, align) {
 	this.target = trg;
 	// move and display the calculator container
 	if (align == "bottom")
-		c.moveTo(pos.x+dim.width-c.getDimensions().width, pos.y+dim.height+2);
+		c.moveTo(pos.x+dim.width-c.getDimensions().width, pos.y+dim.height);
 	else
-		c.moveTo(pos.x+dim.width+2, pos.y);
+		c.moveTo(pos.x+dim.width, pos.y);
 	c.show();
 	// set properties based on the trigger
 	var tmp = trg.value;

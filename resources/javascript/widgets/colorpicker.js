@@ -384,12 +384,12 @@ ColorPicker.prototype.mouseDownHandler = function(e) {
  */
 ColorPicker.prototype.showPopupAt = function(trg) {
 	var pop = ColorPicker.popup;
-	var pos = trg.getPosition();
+	var pos = trg.getPosition(Element.PADDING_BOX);
 	var dim = trg.getDimensions();
 	if (this.onOpen)
 		this.onOpen();
 	pop.trigger = trg;
-	pop.moveTo(pos.x, pos.y+dim.height);
+	pop.moveTo(pos.x, (pos.y+dim.height));
 	pop.onClose = this.onClose;
 	pop.onSelect = this.onSelect;
 	if (pop.style.display == 'none')
