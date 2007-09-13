@@ -333,8 +333,7 @@ AutoCompleteField.prototype.keyDownHandler = function(e) {
 		}
 	}
 	this.lastValue = this.fld.value;
-	if (this.timer)
-		clearTimeout(this.timer);
+	clearTimeout(this.timer);
 };
 
 /**
@@ -348,6 +347,7 @@ AutoCompleteField.prototype.keyUpHandler = function(e) {
 	this.fldChanged = (this.fld.value != this.lastValue);
 	if ('#9#13#16#17#33#34#35#36#37#38#39#40#45#127#4098#'.indexOf('#'+k+'#') != -1 || !this.fldChanged)
 		return;
+	clearTimeout(this.timer);
 	this.timer = this.timerHandler.bind(this).delay(this.options.delay * 1000);
 };
 
