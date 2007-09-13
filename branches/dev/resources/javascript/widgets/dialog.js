@@ -230,12 +230,11 @@ Dialog.prototype.setupContents = function() {
 			marginBottom: '2px'
 		});
 		for (var i=0; i<this.buttons.length; i++) {
-			var styles = (this.buttonsClass ? {} : {marginLeft: '5px', marginRight: '5px'});
-			var btn = this.buttons[i].el = $N('button', parent, styles, this.buttons[i].text, {
+			var btn = this.buttons[i].el = $N('button', parent, {marginLeft: '5px', marginRight: '5px'}, this.buttons[i].text, {
 				id: this.id + '_btn' + i,
-				className: this.buttonsClass,
-				type: 'button'
+				className: this.buttonsClass				
 			});
+			btn.setAttribute('type', 'button');
 			btn.index = i;
 			Event.addListener(btn, 'click', function(e) {
 				var idx = $EV(e).target.index;
