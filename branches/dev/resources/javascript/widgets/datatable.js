@@ -105,17 +105,22 @@ DataTable.instances = {};
 DataTable.prototype.setup = function() {
 	var attrs = this.attributes;
 	this.root = $(attrs.id);
-	this.table = (this.root.getElementsByTagName('table') || [null])[0];
+	this.table = $((this.root.getElementsByTagName('table') || [null])[0]);
 	if (this.table && this.table.tHead && this.table.tBodies.length > 0) {
-		if (PHP2Go.browser.ie)
+		// setup main members
+		this.thead = $(this.table.tHead);
+		this.thead.addClass(attrs.headerClass);
+		this.tbody = $(this.table.tBodies[0]);
+		// scrollable
+		if (attrs.scrollable)
+			this._setScrollable();
+		// setup table events
+		if (PHP2Go.browser.ie) {
 			Event.addListener(this.table, 'selectstart', function() {
 				var e = window.event;
 				(e.ctrlKey || e.shiftKey) && (e.returnValue = false);
 			});
-		this.thead = $(this.table.tHead);
-		this.thead.addClass(attrs.headerClass);
-		this.tbody = $(this.table.tBodies[0]);
-		// setup table
+		}
 		if (attrs.selectable)
 			Event.addListener(this.table, 'click', this.selectHandler.bind(this), true);
 		// setup headers
@@ -177,6 +182,7 @@ DataTable.prototype.setup = function() {
 		this.addSortType('CURRENCY', toFloat);
 		this.addSortType('STRING');
 		this.addSortType('ISTRING', toUpper);
+		DataTable.instances[attrs.id] = this;
 		this.raiseEvent('init');
 	}
 };
@@ -364,6 +370,7 @@ DataTable.prototype.selectHandler = function(e) {
 	if (row && row.parentNode == this.tbody) {
 		ev.stop();
 		row = $(row);
+		var offset = (this.attributes.scrollable ? 0 : 1);
 		var before = this.getSelectedRows();
 		var attrs = this.attributes;
 		// set current row as anchor
@@ -382,7 +389,7 @@ DataTable.prototype.selectHandler = function(e) {
 		}
 		// multiple selection and ctrl click
 		else if (attrs.multiple && e.ctrlKey && !e.shiftKey) {
-			this.selectRow(row.rowIndex-1, !row.selected, false);
+			this.selectRow(row.rowIndex-offset, !row.selected, false);
 			this.anchor = row;
 		}
 		// multiple selection and ctrl+shift click
@@ -390,10 +397,10 @@ DataTable.prototype.selectHandler = function(e) {
 			var up = (row.rowIndex < this.anchor.rowIndex);
 			var item = this.anchor;
 			while (item != null && item != row) {
-				(!item.selected) && (this.selectRow(item.rowIndex-1, true, false));
+				(!item.selected) && (this.selectRow(item.rowIndex-offset, true, false));
 				item = (up ? this.getPreviousRow(item) : this.getNextRow(item));
 			}
-			(!row.selected) && (this.selectRow(row.rowIndex-1, true, false));
+			(!row.selected) && (this.selectRow(row.rowIndex-offset, true, false));
 		}
 		// multiple selection and shift click
 		else if (attrs.multiple && !e.ctrlKey && e.shiftKey) {
@@ -403,7 +410,7 @@ DataTable.prototype.selectHandler = function(e) {
 			var up = (row.rowIndex < this.anchor.rowIndex);
 			var item = this.anchor;
 			while (item != null) {
-				this.selectRow(item.rowIndex-1, true, false);
+				this.selectRow(item.rowIndex-offset, true, false);
 				if (item == row)
 					break;
 				item = (up ? this.getPreviousRow(item) : this.getNextRow(item));
@@ -489,6 +496,61 @@ DataTable.prototype.selectRowUI = function(row, b) {
 	var a = this.attributes, b = !!b;
 	(b ? row.addClass(a.selectedClass) : row.removeClass(a.selectedClass));
 	row.selected = b;
+};
+
+/**
+ * Adds scrollable behavior on the data table
+ * @access private
+ * @type void
+ */
+DataTable.prototype._setScrollable = function() {
+	var tbl = this.table, head = this.thead, body = this.tbody;
+	var ht = null, border = parseInt(tbl.border, 10);
+	// clone table, move head
+	ht = tbl.cloneNode(false);
+	(tbl.id) && (ht.id += 'head');
+	head.setParentNode(ht);
+	tbl.parentNode.insertBefore(ht, tbl);
+	tbl.head = ht;
+	// adjust head cells
+	if (head.rows.length > 0 && body.rows.length > 0 && head.rows[0].cells.length == body.rows[0].cells.length) {
+		for (var i=0,s=body.rows[0].cells.length; i<s; i++) {
+			var wid = Element.getDimensions(body.rows[0].cells[i], Element.CONTENT_BOX).width;
+			head.rows[0].cells[i].style.width = (wid-border) + 'px';
+		}
+	}
+	// scroll container
+	var cont = $N('div', tbl.parentNode);
+	tbl.setParentNode(cont);
+	this._onResize();
+	if (!this.attributes.height)
+		Event.addListener(window, 'resize', this._onResize.bind(this));
+};
+
+/**
+ * Table resize handler
+ * @access private
+ * @type void
+ */
+DataTable.prototype._onResize = function() {
+	var cont = this.table.parentNode;
+	var sb = (PHP2Go.browser.ie ? 16 : 16);
+	var tbl = this.table, tblPos = tbl.getPosition();
+	var tblSize = tbl.getDimensions(), maxHeight = (this.attributes.height || Window.size().height);
+	if ((tblPos.y + tblSize.height) > maxHeight) {
+		cont.setStyle({
+			width: (tblSize.width + sb) + 'px',
+			height: (maxHeight - tblPos.y - sb) + 'px',
+			overflowY: 'scroll'
+		});
+	} else {
+		cont.setStyle({
+			width: tblSize.width + 'px',
+			height: tblSize.height + 'px',
+			overflowY: 'hidden',
+			overflowX: 'hidden'
+		});
+	}
 };
 
 /**
