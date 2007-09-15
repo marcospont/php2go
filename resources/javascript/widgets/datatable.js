@@ -113,7 +113,7 @@ DataTable.prototype.setup = function() {
 		this.tbody = $(this.table.tBodies[0]);
 		// scrollable
 		if (attrs.scrollable)
-			this._setScrollable();
+			this._setupScroll();
 		// setup table events
 		if (PHP2Go.browser.ie) {
 			Event.addListener(this.table, 'selectstart', function() {
@@ -136,34 +136,7 @@ DataTable.prototype.setup = function() {
 			}
 		}
 		// setup rows
-		if (this.tbody.rows.length > 0) {
-			var highlight = function(e) {
-				e = (e || window.event);
-				var row = Element.getParentByTagName(e.target || e.srcElement, 'tr');
-				if (row) {
-					row = $(row);
-					if (e.type == 'mouseover')
-						row.addClass(attrs.highlightClass);
-					else
-						row.removeClass(attrs.highlightClass);
-				}
-			};
-			for (var i=0; i<this.tbody.rows.length; i++) {
-				var row = $(this.tbody.rows[i]);
-				if (attrs.rowClass) {
-					if (attrs.alternateRowClass && ((i+1)%2) == 0)
-						row.addClass(attrs.alternateRowClass);
-					else
-						row.addClass(attrs.rowClass);
-				}
-				if (attrs.highlightClass) {
-					Event.addListener(row, 'mouseover', highlight);
-					Event.addListener(row, 'mouseout', highlight);
-				}
-				if (attrs.selectable)
-					row.style.cursor = 'pointer';
-			}
-		}
+		this._setupRows();
 		// setup sort types
 		var toDate = function(v) {
 			var d = Date.fromString(v);
@@ -184,6 +157,30 @@ DataTable.prototype.setup = function() {
 		this.addSortType('ISTRING', toUpper);
 		DataTable.instances[attrs.id] = this;
 		this.raiseEvent('init');
+	}
+};
+
+/**
+ * Refreshes sorting and scrolling behaviors.
+ * This method should be used when the contents
+ * of the table are dinamically changed.
+ * @type void
+ */
+DataTable.prototype.reset = function() {
+	this._setupRows();
+	// reset sorting
+	if (this.attributes.sortable) {
+		var headers = this.thead.rows[0].cells;
+		if (this.sortIdx != null) {
+			headers[this.sortIdx].lastChild.style.visibility = 'hidden';
+			this.sortIdx = idx;
+		}
+		this.desc = null;
+	}
+	// refresh size and scroll bars
+	if (this.attributes.scrollable) {
+		this._onResize();
+		this._setupScroll();
 	}
 };
 
@@ -270,7 +267,7 @@ DataTable.prototype.getNextRow = function(row) {
 DataTable.prototype.sortHandler = function(e) {
 	var ev = $EV(e);
 	ev.stop();
-	var cell = ev.findElement('td');
+	var cell = ev.target;
 	if (cell) {
 		var idx = null;
 		if (PHP2Go.browser.ie) {
@@ -499,32 +496,84 @@ DataTable.prototype.selectRowUI = function(row, b) {
 };
 
 /**
+ * Configures CSS classes for all table rows
+ * @access private
+ * @type void
+ */
+DataTable.prototype._setupRows = function() {
+	if (this.tbody && this.tbody.rows.length > 0) {
+		var attrs = this.attributes;
+		var highlight = function(e) {
+			e = (e || window.event);
+			var row = Element.getParentByTagName(e.target || e.srcElement, 'tr');
+			if (row) {
+				row = $(row);
+				if (e.type == 'mouseover')
+					row.addClass(attrs.highlightClass);
+				else
+					row.removeClass(attrs.highlightClass);
+			}
+		};
+		for (var i=0; i<this.tbody.rows.length; i++) {
+			var row = $(this.tbody.rows[i]);
+			if (attrs.rowClass) {
+				if (attrs.alternateRowClass && ((i+1)%2) == 0)
+					row.addClass(attrs.alternateRowClass);
+				else
+					row.addClass(attrs.rowClass);
+			}
+			if (!row.dtHighlight && attrs.highlightClass) {
+				Event.addListener(row, 'mouseover', highlight);
+				Event.addListener(row, 'mouseout', highlight);
+				row.dtHighlight = true;
+			}
+			if (attrs.selectable)
+				row.style.cursor = 'pointer';
+		}
+	}	
+};
+
+/**
  * Adds scrollable behavior on the data table
  * @access private
  * @type void
  */
-DataTable.prototype._setScrollable = function() {
+DataTable.prototype._setupScroll = function() {
 	var tbl = this.table, head = this.thead, body = this.tbody;
-	var ht = null, border = parseInt(tbl.border, 10);
-	// clone table, move head
-	ht = tbl.cloneNode(false);
-	(tbl.id) && (ht.id += 'head');
-	head.setParentNode(ht);
-	tbl.parentNode.insertBefore(ht, tbl);
-	tbl.head = ht;
+	var border = parseInt(tbl.border || 0, 10);	
+	var spacing = parseInt(tbl.cellSpacing || 0, 10);
+	//var offset = (border*2)+(spacing*2);
+	if (!tbl.head) {
+		// create table, move head
+		var ht = $N('table');
+		ht.cellPadding = tbl.cellPadding || 0;
+		ht.cellSpacing = tbl.cellSpacing || 0;
+		ht.border = tbl.border || 0;
+		ht.className = tbl.className || '';
+		ht.style.width = tbl.getDimensions().width + 'px';
+		(tbl.id) && (ht.id += 'head');
+		head.setParentNode(ht);
+		tbl.parentNode.insertBefore(ht, tbl);
+		tbl.head = ht;
+	}
 	// adjust head cells
 	if (head.rows.length > 0 && body.rows.length > 0 && head.rows[0].cells.length == body.rows[0].cells.length) {
 		for (var i=0,s=body.rows[0].cells.length; i<s; i++) {
-			var wid = Element.getDimensions(body.rows[0].cells[i], Element.CONTENT_BOX).width;
-			head.rows[0].cells[i].style.width = (wid-border) + 'px';
+			var th = head.rows[0].cells[i];
+			var wid = Element.getDimensions(body.rows[0].cells[i]).width;
+			var hb = Element.getBorderBox(th).width;
+			var hp = Element.getPaddingBox(th).width;
+			th.style.width = (wid-hb-hp) + 'px';
 		}
 	}
-	// scroll container
-	var cont = $N('div', tbl.parentNode);
-	tbl.setParentNode(cont);
-	this._onResize();
-	if (!this.attributes.height)
-		Event.addListener(window, 'resize', this._onResize.bind(this));
+	if (!tbl.cont) {
+		// scroll container
+		tbl.cont = $N('div', tbl.parentNode);
+		tbl.setParentNode(tbl.cont);
+		this._onResize();
+		if (!this.attributes.maxHeight)
+			Event.addListener(window, 'resize', PHP2Go.method(this, '_onResize'));
+	}	
 };
 
 /**
@@ -536,11 +585,11 @@ DataTable.prototype._onResize = function() {
 	var cont = this.table.parentNode;
 	var sb = (PHP2Go.browser.ie ? 16 : 16);
 	var tbl = this.table, tblPos = tbl.getPosition();
-	var tblSize = tbl.getDimensions(), maxHeight = (this.attributes.height || Window.size().height);
-	if ((tblPos.y + tblSize.height) > maxHeight) {
+	var tblSize = tbl.getDimensions(), maxHeight = (this.attributes.maxHeight || Window.size().height-tblPos.y);
+	if (tblSize.height > maxHeight) {
 		cont.setStyle({
 			width: (tblSize.width + sb) + 'px',
-			height: (maxHeight - tblPos.y - sb) + 'px',
+			height: (maxHeight - sb) + 'px',
 			overflowY: 'scroll'
 		});
 	} else {
