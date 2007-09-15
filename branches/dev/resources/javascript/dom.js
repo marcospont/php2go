@@ -438,10 +438,9 @@ Element.getPosition = function(elm, tbt) {
  * The results are returned as an object,
  * containing 2 properties: width and height
  * @param {Object} elm Element
- * @param {Number} tbt Box type (0, 1, 2 or 3)
  * @type Object
  */
-Element.getDimensions = function(elm, tbt) {
+Element.getDimensions = function(elm) {
 	var elm = $(elm), d = {width: 0, height: 0};
 	if (elm) {
 		if (elm.getComputedStyle('display') != 'none') {
@@ -460,23 +459,43 @@ Element.getDimensions = function(elm, tbt) {
 				d.height = elm.clientHeight;
 			});
 		}
-		if (tbt >= 0 && tbt <= 3) {
-			var nbt = (document.getBoxObjectFor ? 1 : 2);
-			var tp = Object.toPixels, extents = ['padding', 'border', 'margin'];
-			if (nbt > tbt) {
-				for (var i=tbt; i<nbt; i++) {
-					d.width -= tp(elm.getComputedStyle(extents[i] + '-left')) + tp(elm.getComputedStyle(extents[i] + '-right'));
-					d.height -= tp(elm.getComputedStyle(extents[i] + '-top')) + tp(elm.getComputedStyle(extents[i] + '-bottom'));
-				}
-			} else if (tbt > nbt) {
-				for (var i=tbt; i>nbt; --i) {
-					d.width -= tp(elm.getComputedStyle(extents[i-1] + '-left')) + tp(elm.getComputedStyle(extents[i-1] + '-right'));
-					d.height -= tp(elm.getComputedStyle(extents[i-1] + '-top')) + tp(elm.getComputedStyle(extents[i-1] + '-bottom'));
-				}
-			}
-		}
 	}
 	return d;
+};
+
+/**
+ * Get an element's border box
+ * @param {Object} elm Element
+ * @type Object
+ */
+Element.getBorderBox = function(elm) {	
+	if (elm = $(elm)) {
+		var self = Element.getBorderBox;
+		self.getSide = self.getSide || function(node, side) {
+			return (node.getComputedStyle('border-' + side + '-style') == 'none' ? 0 : Object.toPixels(node.getComputedStyle('border-' + side + '-width')));			
+		};
+		return {
+			width: self.getSide(elm, 'left') + self.getSide(elm, 'right'),
+			height: self.getSide(elm, 'top') + self.getSide(elm, 'bottom')
+		};
+	}
+	return {width: 0, height: 0};
+};
+
+/**
+ * Get an element's padding box
+ * @param {Object} elm Element
+ * @type Object
+ */
+Element.getPaddingBox = function(elm) {
+	if (elm = $(elm)) {
+		var tp = Object.toPixels;
+		return {
+			width: tp(elm.getComputedStyle('padding-left')) + tp(elm.getComputedStyle('padding-right')),
+			height: tp(elm.getComputedStyle('padding-top')) + tp(elm.getComputedStyle('padding-bottom'))
+		};
+	}
+	return {width: 0, height: 0};
 };
 
 /**
