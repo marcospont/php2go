@@ -173,7 +173,7 @@ DataTable.prototype.reset = function() {
 		var headers = this.thead.rows[0].cells;
 		if (this.sortIdx != null) {
 			headers[this.sortIdx].lastChild.style.visibility = 'hidden';
-			this.sortIdx = idx;
+			this.sortIdx = null;
 		}
 		this.desc = null;
 	}
