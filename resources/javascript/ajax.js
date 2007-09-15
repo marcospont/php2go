@@ -103,11 +103,13 @@ Ajax.getTransport = function() {
  * @param {String} name Event name
  * @param {Function} func Listener function
  * @param {Object} scope Listener scope
+ * @param {Bool} unshift Add listener on the top of the stack
  * @type void
  */
-Ajax.bind = function(name, func, scope) {
+Ajax.bind = function(name, func, scope, unshift) {
+	unshift = !!unshift;
 	Ajax.listeners[name] = Ajax.listeners[name] || [];
-	Ajax.listeners[name].push([func, scope || null]);
+	Ajax.listeners[name][unshift ? 'unshift' : 'push']([func, scope || null]);
 };
 
 /**
@@ -151,11 +153,13 @@ Ajax.transactionCount = 0;
  * @param {String} name Event name
  * @param {Function} func Listener function
  * @param {Object} scope Listener scope
+ * @param {Bool} unshift Add the listener on the top of the stack
  * @type void
  */
-Ajax.prototype.bind = function(name, func, scope) {
+Ajax.prototype.bind = function(name, func, scope, unshift) {
+	unshift = !!unshift;
 	this.listeners[name] = this.listeners[name] || [];
-	this.listeners[name].push([func, scope || null]);
+	this.listeners[name][unshift ? 'unshift' : 'push']([func, scope || null]);
 };
 
 /**
@@ -912,7 +916,7 @@ AjaxUpdater.prototype.update = function(response) {
  */
 AjaxService = function(uri, args) {
 	this.AjaxRequest(uri, args);
-	this.bind('onJSONResult', this.parseResponse);
+	this.bind('onJSONResult', this.parseResponse, null, true);
 	this.setHandler(args.handler);
 };
 AjaxService.extend(AjaxRequest, 'AjaxRequest');
