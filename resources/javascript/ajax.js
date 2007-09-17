@@ -761,11 +761,9 @@ AjaxResponse.prototype.run = function() {
 					elm.setStyle(p, item.arg[p]);
 				break;
 			case 'create' :
-				var elm = $N(item.arg.tag, $(item.arg.parent), item.arg.styles, item.arg.cont);
-				if (item.id)
-					elm.id = item.id;
-				for (var p in item.arg.attrs)
-					elm.setAttribute(p, item.arg.attrs[p]);
+				item.arg.attrs = item.arg.attrs || {};
+				(item.id) && (item.arg.attrs.id = id);
+				$N(item.arg.tag, $(item.arg.parent), item.arg.styles, item.arg.cont, item.arg.attrs);
 				break;
 			case 'clear' :
 				$(item.id).clear();
