@@ -1301,8 +1301,8 @@ var IFrame = {
 };
 
 /**
- * The Report singleton is used by php2go.data.Report, responsible
- * for building data sets splitted in multiple pages with navigation
+ * The Report singleton is used by php2go.data.Report, the class that
+ * builds data sets splitted into multiple pages with navigation
  * @class Report
  */
 var Report = {
@@ -1548,12 +1548,29 @@ $E = function(elm) {
  * @type Object
  */
 $N = function(name, parent, style, html, attrs) {
-	var elm = $E(document.createElement(name.toLowerCase()));
-	elm.setStyle(style);
-	(parent) && (parent.appendChild(elm));
-	(html) && (elm.innerHTML = html);
-	(attrs) && (Object.extend(elm, attrs));
-	return elm;
-};
+	var cache = {};
+	return function(name, parent, style, html, attrs) {
+		name = name.toLowerCase();
+		attrs = attrs || {};
+		var elm = null;
+		if (PHP2Go.browser.ie && (attrs.name || attrs.type)) {
+			name = '<' + name +
+					(attrs.name ? ' name="' + attrs.name + '"' : '') +
+					(attrs.type ? ' type="' + attrs.type + '"' : '') +
+					'>';
+			delete attrs.name;
+			delete attrs.type;
+			elm = $E(document.createElement(name));
+		} else {
+			if (!cache[name]) cache[name] = $E(document.createElement(name));
+			elm = cache[name].cloneNode(false);
+		}
+		(style) && (elm.setStyle(style));
+		(parent) && (parent.appendChild(elm));
+		(html) && (elm.innerHTML = html);
+		(attrs) && (elm.writeAttribute(attrs));
+		return elm;
+	};
+}();
 
 PHP2Go.load();

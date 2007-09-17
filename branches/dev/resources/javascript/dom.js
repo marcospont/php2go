@@ -63,31 +63,6 @@ Element.extend = function(obj) {
 };
 
 /**
- * Defines a trigger function that runs when
- * a given property of an element is changed
- * @param {Object} elm Element
- * @param {String} property Property name
- * @param {Function} func Trigger function
- * @type void
- */
-Element.watch = function(elm, property, func) {
-	if (elm = $(elm)) {
-		var setter = '_set_' + property;
-		elm[setter] = func;
-		if (elm.__defineSetter__) {
-			elm.__defineSetter__(property, function(val) {
-				elm[setter](val);
-			});
-		} else {
-			elm.attachEvent('onpropertychange', function() {
-				if (event.propertyName == property)
-					event.srcElement[setter](event.srcElement[property]);
-			});
-		}
-	}
-};
-
-/**
  * Checks if an element has a given attribute
  * @param {Object} elm Element
  * @param {String} attr Attribute name
@@ -101,6 +76,56 @@ Element.hasAttribute = function(elm, attr) {
 		return (node && node.specified);
 	}
 	return false;
+};
+
+/**
+ * Reads the value of an element's attribute
+ * @param {Object} elm Element
+ * @param {String} attr Attribute name
+ * @type Object
+ */
+Element.readAttribute = function(elm, attr) {
+	if (elm = $(elm)) {
+		var trans = Element.translation.attrs, tn, flag = 0, node;
+		if (tn = trans.names[attr])
+			return elm[tn];
+		if (!PHP2Go.browser.ie || (flag = trans.iflag[attr]))
+			return elm.getAttribute(attr, flag);
+		if (node = elm.attributes[attr])
+			return node.nodeValue;
+	}
+	return null;
+};
+
+/**
+ * Writes one or more attributes on a given element
+ * @param {Object} elm Element
+ * @param {Object} attr Attribute name or attributes hash
+ * @param {Object} value Attribute value
+ * @type Object
+ */
+Element.writeAttribute = function(elm, attr, value) {
+	if (elm = $(elm)) {
+		var trans = Element.translation.attrs;
+		var attrs = attr;
+		if (Object.isString(attr)) {
+			attrs = {};
+			attrs[attr] = value;
+		}
+		for (var attr in attrs) {
+			var tn = trans.names[attr];
+			if (tn) {
+				elm[tn] = attrs[attr];
+			} else if (trans.write[attr]) {
+				trans.write[attr](elm, attrs[attr]);
+			} else if (attrs[attr] === null) {
+				elm.removeAttribute(attr);
+			} else {
+				elm.setAttribute(attr, attrs[attr]);
+			}
+		}
+	}
+	return elm;
 };
 
 /**
@@ -468,11 +493,11 @@ Element.getDimensions = function(elm) {
  * @param {Object} elm Element
  * @type Object
  */
-Element.getBorderBox = function(elm) {	
+Element.getBorderBox = function(elm) {
 	if (elm = $(elm)) {
 		var self = Element.getBorderBox;
 		self.getSide = self.getSide || function(node, side) {
-			return (node.getComputedStyle('border-' + side + '-style') == 'none' ? 0 : Object.toPixels(node.getComputedStyle('border-' + side + '-width')));			
+			return (node.getComputedStyle('border-' + side + '-style') == 'none' ? 0 : Object.toPixels(node.getComputedStyle('border-' + side + '-width')));
 		};
 		return {
 			width: self.getSide(elm, 'left') + self.getSide(elm, 'right'),
@@ -1136,6 +1161,42 @@ Element.translation = {
 	    TH : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
 	    TD : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
 	    SELECT : ['<select>', '</select>', 1]
+	},
+	attrs : {
+		names : {
+			'class' : 'className',
+			'for' : 'htmlFor',
+			'colspan' : 'colSpan',
+			'rowspan' : 'rowSpan',
+			'valign' : 'vAlign',
+			'cellspacing' : 'cellSpacing',
+			'cellpadding' : 'cellPadding',
+			'enctype' : 'encType',
+			'accesskey' : 'accessKey',
+			'tabindex' : 'tabIndex',
+			'maxlength' : 'maxLength',
+			'readonly' : 'readOnly',
+			'frameborder' : 'frameBorder',
+			'value' : 'value',
+			'disabled' : 'disabled',
+			'checked' : 'checked',
+			'multiple' : 'multiple',
+			'selected' : 'selected',
+			'title' : (PHP2Go.browser.ie || PHP2Go.browser.opera ? 'title' : null)
+		},
+		iflag : (PHP2Go.browser.ie ? {
+			src: 2, href: 2, type: 2
+		} : { }),
+		read : {
+			'style' : function(elm) {
+				return elm.style.cssText.toLowerCase();
+			}
+		},
+		write : {
+			'style' : function(elm, value) {
+				elm.style.cssText = (value ? value : '');
+			}
+		}
 	},
 	div : document.createElement('div'),
 	createFromHTML : function(tn, html) {
