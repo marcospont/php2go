@@ -107,8 +107,16 @@ EditorField = function(fld, opts) {
 	 * @type Selection
 	 */
 	this.selection = (PHP2Go.browser.ie ? new Selection(this.document) : new Selection(this.iframe.contentDocument, this.iframe.contentWindow));
+	this.setup();
 };
 EditorField.extend(ComponentField, 'ComponentField');
+
+/**
+ * Holds existent EditorField instances,
+ * indexed by ID.
+ * @type Object
+ */
+EditorField.instances = {};
 
 /**
  * Performs all the setup routines of the HTML editor. This method
@@ -153,6 +161,7 @@ EditorField.prototype.setup = function() {
 	});
 	if (this.config.readOnly)
 		this.setDisabled(true);
+	EditorField.instances[this.fld.id] = this;
 };
 
 /**
@@ -286,17 +295,6 @@ EditorField.prototype.setupEvents = function() {
 	if (this.config.resizeMode != 'none') {
 		Event.addListener($(this.name + '_resize'), 'mousedown', function(e) {
 			self.setResizing($EV(e), true);
-		});
-	}
-	// internal event listeners
-	if (!PHP2Go.browser.ie) {
-		this.addEventListener('afterpaste', function() {
-			var self = this;
-			setTimeout(function() {
-				var v = self.getValue();
-				self.execCommand('selectall');
-				self.insertHTML(self.cleanHTML(v));
-			}, 10);
 		});
 	}
 };
@@ -520,7 +518,7 @@ EditorField.prototype.execCommand = function(cmd, val, ev) {
 					ev.stop();
 				} else {
 					this.document.execCommand(cmd, false, val);
-					this.raiseEvent('afterpaste');
+					this.paste();
 				}
 				break;
 			default :
@@ -583,7 +581,7 @@ EditorField.prototype.keyHandler = function(e) {
 			case 'u' : !e.shiftKey && (cmd = 'underline'); break;
 			case 'v' :
 				if (!e.shiftKey) {
-					PHP2Go.browser.ie ? (cmd = 'paste') : (this.raiseEvent('afterpaste'));
+					PHP2Go.browser.ie ? (cmd = 'paste') : (this.paste());
 				}
 				break;
 			case 'x' : !e.shiftKey && PHP2Go.browser.ie && (cmd = 'cut'); break;
@@ -762,22 +760,33 @@ EditorField.prototype.insertImage = function() {
  * @type void
  */
 EditorField.prototype.paste = function() {
-	var div = $(this.name + '_pasteDiv');
-	if (!div) {
-		div = $N('div', document.body, {
-			visibility : 'hidden',
-			overflow : 'hidden',
-			position : 'absolute',
-			width : 1,
-			height : 1
-		});
-		div.id = this.name + '_pasteDiv';
+	if (PHP2Go.browser.ie) {
+		var div = $(this.name + '_pasteDiv');
+		if (!div) {
+			div = $N('div', document.body, {
+				visibility : 'hidden',
+				overflow : 'hidden',
+				position : 'absolute',
+				width : 1,
+				height : 1
+			});
+			div.id = this.name + '_pasteDiv';
+		}
+		div.innerHTML = '';
+		range = document.body.createTextRange();
+		range.moveToElementText(div);
+		range.execCommand('paste');
+		this.insertHTML(this.cleanHTML(div.innerHTML));
+		this.raiseEvent('paste');
+	} else {
+		var self = this;
+		setTimeout(function() {
+			var v = self.getValue();
+			self.execCommand('selectall');
+			self.insertHTML(self.cleanHTML(v));
+			self.raiseEvent('paste');
+		}, 10);
 	}
-	div.innerHTML = '';
-	range = document.body.createTextRange();
-	range.moveToElementText(div);
-	range.execCommand('paste');
-	this.insertHTML(this.cleanHTML(div.innerHTML));
 };
 
 /**
