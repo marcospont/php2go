@@ -47,7 +47,7 @@ MultiColumnLookupField = function(id, height, style) {
 	this.text = $(id + '_text');
 	this.btn = $(id + '_button');
 	this.tblContainer = $(id + '_tableContainer');
-	this.tbl = this.tblContainer.getElementsByTagName('table')[0];
+	this.tbl = $E(this.tblContainer.getElementsByTagName('table')[0]);
 	this.height = height || 150;
 	this.style = {
 		normal: (style || {}).normal || 'mclookupNormal',
@@ -304,7 +304,7 @@ MultiColumnLookupField.prototype.toggleDisplay = function() {
 		// move to selected option
 		if (this.selectedIndex >= 1)
 			this.tbl.rows[this.selectedIndex].scrollIntoView(false);
-		// add document listener		
+		// add document listener
 		Event.addListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 	} else {
 		this.tblContainer.hide();
