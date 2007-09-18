@@ -410,8 +410,8 @@ Function.prototype.methodize = function() {
 	if (this._methodized)
 		return this._methodized;
 	var self = this;
-	return this._methodized = function() {
-		return self.apply(null, [this].concat($A(arguments)));
+	return this._methodized = function(bind) {
+		return self.apply(bind, Array.prototype.slice.call(arguments, 1));
 	};
 };
 
@@ -438,6 +438,16 @@ Function.prototype.extend = function(parent, propName) {
 		if (parent.prototype.constructor == Object.prototype.constructor)
 			parent.prototype.constructor = parent;
 	}
+};
+
+/**
+ * Adds one or more implementations to the
+ * class specificied by the function
+ * @type void
+ */
+Function.prototype.implement = function() {
+	for (var i=0,l=arguments.length; i<l; i++)
+		Object.extend(this.prototype, arguments[i], false);
 };
 
 /**
@@ -1340,6 +1350,59 @@ var Report = {
 };
 
 /**
+ * Observable interface. The classes that implement
+ * it will support registration of event listeners
+ * and events dispatch.
+ * @class Observable
+ */
+var Observable = {
+	/**
+	 * Event listeners
+	 * @type Object
+	 */
+	listeners : {},
+	/**
+	 * Adds an event listener
+	 * @param {String} name Event name
+	 * @param {Function} func Handler function
+	 * @param {Object} scope Handler scope
+	 * @param {Boolean} unshift Allows to add the handler in the first position of the stack
+	 * @type void
+	 */
+	addEventListener : function(name, func, scope, unshift) {
+		unshift = !!unshift;
+		this.listeners[name] = this.listeners[name] || [];
+		this.listeners[name][(unshift ? 'unshift' : 'push')]([func, scope]);
+	},
+	/**
+	 * Removes an event listener from the chain
+	 * @param {String} name Event name
+	 * @param {Function} func Handler function
+	 * @param {Object} scope Handler scope
+	 * @type void
+	 */
+	removeEventListener : function(name, func, scope) {
+		if (this.listeners[name])
+			this.listeners[name].remove([func, scope]);
+	},
+	/**
+	 * Raises an event
+	 * @param {String} name Event name
+	 * @param {Object} args Event arguments
+	 * @type Boolean
+	 */
+	raiseEvent : function(name, args) {
+		args = args || [];
+		var funcs = this.listeners[name] || [];
+		for (var i=0,l=funcs.length; i<l; i++) {
+			if (funcs[i][0].apply(funcs[i][1] || this, args) === false)
+				return false;
+		}
+		return true;
+	}
+};
+
+/**
  * The Widget class is the base class of all widgets.
  * @param {Object} attrs Widget's attributes
  * @param {Function} func Setup function
@@ -1350,16 +1413,11 @@ Widget = function(attrs, func) {
 	 * Widget's attributes
 	 * @type Object
 	 */
-	this.attributes = {};
-	/**
-	 * Widget's event listeners
-	 * @type Object
-	 */
-	this.listeners = {};
-	this.loadAttributes(attrs);
+	this.attributes = (attrs ? Object.extend({}, attrs) : {});
 	if (Object.isFunc(func))
 		func(this);
 };
+Widget.implement(Observable);
 
 /**
  * @ignore
@@ -1389,43 +1447,6 @@ Widget.prototype.hasAttributes = function() {
 };
 
 /**
- * Loads the widget's attributes
- * @param {Object} attrs Widget attributes
- */
-Widget.prototype.loadAttributes = function(attrs) {
-	for (var prop in attrs) {
-		this.attributes[prop] = attrs[prop];
-	}
-};
-
-/**
- * Register a new event listener in the widget
- * @param {String} name Event name
- * @param {Function} func Handler function
- * @type void
- */
-Widget.prototype.addEventListener = function(name, func) {
-	this.listeners[name] = this.listeners[name] || [];
-	this.listeners[name].push(func.bind(this));
-};
-
-/**
- * Raises an event in the widget. Call all
- * handlers bound to the event
- * @param {String} name Event name
- * @param {Array} args Event arguments
- * @type void
- */
-Widget.prototype.raiseEvent = function(name, args) {
-	var funcs = this.listeners[name] || [];
-	for (var i=0; i<funcs.length; i++) {
-		if (funcs[i](args) === false)
-			return false;
-	}
-	return true;
-};
-
-/**
  * Finds one or more objects by their ids.
  * If one argument is passed, the function will return
  * an object or null if not found. If more than one argument
@@ -1439,7 +1460,7 @@ $ = function() {
 	if (a.length == 1) {
 		elm = a[0];
 		if (typeof(elm) == 'string')
-			elm = (d.getElementById ? $E(d.getElementById(elm)) : (d.all ? $E(d.all[elm]) : null));
+			elm = $E(d.getElementById(elm));
 		else
 			elm = $E(elm);
 		return elm;
@@ -1448,7 +1469,7 @@ $ = function() {
 	for (var i=0, res=[], len=a.length; i<len; i++) {
 		elm = a[i];
 		if (typeof(elm) == 'string')
-			elm = (d.getElementById ? $E(d.getElementById(elm)) : (d.all ? $E(d.all[elm]) : null));
+			elm = $E(d.getElementById(elm));
 		else
 			elm = $E(elm);
 		res.push(elm);
@@ -1460,117 +1481,12 @@ $ = function() {
  * Empty function
  * @type void
  */
-$EF = function() {
-};
+$EF = function() { };
 
 /**
  * Identity function
  * @type Object
  */
-$IF = function(x) {
-	return x;
-};
-
-/**
- * This function returns an array object from a given
- * iterable element, or object that implements the
- * toArray method
- * @param {Object} o Iterable object
- * @type Hash
- */
-$A = function(o) {
-	if (o && o.constructor == Array)
-		return o;
-	return Array.valueOf(o);
-};
-
-/**
- * Convert an iterable object into an object
- * that can be iterated as a collection. The second
- * parameter indicates if the iterable must be handled
- * as an associative collection (Hash) or an array
- * @param {Object} o Iterable object
- * @param {Boolean} assoc Indicates if the iterable object is associative or not
- * @type Object
- */
-$C = function(o, assoc) {
-	assoc = !!assoc;
-	if (o.walk && o.each)
-		return o;
-	else if (!o)
-		o = (assoc ? {} : []);
-	if (assoc) {
-		o = {data:o};
-		o.each = Hash.each;
-	} else {
-		o.each = Array.prototype.each;
-	}
-	Object.extend(o, Collection, false);
-	return o;
-};
-
-/**
- * This function returns a hash object
- * from a given iterable element
- * @param {Object} obj Iterable object
- * @type Hash
- */
-$H = function(obj) {
-	return Hash.valueOf(obj);
-};
-
-/**
- * Convert an HTML element to access all methods
- * of Element class as its native methods. The
- * objects are converted only once. In browsers with
- * native HTMLElement support, this function will
- * directly return the passed object
- * @param {Object} elm Object to be converted
- * @type Object
- */
-$E = function(elm) {
-	if (!elm || !elm.tagName || elm.nodeType == 3 || elm._extended || elm == window || PHP2Go.nativeElementExtensions)
-		return elm;
-	Element.extend(elm);
-	elm._extended = $EF;
-	return elm;
-};
-
-/**
- * Utility function to create DOM element nodes. The
- * element can be initialized with a set of style
- * properties and initial HTML contents
- * @param {String} name Tag name
- * @param {Object} parent Parent node
- * @param {Object} style Style properties
- * @param {String} innerHTML Inner HTML
- * @param {Object} attrs Attributes
- * @type Object
- */
-$N = function(name, parent, style, html, attrs) {
-	var cache = {};
-	return function(name, parent, style, html, attrs) {
-		name = name.toLowerCase();
-		attrs = attrs || {};
-		var elm = null;
-		if (PHP2Go.browser.ie && (attrs.name || attrs.type)) {
-			name = '<' + name +
-					(attrs.name ? ' name="' + attrs.name + '"' : '') +
-					(attrs.type ? ' type="' + attrs.type + '"' : '') +
-					'>';
-			delete attrs.name;
-			delete attrs.type;
-			elm = $E(document.createElement(name));
-		} else {
-			if (!cache[name]) cache[name] = $E(document.createElement(name));
-			elm = cache[name].cloneNode(false);
-		}
-		(style) && (elm.setStyle(style));
-		(parent) && (parent.appendChild(elm));
-		(html) && (elm.innerHTML = html);
-		(attrs) && (elm.writeAttribute(attrs));
-		return elm;
-	};
-}();
+$IF = function(x) { return x; };
 
 PHP2Go.load();
