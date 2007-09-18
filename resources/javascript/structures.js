@@ -239,6 +239,31 @@ var Collection = {
 };
 
 /**
+ * Convert an iterable object into an object
+ * that can be iterated as a collection. The second
+ * parameter indicates if the iterable must be handled
+ * as an associative collection (Hash) or an array
+ * @param {Object} o Iterable object
+ * @param {Boolean} assoc Indicates if the iterable object is associative or not
+ * @type Object
+ */
+$C = function(o, assoc) {
+	assoc = !!assoc;
+	if (o.walk && o.each)
+		return o;
+	else if (!o)
+		o = (assoc ? {} : []);
+	if (assoc) {
+		o = {data:o};
+		o.each = Hash.each;
+	} else {
+		o.each = Array.prototype.each;
+	}
+	Object.extend(o, Collection, false);
+	return o;
+};
+
+/**
  * The Hash class contains methods to handle
  * hash structures, which are collections of
  * key:value pairs
@@ -363,24 +388,29 @@ var Hash = {
 		return '{' + this.map(function(pair) {
 			return pair.key + " : " + Object.serialize(pair.value);
 		}).join(', ') + '}';
+	},
+	/**
+	 * Builds a Hash object based on an iterable value
+	 * @param {Object} iterable Iterable object
+	 * @type Hash
+	 */
+	valueOf : function(iterable) {
+		var h = new Object();
+		h.data = iterable || {};
+		Object.extend(h, Hash);
+		return h;
 	}
 };
-
-/**
- * Add Collection class methods
- */
 Object.extend(Hash, Collection);
 
 /**
- * Builds a Hash object based on an iterable value
- * @param {Object} iterable Iterable object
+ * This function returns a hash object
+ * from a given iterable element
+ * @param {Object} obj Iterable object
  * @type Hash
  */
-Hash.valueOf = function(iterable) {
-	var h = new Object();
-	h.data = iterable || {};
-	Object.extend(h, Hash);
-	return h;
+$H = function(obj) {
+	return Hash.valueOf(obj);
 };
 
 /**
@@ -547,18 +577,21 @@ Array.prototype.last = function() {
 };
 
 /**
- * Removes an element of the array given its index.
- * Indexes which are invalid or out of bounds will be ignored
- * @param {Number} idx Element index to remove
+ * Removes all occurrences of an item from the array
+ * @param {Object} item Array item
  * @type void
  */
-Array.prototype.remove = function(idx) {
-	idx = parseInt(idx, 10);
-	if (!isNaN(idx) && idx >= 0 && idx < this.length) {
-		for (var i=idx+1; i<this.length; i++)
-			this[i-1] = this[i];
-		this.length--;
+Array.prototype.remove = function(item) {
+	var i = 0, len = this.length;
+	while (i < len) {
+		if (this[i] === item) {
+			this.splice(i, 1);
+			len--;
+		} else {
+			i++;
+		}
 	}
+	return this;
 };
 
 /**
@@ -595,12 +628,22 @@ Array.prototype.serialize = function() {
 	return '[' + this.map(Object.serialize).join(', ') + ']';
 };
 
-/**
- * Add Collection class methods
- */
-Object.extend(Array.prototype, Collection, false);
+Array.implement(Collection);
 if (Array.prototype.filter)
 	Array.prototype.accept = Array.prototype.filter;
+
+/**
+ * This function returns an array object from a given
+ * iterable element, or object that implements the
+ * toArray method
+ * @param {Object} o Iterable object
+ * @type Hash
+ */
+$A = function(o) {
+	if (o && o.constructor == Array)
+		return o;
+	return Array.valueOf(o);
+};
 
 PHP2Go.included[PHP2Go.baseUrl + 'structures.js'] = true;
 

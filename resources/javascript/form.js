@@ -986,24 +986,9 @@ ComponentField = function(fld, clsName) {
 	 * @type String
 	 */
 	this.componentClass = clsName;
-	/**
-	 * Component's event listeners
-	 * @type Object
-	 */
-	this.listeners = {};
 };
 ComponentField.extend(Field, 'Field');
-
-/**
- * Register a new event listener in the component
- * @param {String} name Event name
- * @param {Function} func Handler function
- * @type void
- */
-ComponentField.prototype.addEventListener = function(name, func) {
-	this.listeners[name] = this.listeners[name] || [];
-	this.listeners[name].push(func.bind(this));
-};
+ComponentField.implement(Observable);
 
 /**
  * Used to raise events inside the component. Searches
@@ -1014,11 +999,10 @@ ComponentField.prototype.addEventListener = function(name, func) {
  */
 ComponentField.prototype.raiseEvent = function(name, args) {
 	var funcs = this.listeners[name] || [];
-	for (var i=0; i<funcs.length; i++) {
-		funcs[i](args);
-	}
+	for (var i=0,l=funcs.length; i<l; i++)
+		funcs[i][0].apply(funcs[i][1] || this, [args || []]);
 	if (this.fld && Object.isFunc(this.fld['on'+name]))
-		this.fld['on'+name]();
+		this.fld['on'+name]({ type: name, srcElement: this.fld });
 };
 
 /**
