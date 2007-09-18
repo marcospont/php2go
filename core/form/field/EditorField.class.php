@@ -96,8 +96,8 @@ class EditorField extends FormField
 		$Tpl->assign('resizeMode', $this->attributes['RESIZEMODE']);
 		$Tpl->assign('width', (isset($this->attributes['WIDTH']) ? $this->attributes['WIDTH'] : EDITOR_DEFAULT_WIDTH));
 		$Tpl->assign('height', (isset($this->attributes['HEIGHT']) ? $this->attributes['HEIGHT'] : EDITOR_DEFAULT_HEIGHT));
-		$Tpl->assign('hiddenField', sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s />",
-				$this->id, $this->name, htmlspecialchars($this->value), $this->label, $this->attributes['DATASRC'], $this->attributes['DATAFLD']));
+		$Tpl->assign('hiddenField', sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\" title=\"%s\"%s%s%s />",
+				$this->id, $this->name, htmlspecialchars($this->value), $this->label, $this->attributes['DATASRC'], $this->attributes['DATAFLD'], $this->attributes['SCRIPT']));
 		$Tpl->assign(PHP2Go::getLangVal('EDITOR_VARS'));
 		$Tpl->assign('fontNames', array(
 			'arial,helvetica,sans-serif' => 'Arial',
@@ -224,7 +224,6 @@ class EditorField extends FormField
 	 * Prepares the component to be rendered
 	 */
 	function onPreRender() {
-		$this->listeners = array();
 		parent::onPreRender();
 		$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . 'form/editorfield.js');
 		$this->_Form->Document->addStyle(PHP2GO_CSS_PATH . 'colorpicker.css');
