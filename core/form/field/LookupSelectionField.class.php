@@ -96,7 +96,7 @@ class LookupSelectionField extends FormField
 		$this->htmlType = 'SELECT';
 		$this->composite = TRUE;
 		$this->searchable = FALSE;
-		$this->customEvents = array('onAdd', 'onRemove');
+		$this->customEvents = array('onadd', 'onremove');
 	}
 
 	/**
