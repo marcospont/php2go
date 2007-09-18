@@ -99,7 +99,7 @@ class EditSelectionField extends FormField
 		parent::FormField($Form, $child);
 		$this->composite = TRUE;
 		$this->searchable = FALSE;
-		$this->customEvents = array('onAdd', 'onRemove');
+		$this->customEvents = array('onadd', 'onremove');
 	}
 
 	/**
