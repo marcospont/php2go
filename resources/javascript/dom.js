@@ -38,12 +38,30 @@
 if (!PHP2Go.included[PHP2Go.baseUrl + 'dom.js']) {
 
 /**
- * The Element class contains methods to deal common
- * properties of page elements: attributes, stylesheet
- * properties, stylesheet class, ...
+ * The Element class contains methods that can be applied
+ * to any DOM element through the $ and $E functions
  * @class Element
  */
-Element = function() {
+Element = function(name, parent, style, html, attrs) {
+	name = name.toLowerCase(), attrs = attrs || {};
+	var elm = null;
+	if (PHP2Go.browser.ie && (attrs.name || attrs.type)) {
+		name = '<' + name +
+				(attrs.name ? ' name="' + attrs.name + '"' : '') +
+				(attrs.type ? ' type="' + attrs.type + '"' : '') +
+				'>';
+		delete attrs.name;
+		delete attrs.type;
+		elm = $E(document.createElement(name));
+	} else {
+		if (!Element.cache[name]) Element.cache[name] = $E(document.createElement(name));
+		elm = Element.cache[name].cloneNode(false);
+	}
+	(style) && (elm.setStyle(style));
+	(parent) && (parent.appendChild(elm));
+	(html) && (elm.innerHTML = html);
+	(attrs) && (elm.writeAttribute(attrs));
+	return elm;
 };
 
 /**
@@ -193,7 +211,7 @@ if (document.evaluate) {
 }
 
 /**
- * Define document.getElementsByClassName only when undefined
+ * Define document.getElementsByClassName only when not already present
  */
 if (!document.getElementsByClassName) {
 	document.getElementsByClassName = function(clsNames) {
@@ -234,13 +252,14 @@ Element.prototype.getParentNodes = function() {
  */
 Element.prototype.setParentNode = function(p) {
 	if (p = $(p)) {
-		if (this.parentNode) {
-			if (this.parentNode == p)
-				return this;
-			this.oldParent = this.parentNode;
-			return this.parentNode.removeChild(this);
+		var child = this;
+		if (child.parentNode) {
+			if (child.parentNode == p)
+				return child;
+			child.oldParent = child.parentNode;
+			child = this.parentNode.removeChild(child);
 		}
-		return p.appendChild(this);
+		return p.appendChild(child);
 	}
 	return null;
 };
@@ -386,11 +405,12 @@ Element.prototype.getDimensions = function() {
 			d.height = this.style.pixelHeight;
     	}
 	} else {
+		var self = this;
 		this.swapStyles({
 			position: 'absolute', visibility: 'hidden', display: (this.tagName.equalsIgnoreCase('div') ? 'block' : '')
 		}, function() {
-			d.width = this.clientWidth;
-			d.height = this.clientHeight;
+			d.width = self.clientWidth;
+			d.height = self.clientHeight;
 		});
 	}
 	return d;
@@ -838,9 +858,9 @@ Element.prototype.update = function(upd, evalScripts, useDom) {
 	if (PHP2Go.browser.ie && tag in tran.tags) {
 		while (this.firstChild)
 			this.removeChild(this.firstChild);
-		var frag = tran.createFromHTML(tag, upd.stripScripts());
+		var self = this, frag = tran.createFromHTML(tag, upd.stripScripts());
 		frag.walk(function(item, idx) {
-			this.appendChild(item);
+			self.appendChild(item);
 		});
 	} else if (useDom) {
 		var div = document.createElement('div');
@@ -948,6 +968,11 @@ Element.extend = function(props) {
 };
 
 /**
+ * @ignore
+ */
+Element.cache = {};
+
+/**
  * Content box
  * @type Number
  */
@@ -1030,6 +1055,7 @@ Element.translation = {
 	attrs : {
 		names : {
 			'class' : 'className',
+			'className' : 'className',
 			'for' : 'htmlFor',
 			'colspan' : 'colSpan',
 			'rowspan' : 'rowSpan',
@@ -1119,30 +1145,8 @@ $E = function(elm) {
  * @type Object
  */
 $N = function(name, parent, style, html, attrs) {
-	var cache = {};
-	return function(name, parent, style, html, attrs) {
-		name = name.toLowerCase();
-		attrs = attrs || {};
-		var elm = null;
-		if (PHP2Go.browser.ie && (attrs.name || attrs.type)) {
-			name = '<' + name +
-					(attrs.name ? ' name="' + attrs.name + '"' : '') +
-					(attrs.type ? ' type="' + attrs.type + '"' : '') +
-					'>';
-			delete attrs.name;
-			delete attrs.type;
-			elm = $E(document.createElement(name));
-		} else {
-			if (!cache[name]) cache[name] = $E(document.createElement(name));
-			elm = cache[name].cloneNode(false);
-		}
-		(style) && (elm.setStyle(style));
-		(parent) && (parent.appendChild(elm));
-		(html) && (elm.innerHTML = html);
-		(attrs) && (elm.writeAttribute(attrs));
-		return elm;
-	};
-}();
+	return new Element(name, parent, style, html, attrs);
+};
 
 /**
  * WCH stands for Windowed Controls Hider, which is a tool that

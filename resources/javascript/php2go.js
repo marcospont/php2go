@@ -411,7 +411,7 @@ Function.prototype.methodize = function() {
 		return this._methodized;
 	var self = this;
 	return this._methodized = function(bind) {
-		return self.apply(bind, Array.prototype.slice.call(arguments, 1));
+		return (bind ? self.apply(bind, Array.prototype.slice.call(arguments, 1)) : null);
 	};
 };
 

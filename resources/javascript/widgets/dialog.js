@@ -283,12 +283,14 @@ Dialog.prototype.setButtonAction = function(idx, fn) {
 Dialog.prototype.setContents = function(contents) {
 	this.contents = contents || this.contents;
 	if (this.contents) {
-		if (Object.isString(this.contents))
+		if (Object.isString(this.contents)) {
 			this.contentEl.update(this.contents);
-		else if (this.contents.tagName)
+		} else if (this.contents.tagName) {
+			this.contents = $E(this.contents);
 			this.contents.setParentNode(this.contentEl);
-		else if (this.contents.toString)
+		} else if (this.contents.toString) {
 			this.contentEl.update(this.contents.toString());
+		}
 	}
 };
 
@@ -330,8 +332,8 @@ Dialog.prototype.show = function() {
 	// place dialog
 	this.place();
 	// focus element
-	var focusEl = (this.focusId ? $(this.focusId) : null);
-	if (Element.isChildOf(focusEl, this.contentEl))
+	var focusEl = $(this.focusId);
+	if (focusEl && focusEl.isChildOf(this.contentEl))
 		focusEl.focus();
 	else if (this.defaultButton)
 		this.defaultButton.focus();
