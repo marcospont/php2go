@@ -47,12 +47,13 @@ var Collection = {
 	 * of the collection. Returns true if at least
 	 * one member satisfy the filter.
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @type Boolean
 	 */
-	some : function(filter) {
+	some : function(filter, scope) {
 		var res = false;
 		this.walk(function(item, idx) {
-			if (res = !!filter(item, idx))
+			if (res = !!filter.apply(scope || null, [item, idx]))
 				throw $break;
 		});
 		return res;
@@ -62,14 +63,16 @@ var Collection = {
 	 * of the collection. Returns true if all
 	 * member satisfy the filter.
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @type Boolean
 	 */
-	every : function(filter) {
+	every : function(filter, scope) {
 		var res = true;
 		this.walk(function(item, idx) {
-			res = res && !!filter(item, idx);
-			if (!res)
+			if (!filter.apply(scope || null, [item, idx])) {
+				res = false;
 				throw $break;
+			}
 		});
 		return res;
 	},
@@ -78,13 +81,14 @@ var Collection = {
 	 * elements of the collection. Returns back
 	 * an array of elements that satisfy the filter
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @return Array of members that satisfy the filter
 	 * @type Array
 	 */
-	accept : function(filter) {
+	accept : function(filter, scope) {
 		var res = [];
 		this.walk(function(item, idx) {
-			if (filter(item, idx))
+			if (filter.apply(scope || null, [item, idx]))
 				res.push(item);
 		});
 		return res;
@@ -94,13 +98,14 @@ var Collection = {
 	 * elements, returning back an array of elements
 	 * that DON'T satisfy the filter
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @return Array of members that don't satisfy the filter
 	 * @type Array
 	 */
-	reject : function(filter) {
+	reject : function(filter, scope) {
 		var res = [];
 		this.walk(function(item, idx) {
-			if (!filter(item, idx))
+			if (!filter.apply(scope || null, [item, idx]))
 				res.push(item);
 		});
 		return res;
@@ -110,12 +115,13 @@ var Collection = {
 	 * element, pushing the not null return values to
 	 * a resulting array
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @type Array
 	 */
-	valid : function(filter) {
+	valid : function(filter, scope) {
 		var res = [], v = null;
 		this.walk(function(item, idx) {
-			v = filter(item, idx);
+			v = filter.apply(scope || null, [item, idx]);
 			if (v != null)
 				res.push(v);
 		});
@@ -124,14 +130,14 @@ var Collection = {
 	/**
 	 * Collect the collection members that satisfy a
 	 * given regexp pattern. The return value of this
-	 * method is an array. Works better with string
+	 * method is an array. Works better on string
 	 * collections
 	 * @param {RegExp} pattern Regexp pattern
 	 * @type Array
 	 */
 	grep : function(pattern) {
 		var str, res = [];
-		var re = new RegExp(pattern);
+		var re = (Object.isString(pattern) ? new RegExp(pattern) : pattern);
 		this.walk(function(item, idx) {
 			str = (item.toString ? item.toString() : String(item));
 			if (str.match(pattern))
@@ -178,11 +184,12 @@ var Collection = {
 	 * Every iteration must return the new value of 'memo'
 	 * @param {Object} memo Object to inject collection members
 	 * @param {Function} iterator Iterator function
+	 * @param {Object} scope Scope object
 	 * @type Object
 	 */
-	inject : function(memo, iterator) {
+	inject : function(memo, iterator, scope) {
 		this.walk(function(item, idx) {
-			memo = iterator(memo, item, idx);
+			memo = iterator.apply(scope || null, [memo, item, idx]);
 		});
 		return memo;
 	},
@@ -194,7 +201,7 @@ var Collection = {
 	 * @type void
 	 */
 	invoke : function(method) {
-		var args = (arguments.length == 1 ? [] : $A(arguments).slice(1));
+		var args = Array.prototype.slice.call(arguments, 1);
 		return this.map(function(item, idx) {
 			(item[method]) && (item[method].apply(item, args));
 		});
@@ -203,14 +210,13 @@ var Collection = {
 	 * Returns a new copy of the collection applying
 	 * a given iterator to every element
 	 * @param {Function} iterator Iterator function
-	 * @param {Object} scope Iterator scope
+	 * @param {Object} scope Scope object
 	 * @type Array
 	 */
 	map : function(iterator, scope) {
-		iterator = (iterator ? iterator.bind(scope) : $IF);
 		var res = [];
 		this.walk(function(item, idx) {
-			res.push(iterator(item));
+			res.push(iterator.apply(scope || null, [item, idx]));
 		});
 		return res;
 	},
@@ -513,16 +519,16 @@ if (!Array.prototype.indexOf) {
 	 * Returns the index of the first occurrence of
 	 * the object inside array, or -1 if not found.
 	 * @param {Object} obj Object to be searched
-	 * @param {Number} i Start index
+	 * @param {Number} idx From index
 	 * @type Number
 	 */
-	Array.prototype.indexOf = function(obj, i) {
-		i || (i = 0);
-		var self = this;
-		if (i < 0)
-			i = self.length + i;
-		for (; i<self.length; i++)
-			if (self[i] === obj) return i;
+	Array.prototype.indexOf = function(obj, idx) {
+		var len = this.length;
+		var idx = (idx < 0 ? idx + len : idx || 0);
+		for (; idx < len; idx++) {
+			if (this[idx] === obj)
+				return idx;
+		}
 		return -1;
 	};
 }
@@ -532,13 +538,16 @@ if (!Array.prototype.lastIndexOf) {
 	 * Returns the index of the last occurrence of
 	 * an object inside the array, or -1 if not found
 	 * @param {Object} obj Object to be searched
-	 * @param {Number} i Start index
+	 * @param {Number} idx From index
 	 * @type Number
 	 */
-	Array.prototype.lastIndexOf = function(obj, i) {
-		i = (isNaN(i) ? this.length : (i < 0 ? this.length + i : i) + 1);
-		var p = this.slice(0, i).reverse().indexOf(obj);
-		return (p < 0 ? p : i - p - 1);
+	Array.prototype.lastIndexOf = function(obj, idx) {
+		var len = this.length;
+		var idx = (isNaN(idx) ? len : (idx < 0 ? idx + len : (idx >= len ? len - 1 : idx)));
+		for (; idx > -1; idx--)
+			if (this[idx] === obj)
+				return idx;
+		return -1;
 	};
 }
 
@@ -564,6 +573,7 @@ if (!Array.prototype.forEach) {
 
 /**
  * Returns the first element of the array
+ * @type Object
  */
 Array.prototype.first = function() {
 	return this[0];
@@ -571,15 +581,27 @@ Array.prototype.first = function() {
 
 /**
  * Returns the first element of the array
+ * @type Object
  */
 Array.prototype.last = function() {
 	return this[this.length-1];
 };
 
 /**
+ * Includes the passed element in the array, only if not already present
+ * @param {Object} item Item to add
+ * @type Array
+ */
+Array.prototype.include = function(item) {
+	if (this.indexOf(item) == -1)
+		this.push(item);
+	return this;
+};
+
+/**
  * Removes all occurrences of an item from the array
  * @param {Object} item Array item
- * @type void
+ * @type Array
  */
 Array.prototype.remove = function(item) {
 	var i = 0, len = this.length;
