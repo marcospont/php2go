@@ -65,7 +65,15 @@ Element = function(name, parent, style, html, attrs) {
 };
 
 /**
- * Checks if an element has a given attribute.
+ * Get the element's tag
+ * @type String
+ */
+Element.prototype.getTag = function() {
+	return this.tagName.toLowerCase();
+};
+
+/**
+ * Checks if the element has a given attribute.
  * This method doesn't override native browser
  * implementations.
  * @param {String} attr Attribute name
@@ -89,14 +97,13 @@ Element.prototype.readAttribute = function(attr) {
 	var trans = Element.translation.attrs, tn, flag = 0, node;
 	if (tn = trans.names[attr])
 		return this[tn];
-	if (!PHP2Go.browser.ie || (flag = trans.iflag[attr]))
+	if (flag = trans.iflag[attr])
 		return this.getAttribute(attr, flag);
-	if (node = this.attributes[attr])
-		return node.nodeValue;
+	return this.getAttribute(attr);
 };
 
 /**
- * Writes one or more attributes on a given element
+ * Writes one or more element's attributes
  * @param {Object} attr Attribute name or attributes hash
  * @param {Object} value Attribute value
  * @type Object
@@ -142,7 +149,7 @@ Element.prototype.recursivelyCollect = function(prop) {
 
 /**
  * Recursively sums the values of a given property
- * on all ancestors of a given node
+ * on all ancestors of the element
  * @param {String} prop Property name
  * @type Number
  */
@@ -220,8 +227,7 @@ if (!document.getElementsByClassName) {
 }
 
 /**
- * Finds an ancestor whose tag name is 'tag',
- * starting from a given element
+ * Finds an element's ancestor by tag name
  * @param {String} tag Tag to be searched
  * @type Object
  */
@@ -236,7 +242,7 @@ Element.prototype.getParentByTagName = function(tag) {
 };
 
 /**
- * Collects element's parent nodes
+ * Collects the ancestor nodes of the element
  * @type Array
  */
 Element.prototype.getParentNodes = function() {
@@ -244,7 +250,7 @@ Element.prototype.getParentNodes = function() {
 };
 
 /**
- * Sets the parent of an element. Stores the old parent
+ * Sets the element's parent node. Stores the old parent
  * in a property called oldParent and move the node
  * to the child nodes of the new parent
  * @param {Object} p New parent
@@ -265,7 +271,7 @@ Element.prototype.setParentNode = function(p) {
 };
 
 /**
- * Collects element's child nodes, skipping
+ * Collects the element's child nodes, skipping
  * all text nodes. Extends and returns all
  * child nodes in an array
  * @type Array
@@ -284,7 +290,7 @@ Element.prototype.getChildNodes = function() {
 };
 
 /**
- * Get element's previous siblings
+ * Get the element's previous siblings
  * @type Array
  */
 Element.prototype.getPreviousSiblings = function() {
@@ -292,7 +298,7 @@ Element.prototype.getPreviousSiblings = function() {
 };
 
 /**
- * Get element's next siblings
+ * Get the element's next siblings
  * @type Array
  */
 Element.prototype.getNextSiblings = function() {
@@ -308,7 +314,7 @@ Element.prototype.getSiblings = function() {
 };
 
 /**
- * Checks if a given element has another as ancestor
+ * Checks if the element is child of a given element
  * @param {Object} anc Ancestor element
  * @type Boolean
  */
@@ -333,10 +339,9 @@ Element.prototype.isChildOf = function(anc) {
 };
 
 /**
- * Retrieve an object containing left and top
- * offsets for a given element. This method
- * returns an object containing 2 properties:
- * x (left offset) and y (top offset)
+ * Retrieve the absolute position of the element.
+ * This method returns an object containing 2 
+ * properties: x (left offset) and y (top offset)
  * @param {Number} tbt Box type (0, 1, 2 or 3)
  * @type Object
  */
@@ -389,7 +394,7 @@ Element.prototype.getPosition = function(tbt) {
 };
 
 /**
- * Get the dimensions of a given element.
+ * Get the dimensions of the element.
  * The results are returned as an object,
  * containing 2 properties: width and height
  * @type Object
@@ -417,7 +422,7 @@ Element.prototype.getDimensions = function() {
 };
 
 /**
- * Get an element's border box
+ * Get the element's border box
  * @type Object
  */
 Element.prototype.getBorderBox = function() {
@@ -432,7 +437,7 @@ Element.prototype.getBorderBox = function() {
 };
 
 /**
- * Get an element's padding box
+ * Get the element's padding box
  * @type Object
  */
 Element.prototype.getPaddingBox = function() {
@@ -458,12 +463,20 @@ Element.prototype.isWithin = function(p1, p2) {
 };
 
 /**
- * Collects the contents of all text nodes inside a given element
+ * Collects the contents of all text nodes inside the element
  * @type String
  */
 Element.prototype.getInnerText = function() {
+	var tag = this.getTag();
+	if (tag == 'script' || tag == 'style') {
+		if (PHP2Go.browser.ie)
+			return (tag == 'style' ? this.styleSheet.cssText : this.readAttribute('text'));
+		return this.innerHTML;
+	}
 	if (this.innerText)
 		return this.innerText;
+	if (this.textContent)
+		return this.textContent;
 	var s = '', cs = this.childNodes;
 	for (var i=0; i<cs.length; i++) {
 		switch (cs[i].nodeType) {
@@ -478,6 +491,29 @@ Element.prototype.getInnerText = function() {
 	return s;
 };
 
+/**
+ * Defines the text content of the element
+ * @param {String} text Text content
+ * @type Object
+ */
+Element.prototype.setInnerText = function(text) {
+	var tag = this.getTag();
+	if (tag == 'script' || tag == 'style') {
+		if (PHP2Go.browser.ie) {
+			if (tag == 'style')
+				this.styleSheet.cssText = text;
+			else
+				this.writeAttribute('text', text);			
+		} else {			
+			(this.firstChild) && (this.removeChild(this.firstChild));
+			this.appendChild(document.createTextNode(text));
+		}
+	} else {
+		this[!Object.isUndef(this.innerText) ? 'innerText' : 'textContent'] = text;
+	}
+	return this;
+};
+
 if (PHP2Go.browser.ie) {
 	/**
 	 * Retrieves the computed value of a given style property
@@ -490,7 +526,7 @@ if (PHP2Go.browser.ie) {
 		return null;
 	};
 	/**
-	 * Gets all computed styles of a given element
+	 * Gets all computed styles of the element
 	 * @type Object
 	 */
 	Element.prototype.getComputedStyles = function() {
@@ -520,10 +556,7 @@ if (PHP2Go.browser.ie) {
 }
 
 /**
- * Gets a style property of a given element.
- * If the property is not found in the element's
- * style definition, the method tries to read it
- * using document's defaultView or currentStyle.
+ * Reads a style property of the element.
  * For better results, always provide property
  * name using CSS property declaration style, e.g.:
  * background-color, border-left-width, font-family
@@ -550,7 +583,7 @@ Element.prototype.getStyle = function(prop) {
 };
 
 /**
- * Set one or more style properties of an element
+ * Set one or more style properties of the element
  * @param {Object} prop Hash of properties or property name
  * @param {Object} value Property value
  * @type Object
@@ -569,7 +602,7 @@ Element.prototype.setStyle = function(prop, value) {
 			case 'width' :
 			case 'height' :
 				this.style[prop.camelize()] = props[prop];
-				if (PHP2Go.browser.ie && !PHP2Go.browser.ie7 && this.getComputedStyle('position') == 'absolute' && this.getComputedStyle('display') != 'none')
+				if (PHP2Go.browser.wch && this.getComputedStyle('position') == 'absolute' && this.getComputedStyle('display') != 'none')
 					WCH.update(this);
 				break;
 			default :
@@ -600,7 +633,7 @@ Element.prototype.swapStyles = function(props, func) {
 };
 
 /**
- * Get an element's opacity level. The level is returned
+ * Gets the element's opacity level. The level is returned
  * as a decimal number between 0 and 1
  * @type Number
  */
@@ -621,7 +654,7 @@ Element.prototype.getOpacity = function() {
 Element.prototype.getOpacity.re = /alpha\(opacity=(.*)\)/;
 
 /**
- * Set an element's opacity level. The opacity level
+ * Sets the element's opacity level. The opacity level
  * must be a decimal number between 0 and 1
  * @param {Number} op Opacity level
  * @type Object
@@ -661,7 +694,7 @@ Element.prototype.hasClass = function(cl) {
 };
 
 /**
- * Adds a CSS class on an element
+ * Adds a CSS class on the element
  * @param {String} cl CSS class
  * @type Object
  */
@@ -673,7 +706,7 @@ Element.prototype.addClass = function(cl) {
 };
 
 /**
- * Removes a CSS class from an element
+ * Removes a CSS class from the element
  * @param {String} cl CSS class
  * @type Object
  */
@@ -684,7 +717,7 @@ Element.prototype.removeClass = function(cl) {
 };
 
 /**
- * Adds/removes a CSS class on an element
+ * Adds/removes a CSS class on the element
  * @param {String} cl CSS class
  * @type Object
  */
@@ -695,7 +728,7 @@ Element.prototype.toggleClass = function(cl) {
 };
 
 /**
- * Verify if a given element is visible
+ * Verify if the element is visible
  * @type Boolean
  */
 Element.prototype.isVisible = function() {
@@ -709,7 +742,7 @@ Element.prototype.isVisible = function() {
 };
 
 /**
- * Shows an element
+ * Shows the element
  * @type Object
  */
 Element.prototype.show = function() {
@@ -720,7 +753,7 @@ Element.prototype.show = function() {
 };
 
 /**
- * Hides an element
+ * Hides the element
  * @type Object
  */
 Element.prototype.hide = function() {
@@ -731,7 +764,7 @@ Element.prototype.hide = function() {
 };
 
 /**
- * Toggles the display property of an element
+ * Toggles the element's visibility
  * @type Object
  */
 Element.prototype.toggleDisplay = function() {
@@ -743,7 +776,7 @@ Element.prototype.toggleDisplay = function() {
 };
 
 /**
- * Moves an element to a given x and y coordinates
+ * Moves the element to the given x and y coordinates
  * @param {Number} x X coordinate
  * @param {Number} y Y coordinate
  * @type Object
@@ -757,7 +790,7 @@ Element.prototype.moveTo = function(x, y) {
 };
 
 /**
- * Resizes an element to given width and height values
+ * Resizes the element to the given width and height values
  * @param {Number} w Width
  * @param {Number} h Height
  * @type Object
@@ -781,7 +814,7 @@ Element.prototype.scrollTo = function() {
 };
 
 /**
- * Insert a node after a given reference node. That
+ * Insert the node after a given reference node. That
  * means the new node is inserted between the reference
  * node and the reference node's next sibling
  * @param {Object] ref Reference node
@@ -796,13 +829,13 @@ Element.prototype.insertAfter = function(ref) {
 };
 
 /**
- * Inserts HTML code inside an element. The 'position' argument
+ * Inserts HTML code inside the element. The 'position' argument
  * allows to define where the HTML contents must be inserted :
  * "before" the element, on the "top" or on the "bottom" of the
  * element or "after" the element
  * @param {String} ins HTML or element to insert
  * @param {String} pos Insertion position. Defaults to "bottom"
- * @param {Boolean} eval Whether to eval scripts. Defaults to false
+ * @param {Boolean} evalScripts Whether to eval scripts. Defaults to false
  * @type Object
  */
 Element.prototype.insert = function(ins, position, evalScripts) {
@@ -837,7 +870,7 @@ Element.prototype.insert = function(ins, position, evalScripts) {
 };
 
 /**
- * Set the HTML contents of a given element.
+ * Set the HTML contents of the element.
  * By setting 'useDom' to true, a temporary div
  * element will be created and its child nodes will
  * be copied to the target element.
@@ -878,7 +911,7 @@ Element.prototype.update = function(upd, evalScripts, useDom) {
 };
 
 /**
- * Replaces an element with the given HTML code
+ * Replaces the element with the given HTML code
  * @param {Object} rep Replacement code or element
  * @param {Boolean} eval Whether to eval scripts. Defaults to false
  * @type Object
@@ -917,7 +950,7 @@ Element.prototype.replace = function(rep, evalScripts) {
 };
 
 /**
- * Remove HTML contents of an element
+ * Remove all HTML contents from the element
  * @param {Boolean} useDom Whether to use DOM or not
  * @type Object
  */
@@ -933,7 +966,7 @@ Element.prototype.clear = function(useDom) {
 };
 
 /**
- * Verify if a given element is empty
+ * Verify if the element is empty
  * @type Boolean
  */
 Element.prototype.empty = function() {
@@ -1042,16 +1075,6 @@ Element.insertion.bottom.initializeRange = Element.insertion.top.initializeRange
  * @ignore
  */
 Element.translation = {
-	tags : {
-	    TABLE : ['<table>', '</table>', 1],
-	    TBODY : ['<table><tbody>', '</tbody></table>', 2],
-	    THEAD : ['<table><tbody>', '</tbody></table>', 2],
-	    TFOOT : ['<table><tbody>', '</tbody></table>', 2],
-	    TR : ['<table><tbody><tr>', '</tr></tbody></table>', 3],
-	    TH : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
-	    TD : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
-	    SELECT : ['<select>', '</select>', 1]
-	},
 	attrs : {
 		names : {
 			'class' : 'className',
@@ -1088,6 +1111,16 @@ Element.translation = {
 				elm.style.cssText = (value ? value : '');
 			}
 		}
+	},
+	tags : {
+	    TABLE : ['<table>', '</table>', 1],
+	    TBODY : ['<table><tbody>', '</tbody></table>', 2],
+	    THEAD : ['<table><tbody>', '</tbody></table>', 2],
+	    TFOOT : ['<table><tbody>', '</tbody></table>', 2],
+	    TR : ['<table><tbody><tr>', '</tr></tbody></table>', 3],
+	    TH : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
+	    TD : ['<table><tbody><tr><td>', '</td></tr></tbody></table>', 4],
+	    SELECT : ['<select>', '</select>', 1]
 	},
 	div : document.createElement('div'),
 	createFromHTML : function(tn, html) {
@@ -1267,55 +1300,52 @@ Event.cache = [];
  * @type void
  */
 Event.onDOMReady = function(fn) {
-	if (!this.queue) {
-		var b = PHP2Go.browser;
-		var self = this, d = document;
-		var run = function() {
-			if (!arguments.callee.done) {
-				arguments.callee.done = true;
+	if (this.done) {
+		fn();
+		return;
+	}
+	if (!this.queue) {		
+		var self = this, b = PHP2Go.browser, d = document;
+		var ready = function() {
+			if (!self.done) {
+				self.done = true;
 				for (var i=0; i<self.queue.length; i++)
 					self.queue[i]();
 				self.queue = null;
 				// mozilla, opera9
-				if (d.removeEventListener)
-					d.removeEventListener('DOMContentLoaded', run, false);
+				(d.removeEventListener) && (d.removeEventListener('DOMContentLoaded', ready, false));
 				// msie
 				var defer = $('defer_script');
-				if (defer)
-					defer.remove();
+				(defer) && (defer.remove());
 				// safari, opera8
-				if (self.timer) {
-					clearInterval(self.timer);
-					self.timer = null;
-				}
+				(self.timer) && (self.timer = clearInterval(self.timer));
 			}
 		};
 		// initialize queue
-		this.queue = [];
-		// mozilla, opera9
-		if (d.addEventListener)
-			d.addEventListener('DOMContentLoaded', run, false);
-		// msie
-		d.write("<scr"+"ipt id=defer_script defer src=javascript:void(0)><\/scr"+"ipt>");
-		var defer = $('defer_script');
-		if (defer) {
-			defer.onreadystatechange = function() {
-				if (this.readyState == "complete")
-					run();
-			};
-			defer.onreadystatechange();
-			defer = null;
-		}
-		// safari, opera8
-		if (b.khtml || b.opera) {
+		this.queue = [];		
+		if (d.addEventListener) {
+			// mozilla, opera9
+			d.addEventListener('DOMContentLoaded', ready, false);
+		} else if (d.readyState && b.ie) {
+			// msie
+			if (!$('defer_script')) {
+				var src = (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)');
+				d.write('<script id="defer_script" defer src="' + src + '"><\/script>');
+				$('defer_script').onreadystatechange = function() {
+					if (this.readyState == "complete")
+						ready();
+				};				
+			}
+		} else if (d.readyState && (b.khtml || b.opera)) {
+			// safari, opera8
 			this.timer = setInterval(function() {
-				if (/loaded|complete/.test(document.readyState)) {
-					run();
-				}
+				if (/loaded|complete/.test(document.readyState))
+					ready();
 			}, 10);
+		} else {
+			// other browsers
+			this.addLoadListener(ready);
 		}
-		// other browsers
-		this.addLoadListener(run);
 	}
 	this.queue.push(fn);
 };
