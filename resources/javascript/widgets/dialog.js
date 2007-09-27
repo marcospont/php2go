@@ -189,7 +189,10 @@ Dialog.prototype.setup = function() {
 			display: 'none',
 			zIndex: this.zIndex
 		}, '', { id: this.id });
-		this.tabDelim.start = $N('span', this.el, null, '', { tabIndex: 0 });
+		var tdTag = (PHP2Go.browser.opera ? 'button' : 'span');
+		var tdStyles = (PHP2Go.browser.opera ? {width: '0px', height: '0px'} : null);
+		var tdAttrs = Object.extend({tabIndex: 0}, (PHP2Go.browser.opera ? {type: 'button'} : {}));
+		this.tabDelim.start = $N(tdTag, this.el, tdStyles, '', tdAttrs);
 		var contentRoot = $N('div', this.el, (this.contentsClass ? {} : {
 			backgroundColor: '#fff',
 			color: '#000',
@@ -201,7 +204,7 @@ Dialog.prototype.setup = function() {
 		});
 		this.contentEl = $N('div', contentRoot);
 		this.setupContents();
-		this.tabDelim.end = $N('span', this.el, null, '', { tabIndex: 0 });
+		this.tabDelim.end = $N(tdTag, this.el, tdStyles, '', tdAttrs);
 	}
 };
 
@@ -232,7 +235,7 @@ Dialog.prototype.setupContents = function() {
 		for (var i=0; i<this.buttons.length; i++) {
 			var btn = this.buttons[i].el = $N('button', parent, {marginLeft: '5px', marginRight: '5px'}, this.buttons[i].text, {
 				id: this.id + '_btn' + i,
-				className: this.buttonsClass				
+				className: this.buttonsClass
 			});
 			btn.setAttribute('type', 'button');
 			btn.index = i;
@@ -473,7 +476,7 @@ ModalDialog.prototype.show = function() {
 	Event.addListener(this.tabDelim.end, 'blur', tb);
 	Event.addListener(document, 'keypress', k);
 	// show overlay
-	this.overlay.style.display = '';
+	this.overlay.show();
 };
 
 /**
@@ -483,12 +486,10 @@ ModalDialog.prototype.show = function() {
 ModalDialog.prototype.place = function() {
 	ModalDialog.superclass.place.apply(this);
 	var sc = Window.scroll();
-	this.overlay.style.left = sc.x + 'px';
-	this.overlay.style.top = sc.y + 'px';
+	this.overlay.moveTo(sc.x, sc.y);
 	if (PHP2Go.browser.ie) {
 		var size = Window.size();
-		this.overlay.style.width = size.width + 'px';
-		this.overlay.style.height = size.height + 'px';
+		this.overlay.resizeTo(size.width, size.height);
 	}
 };
 
@@ -508,7 +509,7 @@ ModalDialog.prototype.hide = function() {
 	Event.removeListener(this.tabDelim.end, 'blur', tb);
 	Event.removeListener(document, 'keypress', k);
 	// hide overlay
-	this.overlay.style.display = 'none';
+	this.overlay.hide();
 };
 
 /**
