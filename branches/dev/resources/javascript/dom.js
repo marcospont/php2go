@@ -340,7 +340,7 @@ Element.prototype.isChildOf = function(anc) {
 
 /**
  * Retrieve the absolute position of the element.
- * This method returns an object containing 2 
+ * This method returns an object containing 2
  * properties: x (left offset) and y (top offset)
  * @param {Number} tbt Box type (0, 1, 2 or 3)
  * @type Object
@@ -503,8 +503,8 @@ Element.prototype.setInnerText = function(text) {
 			if (tag == 'style')
 				this.styleSheet.cssText = text;
 			else
-				this.writeAttribute('text', text);			
-		} else {			
+				this.writeAttribute('text', text);
+		} else {
 			(this.firstChild) && (this.removeChild(this.firstChild));
 			this.appendChild(document.createTextNode(text));
 		}
@@ -1215,12 +1215,10 @@ var WCH = {
 			}
 			elm.wchList = list;
 		} else {
-			var wch, pos = elm.getPosition(), dim = elm.getDimensions();
+			var wch, pos = elm.getPosition(Element.BORDER_BOX), dim = elm.getDimensions();
 			var zi = elm.getComputedStyle('z-index');
 			if (!elm.wchIframe) {
-				wch = elm.wchIframe = $N('iframe', elm.parentNode, {position: 'absolute'});
-				if (PHP2Go.browser.ie6)
-					wch.style.filter = 'progid:DXImageTransform.Microsoft.Alpha(style=0,opacity=0);';
+				wch = elm.wchIframe = $N('iframe', elm.parentNode, {position: 'absolute', filter: 'progid:DXImageTransform.Microsoft.Alpha(style=0,opacity=0);'});
 				// fix low z-indexes
 				if (zi <= 2)
 					zi = elm.style.zIndex = 1000;
@@ -1261,7 +1259,7 @@ var WCH = {
 		if (elm.wchIframe || elm.wchList) {
 			if (elm.wchIframe) {
 				opts = opts || {};
-				var pos = opts.position || elm.getPosition();
+				var pos = opts.position || elm.getPosition(Element.BORDER_BOX);
 				var dim = opts.dimensions || elm.getDimensions();
 				elm.wchIframe.style.left = pos.x;
 				elm.wchIframe.style.top = pos.y;
@@ -1304,7 +1302,7 @@ Event.onDOMReady = function(fn) {
 		fn();
 		return;
 	}
-	if (!this.queue) {		
+	if (!this.queue) {
 		var self = this, b = PHP2Go.browser, d = document;
 		var ready = function() {
 			if (!self.done) {
@@ -1312,36 +1310,31 @@ Event.onDOMReady = function(fn) {
 				for (var i=0; i<self.queue.length; i++)
 					self.queue[i]();
 				self.queue = null;
-				// mozilla, opera9
-				(d.removeEventListener) && (d.removeEventListener('DOMContentLoaded', ready, false));
-				// msie
-				var defer = $('defer_script');
-				(defer) && (defer.remove());
-				// safari, opera8
-				(self.timer) && (self.timer = clearInterval(self.timer));
 			}
 		};
 		// initialize queue
-		this.queue = [];		
+		this.queue = [];
 		if (d.addEventListener) {
 			// mozilla, opera9
 			d.addEventListener('DOMContentLoaded', ready, false);
 		} else if (d.readyState && b.ie) {
 			// msie
-			if (!$('defer_script')) {
-				var src = (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)');
-				d.write('<script id="defer_script" defer src="' + src + '"><\/script>');
-				$('defer_script').onreadystatechange = function() {
-					if (this.readyState == "complete")
-						ready();
-				};				
-			}
-		} else if (d.readyState && (b.khtml || b.opera)) {
-			// safari, opera8
-			this.timer = setInterval(function() {
-				if (/loaded|complete/.test(document.readyState))
+			var f = function() {
+				try {
+					d.firstChild.doScroll('left');
 					ready();
-			}, 10);
+				} catch(e) {
+					f.delay(10);
+				}
+			}; f();
+		} else if (d.readyState && (b.khtml || b.opera)) {
+			// khtml, opera8
+			var f = function() {
+				if (/loaded|complete/.test(d.readyState))
+					ready();
+				else
+					f.delay(10);
+			}; f();
 		} else {
 			// other browsers
 			this.addLoadListener(ready);
