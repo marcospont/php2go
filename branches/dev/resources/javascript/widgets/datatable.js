@@ -168,14 +168,10 @@ DataTable.prototype.setup = function() {
  */
 DataTable.prototype.reset = function() {
 	this._setupRows();
-	// reset sorting
+	// restore sorting
 	if (this.attributes.sortable) {
-		var headers = this.thead.rows[0].cells;
-		if (this.sortIdx != null) {
-			headers[this.sortIdx].lastChild.style.visibility = 'hidden';
-			this.sortIdx = null;
-		}
-		this.desc = null;
+		if (this.sortIdx != null)
+			this.sort(this.sortIdx, this.desc);
 	}
 	// refresh size and scroll bars
 	if (this.attributes.scrollable) {
