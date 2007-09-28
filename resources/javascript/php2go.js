@@ -256,7 +256,7 @@ try {
 Object.extend = function(dst, src, ov) {
 	ov = Object.ifUndef(ov, true);
 	for (p in src) {
-		if (!ov && dst[p])
+		if (!ov && p in dst)
 			continue;
 		dst[p] = src[p];
 	}
@@ -404,13 +404,15 @@ Function.prototype.bind = function(obj) {
 /**
  * Encapsulates the pattern of converting the
  * first argument of the function into its 'this' value
+ * @param {Function} fn Function that must be applied on the bind argument
  * @type Function
  */
-Function.prototype.methodize = function() {
+Function.prototype.methodize = function(fn) {
 	if (this._methodized)
 		return this._methodized;
 	var self = this;
 	return this._methodized = function(bind) {
+		(fn) && (bind = fn(bind));
 		return (bind ? self.apply(bind, Array.prototype.slice.call(arguments, 1)) : null);
 	};
 };

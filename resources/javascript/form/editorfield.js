@@ -262,20 +262,20 @@ EditorField.prototype.setupEvents = function() {
 	// change block format, font name and font size
 	$(self.name + '_formatblock', self.name + '_fontname', self.name + '_fontsize').walk(function(item, idx) {
 		Event.addListener(item, 'change', function(event) {
-			self.execCommand(item.name.substring(len), item.options[item.selectedIndex].value, $EV(event));
+			self.execCommand(item.id.substring(len), item.options[item.selectedIndex].value, $EV(event));
 			item.options[0].selected = true;
 		});
 	});
 	// top buttons
 	$C($(this.name + '_top').getElementsByTagName('a')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function(event) {
-			self.execCommand(item.name.substring(len), null, $EV(event));
+			self.execCommand(item.id.substring(len), null, $EV(event));
 		});
 	});
 	// bottom buttons
 	$C($(this.name + '_bottom').getElementsByTagName('a')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function(event) {
-			self.execCommand(item.name.substring(len), $EV(event));
+			self.execCommand(item.id.substring(len), $EV(event));
 		});
 	});
 	// emoticons
@@ -484,6 +484,9 @@ EditorField.prototype.execCommand = function(cmd, val, ev) {
 	try {
 		this.focus();
 		switch (cmd.toLowerCase()) {
+			case 'pickbackcolor' :
+			case 'pickforecolor' :
+				break;
 			case 'addemoticon' :
 				this.showHideEmoticons(ev);
 				break;
@@ -693,7 +696,7 @@ EditorField.prototype.showHideEmoticons = function(ev) {
 	if (emo.getStyle('display') == 'none') {
 		// set emoticons div position and display it
 		var elm = ev.findElement('a');
-		var pos = elm.getPosition(Element.PADDING_BOX);
+		var pos = elm.getPosition();
 		var dim = elm.getDimensions();
 		emo.moveTo((pos.x+dim.width-emo.getDimensions().width), (pos.y+dim.height));
 		emo.show();
