@@ -31,6 +31,10 @@
 	 * Define framework's root folder
 	 */
 	define("PHP2GO_ROOT", str_replace("\\", "/", dirname(__FILE__)) . '/');
+	/**
+	 * Indicates if we're running PHP 5.0.0 or higher
+	 */
+	define('IS_PHP5', (floatval(PHP_VERSION) >= 5));
 
 	/**
 	 * Require framework's initialization modules
@@ -99,10 +103,6 @@
 	 * Path separator
 	 */
 	define('PHP2GO_PATH_SEPARATOR', (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? ';' : ':'));
-	/**
-	 * Indicates if we're running PHP 5.0.0 or higher
-	 */
-	define('IS_PHP5', (floatval(PHP_VERSION) >= 5));
 	/**
 	 * Indicates a file name parameter
 	 */
