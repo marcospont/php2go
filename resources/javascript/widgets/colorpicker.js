@@ -154,7 +154,7 @@ ColorPicker.prototype.setup = function() {
 	if (this.mode == 'popup') {
 		if (!ColorPicker.loaded) {
 			ColorPicker.loaded = true;
-			Event.addLoadListener(function(e) {
+			Event.onDOMReady(function(e) {
 				ColorPicker.popup = self.build();
 			});
 		}
@@ -384,7 +384,7 @@ ColorPicker.prototype.mouseDownHandler = function(e) {
  */
 ColorPicker.prototype.showPopupAt = function(trg) {
 	var pop = ColorPicker.popup;
-	var pos = trg.getPosition(Element.PADDING_BOX);
+	var pos = trg.getPosition();
 	var dim = trg.getDimensions();
 	if (this.onOpen)
 		this.onOpen();

@@ -148,7 +148,7 @@ Calculator.setup = function(opts) {
 	if (tgr && trg) {
 		if (!Calculator.loaded) {
 			Calculator.loaded = true;
-			Event.addLoadListener(function() {
+			Event.onDOMReady(function() {
 				Calculator.singleton = c = new Calculator();
 				c.build();
 			});
@@ -529,11 +529,11 @@ Calculator.prototype.showAt = function(tgr, trg, align) {
 	// set current trigger/input/mask
 	this.trigger = tgr;
 	this.target = trg;
-	// move and display the calculator container
+	// move and display the calculator
 	if (align == "bottom")
-		c.moveTo(pos.x+dim.width-c.getDimensions().width, pos.y+dim.height);
+		c.moveTo(pos.x+dim.width-c.getDimensions().width, pos.y+dim.height+2);
 	else
-		c.moveTo(pos.x+dim.width, pos.y);
+		c.moveTo(pos.x+dim.width+2, pos.y);
 	c.show();
 	// set properties based on the trigger
 	var tmp = trg.value;
@@ -542,7 +542,7 @@ Calculator.prototype.showAt = function(tgr, trg, align) {
 		if (trg.inputMask.mask == CurrencyMask)
 			tmp = tmp.replace(".", "").replace(",", ".");
 		else
-			tmp = tmp.replace(/[^0-9\.]/, "");
+			tmp = tmp.replace(/[^0-9\.\-]/, "");
 	}
 	input.value = tmp;
 	// reset class properties
