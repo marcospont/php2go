@@ -349,13 +349,13 @@ Element.prototype.getPosition = function(tbt) {
 	var p = {x: 0, y: 0};
 	var b = PHP2Go.browser, db = document.body || document.documentElement;
 	// native and target box type
-	var nbt = 2, tbt = Object.ifUndef(tbt, 0);
+	var nbt = Element.BORDER_BOX, tbt = Object.ifUndef(tbt, Element.BORDER_BOX);
 	if (this.getBoundingClientRect) {
 		var bcr = this.getBoundingClientRect();
 		p.x = bcr.left - 2;
 		p.y = bcr.top - 2;
 	} else if (document.getBoxObjectFor) {
-		nbt = 1;
+		nbt = Element.PADDING_BOX;
 		var box = document.getBoxObjectFor(this);
 		p.x = box.x - this.recursivelySum('scrollLeft');
 		p.y = box.y - this.recursivelySum('scrollTop');
@@ -377,17 +377,26 @@ Element.prototype.getPosition = function(tbt) {
 		p.x += (isNaN(this.x) ? 0 : this.x);
 		p.y += (isNaN(this.y) ? 0 : this.y);
 	}
-	var tp = Object.toPixels;
 	var extents = ['padding', 'border', 'margin'];
 	if (nbt > tbt) {
 		for (var i=tbt; i<nbt; i++) {
-			p.x -= tp(this.getComputedStyle(extents[i] + '-left'));
-			p.y -= tp(this.getComputedStyle(extents[i] + '-top'));
+			if (extents[i] == 'border') {
+				p.x += this.getBorder('left');
+				p.y += this.getBorder('top');
+			} else {
+				p.x += Object.toPixels(this.getComputedStyle(extents[i] + '-left'));
+				p.y += Object.toPixels(this.getComputedStyle(extents[i] + '-top'));
+			}
 		}
 	} else if (tbt > nbt) {
 		for (var i=tbt; i>nbt; --i) {
-			p.x -= tp(this.getComputedStyle(extents[i-1] + '-left'));
-			p.y -= tp(this.getComputedStyle(extents[i-1] + '-top'));
+			if (extents[i-1] == 'border') {
+				p.x -= this.getBorder('left');
+				p.y -= this.getBorder('top');
+			} else {
+				p.x -= Object.toPixels(this.getComputedStyle(extents[i-1] + '-left'));
+				p.y -= Object.toPixels(this.getComputedStyle(extents[i-1] + '-top'));
+			}
 		}
 	}
 	return p;
@@ -422,17 +431,22 @@ Element.prototype.getDimensions = function() {
 };
 
 /**
+ * Get the element's border value for a given side
+ * @param {String} side Border side (top, right, bottom or left)
+ * @type Number
+ */
+Element.prototype.getBorder = function(side) {
+	return (this.getComputedStyle('border-' + side + '-style') == 'none' ? 0 : Object.toPixels(this.getComputedStyle('border-' + side + '-width')));
+};
+
+/**
  * Get the element's border box
  * @type Object
  */
 Element.prototype.getBorderBox = function() {
-	var self = Element.prototype.getBorderBox;
-	self.getSide = self.getSide || function(node, side) {
-		return (node.getComputedStyle('border-' + side + '-style') == 'none' ? 0 : Object.toPixels(node.getComputedStyle('border-' + side + '-width')));
-	};
 	return {
-		width: self.getSide(this, 'left') + self.getSide(this, 'right'),
-		height: self.getSide(this, 'top') + self.getSide(this, 'bottom')
+		width: this.getBorder('left') + this.getBorder('right'),
+		height: this.getBorder('top') + this.getBorder('bottom')
 	};
 };
 
@@ -995,7 +1009,7 @@ Element.extend = function(props) {
 		if (Object.isFunc(props[prop])) {
 			HTMLElement.prototype[prop] = props[prop];
 			Element.prototype[prop] = props[prop];
-			Element[prop] = props[prop].methodize();
+			Element[prop] = props[prop].methodize($E);
 		}
 	}
 };
@@ -1134,19 +1148,6 @@ Element.translation = {
 };
 
 /**
- * Define HTMLElement if it's not a valid identifier,
- * and add all Element methods to its prototype
- */
-if (!PHP2Go.nativeElementExtension) {
-	window.HTMLElement = $EF;
-	if (document.createElement('div').__proto__) {
-		window.HTMLElement.prototype = document.createElement('div').__proto__;
-		PHP2Go.nativeElementExtension = true;
-	}
-}
-Element.extend(Element.prototype);
-
-/**
  * Convert an HTML element to access all methods
  * of Element class as its native methods. The
  * objects are converted only once. In browsers with
@@ -1180,6 +1181,19 @@ $E = function(elm) {
 $N = function(name, parent, style, html, attrs) {
 	return new Element(name, parent, style, html, attrs);
 };
+
+/**
+ * Define HTMLElement if it's not a valid identifier,
+ * and add all Element methods to its prototype
+ */
+if (!PHP2Go.nativeElementExtension) {
+	window.HTMLElement = $EF;
+	if (document.createElement('div').__proto__) {
+		window.HTMLElement.prototype = document.createElement('div').__proto__;
+		PHP2Go.nativeElementExtension = true;
+	}
+}
+Element.extend(Element.prototype);
 
 /**
  * WCH stands for Windowed Controls Hider, which is a tool that

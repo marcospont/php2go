@@ -920,6 +920,14 @@ AjaxService = function(uri, args) {
 AjaxService.extend(AjaxRequest, 'AjaxRequest');
 
 /**
+ * Returns the active handler ID
+ * @type String
+ */
+AjaxService.prototype.getHandler = function() {
+	return this.headers['X-Handler-ID'] || '';
+};
+
+/**
  * Changes the service handler ID
  * @param {String} id Handler ID
  * @type void
