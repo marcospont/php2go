@@ -38,7 +38,7 @@ PHP2Go.include(PHP2Go.baseUrl + 'ajax.js');
 /**
  * Base class of the dialogs API. Builds simple dialogs
  * that can be placed absolutely (centered) or relative
- * to an existent element. These dialogs can be populated
+ * to a container element. These dialogs can be populated
  * with string contents, an existent element reference or
  * an AJAX call
  * @constructor
@@ -66,10 +66,10 @@ Dialog = function(opts) {
 	 */
 	this.parent = $(opts.parent) || document.body;
 	/**
-	 * Whether the dialog must use relative or absolute position
-	 * @type Boolean
+	 * If a container element is provided, the dialog will use relative positioning
+	 * @type Object
 	 */
-	this.relative = !!opts.relative;
+	this.container = $(opts.container) || null;
 	/**
 	 * Left offset, when using relative positioning
 	 * @type Number
@@ -89,7 +89,7 @@ Dialog = function(opts) {
 	 * Whether the dialog must follow window scroll (absolute positioning only)
 	 * @type Boolean
 	 */
-	this.followScroll = (!this.relative ? !!opts.followScroll : false);
+	this.followScroll = (!this.container ? !!opts.followScroll : false);
 	/**
 	 * Dialog contents (string or element reference)
 	 * @type Object
@@ -140,6 +140,11 @@ Dialog = function(opts) {
 	 */
 	this.buttonsClass = opts.buttonsClass || '';
 	/**
+	 * Whether the dialog must be closed upon mouseout event
+	 * @type Boolean
+	 */
+	this.hoverClose = !!opts.hoverClose;
+	/**
 	 * Called before opening the dialog, can be used to cancel this event
 	 * @type Function
 	 */
@@ -159,6 +164,11 @@ Dialog = function(opts) {
 	 * @type Function
 	 */
 	this.onClose = opts.onClose || null;
+	/**
+	 * Indicates if the dialog is visible (opened)
+	 * @type Boolean
+	 */
+	this.visible = false;
 	/**
 	 * @ignore
 	 */
@@ -205,6 +215,12 @@ Dialog.prototype.setup = function() {
 		this.contentEl = $N('div', contentRoot);
 		this.setupContents();
 		this.tabDelim.end = $N(tdTag, this.el, tdStyles, '', tdAttrs);
+		if (this.hoverClose) {
+			var self = this;
+			Event.addListener(this.el, 'mouseout', function(e) {
+				(!$EV(e).isRelated(self.el)) && (self.close());
+			});
+		}
 	}
 };
 
@@ -306,6 +322,7 @@ Dialog.prototype.open = function() {
 		return;
 	this.setup();
 	this.show();
+	this.visible = true;
 	(this.onOpen) && (this.onOpen.apply(this));
 };
 
@@ -317,6 +334,7 @@ Dialog.prototype.close = function() {
 	if (this.onBeforeClose && this.onBeforeClose.apply(this) == false)
 		return;
 	this.hide();
+	this.visible = false;
 	if (this.onClose)
 		this.onClose.apply(this);
 };
@@ -327,7 +345,7 @@ Dialog.prototype.close = function() {
  */
 Dialog.prototype.show = function() {
 	// add events
-	if (this.followScroll && !this.relative)
+	if (this.followScroll && !this.container)
 		Event.addListener(window, 'scroll', PHP2Go.method(this, 'scrollHandler'), true);
 	Event.addListener(window, 'resize', PHP2Go.method(this, 'resizeHandler'), true);
 	// show dialog
@@ -352,15 +370,15 @@ Dialog.prototype.show = function() {
  */
 Dialog.prototype.place = function() {
 	var elDim, parDim, offset;
-	if (this.relative) {
+	if (this.container) {
 		if (this.left !== null || this.top !== null) {
-			offset = (this.parent == document.body ? {x: 0, y: 0} : this.parent.getPosition());
+			offset = (this.container == document.body ? {x: 0, y: 0} : this.container.getPosition());
 			this.el.moveTo(offset.x + (this.left||0), offset.y + (this.top||0));
 		} else {
 			elDim = this.el.getDimensions();
-			parDim = this.parent.getDimensions();
-			offset = this.parent.getPosition();
-			this.el.moveTo((((parDim.width-elDim.width)/2)+offset.x), (((parDim.height-elDim.height)/2)+offset.y));
+			contDim = this.container.getDimensions();
+			offset = this.cont.getPosition();
+			this.el.moveTo((((contDim.width-elDim.width)/2)+offset.x), (((contDim.height-elDim.height)/2)+offset.y));
 		}
 	} else {
 		elDim = this.el.getDimensions();
@@ -376,7 +394,7 @@ Dialog.prototype.place = function() {
  */
 Dialog.prototype.hide = function() {
 	// remove events
-	if (this.followScroll && !this.relative)
+	if (this.followScroll && !this.container)
 		Event.removeListener(window, 'scroll', PHP2Go.method(this, 'scrollHandler'), true);
 	Event.removeListener(window, 'resize', PHP2Go.method(this, 'resizeHandler'), true);
 	// hide dialog
@@ -577,7 +595,7 @@ ImageDialog = function(opts) {
 	this.ModalDialog(Object.extend(opts, {
 		contents: null,
 		loadUri: null,
-		relative: false
+		container: null
 	}));
 	/**
 	 * Used to display the image inside the dialog box
