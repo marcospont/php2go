@@ -35,7 +35,6 @@
 	/**
 	 * Require framework's initialization modules
 	 */
-	require_once(PHP2GO_ROOT . 'errorHandler.php');
 	require_once(PHP2GO_ROOT . 'p2gLib.php');
 	require_once(PHP2GO_ROOT . 'core/Conf.class.php');
 	require_once(PHP2GO_ROOT . 'core/Init.class.php');
