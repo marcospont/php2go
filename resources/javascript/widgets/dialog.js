@@ -618,11 +618,13 @@ ImageDialog.extend(ModalDialog, 'ModalDialog');
  * @type void
  */
 ImageDialog.setup = function(cls) {
-	var imgs = document.getElementsByClassName(cls, 'img');
+	var imgs = document.getElementsByTagName('img');
 	for (var i=0; i<imgs.length; i++) {
-		new ImageDialog({
-			trigger: imgs[i]
-		});
+		if (Element.hasClass(imgs[i], cls)) {
+			new ImageDialog({
+				trigger: imgs[i]
+			});
+		}
 	}
 };
 
