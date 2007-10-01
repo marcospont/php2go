@@ -101,8 +101,8 @@ Calendar.is_opera = /opera/i.test(navigator.userAgent);
 /// detect KHTML-based browsers
 Calendar.is_khtml = /Konqueror|Safari|KHTML/i.test(navigator.userAgent);
 
-/// detect IE5.5+ (not IE7), where we must use WCH approach
-Calendar.use_wch = (Calendar.is_ie && !Calendar.is_ie5 && !Calendar.is_ie7);
+/// detect IE5.5+, where we must use WCH approach
+Calendar.use_wch = (Calendar.is_ie && !Calendar.is_ie5);
 
 // BEGIN: UTILITY FUNCTIONS; beware that these might be moved into a separate
 //        library, at some point.
