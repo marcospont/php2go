@@ -998,9 +998,10 @@ ComponentField.implement(new Observable);
  * @type void
  */
 ComponentField.prototype.raiseEvent = function(name, args) {
-	var funcs = this.listeners[name] || [];
+	this.listeners = this.listeners || {};
+	var funcs = this.listeners[name] || [], args = args || [];
 	for (var i=0,l=funcs.length; i<l; i++)
-		funcs[i][0].apply(funcs[i][1] || this, [args || []]);
+		funcs[i][0].apply(funcs[i][1] || this, [args]);
 	if (this.fld && Object.isFunc(this.fld['on'+name]))
 		this.fld['on'+name]({ type: name, srcElement: this.fld });
 };
