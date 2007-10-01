@@ -329,6 +329,21 @@ Object.isArray = function(obj) {
 };
 
 /**
+ * Checks if a given object is iterable
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isIterable = function(obj) {
+	if (!obj || Object.isUndef(obj))
+		return false;
+	if (Object.isString(obj) || Object.isFunc(obj) || Object.isNumber(obj))
+		return false;
+	if (Object.isArray(obj))
+		return true;
+	return (!Object.isUndef(obj.length) && isFinite(obj.length) && (!obj.tagName || obj.tagName.equalsIgnoreCase('form')));
+};
+
+/**
  * Checks if a given object is a function
  * @param {Object} obj Object
  * @type Boolean
@@ -1357,12 +1372,7 @@ var Report = {
  * and events dispatch.
  * @class Observable
  */
-var Observable = {
-	/**
-	 * Event listeners
-	 * @type Object
-	 */
-	listeners : {},
+Observable = function() {
 	/**
 	 * Adds an event listener
 	 * @param {String} name Event name
@@ -1371,11 +1381,13 @@ var Observable = {
 	 * @param {Boolean} unshift Allows to add the handler in the first position of the stack
 	 * @type void
 	 */
-	addEventListener : function(name, func, scope, unshift) {
-		unshift = !!unshift;
+	this.addEventListener = function(name, func, scope, unshift) {
+		unshift = !!unshift, name = name.toLowerCase().replace(/^on/, '');
+		this.listeners = this.listeners || {};
 		this.listeners[name] = this.listeners[name] || [];
 		this.listeners[name][(unshift ? 'unshift' : 'push')]([func, scope]);
-	},
+		return this;
+	};
 	/**
 	 * Removes an event listener from the chain
 	 * @param {String} name Event name
@@ -1383,25 +1395,26 @@ var Observable = {
 	 * @param {Object} scope Handler scope
 	 * @type void
 	 */
-	removeEventListener : function(name, func, scope) {
-		if (this.listeners[name])
+	this.removeEventListener = function(name, func, scope) {
+		if (this.listeners && this.listeners[name])
 			this.listeners[name].remove([func, scope]);
-	},
+		return this;
+	};
 	/**
 	 * Raises an event
 	 * @param {String} name Event name
 	 * @param {Object} args Event arguments
 	 * @type Boolean
 	 */
-	raiseEvent : function(name, args) {
-		args = args || [];
-		var funcs = this.listeners[name] || [];
+	this.raiseEvent = function(name, args) {
+		this.listeners = this.listeners || {};
+		var funcs = this.listeners[name] || [], args = args || [];
 		for (var i=0,l=funcs.length; i<l; i++) {
 			if (funcs[i][0].apply(funcs[i][1] || this, args) === false)
 				return false;
 		}
 		return true;
-	}
+	};
 };
 
 /**
@@ -1419,7 +1432,7 @@ Widget = function(attrs, func) {
 	if (Object.isFunc(func))
 		func(this);
 };
-Widget.implement(Observable);
+Widget.implement(new Observable);
 
 /**
  * @ignore

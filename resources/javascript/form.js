@@ -988,7 +988,7 @@ ComponentField = function(fld, clsName) {
 	this.componentClass = clsName;
 };
 ComponentField.extend(Field, 'Field');
-ComponentField.implement(Observable);
+ComponentField.implement(new Observable);
 
 /**
  * Used to raise events inside the component. Searches

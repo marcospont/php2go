@@ -676,16 +676,15 @@ Element.prototype.getOpacity.re = /alpha\(opacity=(.*)\)/;
 Element.prototype.setOpacity = function(op) {
 	op = (isNaN(op) || op >= 1 ? 1 : (op < 0.00001 ? 0 : op));
 	var s = this.style, b = PHP2Go.browser;
+	s.opacity = op;
 	if (b.ie) {
 		s.zoom = 1;
 		s.filter = (this.getStyle('filter') || '').replace(Element.prototype.setOpacity.re, '');
-		s.filter += (op ? 'alpha(opacity=' + Math.round(op*100) + ')' : '');
+		s.filter += 'alpha(opacity=' + Math.round(op*100) + ')';
 	} else if (b.mozilla) {
-		s.opacity = s.MozOpacity = op;
+		s.MozOpacity = op;
 	} else if (b.khtml) {
-		s.opacity = s.KhtmlOpacity = op;
-	} else {
-		s.opacity = op;
+		s.KhtmlOpacity = op;
 	}
 	return this;
 };
