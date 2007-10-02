@@ -104,7 +104,7 @@ class EditableField extends FormField
 	 */
 	function display() {
 	}
-
+	
 	/**
 	 * Get component's mask name
 	 *
@@ -412,6 +412,9 @@ class EditableField extends FormField
 	 */
 	function onPreRender() {
 		parent::onPreRender();
+		// convert special characters inside the field's value
+		$this->value = htmlspecialchars($this->value);
+		// define readonly state
 		if ($this->readOnly === NULL) {
 			if ($this->_Form->readonly)
 				$this->setReadonly();
