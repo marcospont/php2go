@@ -1298,11 +1298,6 @@ if (!window.Event) {
 }
 
 /**
- * @ignore
- */
-Event.cache = [];
-
-/**
  * Register a function to be executed when
  * the Document Object Model is available. In
  * the worst case, the function will be called
@@ -1314,15 +1309,15 @@ Event.onDOMReady = function(fn) {
 	if (this.done) {
 		fn();
 		return;
-	}
+	}	
 	if (!this.queue) {
 		var self = this, b = PHP2Go.browser, d = document;
 		var ready = function() {
 			if (!self.done) {
-				self.done = true;
 				for (var i=0; i<self.queue.length; i++)
 					self.queue[i]();
 				self.queue = null;
+				self.done = true;i
 			}
 		};
 		// initialize queue
@@ -1339,7 +1334,7 @@ Event.onDOMReady = function(fn) {
 				} catch(e) {
 					f.delay(10);
 				}
-			}; f();
+			}; f.delay(0);
 		} else if (d.readyState && (b.khtml || b.opera)) {
 			// khtml, opera8
 			var f = function() {
@@ -1347,7 +1342,7 @@ Event.onDOMReady = function(fn) {
 					ready();
 				else
 					f.delay(10);
-			}; f();
+			}; f.delay(0);
 		} else {
 			// other browsers
 			this.addLoadListener(ready);
@@ -1383,6 +1378,68 @@ Event.addLoadListener = function(fn) {
 };
 
 /**
+ * @ignore
+ */
+Event.handlers = {
+	cache : {},
+	getCacheId : function(elm) {
+		if (elm.eventId)
+			return elm.eventId;
+		arguments.callee.id = arguments.callee.id || 1;
+		return elm.eventId = arguments.callee.id++;
+	},
+	getEventName : function(type) {
+		type = type.replace(/^on/i, '').toLowerCase();
+		(type == 'keypress' && PHP2Go.browser.khtml) && (type = 'keydown');
+		return type;		
+	},
+	getHandlers : function(elm, type) {
+		var id = this.getCacheId(elm);
+		var c = this.cache[id] = this.cache[id] || {};
+		return c[type] = c[type] || [];
+	},
+	add : function(elm, type, fn) {
+		var h = this.getHandlers(elm, type);
+		if (h.indexOf(fn) == -1) {
+			h.push(fn);
+			return true;
+		}
+		return false;
+	},
+	remove : function(elm, type, fn) {
+		var h = this.getHandlers(elm, type);
+		var p = h.indexOf(fn);
+		if (p != -1) {
+			h.splice(pos, 1);
+			return true;
+		}
+		return false;
+	},
+	fire : function(elm, type) {
+		var h = this.getHandlers(elm, type);
+		h.walk(function(h, i) {
+			h.apply(elm);
+		});
+	},
+	destroy : function() {
+		for (var id in this.cache)
+			for (var type in this.cache[id])
+				this.cache[id][type] = null;
+		delete this.cache;
+	}
+};
+
+if (window.attachEvent) {
+	window.attachEvent('onunload', function() {
+		Event.handlers.destroy();
+		try {
+			window.onload = $EF;
+			window.onunload = $EF;
+		} catch(e) { }
+	});
+}
+
+/**
  * Adds an event handler function to a given element and event type
  * @param {Object} elm Element
  * @param {String} type Event type
@@ -1392,17 +1449,15 @@ Event.addLoadListener = function(fn) {
  */
 Event.addListener = function(elm, type, fn, capt) {
 	if (elm = $(elm)) {
-		type = type.replace('/^on/i', '').toLowerCase();
-		if (type == 'keypress' && PHP2Go.browser.khtml)
-			type = 'keydown';
-		capt = !!capt;
-		if (elm.addEventListener)
-			elm.addEventListener(type, fn, capt);
-		else if (elm.attachEvent)
-			elm.attachEvent('on' + type, fn);
-		else
-			elm['on' + type] = fn;
-		Event.cache.push([elm, type, fn, capt]);
+		var handlers = Event.handlers;
+		var type = handlers.getEventName(type);
+		if (handlers.add(elm, type, fn)) {
+			capt = !!capt;
+			if (elm.addEventListener)
+				elm.addEventListener(type, fn, capt);
+			else if (elm.attachEvent)
+				elm.attachEvent('on' + type, fn);
+		}
 	}
 };
 
@@ -1416,16 +1471,29 @@ Event.addListener = function(elm, type, fn, capt) {
  */
 Event.removeListener = function(elm, type, fn, capt) {
 	if (elm = $(elm)) {
-		type = type.replace('/^on/i', '').toLowerCase();
-		if (type == 'keypress' && PHP2Go.browser.khtml)
-			type = 'keydown';
-		capt = !!capt;
-		if (elm.removeEventListener)
-			elm.removeEventListener(type, fn, capt);
-		else if (elm.detachEvent)
-			elm.detachEvent('on' + type, fn);
-		else
-			elm['on' + type] = null;
+		var handlers = Event.handlers;
+		var type = handlers.getEventName(type);
+		if (handlers.remove(elm, type, fn)) {
+			capt = !!capt;
+			if (elm.removeEventListener)
+				elm.removeEventListener(type, fn, capt);
+			else if (elm.detachEvent)
+				elm.detachEvent('on' + type, fn);
+		}
+	}
+};
+
+/**
+ * Runs all handlers of a given type on an element
+ * @param {Object} elm Element
+ * @param {String} type Event type
+ * @type void
+ */
+Event.fire = function(elm, type) {
+	if (elm = $(elm)) {
+		var handlers = Event.handlers;
+		var type = handlers.getEventName(type);
+		handlers.fire(elm, type);
 	}
 };
 
@@ -1570,23 +1638,6 @@ $K = function(e) {
 	e = (e || window.event);
 	return (e.keyCode || e.which);
 };
-
-if (window.attachEvent) {
-	/**
-	 * @ignore
-	 */
-	function flushCache() {
-		Event.cache.walk(function(item, idx) {
-			Event.removeListener.apply(this, item);
-		});
-		delete Event.cache;
-		try {
-			window.onload = $EF;
-			window.onunload = $EF;
-		} catch(e) { }
-	}
-	window.attachEvent('onunload', flushCache);
-}
 
 PHP2Go.included[PHP2Go.baseUrl + 'dom.js'] = true;
 
