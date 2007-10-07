@@ -81,8 +81,7 @@
 	 * These methods return a new Image object
 	 */
 	$Flipped = $Img->flip(IMAGEFLIP_HORIZONTAL);
-	$Rotated = $Flipped->rotate(180, '#ffffff');
-	$Resized = $Rotated->resize(250, 250);
+	$Resized = $Flipped->resize(250, 250);
 
 	/**
 	 * Example of drawing text using GD internal fonts or true type fonts
