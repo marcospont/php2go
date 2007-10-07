@@ -1410,7 +1410,7 @@ Event.handlers = {
 		var h = this.getHandlers(elm, type);
 		var p = h.indexOf(fn);
 		if (p != -1) {
-			h.splice(pos, 1);
+			h.splice(p, 1);
 			return true;
 		}
 		return false;
