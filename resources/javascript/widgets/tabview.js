@@ -92,6 +92,7 @@ TabView.instances = {};
 
 /**
  * Initializes the widget
+ * @type void
  */
 TabView.prototype.setup = function() {
 	this.root = $(this.attributes.id);
@@ -121,6 +122,7 @@ TabView.prototype.setup = function() {
  * Adds a new tab panel
  * @param {TabPanel} tab New tab
  * @param {Number} idx Index where tab must be added
+ * @type TabPanel
  */
 TabView.prototype.addTab = function(tab, idx) {
 	if (tab instanceof TabPanel && tab.hasAttributes('id', 'caption')) {
@@ -158,11 +160,13 @@ TabView.prototype.addTab = function(tab, idx) {
 			this._updateArrows();
 		Event.addListener(a, 'click', this._clickHandler.bind(this));
 	}
+	return tab;
 };
 
 /**
  * Removes a tab panel given its index
  * @param {Number} idx Tab index
+ * @type TabPanel
  */
 TabView.prototype.removeTabByIndex = function(idx) {
 	this.removeTab(this.getTabByIndex(idx));
@@ -171,6 +175,7 @@ TabView.prototype.removeTabByIndex = function(idx) {
 /**
  * Removes a given tab panel
  * @param {TabPanel} tab Tab to remove
+ * @type TabPanel
  */
 TabView.prototype.removeTab = function(tab) {
 	if (tab instanceof TabPanel && tab.parent == this) {
@@ -204,11 +209,13 @@ TabView.prototype.removeTab = function(tab) {
 		this.raiseEvent('afterremove', [tab]);
 		this._updateArrows();
 	}
+	return tab;
 };
 
 /**
  * Get the index of a given tab
  * @param {TabPanel} tab Tab panel
+ * @type Number
  */
 TabView.prototype.getTabIndex = function(tab) {
 	for (var i=0; i<this.tabs.length; i++) {
@@ -253,6 +260,7 @@ TabView.prototype.getActiveIndex = function() {
 /**
  * Set active tab index
  * @param {Number} idx Tab index
+ * @type void
  */
 TabView.prototype.setActiveIndex = function(idx) {
 	this.setActiveTab(this.getTabByIndex(idx));
@@ -269,6 +277,7 @@ TabView.prototype.getActiveTab = function()  {
 /**
  * Set active tab
  * @param {TabPanel} tab Tab to activate
+ * @type TabPanel
  */
 TabView.prototype.setActiveTab = function(tab) {
 	if (tab instanceof TabPanel && tab.isEnabled() && tab != this.activeTab) {
@@ -287,6 +296,7 @@ TabView.prototype.setActiveTab = function(tab) {
 			this._updateArrows();
 		}
 	}
+	return tab;
 };
 
 /**
@@ -445,6 +455,7 @@ TabPanel.extend(Widget, 'Widget');
 
 /**
  * Initializes the widget
+ * @type void
  */
 TabPanel.prototype.setup = function() {
 	if (!this.contentEl)
@@ -462,6 +473,7 @@ TabPanel.prototype.getIndex = function() {
 
 /**
  * Activates the tab
+ * @type void
  */
 TabPanel.prototype.activate = function() {
 	this.parent.setActiveTab(this);
@@ -477,6 +489,7 @@ TabPanel.prototype.isActive = function() {
 
 /**
  * Enables the tab
+ * @type void
  */
 TabPanel.prototype.enable = function() {
 	this.attributes.disabled = false;
@@ -485,6 +498,7 @@ TabPanel.prototype.enable = function() {
 
 /**
  * Disables the tab
+ * @type void
  */
 TabPanel.prototype.disable = function() {
 	this.attributes.disabled = true;
@@ -504,6 +518,7 @@ TabPanel.prototype.isEnabled = function() {
  * @param {String} Target URI
  * @param {String} Method
  * @param {Object} Parameters (when using POST)
+ * @type void
  */
 TabPanel.prototype.loadContent = function(uri, method, params, activate) {
 	this.attributes.loaded = false;
@@ -525,6 +540,7 @@ TabPanel.prototype.loadContent = function(uri, method, params, activate) {
  * Set tab contents
  * @param {String} code Contents
  * @param {Boolean} evalScripts Eval script blocks or not
+ * @type void
  */
 TabPanel.prototype.setContent = function(code, evalScripts) {
 	if (typeof(code) == 'string')

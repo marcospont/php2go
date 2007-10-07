@@ -972,8 +972,7 @@ GroupField.prototype.serialize = function() {
 
 /**
  * Base class for all specialized form components.
- * This class methods should be implemented by each
- * form component
+ * Implements {@link Observable} interface.
  * @constructor
  * @base Field
  * @param {Object} Component top element's name or reference
@@ -991,8 +990,8 @@ ComponentField.extend(Field, 'Field');
 ComponentField.implement(new Observable);
 
 /**
- * Used to raise events inside the component. Searches
- * for a handler function and call it if it exists
+ * Used to raise events inside the component. Overrides
+ * {@link Observable#raiseEvent}.
  * @param {String} name Event name
  * @param {Array} args Event arguments
  * @type void

@@ -380,6 +380,7 @@ AjaxRequest.prototype.send = function() {
  * contains one or more files to upload. Performs the request
  * by submitting the form through an IFRAME element
  * @type void
+ * @private
  */
 AjaxRequest.prototype.doFormUpload = function() {
 	try {
@@ -688,6 +689,7 @@ AjaxResponse = function(transId) {
 /**
  * Parses and executes command definitions
  * returned in the response in JSON format
+ * @type void
  */
 AjaxResponse.prototype.run = function() {
 	var skip = 0;
@@ -940,6 +942,8 @@ AjaxService.prototype.setHandler = function(id) {
  * Tries to parse and execute commands from
  * the returned JSON string
  * @param {AjaxResponse} response Response
+ * @type void
+ * @private
  */
 AjaxService.prototype.parseResponse = function(response) {
 	try {
@@ -992,6 +996,7 @@ AjaxPeriodicalUpdater = function(uri, args) {
 
 /**
  * Starts the periodical updater
+ * @type void
  */
 AjaxPeriodicalUpdater.prototype.start = function() {
 	this.updater = new AjaxUpdater(this.uri, this.updaterArgs);
@@ -1001,6 +1006,7 @@ AjaxPeriodicalUpdater.prototype.start = function() {
 
 /**
  * Stops the periodical updater
+ * @type void
  */
 AjaxPeriodicalUpdater.prototype.stop = function() {
 	if (this.updater)
@@ -1010,6 +1016,8 @@ AjaxPeriodicalUpdater.prototype.stop = function() {
 
 /**
  * Executes an iteration by calling AjaxUpdater.send
+ * @type void
+ * @private
  */
 AjaxPeriodicalUpdater.prototype.onTimer = function() {
 	if (this.onBeforeUpdate)
@@ -1019,6 +1027,8 @@ AjaxPeriodicalUpdater.prototype.onTimer = function() {
 
 /**
  * Called when updater response is returned
+ * @type void
+ * @private
  */
 AjaxPeriodicalUpdater.prototype.onUpdate = function() {
 	this.timer = this.onTimer.bind(this).delay(this.frequency * 1000);
