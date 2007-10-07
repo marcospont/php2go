@@ -86,11 +86,11 @@
 	/**
 	 * Framework's version
 	 */
-	define('PHP2GO_VERSION', '0.5.7');
+	define('PHP2GO_VERSION', '0.5.8');
 	/**
 	 * Date when latest framework's version was released
 	 */
-	define('PHP2GO_RELEASE_DATE', '15/07/2007');
+	define('PHP2GO_RELEASE_DATE', '07/10/2007');
 	/**
 	 * Special key representing framework's modules in import operations
 	 */
