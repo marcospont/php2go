@@ -483,8 +483,8 @@ AjaxRequest.prototype.abort = function() {
  * onJSONResult (if a json object is available), onXMLResult
  * (if responseXML is available), onSuccess (successful HTTP
  * response code) and onFailure (HTTP error)
- * @access private
  * @type void
+ * @private 
  */
 AjaxRequest.prototype.onStateChange = function() {
 	if (this.conn) {
@@ -540,8 +540,8 @@ AjaxRequest.prototype.onStateChange = function() {
 /**
  * Internal method used by {@link AjaxRequest#send} to
  * build the query string included in the HTTP request
- * @access private
  * @type String
+ * @private 
  */
 AjaxRequest.prototype.buildQueryString = function() {
 	var item, key, subKey, buf = [];
@@ -571,8 +571,8 @@ AjaxRequest.prototype.buildQueryString = function() {
 /**
  * Internal method used by {@link AjaxRequest#onStateChange} to
  * create a new instance of the AjaxResponse class
- * @access private
  * @type AjaxResponse
+ * @private 
  */
 AjaxRequest.prototype.createResponse = function() {
 	var resp = new AjaxResponse(this.transId);
@@ -618,8 +618,8 @@ AjaxRequest.prototype.createResponse = function() {
 
 /**
  * Release the connection object
- * @access private
  * @type void
+ * @private 
  */
 AjaxRequest.prototype.release = function() {
 	if (this.conn) {

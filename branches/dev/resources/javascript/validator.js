@@ -513,8 +513,8 @@ RuleValidator.prototype.getErrorMessage = function() {
 /**
  * Internal comparison method
  * @param {String} op Comparison operator
- * @access private
  * @type Boolean
+ * @private 
  */
 RuleValidator.prototype.compare = function(op) {
 	var trg, src = (this.fld.getValue() || '').toString();
