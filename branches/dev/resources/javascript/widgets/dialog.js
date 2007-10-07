@@ -404,6 +404,7 @@ Dialog.prototype.hide = function() {
 /**
  * Called upon window.onresize
  * @type void
+ * @private
  */
 Dialog.prototype.resizeHandler = function(e) {
 	this.place();
@@ -412,6 +413,7 @@ Dialog.prototype.resizeHandler = function(e) {
 /**
  * Called upon window.onscroll
  * @type void
+ * @private
  */
 Dialog.prototype.scrollHandler = function(e) {
 	this.place();

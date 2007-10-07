@@ -1419,6 +1419,7 @@ Observable = function() {
 
 /**
  * The Widget class is the base class of all widgets.
+ * Implements {@link Observable} interface.
  * @param {Object} attrs Widget's attributes
  * @param {Function} func Setup function
  * @constructor

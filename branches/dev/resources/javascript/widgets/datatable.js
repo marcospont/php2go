@@ -101,6 +101,7 @@ DataTable.instances = {};
 
 /**
  * Initializes the widget
+ * @type void
  */
 DataTable.prototype.setup = function() {
 	var attrs = this.attributes;
@@ -259,6 +260,7 @@ DataTable.prototype.getNextRow = function(row) {
  * Handles click event on table headers
  * @param {Event} e Event
  * @type void
+ * @private
  */
 DataTable.prototype.sortHandler = function(e) {
 	var ev = $EV(e);
@@ -356,6 +358,7 @@ DataTable.prototype.sort = function(idx, desc) {
  * Handles click event on table rows
  * @param {Event} e Event
  * @type void
+ * @private
  */
 DataTable.prototype.selectHandler = function(e) {
 	var ev = $EV(e);
@@ -435,7 +438,7 @@ DataTable.prototype.selectHandler = function(e) {
  * @param {Number} idx Row index
  * @param {Boolean} b Select/unselect
  * @param {Boolean} r Whether 'changeselection' event must be triggered
- * @type void
+ * @type void 
  */
 DataTable.prototype.selectRow = function(idx, b, r) {
 	if (this.tbody) {
@@ -484,6 +487,7 @@ DataTable.prototype.selectRow = function(idx, b, r) {
  * @param {Object} row Table row
  * @param {Boolean} b Select/unselect
  * @type void
+ * @private
  */
 DataTable.prototype.selectRowUI = function(row, b) {
 	var a = this.attributes, b = !!b;
