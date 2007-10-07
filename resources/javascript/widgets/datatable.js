@@ -493,8 +493,8 @@ DataTable.prototype.selectRowUI = function(row, b) {
 
 /**
  * Configures CSS classes for all table rows
- * @access private
  * @type void
+ * @private 
  */
 DataTable.prototype._setupRows = function() {
 	if (this.tbody && this.tbody.rows.length > 0) {
@@ -531,8 +531,8 @@ DataTable.prototype._setupRows = function() {
 
 /**
  * Adds scrollable behavior on the data table
- * @access private
  * @type void
+ * @private 
  */
 DataTable.prototype._setupScroll = function() {
 	var tbl = this.table, head = this.thead, body = this.tbody;
@@ -574,8 +574,8 @@ DataTable.prototype._setupScroll = function() {
 
 /**
  * Table resize handler
- * @access private
  * @type void
+ * @private 
  */
 DataTable.prototype._onResize = function() {
 	var cont = this.table.parentNode;
@@ -602,8 +602,8 @@ DataTable.prototype._onResize = function() {
  * Default method to read the text contents of a table cell
  * @param {Object} row Table row
  * @param {Number} idx Column index
- * @access private
  * @type String
+ * @private 
  */
 DataTable.prototype._getRowValue = function(row, idx) {
 	if (row && row.cells) {
@@ -619,9 +619,9 @@ DataTable.prototype._getRowValue = function(row, idx) {
  * It's used to sort the array of values
  * collected from a table column.
  * @param {Object} a Left operand
- * @param {Object} b Right operand
- * @access private
+ * @param {Object} b Right operand 
  * @type Number
+ * @private 
  */
 DataTable.prototype._compare = function(a, b) {
 	if (a.value < b.value)

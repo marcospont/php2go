@@ -293,7 +293,8 @@ TabView.prototype.setActiveTab = function(tab) {
  * Changes active state of a given tab
  * @param {TabPanel} tab Tab panel
  * @param {Boolean} state Active state
- * @access private
+ * @type void
+ * @private
  */
 TabView.prototype._changeActiveState = function(tab, state) {
 	if (state) {
@@ -312,7 +313,8 @@ TabView.prototype._changeActiveState = function(tab, state) {
 /**
  * Loads content into a tab using AJAX
  * @param {TabPanel} tab Tab panel
- * @access private
+ * @type void
+ * @private
  */
 TabView.prototype._loadContents = function(tab) {
 	var self = this;
@@ -343,7 +345,8 @@ TabView.prototype._loadContents = function(tab) {
 /**
  * Handles click event on tab labels
  * @param {Event} e Event
- * @access private
+ * @type void
+ * @private
  */
 TabView.prototype._clickHandler = function(e) {
 	e = $EV(e);
@@ -362,7 +365,8 @@ TabView.prototype._clickHandler = function(e) {
 
 /**
  * Initializes scroll arrows
- * @access private
+ * @type void
+ * @private
  */
 TabView.prototype._initArrows = function() {
 	var ac = this.root.getElementsByClassName('tabScrollContainer')[0];
@@ -394,7 +398,8 @@ TabView.prototype._initArrows = function() {
 
 /**
  * Updates scroll arrows visibility state
- * @access private
+ * @type void
+ * @private
  */
 TabView.prototype._updateArrows = function() {
 	var ar = this.arrows, ns = this.navScroll;

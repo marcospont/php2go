@@ -272,8 +272,8 @@ AutoCompleteField.prototype.getChoices = function() {
 /**
  * Update the choices box contents
  * @param {String} html New contents
- * @access private
  * @type void
+ * @private 
  */
 AutoCompleteField.prototype.updateChoices = function(html) {
 	(this.options.ajax && this.options.throbber) && (this.options.throbber.hide());
@@ -437,9 +437,9 @@ AutoCompleteField.prototype.choiceClickHandler = function(e) {
 
 /**
  * Navigate by a given offset in the available choices
- * @param {Number} fw Offset
- * @access private
+ * @param {Number} fw Offset 
  * @type void
+ * @private 
  */
 AutoCompleteField.prototype.navigate = function(fw) {
 	if (this.choiceCount > 0) {
@@ -463,8 +463,8 @@ AutoCompleteField.prototype.navigate = function(fw) {
 /**
  * Choose an available choice from its index
  * @param {Number} idx Choice index
- * @access private
  * @type void
+ * @private 
  */
 AutoCompleteField.prototype.chooseByIndex = function(idx) {
 	var res, itemText, item = this.choiceItems[idx];

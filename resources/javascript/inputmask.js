@@ -775,8 +775,8 @@ Mask.prototype.onBlur = function(fld) {
  * Filters the field value removing chars that
  * don't respect the mask regular expression
  * @param {Object} field Field reference
- * @access private
  * @type void
+ * @private 
  */
 Mask.prototype.filter = function(field) {
 	var newVal = field.value, f = this.fields;
@@ -792,8 +792,8 @@ Mask.prototype.filter = function(field) {
  * against the mask format. Invalid chars will be removed and
  * missing literals will be included
  * @param {Object} field Field reference
- * @access private
  * @type void
+ * @private 
  */
 Mask.prototype.format = function(field) {
 	var maxPos = chrIdx = fldIdx = 0;
