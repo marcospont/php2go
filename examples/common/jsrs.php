@@ -36,7 +36,9 @@
 	$jsrs->handleRequest();
 
 	function jsrsTest($selected) {
-		return "You've chosen option {$selected}. PHP was successfully called! PHP Version: " . PHP_VERSION;
+		if (!empty($selected))
+			return "You've chosen option {$selected}. PHP was successfully called! PHP Version: " . PHP_VERSION;
+		return '';
 	}
 
 	function jsrsTest2() {
