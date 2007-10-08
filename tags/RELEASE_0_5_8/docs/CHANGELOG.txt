@@ -1,0 +1,255 @@
+PHP2Go Web Development Framework - CHANGELOG
+=============================================
+
+	Version 0.5.8 - 07/10/2007
+	--------------------------------
+	
+	* All if statements that use array keys that might be undefined were changed to use the isset operator	
+	* Support was added for E_RECOVERABLE_ERROR (PHP 5.2.x)
+	* [ticket:22] - php2go.data.Report - fixed bad parsing of nested queries
+	* [ticket:23] - Init - fixed undefined variable bug
+	* [ticket:27] - php2go.gui.LayerMenu - Fixed initialization of relative positioned menus
+	* [ticket:30] - php2go.net.MailTransport - When using sendmail, the email address must be quoted in the command string
+	* [ticket:31] - php2go.net.MailTransport - Show debug information when using sendmail
+	* php2go.db.Db - new method added: quoteIdentifier
+	* php2go.db.DMLBuilder - new mode added: DML_BUILDER_UPDATE_MULTIPLE
+		* This new mode should be used to build update statements for multiple records or all records (empty condition clause)
+	* php2go.data.Report - changed to build "order by" clause using db->quoteIdentifier
+	* php2go.form.field.FieldField - evaluate variables on the SAVEPATH attribute
+	* php2go.net.HttpRequest - changed isAjax to understand iframe based Ajax calls (file upload)
+	* [ticket:32] - docs/dtd/php2go_reports.dtd - added STRING on the values supported by the MASK attribute
+	* [ticket:35] - javascript/validator.js - fixed wrong call to FormValidator.clearSummary (previously renamed to clearErrors)
+	* [ticket:38] - php2go.form.field.EditSearchField - changed to read its value from the request and use it to load the data source
+	* javascript/validator.js - call afterValidate handler only when global validation result is true
+	* javascript/php2go.js
+		* Added PHP2Go.method
+		* Added override parameter on Object.extend
+		* Added Object.ifUndef, Object.isUndef, Object.isElement, Object.isFunction, Object.isArray, Object.isString, Object.isNumber, Object.isIterable
+		* Added Function.prototype.delay, Function.prototype.methodize, Function.prototype.implement
+		* Rewritten String.prototype.escapeHTML, added String.prototype.toArray
+	* javascript/structures.js
+		* Removed support of $continue exception. A return statement must be used instead	
+		* Added Collection.some, Collection.every
+		* Collection.filter renamed to Collection.valid (avoid collision with native filter implementations)
+		* Added Hash.findKey
+		* Added Array.prototype.lastIndexOf, Array.prototype.clone, Array.prototype.include
+		* Use native functions Array.prototype.forEach and Array.prototype.filter when available
+		* Define Array.prototype.concat when undefined (some Opera versions)
+	* javascript/dom.js
+		* All element extensions were changed from static methods to members of the Element class prototype
+		* Element.extend can now be used to register more element extensions
+		* An element can now be created using "new Element(tag, parent, style, html, attrs)"
+		* Added Element.readAttribute, Element.writeAttribute, Element.recursivelySum, Element.getComputedStyle, Element.getComputedStyles, 
+		* Added Element.scrollTo, Element.hasClass, Element.toggleClass, Element.getPaddingBox, Element.getBorderBox, Element.getBorder
+		* Added Element.getTag, Element.setInnerText
+		* Removed Element.watch, Element.classNames and CSSClasses class
+		* Element.getPosition was rewritten
+		* Element.insertHTML renamed to Element.insert
+		* Bug fixes on Element.getElementsByClassName and WCH.attach
+		* Event.onDOMReady was rewritten and optimized
+		* Event extension model was reviewed. An extended event will now always contain target, relatedTarget, pageX and pageY members
+		* Changed the way event handlers are cached (and flushed on IE browsers). Added Event.fire
+		* Changed WCH detection to ignore IE7
+	* javascript/ajax.js - New static method added: Ajax.bind. Allows to defined global Ajax event listeners
+	* Added a dialog library, containing 3 classes: Dialog, ModalDialog and ImageDialog
+		* Dialog: builds simple modeless dialogs, supporting relative or absolute positioning
+		* ModalDialog: builds modal dialogs
+		* ImageDialog: displays images on modal dialogs
+	* php2go.base.Document, php2go.base.DocumentHead, php2go.util.HtmlUtils - fixed issues with entities encoding
+	* php2go.form.Form - encode entities inside setFormAction and setBackUrl methods
+	* php2go.form.FormRule, javascript/validator.js - REQIFXX rules wasn't working with empty string as peer value
+	* php2go.form.SearchForm - new method added: clearSession
+	* php2go.template.TemplateParser - fixed bug while parsing widgets attributes
+	* javascript/ajax.js - AjaxService
+		* new method added: getHandler
+		* enable, disable and clear should support elements and form fields transparently	
+	* javascript/form/editorfield.js, javascript/widgets/calculator.js, javascript/widgets/colorpicker.js - fixed positioning issues
+	* php2go.gui.widgets.DataTable - New attributes added: scrollable and maxHeight
+	* errorHandler.php file was removed. The content was moved to p2gLib.php
+	* Added p2gCompatv4.php and p2gCompatv5+.php, containing PHP 4.x and 5.x specific code
+	* php2go.auth.User - New abstract method added: onLogout
+
+	Version 0.5.7 - 15/07/2007
+	--------------------------------
+	
+	* All HTML code generated by the framework was ported to XHTML 1.0 Transitional
+	* The examples folder was totally rebuilt; added a bundled examples browser
+	* javascript/dom.js - new methods added: Element.swapStyles, Element.addClass, Element.removeClass, Element.getInnerText
+	* javascript/php2go.js - additions and improvements
+		* added PHP2Go.eval; added safari detection on PHP2Go.browser
+		* Object.implement renamed to Object.extend
+	* javascript/ajax.js - added ifModified property on AjaxRequest class
+	* php2go.net.HttpRequest - new method added: rawPost
+	* Added php2go.db.QueryParser - splits a SQL string into the most significant parts
+	* php2go.db.Db - getCount method was rewritten
+	* php2go.db.QueryBuilder - new methods added: setTable, clearLimit
+	* php2go.file.DirectoryEntry - new method added: toArray
+	* php2go.xml.feed.Feed - new methods added: getItems, createDataSet
+	* Added a new subpackage called php2go.net.ldap, containing an LDAP client class
+	* Added a new authentication driver: php2go.auth.AuthLDAP
+	* php2go.net.MailMessage - support subject on the constructor
+	* php2go.net.MailTransport - support transport type and transport type parameters on the constructor; added throwErrors property (turns on/off error messages display)
+	* php2go.util.Callback - new method added: setFunctionByRef	
+	* Package php2go.util.service was renamed to php2go.service
+	* Added php2go.service.AbstractService - common service methods were moved to this class
+	* ServiceJSRS class was renamed to JSRSService and adapted to extend AbstractService	
+	* Added php2go.service.AjaxService - interacts with AjaxService JS class making possible calling functions or methods from JS code
+	* Added php2go.service.ajax.AjaxResponse
+		* contains an API that allows to build a sequence of Javascript commands.
+		* these commands are sent back to the client as a JSON string and can be understood by the run method of the AjaxResponse JS class
+	* javascript/ajax.js - added AjaxService class; added AjaxResponse.prototype.run (parses and executes commands defined on PHP side by AjaxResponse class)
+	* Added USE_COMPRESSED_JS configuration key
+	* php2go.graph.CaptchaImage - removed tahoma from fonts used to generate captcha string (not normally found on linux stations or servers)
+	* javascript/ajax.js - added file upload handling (auto detection based on form's enctype attribute or manually through the formUpload setting)
+	* javascript/php2go.js - added $IF (identity function); new attribute on $N function (attrs)
+	* New widget added: DataTable
+		* transforms a regular HTML table by adding sort and selection behaviors
+	* php2go.net.HttpRequest - changed getHeaders to work when PHP is not running as an Apache module
+	* php2go.datetime.Date - additions and improvements
+		* new methods added: fromSqlDate, toSqlDate, parse
+	* LOCAL_DATE_FORMAT configuration key was changed to support 3 different values: EURO, US or SQL
+		* EURO: DD/MM/YYYY - most widely used format (Europe, South America)
+		* US: MM/DD/YYYY - used on US and Canada
+		* SQL: YYYY-MM-DD - ISO8601 format
+		* core classes and JS libraries were adapted to support these new formats
+	* php2go.data.ReportSimpleSearch, php2go.form.field.EditSearchField - filters using DATE mask will now be automatically converted to SQL date
+	* php2go.auth.User - new method added: onAuthenticate (abstract)
+	* php2go.session.SessionManager - new parameter on getValue method: $fallback
+	* javascript/ajax.js - added AjaxPeriodicalUpdater class
+	* php2go.form.field.AutoCompleteField - decode utf8 input; send content-type header before printing choices
+	* Added widgets example: examples/widgets	
+
+	Version 0.5.6 - 12/05/2007
+	--------------------------------
+
+	* [ticket:8] - p2gLib.php - changed dumpArray to support objects in the first level and identify boolean and null values
+	* All methods that deal with the HEAD section of an HTML page were moved to a new class called DocumentHead
+	* php2go.template.Template, php2go.template.TemplateParser - structural changes were made so that resources used by widgets are collected when template is pre rendered
+	* php2go.gui.Widget - new methods and properties
+		* factory (static), preload (static), getDefaultAttributes, setParent
+		* Parent (parent widget), hasOutput (boolean, widget generates output or not)
+	* Existent widgets (Toolbar and TemplateContainer) were moved to a new subpackage called php2go.gui.widget
+	* New widget added: CollapsiblePanel
+		* a panel that accepts content, has a title bar and can be collapsed/expanded
+	* Support was added for a new delimiter type for templates: TEMPLATE_DELIM_DIRECTIVE (<% ... %>)
+	* javascript/php2go.js - Added Widget Javascript class
+	* New widget added: SlideShow
+		* display a list of images sequentially
+		* supports play/pause and an input to change interval between pictures
+	* [ticket:9] - php2go.validation.UploadValidator - reset and redefine FileUpload settings before each execution
+	* php2go.validation.RuleValidator - wasn't handling REQIF(operation) rules correctly
+	* New configuration entry: USE_COMPRESSED_JS
+		* turned on by default
+		* when turned off, framework's uncompressed Javascript libraries are used
+	* New widget added: GoogleMap
+		* receives a set of locations and configurations and renders a map, based on the Google Maps API
+	* php2go.net.HttpRequest - new method added: isAjax
+	* All SQL scripts needed to run the examples were moved to a new folder: examples/sql
+	* php2go.form.listener.FormAjaxListener
+		* resolve variables on URL attribute, CDATA section and CDATA sections of PARAM child nodes
+		* new attribute added: formValidate (indicates if the form associated with the request must be validated)
+	* php2go.form.field.DataGrid - 2 new attributes added
+		* SHOWCHECKBOXES (T|F) : allows to render the identifier column (leftmost column) as a checkbox input
+		* EMPTYGRIDMESSAGE (string) : message that should be displayed when the grid is empty (accepts i18n pattern)
+	* New example added: examples/crudcomponents
+	* php2go.db.Db - changed checkIntegrity to return false when check fails (a related record is found)
+	* javascript/form.js - changed ajaxify to expect an instance of an AJAX class (AjaxRequest, AjaxUpdater) instead of a function
+	* javascript/php2go.js - new methods and improvements
+		* removed UserAgent class - properties are now owned by PHP2Go.browser
+		* Object.serialize rewritten (performance, simplification)
+		* use window.execScript when available inside String.prototype.evalScripts
+		* added String.prototype.empty
+		* added Number.prototype.toPaddedString, Number.prototype.serialize
+		* Function.prototype.extend was rewritten
+	* [ticket:10] - javascript/php2go.js - fixed property search order inside Window.size and Window.scroll methods
+	* javascript/dom.js - new methods added
+		* Element.hasAttribute, Element.recursivelyCollect, Element.getParentNodes, Element.getChildNodes
+		* Element.getPreviousSiblings, Element.getNextSiblings, Element.getSiblings
+	* javascript/dom.js - methods improved
+		* Element.getStyle, Element.getOpacity, Element.update
+	* php2go.gui.Widget - new methods added: addEventListener, renderJS
+	* javascript/php2go.js - new methods: Widget.addEventListener, Widget.raiseEvent, Widget.hasAttributes
+	* Template syntax changes
+		* <!-- call function="funcname" ... --> (direct function call)
+		* <!-- function name="funcname" ... --> <!-- end function --> (container function)
+		* <!-- include widget path="path" ... --> (widget include)
+		* <!-- widget path="path" ... --> <!-- end widget --> (widget with content)
+		* Added <!-- listener ... --> <!-- end listener --> (allows to register JS event listeners on widgets)
+		* Understand "/tag" as "end tag" (e.g.: "/if" will be parsed as "end if")
+	* New widgets added: TabView and TabPanel
+		* provides control over a set of tab panels (tabbed views)
+	* php2go.net.Url - new method added: setParameters
+	* [ticket:12] - p2gLib.php - changed dumpArray to handle objects and arrays in a better way; added recursion detection (already visited objects)
+	* php2go.template.Template - reset loop variables (arrays, data sets and record sets) before iteration start (thx to adecool)
+	* php2go.gui.LayerMenu - added support for relative positioning
+	* javascript/ajax.js - AjaxUpdater - added onUpdate handler; call Element.show on containers only if they're not visible
+	* php2go.util.json.JSONEncoder - added JSONEncoder::jsIdentifier and JSONEncoder::jsFunction
+		* these methods allow to encode JS identifiers and functions
+	* New template tags - <!-- attribute ... --> <!-- end attribute --> (allows to define widget attributes)
+	* New widget added: I25BarCode
+		* renders a bar code using Interleaved 2 of 5 pattern
+	* javascript/form.js - added Field.prototype.beforeFocus (tasks and validations that must run before the element is focused)
+	* php2go.validation.RuleValidator, javascript/validator.js - bypass field x field rules only when *both* are empty
+	* ClassLoader - verify paths being imported, so that inexistent files can be detected when import is called
+	* Init - accept _ char in ABSOLUTE_URI configuration entry
+	* php2go.form.field.CheckField - enabled i18n on the CAPTION attribute
+	* php2go.form.Form, php2go.form.FormBasic, php2go.form.FormTemplate - new error display option: SHOWALL (whether all errors must be displayed or just the first one, defaults to TRUE)
+
+	Version 0.5.5 - 12/03/2007
+	--------------------------------
+
+	* Documentation inside source files was rewritten in English and phpDoc format
+		* the documentation was extended to cover more explanations and examples, when applicable
+		* the new documentation package will use HTML:frames:default theme, with some small fixes and customizations
+	* [ticket:4] - php2go.xml.feed.Feed - fixed bugs with date nodes and CDATA sections
+	* php2go.data.DataSet, php2go.data.adapter.* - added close method
+	* Init - fixed undefined variable error inside _initSession method
+	* php2go.file.FileManager - changed to extend PHP2Go instead of FileSystem
+	* php2go.form.Form - renamed evaluateStatement to resolveVariables
+	* php2go.form.listener.FormAJAXListener - listeners bound to submit buttons should automatically set 'url', 'form' and 'method' params
+	* php2go.net.Pop3 - new method added: deleteMessage, 4 methods renamed
+		* getMsgCount => getMessagesCount
+		* listMessages => getAllMessages
+		* clearMailBox => deleteAllMessages
+		* login => authenticate
+	* javascript/dom.js - changed addLoadListener to call addListener when document.body isn't available
+	* php2go.net.UserAgent - New detection rules: ie7, opera9, firefox2x, opera9+, winvista
+	* php2go.session.SessionObject - new method added: deleteProperty
+	* php2go.session.SessionManager - removed delele method; changed destroy method to static
+	* php2go.base.Component - new method added: hasAttribute
+	* php2go.template.widget.* - all classes were moved to php2go.gui package
+	* php2go.template.TemplateParser - assume "php2go.gui" when the path attribute of a widget is a class name
+	* javascript/dom.js - changed isVisible to consider parent elements when evaluating visibility
+	* Added AbstractValidator class, which is now the parent class of all validators
+	* php2go.validation.* - changed all validators to extend the new AbstractValidator class
+	* php2go.form.Form - added support for "help" node in XML specification
+		* example: <help mode="mode" options="option=value&option2=value2"/>
+	* php2go.form.FormAJAXListener - wasn't rendering onException parameter properly
+	* ph2pgo.form.field.DataGrid, ph2pgo.form.field.EditSearchField, ph2pgo.form.field.EditSelectionField, ph2pgo.form.field.LookupSelectionField - changed to understand the "style" XML attribute
+	* php2go.form.FormRule, php2go.validation.RuleValidator - added support for CURRENCY datatype
+	* javascript/php2go.js - changed PHP2Go.compare to support CURRENCY datatype
+	* php2go.util.json.JSONEncoder - wasn't encoding empty array values and empty object properties correctly
+	* Added thai translation package, produced by Ross Stewart and Trirat Petchsingh
+	* javascript/widgets/calculator.js - wasn't copying the result properly when field's mask was CURRENCY or INTEGER
+	* php2go.form.FormEventListener - 3 new methods added: getOwner, getOwnerForm and onDataBind
+	* php2go.form.FormButton - new method added: onDataBind
+	* [ticket:5] - Added support for variables inside the following attributes:
+		* listener.file
+		* listener.params
+		* listener.url
+	* php2go.util.Properties - fatal error when processSections=true and the input file doesn't contain sections
+	* php2go.data.Report - 2 new methods added: getCurrentPageUrl and getPageUrl
+	* [ticket:3] - php2go.template.TemplateParser - addded CONFIG tag
+		* this new tag is able to load configuration entries from files in the .ini format
+		* files can be fully or partially loaded (by section name)
+		* config variables can be used anywhere a variable is accepted
+		* example:
+			* loading: <!-- config file="test.conf" -->
+			* reading: #section_name.variable_name#
+	* php2go.template.Template, php2go.template.TemplateParser - changed to handle cache independently for the main template and its includes
+		* parsing is now composed by 3 phases: pre-compilation, compilation and processing of include blocks
+		* even if the main template is loaded from cache, its include blocks will be processed separately (from cache or not)
+	* [ticket:6] - php2go.base.Document - apply entities conversion on all URL parameters
+	* [ticket:7] - php2go.data.Report - don't clear simple search filters when print mode is enabled
+	* php2go.data.Report - wrong handling of group display using multiple columns
+	* php2go.auth.AuthDb - Added an optional parameter $dbFunction (default=false) in the setCryptFunction method (thx to Flávio Fagundes/Brazil)

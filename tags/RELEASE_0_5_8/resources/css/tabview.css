@@ -1,0 +1,151 @@
+.tabView, .tabViewBottom, .tabViewLeft, .tabViewRight {
+	position: relative;
+	zoom: 1;
+}
+.tabNavigationContainer:focus {
+	outline: 0;
+}
+.tabNavigation, .tabNavigation li {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	white-space: nowrap;
+}
+.tabNavigation li {
+	vertical-align: bottom;
+	cursor: pointer;
+	zoom: 1;
+}
+.tabNavigation li a {
+	position: relative;
+	background-color: #fff;
+	border: 1px solid #000;
+	vertical-align: bottom;
+	text-decoration: none;
+	outline: 0;
+	zoom: 1;
+}
+.tabNavigation li a[disabled] {
+	color: #999;
+	cursor: default;
+}
+.tabNavigation li a em {
+	padding: 5px;
+	font-style: normal;
+	display: block;
+}
+.tabScrollContainer {
+	position: absolute;
+	top: 0;
+	z-index: 10;
+}
+.tabScrollArrow {
+	position: absolute;
+	visibility: hidden;
+	background-color: Scrollbar;
+	outline-style: none;
+	border: 1px solid;
+	border-color: ThreeDLightShadow ThreeDDarkShadow ThreeDDarkShadow ThreeDLightShadow;
+	margin: 0;
+	padding: 0;
+}
+.tabContainer {
+	background-color: #fff;
+	border: 1px solid #000;
+	zoom: 1;
+	padding: 5px;
+}
+.tabContainer div {
+	overflow: auto;
+	display: none;
+}
+.tabContainer div.tabViewVisible {
+	display: block;
+}
+.tabContainer div.tabViewLoading {
+	visibility: hidden;
+}
+/* tob, bottom and left orientation */
+.tabView .tabScrollContainer, .tabViewBottom .tabScrollContainer, .tabViewLeft .tabScrollContainer {
+	left: 0;
+}
+/* top and bottom orientation */
+.tabView .tabScrollArrow, .tabViewBottom .tabScrollArrow {
+	width: 12px;
+	vertical-align: middle;
+}
+.tabView .tabNavigationContainer, .tabViewBottom .tabNavigationContainer {
+	position: relative;
+	overflow-x: hidden;
+	z-index: 1;
+	width: 100%;
+}
+.tabView .tabNavigation li, .tabViewBottom .tabNavigation li {
+	display: inline-block;
+	display: -moz-inline-stack;
+	*display: inline;
+	margin-right: 2px;
+}
+.tabView .tabNavigation li a, .tabViewBottom .tabNavigation li a {
+	display: block;
+	display: inline-block;
+}
+/* top orientation */
+.tabView .tabNavigation .tabViewSelected a {
+	border-bottom-width: 0;
+	padding-bottom: 1px;
+}
+.tabView .tabContainer {
+	margin-top: -1px;
+}
+/* bottom orientation */
+.tabViewBottom .tabNavigation li a {
+	vertical-align: text-top;
+}
+.tabViewBottom .tabNavigation .tabViewSelected a {
+	border-width: 0 1px 1px;
+	padding: 1px 0 0;
+}
+.tabViewBottom .tabContainer {
+	margin: 0 0 -1px;
+}
+/* left and right orientations */
+.tabViewLeft .tabScrollArrow, .tabViewRight .tabScrollArrow {
+	height: 12px;
+	text-align: center;
+}
+.tabViewLeft .tabNavigationContainer, .tabViewRight .tabNavigationContainer {
+	position: absolute;
+	overflow-y: hidden;
+	z-index: 1;
+}
+.tabViewLeft .tabNavigation li, .tabViewRight .tabNavigation li {
+	display: block;
+	margin: 0 0 2px;
+}
+.tabViewLeft .tabNavigation li a, .tabViewRight .tabNavigation li a {
+	display: block;
+	text-align: center;
+}
+/* left orientation */
+.tabViewLeft .tabNavigationContainer {
+	left: 0;
+}
+.tabViewLeft .tabNavigation .tabViewSelected a {
+	border-width: 1px 0 1px 1px;
+	padding: 0 1px 0 0;
+}
+.tabViewLeft .tabContainer {
+	margin: 0 0 0 -1px;
+}
+/* right orientation */
+.tabViewRight .tabNavigationContainer {
+	right: 0;
+}
+.tabViewRight .tabNavigation .tabViewSelected a {
+	border-width: 1px 1px 1px 0;
+	padding: 0 0 0 1px;
+}
+.tabViewRight .tabContainer {
+	margin: 0 -1px 0 0;
+}

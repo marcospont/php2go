@@ -1,0 +1,128 @@
+PHP2Go Web Development Framework - JS MIGRATION
+================================================
+
+	Version 0.5.8 - October 2007
+	---------------------------------
+	http://www.php2go.com.br
+
+	Below you can view a complete list of functions that used to be
+	included in the PHP2Go distributions until version 0.4.3.
+
+	The functions that have a "*" mark in the right side were included
+	in a backwards compatibility library called compat.js. This library
+	is included by default in every page built with php2go.base.Document.
+
+	The other functions (those without the "*" mark) were dropped and will
+	not be supported anymore. To keep these old functions running for your
+	application, you'll have to copy the old code to your application's
+	source tree.
+
+	» libs/cookie.js
+
+		setCookie *
+		getCookieVal
+		getCookie *
+		deleteCookie *
+		buildExpireDate
+
+	» libs/div.js
+
+		getWindowWidth
+		getWindowHeight
+		getWinXOffset
+		getWinYOffset
+		getDivFromName
+		getDivName
+		createLayer
+		createILayer
+		getDivImage
+		getDivForm
+		initDivPos
+		initDivSize
+		getDivLeft *
+		getDivTop *
+		getDivWidth *
+		getDivHeight *
+		getILayerWidth *
+		getILayerHeight *
+		moveDivTo *
+		moveDivBy
+		scrollILayerXTo *
+		scrollILayerYTo *
+		changeILayerUrl *
+		resizeDivTo
+		resizeDivBy
+		showHideLayer *
+		setDivVisibility *
+		hideSelectBoxes
+		hideCoveredElements
+		setDivVisibilities *
+		setDivClip
+		writeToDiv *
+		setDivBackgroundColor
+		setDivBackgroundImage
+		setDivZIndex
+		setDivStyleAttribute
+		getLeftFromEvent
+		getTopFromEvent
+
+	» libs/form.js
+
+		getFormObj *
+		getFormFieldObj *
+		getFormFieldAttribute
+		getFormFieldValue *
+		getEditCaretPos
+		getSelectionEnd
+		setEditCaretPos
+		getSelectedRadioOption *
+		getCheckboxValue *
+		setDisableField
+		enableField *
+		enableFieldList *
+		disableField *
+		disableFieldList *
+		requestFocus *
+		isEmpty *
+		isListSelected
+		isGroupSelected
+		checkBoxChange
+		editCalculatorClick
+		getRadioOptions *
+		clearForm *
+		createOptionsFromString *
+		clearOptions *
+		addOption *
+		selectOptionByCaption *
+		memoFieldCharControl
+		registerMemoField
+
+	» libs/object.js
+
+		getDocumentObject *
+		$ *
+		getElementAttribute
+		getAbsolutePos *
+		findParentElementByTag
+		addEvent *
+		stopEvent *
+		setBackgroundColor *
+		getStyleAttribute *
+		setStyleAttribute *
+		debugObject
+
+	» libs/report.js
+
+		goToPage
+
+	» libs/string.js
+
+		trim *
+		stringReplace *
+		capitalizeWords *
+
+	» libs/window.js
+
+		createWindow *
+		getCenterPosition
+		getFromSrcElement
