@@ -380,7 +380,7 @@ class DocumentHead
 			foreach($this->scriptBlocks as $language => $scripts) {
 				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
-				print sprintf("<script language=\"%s\" type=\"text/%s\">\n%s</script>\n", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
+				print sprintf("<script language=\"%s\" type=\"text/%s\">\n//<![CDATA[\n%s\n//]]>\n</script>\n", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
 		}
 		// extra content

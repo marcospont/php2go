@@ -10,7 +10,7 @@
     <table cellpadding="0" cellspacing="0" border="0">
       <tr id="{$id}_top">
         <td align="left" nowrap="nowrap"><select id="{$id}_formatblock" name="{$id}_formatblock"{$inputStyle}{$globalDisabled}>
-          <option value="" selected>{$formatBlock}</option><!-- LOOP var=$formatBlockOptions key="value" item="caption" --><option value="{$value}">{$caption}</option><!-- END LOOP -->
+          <option value="" selected="selected">{$formatBlock}</option><!-- LOOP var=$formatBlockOptions key="value" item="caption" --><option value="{$value}">{$caption}</option><!-- END LOOP -->
         </select></td>
         <td><img src="{$iconPath}spacer.gif" width="1" height="1" border="0" alt="" /></td>
         <!-- loop var=$topButtons key="key" item="caption" -->
@@ -19,9 +19,9 @@
       </tr>
       <tr id="{$id}_bottom">
         <td align="left" nowrap="nowrap"><select id="{$id}_fontname" name="{$id}_fontname"{$inputStyle} style="width:110px"{$globalDisabled}>
-          <option value="" selected>{$font}</option><!-- LOOP var=$fontNames key="fontValue" item="fontName" --><option value="{$fontValue}">{$fontName}</option><!-- END LOOP -->
+          <option value="" selected="selected">{$font}</option><!-- LOOP var=$fontNames key="fontValue" item="fontName" --><option value="{$fontValue}">{$fontName}</option><!-- END LOOP -->
         </select><select id="{$id}_fontsize" name="{$id}_fontsize"{$inputStyle} style="width:70px"{$globalDisabled}>
-          <option value="" selected>{$fontSize}</option><option value="1">1 (8 pt)</option><option value="2">2 (10 pt)</option><option value="3">3 (12 pt)</option><option value="4">4 (14 pt)</option><option value="5">5 (18 pt)</option><option value="6">6 (24 pt)</option><option value="7">7 (36 pt)</option>
+          <option value="" selected="selected">{$fontSize}</option><option value="1">1 (8 pt)</option><option value="2">2 (10 pt)</option><option value="3">3 (12 pt)</option><option value="4">4 (14 pt)</option><option value="5">5 (18 pt)</option><option value="6">6 (24 pt)</option><option value="7">7 (36 pt)</option>
         </select></td>
         <td><img src="{$iconPath}spacer.gif" width="1" height="1" border="0" alt="" /></td>
         <!-- loop var=$bottomButtons key="key" item="caption" -->
@@ -53,5 +53,9 @@
       </td></tr>
     </table>
   </div>
-  <script type="text/javascript">new EditorField($('{$id}'), {$options});</script>
+  <script type="text/javascript">
+  //<![CDATA[
+	 new EditorField($('{$id}'), {$options});
+  //]]>	
+  </script>
 </div>
