@@ -1,0 +1,41 @@
+body {
+	background-color: #eee;
+	margin: 0px;
+}
+#example_outer {
+	width: 100%;
+	height: 100%;
+}
+#example_inner {
+	padding: 8px 12px 0px 12px;
+}
+#example_view .tabNavigation li a {
+	width: auto;
+	text-align: center;
+	font-family: Verdana;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000;
+}
+#example_view .tabContainer {
+	background-color: #fff;
+}
+#example_view .tabContainer div {
+	overflow: auto;
+	padding: 10px;
+}
+#example_iframe {
+	border: none;
+	width: 100%;
+	height: 100%;
+}
+#example_loader {
+	font-size: 12px;
+	font-family: Verdana;
+	padding-top: 5px;
+}
+#examples, #view {
+	font-size: 13px;
+	font-family: Verdana;
+	font-weight: bold;
+}

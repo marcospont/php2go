@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- PHP2Go Examples : form.xml, used by formtemplate example -->
+<!DOCTYPE form SYSTEM "..\..\docs\dtd\php2go_forms.dtd">
+<form>
+
+	<!-- a "section" is a set of fields; you can flag it as conditional, then its visibility will be defined by a user function or method -->
+	<!-- the section name will appear in the template if a variable {section_[section_id]} is declared -->
+	<section name="PHP2Go Form Example" id="section" required_flag="T" required_color="#0000ff" required_text=" (*)">
+
+		<!-- the editfield implements an HTML input of type "TEXT" -->
+		<editfield name="edit_field" label="Date" mask="DATE" size="12" length="10" required="T" help="This fields requires a date greater than the first day of the current month, and less than today plus 2 days" accesskey="D">
+			<!-- a rule using PHP code (pattern ~#code#~), validating if the provided date is "greater than" (GT) the first day of the current month -->
+			<rule type="GT" value="01/~#date('m/Y')#~"/>
+			<!-- the text fields that use the mask "DATE" accept date expressions in the "VALUE" attribute of the rules -->
+			<rule type="LT" value="TODAY+2Y"/>
+		</editfield>
+
+		<!-- the passwdfield implements an HTML input of type "PASSWORD" -->
+		<passwdfield name="passwd_field" label="Password" value="xxxxxx" help="This is a sample of a simple password field" accesskey="P"/>
+
+		<!-- the rangefield is a composite field containing two editfield child nodes -->
+		<!-- the interval is posted as an array, and the keys are defined by the attributes startname and endname -->
+		<!-- a comparison rule is added automatically. using the attribute ruleequal, you can define if the interval accepts equal values -->
+		<rangefield name="range_field" label="Interval" required="T" startname="bottom" endname="top" surroundtext="Between %s and %s" ruleequal="F" rulemessage="The top date must be greater than the bottom date" accesskey="I">
+			<!-- in the child nodes, you don't need to provide the "name" attribute; the names will be defined by the rangefield -->
+			<editfield label="Bottom date" size="12" length="10" mask="DATE"/>
+			<editfield label="Top date" size="12" length="10" mask="DATE"/>
+		</rangefield>
+
+		<!-- a lookupfield builds an HTML select field based on the values of a database query -->
+		<!-- the query string is defined inside the DATASOURCE element -->
+		<lookupfield name="lookup_field" label="DB List Box" width="150" help="This is an HTML select box filled by a database query. Click on the List all button to fill the select using JSRS" accesskey="D">
+			<datasource>
+				<keyfield>client_id</keyfield>
+				<displayfield>name</displayfield>
+				<lookuptable>client</lookuptable>
+				<clause>category = 'Master'</clause>
+				<orderby>name</orderby>
+			</datasource>
+		</lookupfield>
+
+		<!-- this button contains a JSRS event listener, which is a simple tool to perform HTTP requests using JavaScript -->
+		<!-- in this special case, we will call a remote function that will bring the complete list of clients, not only the inactive ones -->
+		<!-- please open "examples/common/jsrs.php" for more details -->
+		<button type="BUTTON" name="fill" value="List all">
+			<listener type="JSRS" event="onClick" file="../common/jsrs.php" remote="jsrsTest2" callback="jsrsTest2Return" debug="F"/>
+		</button>
+
+		<!-- a combofield builds an HTML select with static options, defined one by one in the XML specification file -->
+		<!-- ** the width attribute is the width of the widget in pixels -->
+		<combofield name="combo_field" label="List Box" width="100" accesskey="L">
+			<option value="M" caption="Male" alt="Click here to choose the male sex"/>
+			<option value="F" caption="Female" alt="Click here to choose the female sex"/>
+			<!-- an example of a JSRS listener, that allows to call a function from another script when an event is dispatched -->
+			<!-- ** the remote attribute is the name of the PHP function to be called -->
+			<!-- ** the callback attribute must point to a user JS function, that receives the PHP function return as parameter -->
+			<listener type="JSRS" event="onChange" file="../common/jsrs.php" remote="jsrsTest" callback="jsrsTestReturn" params="this.options[this.selectedIndex].text" debug="F"/>
+		</combofield>
+
+		<!-- a radiofield builds a group of HTML radio buttons, defined one by one in the XML file -->
+		<!-- ** the cols attribute indicates the number of options per line -->
+		<radiofield name="radio_field" label="Radio Group" required="T" cols="3">
+			<!--
+				the radiofield accepts global listeners (direct descendants of radiofield node) or
+				individual listeners (descendants of option node). the global listeners will be included
+				in the HTML code of all provided options
+			-->
+			<option value="1" caption="Option 1" alt="Clicking in this option will turn the checkbox check_field mandatory" accesskey="1">
+				<listener type="JS" event="onClick" action="alert('option selected: ' + this.value)"/>
+			</option>
+			<option value="2" caption="Option 2" accesskey="2">
+				<listener type="JS" event="onClick" action="alert('option selected: ' + this.value)"/>
+			</option>
+			<option value="3" caption="Option 3" accesskey="3">
+				<!--
+					simple demonstration os JS listeners using the CDATA section as the function body
+				-->
+				<listener type="JS" event="onClick"><![CDATA[
+					alert('option selected: ' + element.value);
+				]]></listener>
+			</option>
+		</radiofield>
+
+		<!--
+			an example of a check field (CHECKBOX input);
+			the checkbox input is renderer together with a hidden field, which name is V_[checkfield_name];
+			when the form is submitted, the hidden field's value will be T if the checkbox is checked or F if it's unchecked
+		-->
+		<checkfield name="check_field" caption="I'm sure I want to click here" accesskey="C">
+			<!--
+				the following rule will turn the field mandatory if the field "radio field" has the value "1"
+				when using this kind of rule, it's recommended to set the attribute "comparetype", to define the data type of the comparison
+				the available types are: DATE, INTEGER, FLOAT and STRING
+			-->
+			<rule type="REQIFEQ" field="radio_field" value="1" comparetype="INTEGER" message="Choosing 'Option 1', the checkbox must be checked!"/>
+		</checkfield>
+
+		<!-- here we define a conditional section: its content will not be displayed if the evaluation function returns false -->
+		<!-- if you don't define an evaluate function, PHP2Go will search for a function called [section_id]_evaluate() -->
+		<!-- finally, if this function isn't defined, the method authorizeFormSection of the default authorizer will be used -->
+		<!-- ** you can use procedural functions or static method calls to evaluate section's visibility -->
+		<condsection id="condsection" evalfunction="evaluateSection">
+			<!--
+				a textfield is a simple label; using the default attribute, you can display in the
+				label content global variables, request parameters or other dynamic variables;
+				to apply values from the global scope, use the pattern ~variable~;
+				to evaluate PHP code, use the pattern ~#php code#~
+			-->
+			<textfield name="remote_addr" label="Remote Addr" default="~REMOTE_ADDR~"/>
+			<textfield name="php_text" label="PHP Text" default="Current time: ~#date('H:i:s')#~. This is a dynamic text returned from ~#testFunction()#~!"/>
+		</condsection>
+
+		<!-- a memofield is mapped to an HTML input of type "TEXTAREA" -->
+		<memofield name="memo_field" label="Textarea" cols="60" rows="6" maxlength="255" charcount="T" accesskey="T">
+			<rule type="REQIFEQ" field="combo_field" value="F"/>
+		</memofield>
+
+		<!-- a button group -->
+		<buttons>
+			<!-- a submit button, that is mapped to an HTML input of type "SUBMIT" -->
+			<!-- swap the two next lines to see the button with and without images -->
+			<button name="submit" type="SUBMIT" value="Submit" accesskey="S"/>
+			<!--<button name="submit" type="SUBMIT" img="resources/btn_send.gif" swpimg="resources/btn_send_ovr.gif"/>-->
+
+			<!-- a reset button, that is mapped to an HTML input of type "RESET" -->
+			<!-- swap the two next lines to see the button with and without images -->
+			<button name="reset" type="RESET" value="Reset"/>
+			<!--<button name="reset" type="RESET" img="resources/btn_reset.gif" swpimg="resources/btn_reset_ovr.gif"/>-->
+
+			<!-- a clear button, that builds an input of type "BUTTON" calling a special JavaScript function that clears the form fields -->
+			<!-- swap the two next lines to see the button with and without images -->
+			<button name="clear" type="CLEAR" value="Clear"/>
+			<!--<button name="clear" type="CLEAR" img="resources/btn_clear.gif" swpimg="resources/btn_clear_ovr.gif"/>-->
+		</buttons>
+
+	</section>
+
+</form>

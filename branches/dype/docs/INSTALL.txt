@@ -1,0 +1,173 @@
+PHP2Go Web Development Framework - INSTALL
+===========================================
+
+	Version 0.5.8 - October 2007
+	--------------------------------
+	http://www.php2go.com.br
+
+		Copyright (C) 2002-2007 Marcos Pont <mpont@uses.sourceforge.net>
+
+		This library is free software; you can redistribute it and/or
+		modify it under the terms of the GNU Lesser General Public
+		License as published by the Free Software Foundation; either
+		version 2.1 of the License, or (at your option) any later version.
+
+		This library is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+		Lesser General Public License for more details.
+
+		You should have received a copy of the GNU Lesser General Public
+		License along with this library; if not, write to the Free Software
+		Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+		02111-1307  USA
+
+	Installation Manual:
+
+		After unpacking the PHP2Go project in your webserver, you must decide where to
+		use it. The decision between using the framework in one web application or in many
+		applications is very important. The decision brings differences to the task of
+		installing, preparing the environment and enabling the framework to work correctly.
+
+		In an "one system" environment, please open the userConfig.php file, located at the
+		root folder of the framework. Fill the array entries to suite your environment: path
+		settings, error handling settings, database settings and values for some common META
+		tags that will be included in the HTML documents of your system.
+
+		If you choose to use the framework in more than one system, then you'll have to define
+		one configuration set for each system. To create this sets, you can create a file called
+		userConfig.php and place it in the DOCUMENT_ROOT folder of each system. If this alternative
+		seems inadequate to you, you can define the $P2G_USER_CFG array, containing all the required
+		entries, and put it in your system's configuration file. Using this approach, PHP2Go will be
+		enable to catch the configuration array in the global scope and process it.
+
+		To create a PHP script that can be able to access all the PHP2Go features, you must include
+		the p2gConfig.php file. Before that, the configuration set ($P2G_USER_CFG) must be defined.
+		The example below can illustrate that.
+
+		IMPORTANT: "PHP2GO_ROOT/p2gConfig.php" performs all initialization routines of the framework. It's
+		strongly recommended to include/require it using absolute or relative paths, and *never* include it
+		just by name, relying on "include_path" resolutions. This is because p2gConfig.php depends on the
+		__FILE__ constant to find its own location, which could point to the wrong place when include_path is used.
+
+	Configuration file example:
+
+		<?php
+
+		// your constants
+		define("FOO", "baz");
+
+		// your includes
+		include_once("foo.php");
+		include_once("bar.php");
+
+		// PHP2Go configuration array definition
+		$P2G_USER_CFG['ABSOLUTE_URI'] = $_SERVER['DOCUMENT_ROOT'] . "/php2go/";
+		//... (fill all the possible entries, see 'Configuration Set' section below)
+
+		// PHP2Go configuration file
+		require_once("/path/to/php2go/p2gConfig.php");
+
+		?>
+
+		Suppose that the file shown above is called config.inc.php. Just include it in the first line of
+		your scripts and you'll be able to access all the framework's features.
+
+	Configuration Set:
+
+		See CONFIGURATION.txt
+
+	Writing your first scripts:
+
+		The following example shows how to write a simple script using the Document class:
+
+		Situation 1 - using PHP2Go default configuration file
+		------------------------------------------------------
+
+		<!-- pageLayout.tpl -->
+		{$main}
+
+		<!-- myScript.php -->
+		<?php
+		// this script will detect the default configuration file and include it
+		require_once("/path/to/php2go/p2gConfig.php");
+		import('php2go.base.Document');
+
+		// create a HTML document
+		$document = new Document("pageLayout.tpl");
+
+		// add your stylesheet files
+		$document->addStyle('css/myapp.css');
+
+		// add your Javascript files
+		$document->addScript('js/utils.js');
+
+		// Assign values to all elements
+		// Here, we suppose that the page layout has one single variable declared: {main}
+		$document->assign('main', "Hello world!");
+
+		// Display the HTML output
+		$document->display();
+		?>
+
+		Situation 2 - using your customized configuration file
+		-------------------------------------------------------
+
+		<!-- pageLayout2.tpl -->
+		<table border='0' width='760'>
+		 <tr>
+		  <td>{$header}</td>
+		 </tr>
+		 <tr>
+		  <td>{$main}</td>
+		 </tr>
+		</table>
+
+		<!-- header.tpl -->
+		<table border='0' width='100%'>
+		 <tr>
+		  <td>{$pageTitle}</td>
+		 </tr>
+		</table>
+
+		<!-- myScript2.php -->
+		<?php
+		// inside the file included below, you must include p2gConfig.php, from the PHP2Go root folder
+		require_once("myConfigFile.php");
+		import('php2go.base.Document');
+
+		// Create a HTML document
+		$document = new Document("pageLayout2.tpl");
+
+		// In a layout template provided to the Document class, each simple
+		// variable can be used as a document element. One of these elements
+		// must be used to generate the main page content. Other elements (or
+		// slots) could be used to display reusable pieces of interface, like
+		// a header, a menu, a footer, .... In this example, we're using 2
+		// template variables (elements): $header and $main
+
+		// First, we assign "header" element with another template
+		// In this case, "header" is the top portion of the page
+		$header =& $document->createElement('header', 'header.tpl', T_BYFILE);
+		$header->assign('pageTitle', 'My Test Page');
+
+		// Second, we assign "main" element with a simple string value
+		$document->assign('main', "Hello World!");
+
+		// Finally, we use the display method generate and display the HTML output
+		$document->display();
+		?>
+
+	Getting to know the framework's API:
+
+		The package you've just downloaded contains a folder called 'examples'. Inside it, there are many use cases
+		related to some of the most important classes included in the PHP2Go core.
+
+		The examples were created to help developers with the task of learning PHP2Go. It's true that the current learning
+		curve of this framework is very long, but we'll be working hard on this. The available examples try to demonstrate with
+		simple test cases the utility of some methods in each class. In some scripts, as the ones that use the classes of
+		php2go.form and php2go.data packages, there's a real example inserted, on which the developers can be based to build
+		features for their applications.
+
+		It's stronlgy recommended that you try to use these examples, getting to know the funcionalities of each involved class.
+		This will became the task of learning PHP2Go much more easier.
