@@ -52,6 +52,8 @@
 	$sp->addCellNote(0, 1, 'A brief description of the product');
 	$sp->writeString(0, 2, 'Long Desc', 0, 0, $arialBold, $borders);
 	$sp->addCellNote(0, 2, 'A long description of the product');
+	$sp->writeString(0, 3, 'Date Added', 0, 0, $arialBold, $borders);
+	$sp->addCellNote(0, 3, 'Date added');
 
 	/**
 	 * writing the results of a database query
@@ -59,16 +61,13 @@
 	$db =& Db::getInstance();
 	$rs =& $db->query("select * from products");
 	while (!$rs->EOF) {
-		$sp->writeString($rs->absolutePosition()+1, 0, $rs->fields['code']);
-		$sp->writeString($rs->absolutePosition()+1, 1, $rs->fields['short_desc']);
-		$sp->writeString($rs->absolutePosition()+1, 2, $rs->fields['long_desc']);
+		$row = $rs->absolutePosition() + 1;
+		$sp->writeString($row, 0, $rs->fields['code']);
+		$sp->writeString($row, 1, $rs->fields['short_desc']);
+		$sp->writeString($row, 2, $rs->fields['long_desc']);
+		$sp->writeDateTime($row, 3, $rs->fields['date_added']);
 		$rs->moveNext();
 	}
-
-	/**
-	 * create a frozen pane
-	 */
-	$sp->freezePanes(1, 10);
 
 	/**
 	 * save the final content

@@ -52,7 +52,8 @@ $P2G_LANGUAGE['ERR_TYPES'] = array(
 	128 => "Alerte du compilateur",
 	256 => "Erreur d'usager",
 	512 => "Alerte d'usager",
-	1024 => "Avis d'usager"
+	1024 => "Avis d'usager",
+	4096 => "Catchable Fatal Error"
 );
 $P2G_LANGUAGE['ERR_ABSOLUTE_URI_NOT_FOUND'] = "L'entrée 'ABSOLUTE_URI' n'était pas fixée dans la tableau global des configurations!";
 $P2G_LANGUAGE['ERR_CONFIG_ENTRY_NOT_FOUND'] = "L'entrée <I>%s</I> n'était pas fixée dans le tableau global des configurations!";

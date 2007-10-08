@@ -230,7 +230,7 @@ EditSearchField.prototype.focus = function() {
  */
 EditSearchField.prototype.submit = function(initOption) {
 	var ffilt = $F(this.filters);
-	var initOption = PHP2Go.ifUndef(initOption, null);
+	var initOption = Object.ifUndef(initOption, null);
 	if (this.search.value != '') {
 		if (this.autoTrim)
 			this.search.value = this.search.value.trim();

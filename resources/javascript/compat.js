@@ -107,7 +107,7 @@ function writeToDiv(elm, op, cl) {
 	elm = $(elm), op = !!op;
 	if (elm) {
 		(op && elm.clear());
-		elm.insertHTML($A(arguments).slice(3).join(''), 'bottom');
+		elm.insert($A(arguments).slice(3).join(''), 'bottom');
 	}
 }
 function getFormObj(frm) {

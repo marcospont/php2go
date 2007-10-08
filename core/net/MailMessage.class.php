@@ -702,7 +702,7 @@ class MailMessage extends PHP2Go
 	 *
 	 * Example:
 	 * <code>
-	 * $msg->setHtmlBody('<html><body><img src='cid:logo' border='0' alt=''><br />Hello World!</body></html>');
+	 * $msg->setHtmlBody('<html><body><img src='cid:logo' border='0' alt='' /><br />Hello World!</body></html>');
 	 * $msg->addEmbeddedFile('images/logo.gif', 'logo');
 	 * </code>
 	 *
@@ -1102,7 +1102,7 @@ class MailMessage extends PHP2Go
 	 * Formats a recipient address
 	 *
 	 * @param array $address Array containing e-mail address and name
-	 * @access private
+	 * @access protected
 	 * @return string
 	 */
 	function _formatAddress($address) {

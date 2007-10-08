@@ -236,7 +236,7 @@ class FormEventListener extends PHP2Go
 	function setOwner(&$Owner, $ownerIndex=NULL) {
 		$this->_Owner =& $Owner;
 		$this->_ownerIndex = $ownerIndex;
-		if (TypeUtils::isInstanceOf($Owner, 'FormField') && in_array($this->eventName, $Owner->customEvents))
+		if (TypeUtils::isInstanceOf($Owner, 'FormField') && in_array(strtolower($this->eventName), $Owner->customEvents))
 			$this->custom = TRUE;
 	}
 

@@ -154,7 +154,7 @@ ColorPicker.prototype.setup = function() {
 	if (this.mode == 'popup') {
 		if (!ColorPicker.loaded) {
 			ColorPicker.loaded = true;
-			Event.addLoadListener(function(e) {
+			Event.onDOMReady(function(e) {
 				ColorPicker.popup = self.build();
 			});
 		}
@@ -372,7 +372,7 @@ ColorPicker.prototype.rgbToHex = function(s) {
  */
 ColorPicker.prototype.mouseDownHandler = function(e) {
 	var pop = ColorPicker.popup;
-	var t = $E($EV(e).element());
+	var t = $EV(e).target;
 	if (!t.isChildOf(pop.trigger) && !t.isChildOf(pop))
 		this.hidePopup();
 };
@@ -389,12 +389,12 @@ ColorPicker.prototype.showPopupAt = function(trg) {
 	if (this.onOpen)
 		this.onOpen();
 	pop.trigger = trg;
-	pop.moveTo(pos.x, pos.y+dim.height);
+	pop.moveTo(pos.x, (pos.y+dim.height));
 	pop.onClose = this.onClose;
 	pop.onSelect = this.onSelect;
 	if (pop.style.display == 'none')
 		pop.show();
-	Event.addListener(document, 'mousedown', this.mouseDownHandler.bind(this));
+	Event.addListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'));
 };
 
 /**
@@ -407,7 +407,7 @@ ColorPicker.prototype.hidePopup = function() {
 		pop.onClose();
 	pop.trigger = null;
 	pop.hide();
-	Event.removeListener(document, 'mousedown', this.mouseDownHandler.bind(this));
+	Event.removeListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'));
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'widgets/colorpicker.js'] = true;

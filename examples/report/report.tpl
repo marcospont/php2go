@@ -50,11 +50,11 @@
 	<div style="padding:4px;">
 		<table width="100%" cellpadding="4" cellspacing="0" border="0">
 			<tr>
-				<td>{$row_count}</td>
+				<td align="left">{$row_count}</td>
 				<td align="right">{$rows_per_page}</td>
 			</tr>
 			<tr>
-				<td>{$go_to_page}</td>
+				<td align="left">{$go_to_page}</td>
 				<td align="right">{$page_links}</td>
 			</tr>
 		</table>

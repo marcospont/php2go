@@ -334,9 +334,9 @@ class FormRule extends PHP2Go
 			$args[] = "ruleType:\"{$this->type}\"";
 			if ($this->compareType != NULL)
 				$args[] = "dataType:\"{$this->compareType}\"";
-			if ($this->field != NULL)
+			if ($this->field !== NULL)
 				$args[] = "peerField:\"{$this->field}\"";
-			if ($this->value != NULL) {
+			if ($this->value !== NULL) {
 				$value = ($this->type == 'REGEX' ? preg_replace("|\/|", "/", $this->value) : "\"{$this->value}\"");
 				$args[] = "peerValue:{$value}";
 			}

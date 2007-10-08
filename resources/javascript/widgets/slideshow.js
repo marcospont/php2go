@@ -183,7 +183,7 @@ SlideShow.prototype.loadNextImage = function() {
 	this.loading = true;
 	this.waiting = true;
 	this[this.background].setOpacity(1);
-	this.timer = setTimeout(this.onTimerEnd.bind(this), this.attributes['delay']);
+	this.timer = this.onTimerEnd.bind(this).delay(this.attributes['delay']);
 	this[this.background].src = this.attributes['images'][this.index].url;
 	if (this.index == (this.attributes['images'].length-1)) {
 		this.index = 0;

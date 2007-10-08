@@ -107,8 +107,16 @@ EditorField = function(fld, opts) {
 	 * @type Selection
 	 */
 	this.selection = (PHP2Go.browser.ie ? new Selection(this.document) : new Selection(this.iframe.contentDocument, this.iframe.contentWindow));
+	this.setup();
 };
 EditorField.extend(ComponentField, 'ComponentField');
+
+/**
+ * Holds existent EditorField instances,
+ * indexed by ID.
+ * @type Object
+ */
+EditorField.instances = {};
 
 /**
  * Performs all the setup routines of the HTML editor. This method
@@ -153,6 +161,7 @@ EditorField.prototype.setup = function() {
 	});
 	if (this.config.readOnly)
 		this.setDisabled(true);
+	EditorField.instances[this.fld.id] = this;
 };
 
 /**
@@ -163,7 +172,7 @@ EditorField.prototype.setup = function() {
 EditorField.prototype.setupOptions = function() {
 	var self = this;
 	var def = function(v, d) {
-		self.config[v] = PHP2Go.ifUndef(self.config[v], d);
+		self.config[v] = Object.ifUndef(self.config[v], d);
 	};
 	def('readOnly', false);
 	def('styleSheet', null);
@@ -253,27 +262,27 @@ EditorField.prototype.setupEvents = function() {
 	// change block format, font name and font size
 	$(self.name + '_formatblock', self.name + '_fontname', self.name + '_fontsize').walk(function(item, idx) {
 		Event.addListener(item, 'change', function(event) {
-			self.execCommand(item.name.substring(len), item.options[item.selectedIndex].value, $EV(event));
+			self.execCommand(item.id.substring(len), item.options[item.selectedIndex].value, $EV(event));
 			item.options[0].selected = true;
 		});
 	});
 	// top buttons
 	$C($(this.name + '_top').getElementsByTagName('a')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function(event) {
-			self.execCommand(item.name.substring(len), null, $EV(event));
+			self.execCommand(item.id.substring(len), null, $EV(event));
 		});
 	});
 	// bottom buttons
 	$C($(this.name + '_bottom').getElementsByTagName('a')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function(event) {
-			self.execCommand(item.name.substring(len), $EV(event));
+			self.execCommand(item.id.substring(len), $EV(event));
 		});
 	});
 	// emoticons
 	$C(this.divEmoticons.getElementsByTagName('img')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function(event) {
 			self.focus();
-			self.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+item.src+"' border='0' alt=''>");
+			self.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+item.src+"' border='0' alt=''/>");
 		});
 	});
 	// form submission
@@ -286,17 +295,6 @@ EditorField.prototype.setupEvents = function() {
 	if (this.config.resizeMode != 'none') {
 		Event.addListener($(this.name + '_resize'), 'mousedown', function(e) {
 			self.setResizing($EV(e), true);
-		});
-	}
-	// internal event listeners
-	if (!PHP2Go.browser.ie) {
-		this.addEventListener('afterpaste', function() {
-			var self = this;
-			setTimeout(function() {
-				var v = self.getValue();
-				self.execCommand('selectall');
-				self.insertHTML(self.cleanHTML(v));
-			}, 10);
 		});
 	}
 };
@@ -339,10 +337,10 @@ EditorField.prototype.getValueAsText = function() {
  */
 EditorField.prototype.getBrokenImages = function() {
 	var imgs = this.document.body.getElementsByTagName('img');
-	var bi = $C(imgs).filter(function(item, idx) {
-		if (typeof(item.fileSize) != 'undefined')
+	var bi = $C(imgs).valid(function(item, idx) {
+		if (!Object.isUndef(item.fileSize))
 			return (item.fileSize == -1);
-		if (typeof(item.naturalWidth) != 'undefined')
+		if (!Object.isUndef(item.naturalWidth))
 			return (item.naturalWidth == 0);
 		return (!item.complete);
 	});
@@ -374,8 +372,8 @@ EditorField.prototype.insertHTML = function(html) {
 		frag = range.createContextualFragment(html);
 		last = frag.lastChild;
 		range.insertNode(frag);
-		this.selection.selectElement(last);
-		this.selection.collapse(last && last.nodeName.equalsIgnoreCase('br'));
+		sel.selectElement(last);
+		sel.collapse(last && last.nodeName.equalsIgnoreCase('br'));
 	}
 };
 
@@ -465,10 +463,7 @@ EditorField.prototype.changeMode = function(b) {
 		this.textarea.hide();
 		this.iframe.show();
 	}
-	var self = this;
-	setTimeout(function() {
-		self.focus();
-	}, 5);
+	this.focus.bind(this).delay(5);
 };
 
 /**
@@ -489,6 +484,9 @@ EditorField.prototype.execCommand = function(cmd, val, ev) {
 	try {
 		this.focus();
 		switch (cmd.toLowerCase()) {
+			case 'pickbackcolor' :
+			case 'pickforecolor' :
+				break;
 			case 'addemoticon' :
 				this.showHideEmoticons(ev);
 				break;
@@ -523,7 +521,7 @@ EditorField.prototype.execCommand = function(cmd, val, ev) {
 					ev.stop();
 				} else {
 					this.document.execCommand(cmd, false, val);
-					this.raiseEvent('afterpaste');
+					this.paste();
 				}
 				break;
 			default :
@@ -586,7 +584,7 @@ EditorField.prototype.keyHandler = function(e) {
 			case 'u' : !e.shiftKey && (cmd = 'underline'); break;
 			case 'v' :
 				if (!e.shiftKey) {
-					PHP2Go.browser.ie ? (cmd = 'paste') : (this.raiseEvent('afterpaste'));
+					PHP2Go.browser.ie ? (cmd = 'paste') : (this.paste());
 				}
 				break;
 			case 'x' : !e.shiftKey && PHP2Go.browser.ie && (cmd = 'cut'); break;
@@ -613,6 +611,7 @@ EditorField.prototype.setResizing = function(e, b) {
 	var self = this, r = this.resizer;
 	var cont = $(this.name + '_container');
 	var box = $(this.name + '_resizeBox');
+	var rh = PHP2Go.method(this, 'resizeHandler');
 	if (b) {
 		var dim = cont.getDimensions();
 		box.resizeTo(dim.width, dim.height);
@@ -622,15 +621,15 @@ EditorField.prototype.setResizing = function(e, b) {
 		r.mode = this.config.resizeMode;
 		r.point = {x:e.screenX,y:e.screenY};
 		r.size = {w:parseInt(box.style.width, 10),h:parseInt(box.style.height, 10)};
-		Event.addListener(document, 'mousemove', this.resizeHandler.bind(this));
-		Event.addListener(document, 'mouseup', this.resizeHandler.bind(this));
+		Event.addListener(document, 'mousemove', rh);
+		Event.addListener(document, 'mouseup', rh);
 	} else {
 		box.style.display = 'none';
 		cont.style.display = 'block';
 		this.document.designMode = 'on';
 		r.resizing = false;
-		Event.removeListener(document, 'mousemove', this.resizeHandler.bind(this));
-		Event.removeListener(document, 'mouseup', this.resizeHandler.bind(this));
+		Event.removeListener(document, 'mousemove', rh);
+		Event.removeListener(document, 'mouseup', rh);
 	}
 };
 
@@ -648,9 +647,9 @@ EditorField.prototype.resizeHandler = function(e) {
 	var box = $(this.name + '_resizeBox');
 	if (e.type == 'mousemove') {
 		if (/horizontal|both/i.test(r.mode))
-			box.style.width = Math.max(r.size.w + dx, r.minWidth);
+			box.style.width = Math.max(r.size.w + dx, r.minWidth) + 'px';
 		if (/vertical|both/i.test(r.mode))
-			box.style.height = Math.max(r.size.h + dy, r.minHeight);
+			box.style.height = Math.max(r.size.h + dy, r.minHeight) + 'px';
 	} else {
 		this.setResizing(e, false);
 		this.resizeTo(r.size.w+dx, r.size.h+dy);
@@ -673,22 +672,16 @@ EditorField.prototype.resizeTo = function(w, h) {
 	var setw = (w && !isNaN(w) && /horizontal|both/i.test(this.config.resizeMode));
 	var seth = (h && !isNaN(h) && /vertical|both/i.test(this.config.resizeMode));
 	if (setw || seth) {
-		var cont = $(this.name + '_container');
-		var cd = cont.getDimensions();
-		var ifr = this.iframe;
-		var id = ifr.getDimensions();
+		var cont = $(this.name + '_container'), cd = cont.getDimensions();
+		var txt = this.textarea, ifr = this.iframe, dim = (this.textMode ? txt : ifr).getDimensions();
 		var dx = (w - cd.width), dy = (h - cd.height);
-		if (PHP2Go.browser.gecko) {
-			dx -= 4;
-			dy -= 4;
-		}
 		if (setw) {
 			cont.style.width = w + 'px';
-			ifr.style.width = (id.width+dx) + 'px';
+			txt.style.width = ifr.style.width = (dim.width+dx-(PHP2Go.browser.gecko?4:0)) + 'px';
 		}
 		if (seth) {
 			cont.style.height = h + 'px';
-			ifr.style.height = (id.height+dy) + 'px';
+			txt.style.height = ifr.style.height = (dim.height+dy-(PHP2Go.browser.gecko?4:0)) + 'px';
 		}
 	}
 };
@@ -702,10 +695,10 @@ EditorField.prototype.showHideEmoticons = function(ev) {
 	var emo = this.divEmoticons;
 	if (emo.getStyle('display') == 'none') {
 		// set emoticons div position and display it
-		var elm = $E(ev.element());
+		var elm = ev.findElement('a');
 		var pos = elm.getPosition();
-		emo.setStyle('left', (pos.x-(emo.getDimensions().width-elm.parentNode.offsetWidth+3)) + 'px');
-		emo.setStyle('top', (pos.y+elm.parentNode.offsetHeight-2) + 'px');
+		var dim = elm.getDimensions();
+		emo.moveTo((pos.x+dim.width-emo.getDimensions().width), (pos.y+dim.height));
 		emo.show();
 	} else {
 		emo.hide();
@@ -757,7 +750,7 @@ EditorField.prototype.insertImage = function() {
 		src = prompt(Lang.editor.insertImage, "");
 		if (src != null && src != "") {
 			if (sel.getType() == 'None') {
-				this.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+src+"' alt='' style='border:none'>");
+				this.insertHTML("<img id='"+PHP2Go.uid('image')+"' src='"+src+"' alt='' style='border:none' />");
 			} else {
 				doc.execCommand('insertimage', false, src);
 			}
@@ -770,22 +763,33 @@ EditorField.prototype.insertImage = function() {
  * @type void
  */
 EditorField.prototype.paste = function() {
-	var div = $(this.name + '_pasteDiv');
-	if (!div) {
-		div = $N('div', document.body, {
-			visibility : 'hidden',
-			overflow : 'hidden',
-			position : 'absolute',
-			width : 1,
-			height : 1
-		});
-		div.id = this.name + '_pasteDiv';
+	if (PHP2Go.browser.ie) {
+		var div = $(this.name + '_pasteDiv');
+		if (!div) {
+			div = $N('div', document.body, {
+				visibility : 'hidden',
+				overflow : 'hidden',
+				position : 'absolute',
+				width : 1,
+				height : 1
+			});
+			div.id = this.name + '_pasteDiv';
+		}
+		div.innerHTML = '';
+		range = document.body.createTextRange();
+		range.moveToElementText(div);
+		range.execCommand('paste');
+		this.insertHTML(this.cleanHTML(div.innerHTML));
+		this.raiseEvent('paste');
+	} else {
+		var self = this;
+		setTimeout(function() {
+			var v = self.getValue();
+			self.execCommand('selectall');
+			self.insertHTML(self.cleanHTML(v));
+			self.raiseEvent('paste');
+		}, 10);
 	}
-	div.innerHTML = '';
-	range = document.body.createTextRange();
-	range.moveToElementText(div);
-	range.execCommand('paste');
-	this.insertHTML(this.cleanHTML(div.innerHTML));
 };
 
 /**

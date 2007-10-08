@@ -315,7 +315,7 @@ class AutoCompleteField extends EditableField
 		// minimum chars for a search token
 		$this->setMinChars(@$attrs['MINCHARS']);
 		// ignore case when searching
-		if ($attrs['IGNORECASE'])
+		if (array_key_exists('IGNORECASE', $attrs))
 			$this->setIgnoreCase(resolveBooleanChoice($attrs['IGNORECASE']));
 		// full search
 		$this->setFullSearch(resolveBooleanChoice(@$attrs['FULLSEARCH']));

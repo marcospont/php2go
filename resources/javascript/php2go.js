@@ -64,41 +64,17 @@ var PHP2Go = {
 	/**
 	 * @ignore
 	 */
-	scriptRegExpAll : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'img'),
+	scriptRegExpAll : new RegExp('<script[^>]*>([\\S\\s]*?)<\/script>', 'img'),
 	/**
 	 * @ignore
 	 */
-	scriptRegExpOne : new RegExp('(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)', 'im'),
+	scriptRegExpOne : new RegExp('<script[^>]*>([\\S\\s]*?)<\/script>', 'im'),
 	/**
 	 * Indicates if it was possible to add
 	 * methods in the HTMLElement class prototype
 	 * @type Boolean
 	 */
 	nativeElementExtension : !!window.HTMLElement,
-	/**
-	 * Check all arguments to see if all of them
-	 * are defined. If one of the passed values
-	 * is undefined, the function returns false.
-	 * @type Boolean
-	 */
-	def : function() {
-		var i, a = arguments;
-		for (i=0; i<a.length; i++) {
-			if (typeof(a[i]) != '' && typeof(a[i]) != 'undefined')
-				return false;
-		}
-		return true;
-	},
-	/**
-	 * Return a default value 'def' when a given
-	 * object 'obj' is undefined
-	 * @param {Object} obj Object to test
-	 * @param {Object} def Default value to return when o is undefined
-	 * @return The given object or the default value
-	 */
-	ifUndef : function(obj, def) {
-		return (typeof(obj) != 'undefined' ? obj : def);
-	},
 	/**
 	 * Includes a given JS libray
 	 * @param {String} lib Library path
@@ -146,14 +122,14 @@ var PHP2Go = {
 	 * @return void
 	 */
 	raiseException : function(msg, name) {
-		if (typeof(Error) == 'function') {
+		if (Object.isFunc(window.Error)) {
 			var e = new Error(msg);
 			if (!e.message)
 				e.message = msg;
 			if (name)
 				e.name = name;
 			throw e;
-		} else if (typeof(msg) == 'string') {
+		} else if (Object.isString(msg)) {
 			throw msg;
 		}
 	},
@@ -177,10 +153,10 @@ var PHP2Go = {
 	 *
 	 * <br>Properties:
 	 * <ul><li>ie (Boolean)</li><li>ie7 (Boolean)</li><li>ie6 (Boolean)</li><li>
-	 * ie5 (Boolean)</li><li>opera (Boolean)</li><li>khtml (Boolean)</li><li>safari
-	 * (Boolean)</li><li>mozilla (Boolean)</li><li>gecko (Boolean)</li><li>windows
-	 * (Boolean)</li><li>linux (Boolean)</li><li>mac (Boolean)</li><li>unix
-	 * (Boolean)</li><li>os (String)</li></ul>
+	 * ie5 (Boolean)</li><li>wch (Boolean)</li><li>opera (Boolean)</li><li>khtml
+	 * (Boolean)</li><li>safari (Boolean)</li><li>mozilla (Boolean)</li><li>gecko
+	 * (Boolean)</li><li>windows (Boolean)</li><li>linux (Boolean)</li><li>mac
+	 * (Boolean)</li><li>unix (Boolean)</li><li>os (String)</li></ul>
 	 *
 	 * @type Object
 	 */
@@ -190,6 +166,7 @@ var PHP2Go = {
 		bw.ie7 = bw.ie && /msie 7/i.test(ua);
 		bw.ie6 = bw.ie && /msie 6/i.test(ua);
 		bw.ie5 = bw.ie && /msie 5\.0/i.test(ua);
+		bw.wch = bw.ie && !bw.ie7;
 		bw.opera = /opera/i.test(ua);
 		bw.khtml = /konqueror|safari|webkit|khtml/i.test(ua);
 		bw.safari = /safari|webkit/i.test(ua);
@@ -217,6 +194,7 @@ var PHP2Go = {
 			case 'FLOAT' : a = parseFloat(a, 10), b = parseFloat(b, 10); break;
 			case 'CURRENCY' : a = parseFloat(a, 10), b = parseFloat(b, 10); break;
 			case 'DATE' : a = Date.toDays(a), b = Date.toDays(b); break;
+			case 'STRING' : a = a || '', b = b || ''; break;
 		}
 		switch (op) {
 			case 'EQ' : return (a == b);
@@ -239,6 +217,20 @@ var PHP2Go = {
 			window.setTimeout(str, 0);
 		else
 			eval.call(window, str);
+	},
+	/**
+	 * Builds a reference to an object's method.
+	 * Can be used to bind events to methods.
+	 * @param {Object} obj Object
+	 * @param {String} method Method name
+	 * @type Function
+	 */
+	method : function(obj, method) {
+		if (!obj._methods)
+			obj._methods = {};
+		if (!obj._methods[method])
+			obj._methods[method] = function() { obj[method].apply(obj, arguments); };
+		return obj._methods[method];
 	}
 };
 
@@ -257,12 +249,17 @@ try {
  * Makes all properties and methods of src available to dst
  * @param {Object} dst Target
  * @param {Object} src Source
+ * @param {Boolean} ov Override existent properties
  * @type Object
  * @addon
  */
-Object.extend = function(dst, src) {
-	for (p in src)
+Object.extend = function(dst, src, ov) {
+	ov = Object.ifUndef(ov, true);
+	for (p in src) {
+		if (!ov && p in dst)
+			continue;
 		dst[p] = src[p];
+	}
 	return dst;
 };
 
@@ -294,6 +291,97 @@ Object.serialize = function(obj) {
 	return '{' + buf.join(', ') + '}';
 };
 
+/**
+ * Checks if a given object is undefined
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isUndef = function(obj) {
+	return (typeof obj == 'undefined');
+};
+
+/**
+ * Tests a given object and returns a default value when it's undefined
+ * @param {Object} obj Object
+ * @param {Object} def Fallback value
+ * @type Object
+ */
+Object.ifUndef = function(obj, def) {
+	return (typeof obj == 'undefined' ? def : obj);
+};
+
+/**
+ * Checks if the given object is a DOM node
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isElement = function(obj) {
+	return (obj && obj.nodeType == 1);
+};
+
+/**
+ * Checks if a given object is an array
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isArray = function(obj) {
+	return (obj && obj.constructor === Array);
+};
+
+/**
+ * Checks if a given object is iterable
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isIterable = function(obj) {
+	if (!obj || Object.isUndef(obj))
+		return false;
+	if (Object.isString(obj) || Object.isFunc(obj) || Object.isNumber(obj))
+		return false;
+	if (Object.isArray(obj))
+		return true;
+	return (!Object.isUndef(obj.length) && isFinite(obj.length) && (!obj.tagName || obj.tagName.equalsIgnoreCase('form')));
+};
+
+/**
+ * Checks if a given object is a function
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isFunc = function(obj) {
+	return (typeof obj == 'function');
+};
+
+/**
+ * Checks if a given object is a string
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isString = function(obj) {
+	return (typeof obj == 'string');
+};
+
+/**
+ * Checks if a given object is a number
+ * @param {Object} obj Object
+ * @type Boolean
+ */
+Object.isNumber = function(obj) {
+	return (typeof obj == 'number');
+};
+
+/**
+ * Parses the value of a style property
+ * @param {String} val Property value
+ * @type Number
+ */
+Object.toPixels = function(val) {
+	if (val && val.slice(-2) == 'px')
+		return parseFloat(val, 10);
+	return 0;
+};
+
+
 if (!Function.prototype.apply) {
 	/**
 	 * Applies the function on a given object, using
@@ -324,8 +412,24 @@ if (!Function.prototype.apply) {
 Function.prototype.bind = function(obj) {
 	var self = this;
 	return function() {
-		self.apply(obj, arguments);
+		return self.apply(obj, arguments);
 	}
+};
+
+/**
+ * Encapsulates the pattern of converting the
+ * first argument of the function into its 'this' value
+ * @param {Function} fn Function that must be applied on the bind argument
+ * @type Function
+ */
+Function.prototype.methodize = function(fn) {
+	if (this._methodized)
+		return this._methodized;
+	var self = this;
+	return this._methodized = function(bind) {
+		(fn) && (bind = fn(bind));
+		return (bind ? self.apply(bind, Array.prototype.slice.call(arguments, 1)) : null);
+	};
 };
 
 /**
@@ -337,7 +441,7 @@ Function.prototype.bind = function(obj) {
  * @type void
  */
 Function.prototype.extend = function(parent, propName) {
-	if (typeof(parent) == 'function') {
+	if (Object.isFunc(parent)) {
 		// inheritance
 		var f = function() {};
 		f.prototype = parent.prototype;
@@ -354,12 +458,52 @@ Function.prototype.extend = function(parent, propName) {
 };
 
 /**
+ * Adds one or more implementations to the
+ * class specificied by the function
+ * @type void
+ */
+Function.prototype.implement = function() {
+	for (var i=0,l=arguments.length; i<l; i++)
+		Object.extend(this.prototype, arguments[i], false);
+};
+
+/**
+ * Calls the function after a given number of miliseconds.
+ * The first argument must be the delay. The others will be
+ * used as arguments to the function call. Returns the
+ * timeout handle.
+ * @type Number
+ */
+Function.prototype.delay = function() {
+	var self = this, args = $A(arguments), ms = args.shift();
+	return window.setTimeout(function() {
+		return self.apply(self, args);
+	}, ms);
+};
+
+/**
+ * Left trim regular expression
+ * @type RegExp
+ */
+String.leftTrim = /^\s*/;
+/**
+ * Right trim regular expression
+ * @type RegExp
+ */
+String.rightTrim = /\s*$/;
+/**
+ * Empty regular expression
+ * @type RegExp
+ */
+String.blank = /^\s*$/;
+
+/**
  * Removes blank chars from the start and
  * from the end of the string
  * @type String
  */
 String.prototype.trim = function() {
-	return this.replace(/^\s*/, "").replace(/\s*$/, "");
+	return this.replace(String.leftTrim, "").replace(String.rightTrim, "");
 };
 
 /**
@@ -367,7 +511,7 @@ String.prototype.trim = function() {
  * @type Boolean
  */
 String.prototype.empty = function() {
-	return /^\s*$/.test(this);
+	return String.blank.test(this);
 };
 
 /**
@@ -398,8 +542,7 @@ String.prototype.wrap = function(l, r) {
  * @type String
  */
 String.prototype.cut = function(p1, p2) {
-	p2 = PHP2Go.ifUndef(p2, this.length);
-	return this.substr(0, p1) + this.substr(p2);
+	return this.substr(0, p1) + this.substr(p2 || this.length);
 };
 
 /**
@@ -409,7 +552,7 @@ String.prototype.cut = function(p1, p2) {
  * @type String
  */
 String.prototype.insert = function(val, at) {
-	at = PHP2Go.ifUndef(at, 0);
+	at = at || 0;
 	return this.substr(0, at) + val + this.substr(at);
 };
 
@@ -512,14 +655,20 @@ String.prototype.capitalize = function() {
  * @type String
  */
 String.prototype.escapeHTML = function() {
-	var d = document;
-	var dv = d.createElement('div');
-	dv.appendChild(d.createTextNode(this));
-	return dv.innerHTML;
+	var self = arguments.callee;
+	self.text.data = this;
+	return self.div.innerHTML;
 };
+Object.extend(String.prototype.escapeHTML, {
+	div: document.createElement('div'),
+	text: document.createTextNode('')
+});
+with (String.prototype.escapeHTML)
+	div.appendChild(text);
+
 
 /**
- * Remove extra spaces from the string
+ * Replace one or more blank chars by a single space in the string
  * @type String
  */
 String.prototype.stripSpaces = function() {
@@ -601,7 +750,7 @@ String.prototype.evalScriptsDelayed = function(t) {
 		window.timeoutArg = self;
 		setTimeout("window.timeoutArg.evalScripts();window.timeoutArg=null;", t);
 	} else {
-		setTimeout(function() { self.evalScripts(); }, t);
+		this.evalScripts.bind(this).delay(t);
 	}
 };
 
@@ -626,6 +775,14 @@ String.prototype.assignAll = function() {
  */
 String.prototype.serialize = function() {
 	return "'" + this.replace('\\', '\\\\').replace("'", '\\\'') + "'";
+};
+
+/**
+ * Converts the string into an array
+ * @type Array
+ */
+String.prototype.toArray = function() {
+	return this.split('');
 };
 
 /**
@@ -697,7 +854,7 @@ Math.truncate = function(num, prec) {
 	return (Math.round(num * Math.pow(10, prec)) / Math.pow(10, prec));
 };
 
-if (typeof(window.isFinite) != 'function') {
+if (!Object.isFunc(window.isFinite)) {
 	/**
 	 * @ignore
 	 */
@@ -886,8 +1043,8 @@ var Logger = {
 	 */
 	log : function(text, color) {
 		(!this.container) && (this.initialize());
-		(typeof(text) != 'string') && (text = Object.serialize(text));
-		this.output.insertHTML("<pre style='padding:0;margin:0;color:" + (color || 'white') + "'>" + String(text).escapeHTML() + "</pre>", "bottom");
+		(!Object.isString(text)) && (text = Object.serialize(text));
+		this.output.insert("<pre style='padding:0;margin:0;color:" + (color || 'white') + "'>" + String(text).escapeHTML() + "</pre>", "bottom");
 	},
 	/**
 	 * Logs an info message
@@ -929,10 +1086,11 @@ var Logger = {
 	exception : function(e) {
 		var info = '[' + e.name + '] - ' + e.message;
 		if (e.stack) {
-			info += "\n" + e.stack.split("\n").filter(function(item, idx) {
+			info += "\n" + e.stack.split("\n").valid(function(item, idx) {
 				var where = item.split('@');
 				if (where[1] && where[1] != ':0')
 					return 'at ' + where[1];
+				return null;
 			}).join("\n");
 		}
 		this.log(info, 'red');
@@ -964,7 +1122,7 @@ var Window = {
 		// sanitize parameters
 		wid = wid || screen.width, hei = hei || screen.availHeight;
 		x = Math.abs(x), y = Math.abs(y);
-		type = PHP2Go.ifUndef(type, 255), ret = !!ret;
+		type = Object.ifUndef(type, 255), ret = !!ret;
 		// build props string
 		var props =
 			(type & 1 ? 'toolbar,' : '') + (type & 2 ? 'location,' : '') +
@@ -1010,11 +1168,11 @@ var Window = {
 	openFromEvent : function(e, url, wid, hei, type, tit, ret) {
 		e = $EV(e), wid = wid || 800, hei = hei || 600;
 		var w = window, b = document.body, x, y;
-		var el = $E(e.element());
+		var el = e.target;
 		var ep = el.getPosition();
 		var ed = el.getDimensions();
 		var ws = Window.scroll();
-		if (typeof(w.screenLeft) != 'undefined') {
+		if (!Object.isUndef(w.screenLeft)) {
 			// window left offset + element X position + element width - window scroll X
 			x = (w.screenLeft + ep.x + ed.width) - ws.x;
 			// window top offset + element Y position - window scroll Y
@@ -1047,7 +1205,7 @@ var Window = {
 	 * @type void
 	 */
 	write : function(wnd, html, close) {
-		close = PHP2Go.ifUndef(close, true);
+		close = Object.ifUndef(close, true);
 		if (wnd.document) {
 			if (!wnd.writing) {
 				wnd.document.open();
@@ -1170,8 +1328,8 @@ var IFrame = {
 };
 
 /**
- * The Report singleton is used by php2go.data.Report, responsible
- * for building data sets splitted in multiple pages with navigation
+ * The Report singleton is used by php2go.data.Report, the class that
+ * builds data sets splitted into multiple pages with navigation
  * @class Report
  */
 var Report = {
@@ -1189,7 +1347,7 @@ var Report = {
 		if (fld.value != '') {
 			pg = parseInt(fld.value, 10);
 			if (pg > 0 && pg <= total) {
-				if (typeof(handler) == 'function')
+				if (Object.isFunc(handler))
 					handler({from: curr, to: pg});
 				if (frm.action.indexOf('?') == -1)
 					frm.action = frm.action+'?page='+pg;
@@ -1209,7 +1367,59 @@ var Report = {
 };
 
 /**
+ * Observable interface. The classes that implement
+ * it will support registration of event listeners
+ * and events dispatch.
+ * @class Observable
+ */
+Observable = function() {
+	/**
+	 * Adds an event listener
+	 * @param {String} name Event name
+	 * @param {Function} func Handler function
+	 * @param {Object} scope Handler scope
+	 * @param {Boolean} unshift Allows to add the handler in the first position of the stack
+	 * @type void
+	 */
+	this.addEventListener = function(name, func, scope, unshift) {
+		unshift = !!unshift, name = name.toLowerCase().replace(/^on/, '');
+		this.listeners = this.listeners || {};
+		this.listeners[name] = this.listeners[name] || [];
+		this.listeners[name][(unshift ? 'unshift' : 'push')]([func, scope]);
+		return this;
+	};
+	/**
+	 * Removes an event listener from the chain
+	 * @param {String} name Event name
+	 * @param {Function} func Handler function
+	 * @param {Object} scope Handler scope
+	 * @type void
+	 */
+	this.removeEventListener = function(name, func, scope) {
+		if (this.listeners && this.listeners[name])
+			this.listeners[name].remove([func, scope]);
+		return this;
+	};
+	/**
+	 * Raises an event
+	 * @param {String} name Event name
+	 * @param {Object} args Event arguments
+	 * @type Boolean
+	 */
+	this.raiseEvent = function(name, args) {
+		this.listeners = this.listeners || {};
+		var funcs = this.listeners[name] || [], args = args || [];
+		for (var i=0,l=funcs.length; i<l; i++) {
+			if (funcs[i][0].apply(funcs[i][1] || this, args) === false)
+				return false;
+		}
+		return true;
+	};
+};
+
+/**
  * The Widget class is the base class of all widgets.
+ * Implements {@link Observable} interface.
  * @param {Object} attrs Widget's attributes
  * @param {Function} func Setup function
  * @constructor
@@ -1219,16 +1429,11 @@ Widget = function(attrs, func) {
 	 * Widget's attributes
 	 * @type Object
 	 */
-	this.attributes = {};
-	/**
-	 * Widget's event listeners
-	 * @type Object
-	 */
-	this.listeners = {};
-	this.loadAttributes(attrs);
-	if (typeof(func) == 'function')
+	this.attributes = (attrs ? Object.extend({}, attrs) : {});
+	if (Object.isFunc(func))
 		func(this);
 };
+Widget.implement(new Observable);
 
 /**
  * @ignore
@@ -1251,44 +1456,7 @@ Widget.init = function(name, attrs, setupFunc) {
  */
 Widget.prototype.hasAttributes = function() {
 	for (var i=0; i<arguments.length; i++) {
-		if (typeof(this.attributes[arguments[i]]) == 'undefined')
-			return false;
-	}
-	return true;
-};
-
-/**
- * Loads the widget's attributes
- * @param {Object} attrs Widget attributes
- */
-Widget.prototype.loadAttributes = function(attrs) {
-	for (var prop in attrs) {
-		this.attributes[prop] = attrs[prop];
-	}
-};
-
-/**
- * Register a new event listener in the widget
- * @param {String} name Event name
- * @param {Function} func Handler function
- * @type void
- */
-Widget.prototype.addEventListener = function(name, func) {
-	this.listeners[name] = this.listeners[name] || [];
-	this.listeners[name].push(func.bind(this));
-};
-
-/**
- * Raises an event in the widget. Call all
- * handlers bound to the event
- * @param {String} name Event name
- * @param {Array} args Event arguments
- * @type void
- */
-Widget.prototype.raiseEvent = function(name, args) {
-	var funcs = this.listeners[name] || [];
-	for (var i=0; i<funcs.length; i++) {
-		if (funcs[i](args) === false)
+		if (Object.isUndef(this.attributes[arguments[i]]))
 			return false;
 	}
 	return true;
@@ -1308,17 +1476,16 @@ $ = function() {
 	if (a.length == 1) {
 		elm = a[0];
 		if (typeof(elm) == 'string')
-			elm = (d.getElementById ? $E(d.getElementById(elm)) : (d.all ? $E(d.all[elm]) : null));
+			elm = $E(d.getElementById(elm));
 		else
 			elm = $E(elm);
 		return elm;
 	}
 	// multiple arguments
-	var res = [];
-	for (var i=0; i<a.length; i++) {
+	for (var i=0, res=[], len=a.length; i<len; i++) {
 		elm = a[i];
 		if (typeof(elm) == 'string')
-			elm = (d.getElementById ? $E(d.getElementById(elm)) : (d.all ? $E(d.all[elm]) : null));
+			elm = $E(d.getElementById(elm));
 		else
 			elm = $E(elm);
 		res.push(elm);
@@ -1330,100 +1497,12 @@ $ = function() {
  * Empty function
  * @type void
  */
-$EF = function() {
-};
+$EF = function() { };
 
 /**
  * Identity function
  * @type Object
  */
-$IF = function(x) {
-	return x;
-};
-
-/**
- * This function returns an array object from a given
- * iterable element, or object that implements the
- * toArray method
- * @param {Object} o Iterable object
- * @type Hash
- */
-$A = function(o) {
-	if (o && o.constructor == Array)
-		return o;
-	return Array.valueOf(o);
-};
-
-/**
- * Convert an iterable object into an object
- * that can be iterated as a collection. The second
- * parameter indicates if the iterable must be handled
- * as an associative collection (Hash) or an array
- * @param {Object} o Iterable object
- * @param {Boolean} assoc Indicates if the iterable object is associative or not
- * @type Object
- */
-$C = function(o, assoc) {
-	assoc = !!assoc;
-	if (o.walk && o.each)
-		return o;
-	else if (!o)
-		o = (assoc ? {} : []);
-	if (assoc) {
-		o = {data:o};
-		o.each = Hash.each;
-	} else {
-		o.each = Array.prototype.each;
-	}
-	Object.extend(o, Collection);
-	return o;
-};
-
-/**
- * This function returns a hash object
- * from a given iterable element
- * @param {Object} obj Iterable object
- * @type Hash
- */
-$H = function(obj) {
-	return Hash.valueOf(obj);
-};
-
-/**
- * Convert an HTML element to access all methods
- * of Element class as its native methods. The
- * objects are converted only once. In browsers with
- * native HTMLElement support, this function will
- * directly return the passed object
- * @param {Object} elm Object to be converted
- * @type Object
- */
-$E = function(elm) {
-	if (!elm || !elm.tagName || elm.nodeType == 3 || elm._extended || elm == window || PHP2Go.nativeElementExtensions)
-		return elm;
-	Element.extend(elm);
-	elm._extended = $EF;
-	return elm;
-};
-
-/**
- * Utility function to create DOM element nodes. The
- * element can be initialized with a set of style
- * properties and initial HTML contents
- * @param {String} name Tag name
- * @param {Object} parent Parent node
- * @param {Object} style Style properties
- * @param {String} innerHTML Inner HTML
- * @param {Object} attrs Attributes
- * @type Object
- */
-$N = function(name, parent, style, html, attrs) {
-	var elm = $E(document.createElement(name.toLowerCase()));
-	elm.setStyle(style);
-	(parent) && (parent.appendChild(elm));
-	(html) && (elm.innerHTML = html);
-	(attrs) && (Object.extend(elm, attrs));
-	return elm;
-};
+$IF = function(x) { return x; };
 
 PHP2Go.load();

@@ -359,14 +359,6 @@ class Spreadsheet extends PHP2Go
 	var $activePane;
 
 	/**
-	 * Cell picures
-	 *
-	 * @var array
-	 * @access private
-	 */
-	var $pictures = array (	'', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
-
-	/**
 	 * Cell fonts
 	 *
 	 * @var array
@@ -383,30 +375,49 @@ class Spreadsheet extends PHP2Go
 	var $cellFormats;
 
 	/**
+	 * Cell picures
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $pictures = array('', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
+	
+	/**
+	 * Date picture
+	 *
+	 * @var int
+	 * @access public
+	 */
+	var $datePicture;
+	
+	/**
+	 * Datetime picture
+	 *
+	 * @var int
+	 * @access public
+	 */
+	var $dateTimePicture;
+
+	/**
 	 * Class constructor
 	 *
 	 * @return Spreadsheet
 	 */
 	function Spreadsheet() {
 		parent::PHP2Go();
+		// detect byte order
+		$this->_getByteOrder();		
+		// dimensions
 		$this->minRowDimension = SPRSH_MAX_ROWS + 1;
 		$this->maxRowDimension = 0;
 		$this->minColDimension = SPRSH_MAX_COLS + 1;
 		$this->maxColDimension = 0;
+		// pre-defined "default" cell format
 		$this->addCellFormat();
-		$this->_getByteOrder();
-	}
-
-	/**
-	 * Adds a new cell picture
-	 *
-	 * @param string $picString Cell picture
-	 * @return int New picture index
-	 */
-	function addPictureString($picString) {
-		$count = sizeof($this->pictures);
-		$this->pictures[] = $picString;
-		return $count;
+		// pre-defined date and datetime pictures
+		$settings = PHP2Go::getConfigVal('DATE_FORMAT_SETTINGS');
+		$this->datePicture = $this->addPictureString($settings['xlsFormat']);
+		$this->dateTimePicture = $this->addPictureString($settings['xlsFormat'] . ' HH:MM:SS');
 	}
 
 	/**
@@ -414,13 +425,24 @@ class Spreadsheet extends PHP2Go
 	 *
 	 * Font properties: name, size, bold, italic,
 	 * underline and strikeout.
+	 * 
+	 * <code>
+	 * $arialBold = $xls->addFont(array('name' => 'Arial', 'bold' => TRUE));
+	 * </code>
 	 *
 	 * @param array $properties Font properties
 	 * @return int New font index
 	 */
 	function addFont($properties) {
-		if (sizeof($this->fonts) < 4 && isset($properties['name'])) {
+		if (sizeof($this->fonts) < 4 && is_array($properties) && isset($properties['name'])) {
 			$count = sizeof($this->fonts);
+			$properties = array_merge(array(
+				'size' => 10,
+				'bold' => FALSE,
+				'italic' => FALSE,
+				'underline' => FALSE,
+				'strikeout' => FALSE
+			), $properties);
 			$properties['font_index'] = constant('SPRSH_FONT_' . $count);
 			$this->fonts[] = $properties;
 			return $count;
@@ -435,6 +457,10 @@ class Spreadsheet extends PHP2Go
 	 * Formatting options: align, fill, shaded, box_border,
 	 * left_border, right_border, top_border, bottom_border,
 	 * locked and hidden.
+	 * 
+	 * <code>
+	 * $boxBorder = $xls->addCellFormat(array('align' => 'left', 'box_border' => TRUE));
+	 * </code>
 	 *
 	 * @param array $properties Formatting options
 	 * @return int New format index
@@ -442,16 +468,23 @@ class Spreadsheet extends PHP2Go
 	function addCellFormat($properties=array()) {
 		if (is_array($properties)) {
 			$count = sizeof($this->cellFormats);
-			$properties['format'] = $this->_buildFormat($properties);
-			$status = 0x0;
-			($properties['locked']) && ($status += 0x40);
-			($properties['hidden']) && ($status += 0x80);
-			$properties['status'] = $status;
-            $this->cellFormats[] = $properties;
+            $this->cellFormats[] = $this->_buildFormat($properties);
             return $count;
 		} else {
            	return 0;
 		}
+	}
+
+	/**
+	 * Adds a new cell picture
+	 *
+	 * @param string $picString Cell picture
+	 * @return int New picture index
+	 */
+	function addPictureString($picString) {
+		$count = sizeof($this->pictures);
+		$this->pictures[] = $picString;
+		return $count;
 	}
 
 	/**
@@ -499,7 +532,7 @@ class Spreadsheet extends PHP2Go
 	 * @param int $colStart Column index
 	 * @param int $colEnd End column index
 	 */
-	function setColWidth($width, $colStart, $colEnd = NULL) {
+	function setColWidth($width, $colStart, $colEnd=NULL) {
 		if (TypeUtils::isInteger($colStart) && TypeUtils::isInteger($colEnd) && $colEnd > $colStart && $colStart >= 0) {
         	for ($i=$colStart; $i<=$colEnd; $i++) {
 				if (!in_array($i, $this->colInfo)) {
@@ -512,21 +545,21 @@ class Spreadsheet extends PHP2Go
 	}
 
 	/**
-	 * Enable/disable printing of grid lines
-	 *
-	 * @param bool $flag Flag value
-	 */
-	function setPrintGridlines($flag) {
-    	$this->printGridlines = (bool)$flag;
-	}
-
-	/**
 	 * Enable/disable printing of headers
 	 *
 	 * @param bool $flag Flag value
 	 */
 	function setPrintHeaders($flag) {
     	$this->printHeaders = (bool)$flag;
+	}
+
+	/**
+	 * Enable/disable printing of grid lines
+	 *
+	 * @param bool $flag Flag value
+	 */
+	function setPrintGridlines($flag) {
+    	$this->printGridlines = (bool)$flag;
 	}
 
 	/**
@@ -707,28 +740,26 @@ class Spreadsheet extends PHP2Go
 	 */
 	function writeNumber($row, $col, $value, $columnWidth=0, $picture=0, $font=0, $format=0) {
 		if (!$this->_checkBounds($row, $col)) {
-			if ($this->throwErrors) {
+			if ($this->throwErrors)
             	PHP2Go::raiseError(PHP2Go::getLangVal('ERR_SPRSH_OUT_OF_BOUNDS', array(SPRSH_MAX_ROWS, SPRSH_MAX_COLS)), E_USER_ERROR, __FILE__, __LINE__);
-			}
 			return FALSE;
-		} else {
-			$id = 0x0003;
-			$length = 0x000F;
-			$len = strlen(strval($value));
-			$this->_adjustColWidth($col, $columnWidth, $len);
-			$number = ($this->byteOrder == SPRSH_BIG_ENDIAN) ? strrev(pack('d', $value)) : pack('d', $value);
-			$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
-			if (isset($this->cellFormats[$format])) {
-            	$cellFormat = $this->cellFormats[$format]['format'];
-				$cellStatus = $this->cellFormats[$format]['status'];
-			} else {
-            	$cellFormat = 0x0;
-				$cellStatus = 0x0;
-			}
-			$data = pack('vvvvCCC', $id, $length, $row, $col, $cellStatus, $picture + $fontIndex, $cellFormat). $number;
-			$this->dataStream .= $data;
-			return TRUE;
 		}
+		$id = 0x0003;
+		$length = 0x000F;
+		$len = strlen(strval($value));
+		$this->_adjustColWidth($col, $columnWidth, $len);
+		$number = ($this->byteOrder == SPRSH_BIG_ENDIAN) ? strrev(pack('d', $value)) : pack('d', $value);
+		$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
+		if (isset($this->cellFormats[$format])) {
+        	$cellFormat = $this->cellFormats[$format]['format'];
+			$cellStatus = $this->cellFormats[$format]['status'];
+		} else {
+        	$cellFormat = 0x0;
+			$cellStatus = 0x0;
+		}
+		$data = pack('vvvvCCC', $id, $length, $row, $col, $cellStatus, $picture + $fontIndex, $cellFormat). $number;
+		$this->dataStream .= $data;
+		return TRUE;
 	}
 
 	/**
@@ -744,30 +775,45 @@ class Spreadsheet extends PHP2Go
 	 * @return bool
 	 */
 	function writeDateTime($row, $col, $value, $columnWidth=0, $picture=0, $font=0, $format=0) {
-		if (!$this->_checkBounds($row, $col)) {
-			if ($this->throwErrors) {
-            	PHP2Go::raiseError(PHP2Go::getLangVal('ERR_SPRSH_OUT_OF_BOUNDS', array(SPRSH_MAX_ROWS, SPRSH_MAX_COLS)), E_USER_ERROR, __FILE__, __LINE__);
+		if (System::loadExtension('calendar')) {
+			$regs = Date::parse(Date::fromSqlDate($value), PHP2Go::getConfigVal('LOCAL_DATE_FORMAT'));
+			if ($regs) {
+				if (!$this->_checkBounds($row, $col)) {
+					if ($this->throwErrors)
+		            	PHP2Go::raiseError(PHP2Go::getLangVal('ERR_SPRSH_OUT_OF_BOUNDS', array(SPRSH_MAX_ROWS, SPRSH_MAX_COLS)), E_USER_ERROR, __FILE__, __LINE__);
+					return FALSE;
+				}
+				$value = juliantojd($regs[1], $regs[0], $regs[2]) - SPRSH_DATE + 1;
+				if ($regs[3]) {
+					$value += (intval($regs[3]) / 24);
+					$value += (intval($regs[4]) / 1440);
+					if ($regs[5])
+						$value += (intval($regs[5]) / 86400);
+					if (!$picture)
+						$picture = $this->dateTimePicture;
+				} else {
+					if (!$picture)
+						$picture = $this->datePicture;
+				}
+				$id = 0x0003;
+				$length = 0x000F;
+				$len = strlen(strval($value));
+				$this->_adjustColWidth($col, $columnWidth, $len);
+				$value = ($this->byteOrder == SPRSH_BIG_ENDIAN ? strrev(pack('d', $value)) : pack('d', $value));
+				$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
+				if (isset($this->cellFormats[$format])) {
+		        	$cellFormat = $this->cellFormats[$format]['format'];
+					$cellStatus = $this->cellFormats[$format]['status'];
+				} else {
+		        	$cellFormat = 0x0;
+					$cellStatus = 0x0;
+				}
+				$data = pack('vvvvCCC', $id, $length, $row, $col, $cellStatus, $picture + $fontIndex, $cellFormat). $value;
+				$this->dataStream .= $data;
+				return TRUE;
 			}
-			return FALSE;
-		} else {
-			$id = 0x0003;
-			$length = 0x000F;
-			$value = $this->_transformDate($value);
-			$len = strlen(strval($value));
-			$this->_adjustColWidth($col, $columnWidth, $len);
-			$value = ($this->byteOrder == SPRSH_BIG_ENDIAN) ? strrev(pack('d', $value)) : pack('d', $value);
-			$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
-			if (isset($this->cellFormats[$format])) {
-            	$cellFormat = $this->cellFormats[$format]['format'];
-				$cellStatus = $this->cellFormats[$format]['status'];
-			} else {
-            	$cellFormat = 0x0;
-				$cellStatus = 0x0;
-			}
-			$data = pack('vvvvCCC', $id, $length, $row, $col, $cellStatus, $picture + $fontIndex, $cellFormat). $value;
-			$this->dataStream .= $data;
-			return TRUE;
 		}
+		return $this->writeString($row, $col, $value, $columnWidth, $picture, $font, $format);
 	}
 
 	/**
@@ -784,27 +830,25 @@ class Spreadsheet extends PHP2Go
 	 */
 	function writeString($row, $col, $value, $columnWidth=0, $picture=0, $font=0, $format=0) {
 		if (!$this->_checkBounds($row, $col)) {
-			if ($this->throwErrors) {
+			if ($this->throwErrors)
             	PHP2Go::raiseError(PHP2Go::getLangVal('ERR_SPRSH_OUT_OF_BOUNDS', array(SPRSH_MAX_ROWS, SPRSH_MAX_COLS)), E_USER_ERROR, __FILE__, __LINE__);
-			}
 			return FALSE;
-		} else {
-			$id = 0x0004;
-			$length = 0x0008;
-			$len = strlen(strval($value));
-			$this->_adjustColWidth($col, $columnWidth, $len);
-			$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
-			if (isset($this->cellFormats[$format])) {
-            	$cellFormat = $this->cellFormats[$format]['format'];
-				$cellStatus = $this->cellFormats[$format]['status'];
-			} else {
-            	$cellFormat = 0x0;
-				$cellStatus = 0x0;
-			}
-			$data = pack('vvvvCCCC', $id, $length + $len, $row, $col, $cellStatus, $picture + $fontIndex, $cellFormat, $len). $value;
-			$this->dataStream .= $data;
-			return TRUE;
 		}
+		$id = 0x0004;
+		$length = 0x0008;
+		$len = strlen(strval($value));
+		$this->_adjustColWidth($col, $columnWidth, $len);
+		$fontIndex = isset($this->fonts[$font]) ? $this->fonts[$font]['font_index'] : SPRSH_FONT_0;
+		if (isset($this->cellFormats[$format])) {
+        	$cellFormat = $this->cellFormats[$format]['format'];
+			$cellStatus = $this->cellFormats[$format]['status'];
+		} else {
+        	$cellFormat = 0x0;
+			$cellStatus = 0x0;
+		}
+		$data = pack('vvvvCCCC', $id, $length + $len, $row, $col, $cellStatus, $picture + $fontIndex, $cellFormat, $len). $value;
+		$this->dataStream .= $data;
+		return TRUE;
 	}
 
 	/**
@@ -818,19 +862,17 @@ class Spreadsheet extends PHP2Go
 	 */
 	function writeBlank($row, $col, $columnWidth=0, $format=0) {
 		if (!$this->_checkBounds($row, $col)) {
-			if ($this->throwErrors) {
+			if ($this->throwErrors)
             	PHP2Go::raiseError(PHP2Go::getLangVal('ERR_SPRSH_OUT_OF_BOUNDS', array(SPRSH_MAX_ROWS, SPRSH_MAX_COLS)), E_USER_ERROR, __FILE__, __LINE__);
-			}
 			return FALSE;
-		} elseif ($format > 0) {
-			$id = 0x0001;
-			$length = 0x0007;
-			$this->_adjustColWidth($col, $columnWidth, $len);
-			$cellFormat = isset($this->cellFormats[$format]) ? $this->cellFormats[$format]['format'] : ALIGN_GENERAL;
-			$data = pack('vvvvCCC', $id, $length, $row, $col, 0x0, 0x0, 0x80);
-			$this->dataStream .= $data;
-			return TRUE;
 		}
+		$id = 0x0001;
+		$length = 0x0007;
+		$this->_adjustColWidth($col, $columnWidth, $len);
+		$cellFormat = isset($this->cellFormats[$format]) ? $this->cellFormats[$format]['format'] : ALIGN_GENERAL;
+		$data = pack('vvvvCCC', $id, $length, $row, $col, 0x0, 0x0, 0x80);
+		$this->dataStream .= $data;
+		return TRUE;
 	}
 
 	/**
@@ -1004,11 +1046,26 @@ class Spreadsheet extends PHP2Go
 	 * @access private
 	 */
 	function _buildFormat($properties) {
+		$properties = array_merge(array(
+			'locked' => FALSE,
+			'hidden' => FALSE,
+			'fill' => FALSE,
+			'shaded' => FALSE,
+			'box_border' => FALSE,
+			'left_border' => FALSE,
+			'right_border' => FALSE,
+			'top_border' => FALSE,
+			'bottom_border' => FALSE
+		), $properties);
+		// build format
     	$format = 0x0;
-		if ($properties['align']) {
-			if ($properties['align'] == 'left') $format += 0x1;
-			if ($properties['align'] == 'center') $format += 0x2;
-			if ($properties['align'] == 'right') $format += 0x3;
+		if (isset($properties['align'])) {
+			if ($properties['align'] == 'left') 
+				$format += 0x1;
+			if ($properties['align'] == 'center') 
+				$format += 0x2;
+			if ($properties['align'] == 'right') 
+				$format += 0x3;
 		}
 		if ($properties['fill'])
         	$format += 0x4;
@@ -1017,12 +1074,24 @@ class Spreadsheet extends PHP2Go
 		if ($properties['box_border']) {
         	$format += 0x78;
 		} else {
-			if ($properties['left_border']) $format += 0x8;
-			if ($properties['right_border']) $format += 0x10;
-			if ($properties['top_border']) $format += 0x20;
-			if ($properties['bottom_border']) $format += 0x40;
+			if ($properties['left_border']) 
+				$format += 0x8;
+			if ($properties['right_border']) 
+				$format += 0x10;
+			if ($properties['top_border']) 
+				$format += 0x20;
+			if ($properties['bottom_border']) 
+				$format += 0x40;
 		}
-		return $format;
+		$properties['format'] = $format;
+		// build status
+		$status = 0x0;
+		if ($properties['locked']) 
+			$status += 0x40;
+		if ($properties['hidden']) 
+			$status += 0x80;
+		$properties['status'] = $status;
+		return $properties;
 	}
 
 	/**
@@ -1095,32 +1164,6 @@ class Spreadsheet extends PHP2Go
 				$this->colInfo[$col] = $len;
 			}
 		}
-	}
-
-	/**
-	 * Converts a date or datetime string into a julian day count
-	 *
-	 * @uses Date::isEuroDate()
-	 * @uses Date::isUsDate()
-	 * @uses Date::isSqlDate()
-	 * @uses System::loadExtension()
-	 * @uses juliantojd()
-	 * @param string $date Date or datetime
-	 * @return int Julian day count
-	 * @access private
-	 */
-	function _transformDate($date) {
-		if ((System::loadExtension('calendar')) && (($regs = Date::parse($date, 'EURO')) || ($regs = Date::parse($date, 'US')) || ($regs = Date::parse($date, 'SQL')))) {
-			$dtVal = juliantojd($regs[1], $regs[0], $regs[2]) - SPRSH_DATE + 1;
-			if ($regs[4]) {
-				$dtVal += (intval($regs[4]) / 24);
-				$dtVal += (intval($regs[5]) / 1440);
-				if ($regs[6])
-					$dtVal += (intval($regs[6]) / 86400);
-			}
-			return $dtVal;
-		}
-		return '';
 	}
 
 	/**
@@ -1270,15 +1313,19 @@ class Spreadsheet extends PHP2Go
 		for ($i=0,$s=sizeof($this->fonts); $i<$s; $i++) {
 			$font = $this->fonts[$i];
 			$fontName = $font['name'];
-			$fontSize = $font['size'] ? $font['size'] * 20 : 10 * 20;
+			$fontSize = $font['size'] * 20;
 			$fontLength = strlen($fontName);
 			$length = 0x0005 + $fontLength;
 			$id = 0x0031;
 			$fontFormat = 0x0;
-			if ($font['bold']) $fontFormat += 0x1;
-			if ($font['italic']) $fontFormat += 0x2;
-			if ($font['underline']) $fontFormat += 0x4;
-			if ($font['strikeout']) $fontFormat += 0x8;
+			if ($font['bold']) 
+				$fontFormat += 0x1;
+			if ($font['italic']) 
+				$fontFormat += 0x2;
+			if ($font['underline']) 
+				$fontFormat += 0x4;
+			if ($font['strikeout']) 
+				$fontFormat += 0x8;
 			$this->_appendStream(pack('vvvCCC', $id, $length, $fontSize, $fontFormat, 0x0, $fontLength) . $fontName);
 		}
 	}

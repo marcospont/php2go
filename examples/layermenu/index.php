@@ -58,7 +58,7 @@
 	 * HTML document configuration
 	 */
 	$doc->setTitle('PHP2Go Examples - php2go.gui.LayerMenu');	// page title
-	$doc->setCache(TRUE);										// use or not use browser cache
+	$doc->setCache(FALSE);										// use or not use browser cache
 	$doc->addStyle("menu.css");									// add menu CSS file
 	$doc->addBodyCfg(array('style'=>'margin:0px'));				// add BODY settings
 

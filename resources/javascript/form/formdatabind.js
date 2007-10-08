@@ -94,7 +94,7 @@ FormDataBind.prototype.setup = function() {
  * @type void
  */
 FormDataBind.prototype.clickHandler = function(e) {
-	var elm = $EV(e).element();
+	var elm = $EV(e).target;
 	if (elm.name && !elm.disabled) {
 		switch (elm.name) {
 			case 'navFirst' :
@@ -151,7 +151,7 @@ FormDataBind.prototype.navigate = function(elm) {
 		} else if (elm.name == 'navLast') {
 			this.rs.MoveLast();
 		}
-		setTimeout(this.showRecCount.bind(this), 100);
+		this.showRecCount.bind(this).delay(100);
 	}
 };
 
@@ -229,9 +229,9 @@ FormDataBind.prototype.saveRecord = function() {
 			this.form.submit();
 		} else {
 			var self = this;
-			var saveValues = $C(this.form.elements).filter(function(item, idx) {
+			var saveValues = $C(this.form.elements).valid(function(item, idx) {
 				if (!item.name || !item.type)
-					throw $continue;
+					return null;
 				if (item.type == 'radio') {
 					if (item.checked)
 						return item.name + '|' + item.value;
@@ -345,7 +345,7 @@ FormDataBind.prototype.applyFilter = function() {
 	} else {
 		this.db.Filter = '';
 		this.db.Reset();
-		setTimeout(this.showRecCount.bind(this), 100);
+		this.showRecCount.bind(this).delay(100);
 		alert(Lang.search.emptySearch);
 		(filter.isEmpty() ? filter.focus() : term.focus());
 	}
@@ -378,15 +378,15 @@ FormDataBind.prototype.applySort = function(ascending) {
  */
 FormDataBind.prototype.moveToRecord = function(recordNum) {
 	var gotoField = $FF(this.formName, 'actGotoField');
-	var target = parseInt(PHP2Go.ifUndef(recordNum, gotoField.getValue()), 10);
+	var target = parseInt(Object.ifUndef(recordNum, gotoField.getValue()), 10);
 	if (target) {
 		if (target < this.rs.RecordCount) {
 			this.rs.AbsolutePosition = target;
-			setTimeout(this.showRecCount.bind(this), 100);
+			this.showRecCount.bind(this).delay(100);
 		} else {
 			if (recordNum != null) {
 				this.rs.AbsolutePosition = this.rs.RecordCount;
-				setTimeout(this.showRecCount.bind(this), 100);
+				this.showRecCount.bind(this).delay(100);
 			} else {
 				alert(Lang.dataBind.gotoInvalid);
 				gotoField.clear();
@@ -471,8 +471,8 @@ FormDataBind.prototype.disableNavigation = function(act) {
  */
 FormDataBind.prototype.showRecCount = function(current, count) {
 	this.rs = this.db.recordset;
-	current = PHP2Go.ifUndef(current, this.rs.AbsolutePosition);
-	count = PHP2Go.ifUndef(count, this.rs.RecordCount);
+	current = Object.ifUndef(current, this.rs.AbsolutePosition);
+	count = Object.ifUndef(count, this.rs.RecordCount);
 	var trg = $(this.formName + '_recCount');
 	if (current > 0)
 		trg.update("Registro" + "&nbsp;&nbsp;" + current + "/" + count);

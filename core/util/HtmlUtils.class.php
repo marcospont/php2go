@@ -73,7 +73,7 @@ class HtmlUtils extends PHP2Go
 		}
 		foreach ($jsEvents as $event => $action)
 			$scriptStr .= " $event=\"" . ereg_replace("\"", "'", $action) . "\"";
-		return sprintf("<a href=\"%s\"%s%s%s%s%s%s%s%s>%s</a>", htmlentities($url),
+		return sprintf("<a href=\"%s\"%s%s%s%s%s%s%s%s>%s</a>", htmlentities(html_entity_decode($url)),
 			(!empty($name) ? " name=\"{$name}\"" : ""),
 			(!empty($id) ? " id=\"{$id}\"" : ""),
 			(!empty($rel) ? " rel=\"{$rel}\"" : ""),
@@ -156,7 +156,7 @@ class HtmlUtils extends PHP2Go
 		if (empty($id))
 			$id = PHP2Go::generateUniqueId('htmlimage');
 		return sprintf ("<img id=\"%s\" src=\"%s\" alt=\"%s\" border=\"0\"%s%s%s%s%s%s%s />",
-			$id, htmlentities($src), $alt,
+			$id, htmlentities(html_entity_decode($src)), $alt,
 			($wid > 0 ? " width=\"{$wid}\"" : ""),
 			($hei > 0 ? " height=\"{$hei}\"" : ""),
 			($hspace >= 0 ? " hspace=\"{$hspace}\"" : ""),
@@ -471,7 +471,7 @@ class HtmlUtils extends PHP2Go
 	 */
 	function flashMovie($src, $wid=0, $hei=0, $vars=array(), $transparent=FALSE) {
 		$id = PHP2Go::generateUniqueId('flashmovie');
-		$src = htmlentities($src);
+		$src = htmlentities(html_entity_decode($src));
 		$tmp = array();
 		if (is_array($vars) && !empty($vars)) {
 			foreach ($vars as $name=>$value)
@@ -512,7 +512,7 @@ class HtmlUtils extends PHP2Go
 		$srcVals = split("[/\\.]", strtolower($src));
 		$extension = $srcVals[sizeof($srcVals)-1];
 		if ($extension == 'ram' || $extension == 'ra' || $extension == 'rm' || $extension == 'rpm' || $extension == 'smil') {
-			$src = htmlentities($src);
+			$src = htmlentities(html_entity_decode($src));
 			$flags = array_merge(array(
 				'CONTROLS' => TRUE,
 				'CLIP_STATUS' => FALSE,
@@ -560,7 +560,7 @@ class HtmlUtils extends PHP2Go
 		$srcVals = split("[/\\.]", strtolower($src));
 		$extension = $srcVals[sizeof($srcVals)-1];
 		if ($extension == 'asf' || $extension == 'asx' || $extension == 'wmv' || $extension == 'wma') {
-			$src = htmlentities($src);
+			$src = htmlentities(html_entity_decode($src));
 			$id = PHP2Go::generateUniqueId('mplayermovie');
 			$flags = array_merge(array(
 				'CLIP_INFO' => FALSE,
@@ -625,7 +625,7 @@ class HtmlUtils extends PHP2Go
 		$extension = $srcVals[sizeof($srcVals)-1];
 		if ($extension == 'mov' || $extension == 'qt') {
 			$id = PHP2Go::generateUniqueId('quicktimemovie');
-			$src = htmlentities($src);
+			$src = htmlentities(html_entity_decode($src));
 			$flags = array_merge(array(
 				'CACHE' => FALSE,
 				'CONTROLS' => TRUE,
@@ -765,7 +765,7 @@ class HtmlUtils extends PHP2Go
 	 * @static
 	 */
 	function refresh($url, $time=1) {
-		echo "<meta http-equiv=\"refresh\" content=\"", $time, "; url=", htmlentities($url), "\" />";
+		echo "<meta http-equiv=\"refresh\" content=\"", $time, "; url=", htmlentities(html_entity_decode($url)), "\" />";
 	}
 
 	/**

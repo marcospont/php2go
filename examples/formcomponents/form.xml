@@ -37,9 +37,10 @@
 
 			- to create an editsearchfield, you must specifiy one "lookupfield" child, the query "datasource" and at least one "datafilter" child
 			- the "expression" attribute inside the "datafilter" node represents how the filter will be added in the SQL condition clause
+			- the input that gets submitted is the combo box. thus, the "name" attribute you expect to be submitted must be assigned to the "lookupfield" node
 		-->
 		<editsearchfield
-			name="edit_search" label="EditSearchField"
+			label="EditSearchField"
 			required="T" autotrim="T" autodispatch="T" debug="F"
 		>
 			<datafilter id="1" label="Name" expression="code like '%%%s%%'" mask="STRING"/>
@@ -49,7 +50,7 @@
 				<displayfield>concat(code,' - ',short_desc)</displayfield>
 				<lookuptable>products</lookuptable>
 			</datasource>
-			<lookupfield width="350"/>
+			<lookupfield name="edit_search" width="350"/>
 		</editsearchfield>
 
 		<!--

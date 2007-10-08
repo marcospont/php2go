@@ -513,8 +513,8 @@ RuleValidator.prototype.getErrorMessage = function() {
 /**
  * Internal comparison method
  * @param {String} op Comparison operator
- * @access private
  * @type Boolean
+ * @private 
  */
 RuleValidator.prototype.compare = function(op) {
 	var trg, src = (this.fld.getValue() || '').toString();
@@ -563,7 +563,7 @@ RuleValidator.prototype.validate = function() {
 		case 'REQIFGOET' :
 		case 'REQIFLT' :
 		case 'REQIFLOET' :
-			return (!f.isEmpty() || p.isEmpty() || !PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
+			return (!f.isEmpty() || !PHP2Go.compare(p.getValue(), this.peerValue, this.ruleType.substring(5), this.dataType));
 	}
 };
 
@@ -674,7 +674,7 @@ FormValidator.prototype.setErrorDisplayOptions = function(mode, target, showAll,
  * @type void
  */
 FormValidator.prototype.add = function(field, validator, args) {
-	if (this.frm && typeof(validator) == 'function') {
+	if (this.frm && Object.isFunc(validator)) {
 		// setup arguments
 		args = args || {};
 		args.form = this.frm;
@@ -767,7 +767,7 @@ FormValidator.prototype.run = function(e) {
 		}
 	}
 	// execute onAfterValidate event trigger function
-	if (!this.onAfterValidate(this)) {
+	if (res && !this.onAfterValidate(this)) {
 		res = false;
 		(e && e.preventDefault());
 	}

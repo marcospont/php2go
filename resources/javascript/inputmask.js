@@ -297,7 +297,7 @@ InputMask.prototype.update = function(e, isBlur) {
 	// call field's onchange handler
 	if (this.fld.value != this.lastValue && this.fld.onchange) {
 		var evt = {};
-		if (typeof(e) != 'undefined') {
+		if (!Object.isUndef(e)) {
 			for (var p in e)
 				evt[p] = e[p];
 		}
@@ -775,8 +775,8 @@ Mask.prototype.onBlur = function(fld) {
  * Filters the field value removing chars that
  * don't respect the mask regular expression
  * @param {Object} field Field reference
- * @access private
  * @type void
+ * @private 
  */
 Mask.prototype.filter = function(field) {
 	var newVal = field.value, f = this.fields;
@@ -792,8 +792,8 @@ Mask.prototype.filter = function(field) {
  * against the mask format. Invalid chars will be removed and
  * missing literals will be included
  * @param {Object} field Field reference
- * @access private
  * @type void
+ * @private 
  */
 Mask.prototype.format = function(field) {
 	var maxPos = chrIdx = fldIdx = 0;
@@ -938,9 +938,8 @@ var CurrencyMask = function() {
 	mask.onKeyDown = function(f, c, k) {
 		if (k == 110 || k == 194 || k == 188 || k == 190)
 			return false;
-		var self = this;
 		clearTimeout(this.timeout);
-		this.timeout = setTimeout(function() { self.applyFormat(f, k); }, 40);
+		this.timeout = this.applyFormat.bind(this).delay(40, f, k);
 		return true;
 	};
 	mask.applyFormat = function(f, k) {

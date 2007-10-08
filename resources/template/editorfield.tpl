@@ -14,7 +14,7 @@
         </select></td>
         <td><img src="{$iconPath}spacer.gif" width="1" height="1" border="0" alt="" /></td>
         <!-- loop var=$topButtons key="key" item="caption" -->
-        <td class="editorBtnCell"><a id="{$id}_{$key}" name="{$id}_{$key}" href="javascript:;" title="{$caption}" class="{$buttonCss}"><img class="{$buttonCss}" src="{$iconPath}editor_{$key}.gif" alt="{$caption}" /></a></td>
+        <td class="editorBtnCell"><a id="{$id}_{$key}" href="javascript:;" title="{$caption}" class="{$buttonCss}"><img class="{$buttonCss}" src="{$iconPath}editor_{$key}.gif" alt="{$caption}" /></a></td>
         <!-- end loop -->
       </tr>
       <tr id="{$id}_bottom">
@@ -25,7 +25,7 @@
         </select></td>
         <td><img src="{$iconPath}spacer.gif" width="1" height="1" border="0" alt="" /></td>
         <!-- loop var=$bottomButtons key="key" item="caption" -->
-        <td class="editorBtnCell"><a id="{$id}_{$key}" name="{$id}_{$key}" href="javascript:;" title="{$caption}" class="{$buttonCss}"><img class="{$buttonCss}" src="{$iconPath}editor_{$key}.gif" alt="{$caption}" /></a></td>
+        <td class="editorBtnCell"><a id="{$id}_{$key}" href="javascript:;" title="{$caption}" class="{$buttonCss}"><img class="{$buttonCss}" src="{$iconPath}editor_{$key}.gif" alt="{$caption}" /></a></td>
         <!-- end loop -->
       </tr>
     </table>
@@ -35,9 +35,9 @@
     <div id="{$id}_window">
       {$hiddenField}
       <iframe id="{$id}_iframe" style="width:{$width}px;height:{$height}px;background-color:#fff;"></iframe>
-      <textarea id="{$id}_textarea" style="width:{$width}px;height:{$height}px;display:none" rows="50" cols="8"></textarea>
+      <textarea id="{$id}_textarea" style="width:{$width}px;height:{$height}px;display:none"></textarea>
     </div>
-    <div id="{name}_footer" style="margin-left:2px;padding-bottom:2px;padding-right:2px;">
+    <div id="{$id}_footer" style="margin-left:2px;padding-bottom:2px;padding-right:2px;">
       <div style="float:left;">
         <input id="{$id}_switch" name="{$id}_switch" type="checkbox"{$globalDisabled} />&nbsp;<label for="{$id}_switch" id="label_{$id}_switch"{$labelStyle}>{$editMode}</label>
       </div>
@@ -53,8 +53,5 @@
       </td></tr>
     </table>
   </div>
-  <script type="text/javascript">
-	{$id}_instance = new EditorField($('{$id}'), {$options});
-	{$id}_instance.setup();
-  </script>
+  <script type="text/javascript">new EditorField($('{$id}'), {$options});</script>
 </div>
