@@ -4,7 +4,7 @@
 .dataTableHeader {
 	background-color: ButtonFace;
 }
-.dataTableHeader td {
+.dataTableHeader th, .dataTableHeader td {
 	border: 1px solid;
 	border-color: ButtonHighlight ButtonShadow ButtonShadow ButtonHighlight;
 	cursor: default;

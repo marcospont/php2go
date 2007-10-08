@@ -321,7 +321,13 @@ class HttpRequest extends PHP2Go
 	function isAjax() {
 		$headers = HttpRequest::getHeaders();
 		$headers = array_change_key_case($headers, CASE_LOWER);
-		return (array_key_exists('x-requested-with', $headers));
+		if (array_key_exists('x-requested-with', $headers))
+			return TRUE;
+		if (is_array($_FILES)) {
+			$params = array_change_key_case($_POST, CASE_LOWER);
+			return (array_key_exists('x-requested-with', $params));
+		}
+		return FALSE;
 	}
 
 	/**

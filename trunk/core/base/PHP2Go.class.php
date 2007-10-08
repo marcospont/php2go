@@ -174,18 +174,6 @@ class PHP2Go
 	}
 
 	/**
-	 * Create a clone of this object
-	 *
-	 * This method is PHP4 only. When running PHP2Go under PHP5,
-	 * please use the {@link clone()} native function.
-	 *
-	 * @return object
-	 */
-	function cloneObject() {
-		return $this;
-	}
-
-	/**
 	 * Create a hash code of this object
 	 *
 	 * @return string

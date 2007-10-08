@@ -195,7 +195,7 @@ class TabView extends Widget
 		$this->renderContent($code);
 		if ($attrs['orientation'] == TABVIEW_ORIENTATION_BOTTOM)
 			$this->renderNavigation($code);
-		$code .= "\n<div>";
+		$code .= "\n</div>";
 		print $code;
 		$tabs = array();
 		foreach ($this->panels as $panel) {

@@ -32,10 +32,12 @@
  */
 define('E_DATABASE_ERROR', 0);
 /**
- * Define strict errors constant when not available
+ * Define missing error level constants
  */
 if (!defined('E_STRICT'))
 	define('E_STRICT', 2048);
+if (!defined('E_RECOVERABLE_ERROR'))
+	define('E_RECOVERABLE_ERROR', 4096);
 
 /**
  * Base error class
@@ -346,14 +348,14 @@ class PHP2GoError extends PHP2Go
 		if (!empty($errData['TRACE'])) {
 			$stackTrace .= "<br /><b>STACK TRACE</b><pre>";
 			foreach ($errData['TRACE'] as $element)
-				$stackTrace .= "\tat {$element['FUNCTION']}(" . htmlspecialchars($element['ARGS']) . "})\n\t\ton {$element['FILE']}, {$element['LINE']}\n";
+				$stackTrace .= "\tat {$element['FUNCTION']}(" . htmlspecialchars($element['ARGS']) . ")\n\t\ton {$element['FILE']}, {$element['LINE']}\n";
 			$stackTrace .= "</pre>";
 		}
 		print ("
 			<table cellpadding=\"6\" cellspacing=\"0\" style=\"border:1px solid red;background-color:#efefef;width:auto;\">
 				<tr><td>
 					<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\" width=\"100%\">
-						<tr><td width=\"20\" valign=\"top\" rowspan=\"4\"><img src=\"" . PHP2Go::getConfigVal('ABSOLUTE_URI', FALSE) . "resources/icon/error.gif\" hspace=\"3\" /></td><td style=\"font-family:Arial;font-weight:bold;font-size:14px;color:red;\">PHP2Go - {$errData['TYPE']}</td></tr>
+						<tr><td width=\"20\" valign=\"top\" rowspan=\"4\"><img src=\"" . PHP2Go::getConfigVal('ABSOLUTE_URI', FALSE) . "resources/icon/error.gif\" hspace=\"3\" alt=\"\"/></td><td style=\"font-family:Arial;font-weight:bold;font-size:14px;color:red;\">PHP2Go - {$errData['TYPE']}</td></tr>
 						<tr><td style=\"font-family:Arial;font-size:12px;\"><b>{$errData['MESSAGE']}</b></td></tr>
 						<tr><td style=\"font-family:Arial;font-size:12px;\">{$extra}{$location}</td></tr>
 						<tr><td style=\"font-family:Arial;font-size:12px;\">{$stackTrace}</td></tr>

@@ -76,12 +76,22 @@ class AjaxResponse extends PHP2Go
 	 *
 	 * This method is automatically called by {@link AjaxService}
 	 * class when the response is generated.
+	 * 
+	 * @param bool $isIframe Indicate we're responding to an IFRAME
 	 */
-	function render() {
-		header("Content-type: application/json; charset={$this->charset}");
-		print JSONEncoder::encode(array(
-			'commands' => $this->commands
-		));
+	function render($isIframe=FALSE) {
+		if (!$isIframe) {
+			header("Content-type: application/json; charset={$this->charset}");
+			print JSONEncoder::encode(array(
+				'commands' => $this->commands
+			));
+		} else {
+			print '<html><body><textarea>';
+			print JSONEncoder::encode(array(
+				'commands' => $this->commands
+			));
+			print '</textarea></body></html>';
+		}
 	}
 
 	/**

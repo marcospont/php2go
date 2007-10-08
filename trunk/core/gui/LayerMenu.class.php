@@ -447,7 +447,7 @@ class LayerMenu extends Menu
 		if ($this->positioning == MENU_RELATIVE)
 			$this->menuCode .= "\n<div id=\"{$this->id}\"></div>";
 		$this->menuCode .=
-			"\n<script type=\"text/javascript\" language=\"Javascript\">" .
+			"\n<script type=\"text/javascript\">" .
 			"\n\tvar {$this->id} = new makeCM(\"{$this->id}\");" .
 			"\n\t{$this->id}.resizeCheck = 1;" .
 			"\n\t{$this->id}.openOnClick = 1;" .
@@ -528,6 +528,12 @@ class LayerMenu extends Menu
 				$this->_buildChildrenCode($this->tree[$i]['CHILDREN'], $thisId, 0);
 		}
 		$this->menuCode .= "\n\t{$this->id}.construct();";
+		if ($this->positioning == MENU_RELATIVE) {
+			$this->menuCode .=
+				"\n\tEvent.onDOMReady(function() {" .
+				"\n\t\t{$this->id}.resized();" .
+				"\n\t});";
+		}
 		$this->menuCode .= "\n</script>\n";
 	}
 

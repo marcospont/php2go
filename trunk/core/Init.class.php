@@ -77,14 +77,14 @@ class Init
 	 * @access private
 	 */
 	var $_localeTable = array(
-		'pt-br' => array(array('pt_BR', 'portuguese', 'pt_BR.iso-8859-1', 'pt_BR.utf-8'), 'brazilian-portuguese', 'pt-br'),
-		'en-us' => array(array('en_US', 'en'), 'us-english', 'en'),
-		'es' => array(array('es_ES', 'es'), 'spanish', 'es'),
-		'cs' => array(array('cs_CZ', 'cz'), 'czech', 'cz'),
-		'it' => array(array('it_IT', 'it'), 'italian', 'it'),
-		'de-de' => array(array('de_DE', 'de', 'ge'), 'de-german', 'de'),
-		'fr-fr' => array(array('fr_FR', 'fr'), 'french', 'fr'),
-		'th' => array(array('th_TH'), 'thai', 'th')
+		'pt-br' => array(array('pt_BR', 'pt_BR.iso-8859-1', 'pt_BR.utf-8', 'portuguese'), 'brazilian-portuguese', 'pt-br'),
+		'en-us' => array(array('en_US', 'en', 'english'), 'us-english', 'en'),
+		'es' => array(array('es_ES', 'es', 'spanish'), 'spanish', 'es'),
+		'cs' => array(array('cs_CZ', 'cz', 'czech'), 'czech', 'cz'),
+		'it' => array(array('it_IT', 'it', 'italian'), 'italian', 'it'),
+		'de-de' => array(array('de_DE', 'de', 'ge', 'german'), 'de-german', 'de'),
+		'fr-fr' => array(array('fr_FR', 'fr', 'french'), 'french', 'fr'),
+		'th' => array(array('th_TH', 'th', 'english'), 'thai', 'th')
 	);
 
 	/**
@@ -97,6 +97,7 @@ class Init
 		'EURO' => array(
 			'type' => 'EURO',
 			'format' => 'd/m/Y',
+			'xlsFormat' => 'DD/MM/YYYY',
 			'calendarFormat' => '%d/%m/%Y',
 			'regexp' => '^([0-9]{1,2})(\/|\-|\.)([0-9]{1,2})(\/|\-|\.)([0-9]{1,4})(\s([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$',
 			'matches' => array(1, 3, 5),
@@ -105,6 +106,7 @@ class Init
 		'US' => array(
 			'type' => 'US',
 			'format' => 'm/d/Y',
+			'xlsFormat' => 'MM/DD/YYYY',
 			'calendarFormat' => '%m/%d/%Y',
 			'regexp' => '^([0-9]{1,2})(\/|\-|\.)([0-9]{1,2})(\/|\-|\.)([0-9]{1,4})(\s([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$',
 			'matches' => array(3, 1, 5),
@@ -113,6 +115,7 @@ class Init
 		'SQL' => array(
 			'type' => 'SQL',
 			'format' => 'Y-m-d',
+			'xlsFormat' => 'YYYY-MM-DD',
 			'calendarFormat' => '%Y-%m-%d',
 			'regexp' => '^([0-9]{1,4})(\/|\-|\.)([0-9]{1,2})(\/|\-|\.)([0-9]{1,2})(\s([0-9]{1,2}):([0-9]{1,2}):?([0-9]{1,2})?)?$',
 			'matches' => array(5, 3, 1),
@@ -265,7 +268,7 @@ class Init
 			$conf = array_merge($defaults, $conf);
 		}
 		// session cookie name
-		if ($conf['NAME'])
+		if (!empty($conf['NAME']))
 			ini_set('session.name', $conf['NAME']);
 		ini_set('session.cache_limiter', 'must_revalidate');
 		ini_set('session.use_cookies', TRUE);
@@ -318,8 +321,8 @@ class Init
 		// language
 		$conf = $this->_Conf->getConfig('LANGUAGE');
 		if (!empty($conf)) {
+			$userDefined = FALSE;
 			if (is_array($conf)) {
-				$userDefined = FALSE;
 				$default = (isset($conf['DEFAULT']) ? $conf['DEFAULT'] : PHP2GO_DEFAULT_LANGUAGE);
 				$param = (!empty($conf['REQUEST_PARAM']) ? $conf['REQUEST_PARAM'] : NULL);
 				$supported = (isset($conf['AVAILABLE']) ? (array)$conf['AVAILABLE'] : array_keys($this->_localeTable));
@@ -449,14 +452,10 @@ class Init
 			$langName = $this->_localeTable[$language][1];
 			$adodbLang = $this->_localeTable[$language][2];
 			// defines locale using setlocale()
-			if (version_compare(PHP_VERSION, '4.3.0', '>=')) {
-				$params = array_merge(array(LC_ALL), $locale);
-				call_user_func_array('setlocale', $params);
-			} else {
-				setlocale(LC_ALL, $locale[0]);
-			}
+			array_unshift($locale, LC_ALL);
+			call_user_func_array('setlocale', $locale);
 			// set configuration entries
-			$this->_Conf->setConfig('LOCALE', $locale[0]);
+			$this->_Conf->setConfig('LOCALE', $locale[1]);
 			$this->_Conf->setConfig('LANGUAGE_CODE', $language);
 			$this->_Conf->setConfig('LANGUAGE_NAME', $langName);
 			// if language code is user-defined, save it in the session scope

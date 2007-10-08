@@ -115,7 +115,7 @@ AutoCompleteField.prototype.setup = function() {
 	op.delay = op.delay || 0.3;
 	op.maxChoices = op.maxChoices || 10;
 	op.minChars = op.minChars || 2;
-	op.ignoreCase = PHP2Go.ifUndef(op.ignoreCase, true);
+	op.ignoreCase = Object.ifUndef(op.ignoreCase, true);
 	op.fullSearch = !!op.fullSearch;
 	op.autoSelect = !!op.autoSelect;
 	op.incremental = !!op.incremental;
@@ -149,9 +149,9 @@ AutoCompleteField.prototype.getValue = function() {
 	if (this.options.incremental) {
 		if (this.fld.value.trim() == '')
 			return null;
-		var res = this.fld.value.split(this.options.separator).filter(function(item, idx) {
+		var res = this.fld.value.split(this.options.separator).valid(function(item, idx) {
 			var val = item.trim();
-			return (val != '' ? val : null);
+			return (val.empty() ? null : val);
 		});
 		return (res.empty() ? null : res);
 	}
@@ -165,7 +165,7 @@ AutoCompleteField.prototype.getValue = function() {
  * @type void
  */
 AutoCompleteField.prototype.setValue = function(val) {
-	(this.incremental && typeof(val) == 'array') && (val = val.split(this.separator + ' '));
+	(this.incremental && Object.isArray(val)) && (val = val.split(this.separator + ' '));
 	this.fld.value = val;
 };
 
@@ -272,8 +272,8 @@ AutoCompleteField.prototype.getChoices = function() {
 /**
  * Update the choices box contents
  * @param {String} html New contents
- * @access private
  * @type void
+ * @private 
  */
 AutoCompleteField.prototype.updateChoices = function(html) {
 	(this.options.ajax && this.options.throbber) && (this.options.throbber.hide());
@@ -333,8 +333,7 @@ AutoCompleteField.prototype.keyDownHandler = function(e) {
 		}
 	}
 	this.lastValue = this.fld.value;
-	if (this.timer)
-		clearTimeout(this.timer);
+	clearTimeout(this.timer);
 };
 
 /**
@@ -348,7 +347,8 @@ AutoCompleteField.prototype.keyUpHandler = function(e) {
 	this.fldChanged = (this.fld.value != this.lastValue);
 	if ('#9#13#16#17#33#34#35#36#37#38#39#40#45#127#4098#'.indexOf('#'+k+'#') != -1 || !this.fldChanged)
 		return;
-	this.timer = setTimeout(this.timerHandler.bind(this), this.options.delay*1000);
+	clearTimeout(this.timer);
+	this.timer = this.timerHandler.bind(this).delay(this.options.delay * 1000);
 };
 
 /**
@@ -429,7 +429,7 @@ AutoCompleteField.prototype.choiceHoverHandler = function(e) {
  */
 AutoCompleteField.prototype.choiceClickHandler = function(e) {
 	var elm = e.findElement('li');
-	if (elm && typeof(elm.index) != 'undefined') {
+	if (elm && !Object.isUndef(elm.index)) {
 		this.chooseByIndex(elm.index);
 		e.stop();
 	}
@@ -437,9 +437,9 @@ AutoCompleteField.prototype.choiceClickHandler = function(e) {
 
 /**
  * Navigate by a given offset in the available choices
- * @param {Number} fw Offset
- * @access private
+ * @param {Number} fw Offset 
  * @type void
+ * @private 
  */
 AutoCompleteField.prototype.navigate = function(fw) {
 	if (this.choiceCount > 0) {
@@ -463,8 +463,8 @@ AutoCompleteField.prototype.navigate = function(fw) {
 /**
  * Choose an available choice from its index
  * @param {Number} idx Choice index
- * @access private
  * @type void
+ * @private 
  */
 AutoCompleteField.prototype.chooseByIndex = function(idx) {
 	var res, itemText, item = this.choiceItems[idx];

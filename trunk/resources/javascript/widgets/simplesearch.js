@@ -186,8 +186,8 @@ ReportSimpleSearch.prototype.getCurrentMask = function() {
 /**
  * Build HTML code of the filters display DIV. Called
  * just once, inside {@link ReportSimpleSearch#setup}
- * @access private
  * @type void
+ * @private 
  */
 ReportSimpleSearch.prototype.buildFilters = function() {
 	var self = this;
@@ -223,8 +223,8 @@ ReportSimpleSearch.prototype.buildFilters = function() {
 /**
  * Called when a new filter field is selected, to rebuild the operators
  * select input based on the mask associated with the selected field
- * @access private
  * @type void
+ * @private 
  */
 ReportSimpleSearch.prototype.rebuildOperators = function() {
 	var filt = this.fields, trg = this.operators;
@@ -274,8 +274,8 @@ ReportSimpleSearch.prototype.isValidSearch = function(focus) {
 /**
  * Validates the search term using {@link Validator#isMask}
  * @param {String} val Search term
- * @access private
  * @type Boolean
+ * @private 
  */
 ReportSimpleSearch.prototype.validateTerm = function(val) {
 	try {
@@ -361,7 +361,7 @@ ReportSimpleSearch.prototype.addFilter = function(verbose) {
  * @type void
  */
 ReportSimpleSearch.prototype.removeFilter = function(e) {
-	var f = this.filters, elm = $E($EV(e).element());
+	var f = this.filters, elm = $EV(e).target;
 	// remove filter
 	f.remove(f.indexOf(elm.getParentByTagName('a').id));
 	if (f.length == 0)

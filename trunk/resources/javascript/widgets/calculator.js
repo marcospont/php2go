@@ -148,7 +148,7 @@ Calculator.setup = function(opts) {
 	if (tgr && trg) {
 		if (!Calculator.loaded) {
 			Calculator.loaded = true;
-			Event.addLoadListener(function() {
+			Event.onDOMReady(function() {
 				Calculator.singleton = c = new Calculator();
 				c.build();
 			});
@@ -198,13 +198,11 @@ Calculator.prototype.build = function() {
 	// event listeners
 	Event.addListener(table, 'mouseover', function(e) {
 		e = (e||window.event);
-		var elm = $E(e.target||e.srcElement);
-		elm.classNames().add('calcButtonHilite');
+		Element.addClass(e.target || e.srcElement, 'calcButtonHilite');
 	});
 	Event.addListener(table, 'mouseout', function(e) {
 		e = (e||window.event);
-		var elm = $E(e.target||e.srcElement);
-		elm.classNames().remove('calcButtonHilite');
+		Element.removeClass(e.target || e.srcElement, 'calcButtonHilite');
 	});
 	$C(table.getElementsByTagName('button')).walk(function(item, idx) {
 		Event.addListener(item, 'click', function() {
@@ -345,7 +343,7 @@ Calculator.prototype.buttonHandler = function(sender) {
  */
 Calculator.prototype.mouseDownHandler = function(e) {
 	var c = Calculator.singleton;
-	var t = $E($EV(e).element());
+	var t = $EV(e).target;
 	if (!t.isChildOf(c.trigger) && !t.isChildOf(c.container))
 		c.hide();
 };
@@ -531,7 +529,7 @@ Calculator.prototype.showAt = function(tgr, trg, align) {
 	// set current trigger/input/mask
 	this.trigger = tgr;
 	this.target = trg;
-	// move and display the calculator container
+	// move and display the calculator
 	if (align == "bottom")
 		c.moveTo(pos.x+dim.width-c.getDimensions().width, pos.y+dim.height+2);
 	else
@@ -544,7 +542,7 @@ Calculator.prototype.showAt = function(tgr, trg, align) {
 		if (trg.inputMask.mask == CurrencyMask)
 			tmp = tmp.replace(".", "").replace(",", ".");
 		else
-			tmp = tmp.replace(/[^0-9\.]/, "");
+			tmp = tmp.replace(/[^0-9\.\-]/, "");
 	}
 	input.value = tmp;
 	// reset class properties
@@ -554,10 +552,9 @@ Calculator.prototype.showAt = function(tgr, trg, align) {
 	this.pendingOp = "";
 	this.lastOp = "";
 	// register event listener
-	var self = this;
-	Event.addListener(document, 'keydown', self.keyDownHandler, true);
-	Event.addListener(document, 'keypress', self.keyPressHandler, true);
-	Event.addListener(document, 'mousedown', self.mouseDownHandler, true);
+	Event.addListener(document, 'keydown', PHP2Go.method(this, 'keyDownHandler'), true);
+	Event.addListener(document, 'keypress', PHP2Go.method(this, 'keyPressHandler'), true);
+	Event.addListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 };
 
 /**
@@ -569,10 +566,9 @@ Calculator.prototype.hide = function() {
 	this.trigger = null;
 	this.container.hide();
 	// unregister event listener
-	var c = this;
-	Event.removeListener(document, 'keydown', c.keyDownHandler, true);
-	Event.removeListener(document, 'keypress', c.keyPressHandler, true);
-	Event.removeListener(document, 'mousedown', c.mouseDownHandler, true);
+	Event.removeListener(document, 'keydown', PHP2Go.method(this, 'keyDownHandler'), true);
+	Event.removeListener(document, 'keypress', PHP2Go.method(this, 'keyPressHandler'), true);
+	Event.removeListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'widgets/calculator.js'] = true;

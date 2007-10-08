@@ -8,7 +8,8 @@ function jsrsTestReturn(returnString, request) {
 	 * and the jsrsContextObj, which represents the request. This object has some useful properties, like the
 	 * requested file (url), requested remote function (func), parameters (params) and debug visibility (visible)
 	 */
-	alert("Request URL: " + request.url + "\nRequested function: " + request.func + "\nParameters: " + request.params + "\nReturn string: " + returnString);
+	if (returnString)
+		alert("Request URL: " + request.url + "\nRequested function: " + request.func + "\nParameters: " + request.params + "\nReturn string: " + returnString);
 }
 
 function jsrsTest2Return(returnString, request) {

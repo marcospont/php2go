@@ -253,7 +253,7 @@ class DocumentHead
 	 * @param string $charset Script charset
 	 */
 	function addScript($path, $language='Javascript', $type='text/javascript', $charset=NULL) {
-		$path = htmlentities($path);
+		$path = htmlentities(html_entity_decode($path));
 		if (!array_key_exists($path, $this->scriptFiles)) {
 			if (!empty($language)) {
 				$this->scriptFiles[$path] = sprintf("<script language=\"%s\" src=\"%s\" type=\"%s\"%s></script>\n",
@@ -285,7 +285,7 @@ class DocumentHead
 	 * @param string $charset Charset of the stylesheet file
 	 */
 	function addStyle($path, $media=NULL, $charset=NULL) {
-		$path = htmlentities($path);
+		$path = htmlentities(html_entity_decode($path));
 		if (!array_key_exists($path, $this->styleFiles)) {
 			$this->styleFiles[$path] = sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s />\n",
 				$path, (!empty($media) ? " media=\"{$media}\"" : ''), (!empty($charset) ? " charset=\"{$charset}\"" : '')
@@ -308,7 +308,7 @@ class DocumentHead
 	 * @param string $url Relative or absolute path to the stylesheet file
 	 */
 	function importStyle($url) {
-		$url = htmlentities($url);
+		$url = htmlentities(html_entity_decode($url));
 		if (!in_array($url, $this->styleImports)) {
 			$this->styleImports[] = $url;
 			$this->styleCode .= sprintf("@import url(%s);\n", trim($url));
@@ -323,7 +323,7 @@ class DocumentHead
 	 * @param string $title Link title
 	 */
 	function addAlternateLink($type, $url, $title) {
-		$url = htmlentities($url);
+		$url = htmlentities(html_entity_decode($url));
 		if (!array_key_exists($url, $this->alternateLinks)) {
 			$this->alternateLinks[$url] = sprintf(
 				"<link rel=\"alternate\" type=\"%s\" href=\"%s\"%s />\n",

@@ -56,7 +56,7 @@ Throbber = function(opts) {
 	 * Whether to centralize the throbber in its parent
 	 * @type Boolean
 	 */
-	this.centralize = PHP2Go.ifUndef(opts.centralize, true);
+	this.centralize = Object.ifUndef(opts.centralize, true);
 	/**
 	 * onShow handler function
 	 * @type Function
@@ -77,8 +77,8 @@ Throbber = function(opts) {
 Throbber.prototype.setup = function() {
 	if (this.element)
 		this.element.hide();
-	this.onShow = (typeof(this.onShow) == 'function' ? this.onShow.bind(this) : null);
-	this.onHide = (typeof(this.onHide) == 'function' ? this.onHide.bind(this) : null);
+	this.onShow = (Object.isFunc(this.onShow) ? this.onShow.bind(this) : null);
+	this.onHide = (Object.isFunc(this.onHide) ? this.onHide.bind(this) : null);
 	var self = this;
 	Event.addListener(window, 'unload', self.hide);
 };

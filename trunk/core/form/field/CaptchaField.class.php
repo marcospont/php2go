@@ -171,7 +171,7 @@ class CaptchaField extends FormField
 		else
 			$this->setSize($this->Captcha->textLength);
 		// CAPTCHA string length
-		if ($attrs['LENGTH']) {
+		if (array_key_exists('LENGTH', $attrs)) {
 			$this->setLength($attrs['LENGTH']);
 			$this->Captcha->setTextLength($attrs['LENGTH']);
 		} else {
@@ -182,22 +182,22 @@ class CaptchaField extends FormField
 		if ($readOnly)
 			$this->setReadonly();
 		// image dimensions
-		if ($attrs['WIDTH'])
+		if (array_key_exists('WIDTH', $attrs))
 			$this->Captcha->setWidth($attrs['WIDTH']);
-		if ($attrs['HEIGHT'])
+		if (array_key_exists('HEIGHT', $attrs))
 			$this->Captcha->setHeight($attrs['HEIGHT']);
 		// noise level
-		if ($attrs['NOISELEVEL'])
+		if (array_key_exists('NOISELEVEL', $attrs))
 			$this->Captcha->setNoiseLevel($attrs['NOISELEVEL']);
 		// font properties
-		if ($attrs['FONTSIZE'])
+		if (array_key_exists('FONTSIZE', $attrs))
 			$this->Captcha->setFontSize($attrs['FONTSIZE']);
-		if ($attrs['FONTSHADOW'])
+		if (array_key_exists('FONTSHADOW', $attrs))
 			$this->Captcha->setFontShadow($attrs['FONTSHADOW']);
-		if ($attrs['FONTANGLE'])
+		if (array_key_exists('FONTANGLE', $attrs))
 			$this->Captcha->setFontAngle($attrs['FONTANGLE']);
 		// image save path
-		if ($attrs['IMAGEPATH'])
+		if (array_key_exists('IMAGEPATH', $attrs))
 			$this->imagePath = $attrs['IMAGEPATH'];
 		// image type
 		$type = @constant(@$attrs['IMAGETYPE']);
