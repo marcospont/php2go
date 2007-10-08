@@ -809,7 +809,7 @@ class Document extends PHP2Go
 			foreach($this->scriptBlocks as $language => $scripts) {
 				if (substr($scripts, -1) != "\n")
 					$scripts .= "\n";
-				print sprintf("\n<script language=\"%s\" type=\"text/%s\">\n%s\n</script>", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
+				print sprintf("\n<script language=\"%s\" type=\"text/%s\">\n//<![CDATA[\n%s\n//]]>\n</script>\n", $language, strtolower(preg_replace("/[^a-zA-Z]/", "", $language)), $scripts);
 			}
 		}
 		print "\n</body>\n</html>";
