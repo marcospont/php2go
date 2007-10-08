@@ -74,7 +74,7 @@ var Form = {
 		if (form) {
 			$C(form.elements).walk(function(el, idx) {
 				if (el.auxiliary == true || ((!el.type || !el.name) && !el.component) || (el.type && (/^submit|reset|button$/.test(el.type))))
-					throw $continue;
+					return;
 				var key = (el.name || el.id);
 				if (!res.containsKey(key))
 					res.data[key] = Form.getField(form, key);
@@ -115,7 +115,7 @@ var Form = {
 					el.value.clear();
 			});
 			if (form.validator)
-				form.validator.clearSummary();
+				form.validator.clearErrors();
 		}
 	},
 	/**
@@ -193,7 +193,7 @@ var Form = {
 	serialize : function(form, fld) {
 		fld = fld || [];
 		this.updateCheckboxes(form);
-		return this.getFields(form).filter(function(el) {
+		return this.getFields(form).valid(function(el) {
 			if (fld.empty() || fld.contains(el.key))
 				return el.value.serialize();
 		}).join('&');
@@ -207,12 +207,12 @@ var Form = {
 	 */
 	ajaxify : function(form, ajax) {
 		form = $(form);
-		if (form && typeof(ajax) == 'function') {
+		if (form && Object.isFunc(ajax)) {
 			form.ajax = ajax;
 			Event.addListener(form, 'submit', function(e) {
 				var evt = $EV(e), frm = null;
 				evt.stop();
-				frm = Element.getParentByTagName(evt.element(), 'form');
+				frm = evt.findElement('form');
 				if (frm) {
 					var ajax = frm.ajax();
 					ajax.form = frm.id;
@@ -250,9 +250,10 @@ var Form = {
 					rel.disabled = chk.disabled;
 				}
 			}
-			$C(form.elements).accept(function(item) {
-				return (item.type == 'checkbox');
-			}).walk(updateHidden);
+			for (var i=0,l=form.elements.length; i<l; i++) {
+				if (form.elements[i].type == 'checkbox')
+					updateHidden(form.elements[i]);
+			}
 		}
 	}
 };
@@ -362,6 +363,7 @@ Field.prototype.getValue = function() {
  * @type void
  */
 Field.prototype.setValue = function(val) {
+	val = val || '';
 	this.fld.value = val;
 	if (this.fld.onchange)
 		this.fld.onchange();
@@ -571,7 +573,7 @@ SelectField.extend(Field, 'Field');
  */
 SelectField.prototype.getValue = function() {
 	if (this.multiple) {
-		var res = $C(this.fld.options).filter(function(el) {
+		var res = $C(this.fld.options).valid(function(el) {
 			if (el.selected == true)
 				return el.value;
 			return null;
@@ -659,7 +661,7 @@ SelectField.prototype.setFirstOption = function(value, text) {
  */
 SelectField.prototype.addOption = function(value, text, pos) {
 	var i, f = this.fld;
-	pos = Math.abs(PHP2Go.ifUndef(pos, f.options.length));
+	pos = Math.abs(Object.ifUndef(pos, f.options.length));
 	if (f.add) {
 		if (pos < f.options.length) {
 			try { // insert before (W3C standard)
@@ -715,7 +717,7 @@ SelectField.prototype.importOptions = function(str, lsep, csep, pos, val) {
  */
 SelectField.prototype.removeOption = function(idx) {
 	var i, f = this.fld, idx = Math.abs(idx);
-	var r = (typeof(f.remove) == 'function');
+	var r = Object.isFunc(f.remove);
 	if (idx >= f.options.length)
 		return;
 	// DOM browsers
@@ -741,8 +743,8 @@ SelectField.prototype.removeOption = function(idx) {
  */
 SelectField.prototype.removeSelectedOptions = function(func, idx) {
 	var i, c, j, k, f = this.fld;
-	var r = (typeof(f.remove) == 'function');
-	func = func || $EF, idx = PHP2Go.ifUndef(idx, 0);
+	var r = Object.isFunc(f.remove);
+	func = func || $EF, idx = Object.ifUndef(idx, 0);
 	for (i=idx; i<f.options.length; i++) {
 		if (f.options[i].selected == true) {
 			// DOM browsers
@@ -827,7 +829,7 @@ GroupField.extend(Field, 'Field');
  * @type Object
  */
 GroupField.prototype.getValue = function() {
-	var v = this.grp.filter(function(el) {
+	var v = this.grp.valid(function(el) {
 		if (el.checked)
 			return el.value;
 		return null;
@@ -957,7 +959,7 @@ GroupField.prototype.focus = function() {
  */
 GroupField.prototype.serialize = function() {
 	var self = this, nm = this.name.replace(/\[\]$/, '');
-	var v = this.grp.filter(function(el) {
+	var v = this.grp.valid(function(el) {
 		if (el.checked && !el.disabled) {
 			if (self.multiple)
 				return nm + '[]=' + el.value.urlEncode();
@@ -970,8 +972,7 @@ GroupField.prototype.serialize = function() {
 
 /**
  * Base class for all specialized form components.
- * This class methods should be implemented by each
- * form component
+ * Implements {@link Observable} interface.
  * @constructor
  * @base Field
  * @param {Object} Component top element's name or reference
@@ -984,39 +985,24 @@ ComponentField = function(fld, clsName) {
 	 * @type String
 	 */
 	this.componentClass = clsName;
-	/**
-	 * Component's event listeners
-	 * @type Object
-	 */
-	this.listeners = {};
 };
 ComponentField.extend(Field, 'Field');
+ComponentField.implement(new Observable);
 
 /**
- * Register a new event listener in the component
- * @param {String} name Event name
- * @param {Function} func Handler function
- * @type void
- */
-ComponentField.prototype.addEventListener = function(name, func) {
-	this.listeners[name] = this.listeners[name] || [];
-	this.listeners[name].push(func.bind(this));
-};
-
-/**
- * Used to raise events inside the component. Searches
- * for a handler function and call it if it exists
+ * Used to raise events inside the component. Overrides
+ * {@link Observable#raiseEvent}.
  * @param {String} name Event name
  * @param {Array} args Event arguments
  * @type void
  */
 ComponentField.prototype.raiseEvent = function(name, args) {
-	var funcs = this.listeners[name] || [];
-	for (var i=0; i<funcs.length; i++) {
-		funcs[i](args);
-	}
-	if (this.fld && typeof(this.fld['on'+name]) == 'function')
-		this.fld['on'+name]();
+	this.listeners = this.listeners || {};
+	var funcs = this.listeners[name] || [], args = args || [];
+	for (var i=0,l=funcs.length; i<l; i++)
+		funcs[i][0].apply(funcs[i][1] || this, [args]);
+	if (this.fld && Object.isFunc(this.fld['on'+name]))
+		this.fld['on'+name]({ type: name, srcElement: this.fld });
 };
 
 /**
@@ -1058,7 +1044,7 @@ CheckboxController = function(frm, name, opts) {
 	 * Enabler function. Receives "false" when all boxes are unchecked, and true otherwise
 	 * @type Function
 	 */
-	this.enabler = (typeof(opts.enabler) == 'function' ? opts.enabler : null);
+	this.enabler = (Object.isFunc(opts.enabler) ? opts.enabler : null);
 	if (this.group && (this.all||this.none||this.toggle||this.invert||this.enabler))
 		this.setupEvents();
 };
@@ -1259,7 +1245,7 @@ var FieldSelection = {
 	collapse : function(elm, toStart) {
 		elm = $(elm);
 		if (elm && !elm.disabled) {
-			toStart = PHP2Go.ifUndef(toStart, true);
+			toStart = Object.ifUndef(toStart, true);
 			if (elm.createTextRange) {
 				var range = elm.createTextRange();
 				range.collapse(toStart);

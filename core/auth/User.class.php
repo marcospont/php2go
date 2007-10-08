@@ -231,12 +231,24 @@ class User extends SessionObject
 	function logout() {
 		$result = parent::unregister();
 		if ($result) {
+			$this->onLogout();
 			$this->username = NULL;
+			$this->activeRole = NULL;
 			$this->loginTime = NULL;
 			$this->lastAccess = NULL;
+			$this->properties = array();
 			$this->timeCounters = array();
 		}
-		return $result;
+	}
+	
+	/**
+	 * Called when the user is logged off
+	 * 
+	 * Must be overriden by child classes.
+	 * 
+	 * @abstract
+	 */
+	function onLogout() {		
 	}
 
 	/**

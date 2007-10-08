@@ -27,32 +27,15 @@
  * @version $Id$
  */
 
-	require_once('../config/config.php');
-	import('php2go.service.JSRSService');
-
-	$jsrs = new JSRSService();
-	$jsrs->registerHandler('jsrsTest');
-	$jsrs->registerHandler('jsrsTest2');
-	$jsrs->handleRequest();
-
-	function jsrsTest($selected) {
-		if (!empty($selected))
-			return "You've chosen option {$selected}. PHP was successfully called! PHP Version: " . PHP_VERSION;
-		return '';
-	}
-
-	function jsrsTest2() {
-		$db = Db::getInstance();
-		$db->setFetchMode(ADODB_FETCH_NUM);
-		$rs = $db->getAll("
-			select
-				CLIENT_ID, NAME
-			from
-				client
-			order by
-				NAME
-		");
-		return JSRSService::arrayToString($rs);
-	}
-
+/**
+ * Clones a given object
+ * 
+ * Internally uses the PHP5 native clone operator.
+ *
+ * @param object $obj Object to clone
+ * @return object
+ */
+function cloneObject($obj) {
+	return clone $obj;
+}
 ?>

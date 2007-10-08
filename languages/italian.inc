@@ -51,7 +51,8 @@ $P2G_LANGUAGE['ERR_TYPES'] = array(
 	128 => "Avviso del compilatore",
 	256 => "Errore dell'utente",
 	512 => "Avviso dell'utente",
-	1024 => "Nota dell'utente"
+	1024 => "Nota dell'utente",
+	4096 => "Catchable Fatal Error"
 );
 $P2G_LANGUAGE['ERR_ABSOLUTE_URI_NOT_FOUND'] = "Alla chiave 'ABSOLUTE_URI' non e' stato associato alcun valore nell'array globale di configurazione!";
 $P2G_LANGUAGE['ERR_CONFIG_ENTRY_NOT_FOUND'] = "La voce <I>%s</I> non e' stata impostata nell'array globale di configurazione!";

@@ -36,6 +36,10 @@ define('DML_BUILDER_INSERT', 1);
  */
 define('DML_BUILDER_UPDATE', 2);
 /**
+ * Update DML command for multiple records
+ */
+define('DML_BUILDER_UPDATE_MULTIPLE', 3);
+/**
  * Base SQL code to build insert statements
  */
 define('DML_BUILDER_INSERTSQL', "INSERT INTO %s (%s) VALUES (%s)");
@@ -43,6 +47,10 @@ define('DML_BUILDER_INSERTSQL', "INSERT INTO %s (%s) VALUES (%s)");
  * Base SQL code to build update statements
  */
 define('DML_BUILDER_UPDATESQL', "UPDATE %s SET %s WHERE %s");
+/**
+ * Base SQL code to build update statements without condition clause
+ */
+define('DML_BUILDER_UPDATEALLSQL', "UPDATE %s SET %s");
 /**
  * Special value to initialize oracle CLOB columns
  */
@@ -198,7 +206,7 @@ class DMLBuilder extends PHP2Go
 	 * @param array $clauseBindVars Bind variables to be used in the condition clause
 	 */
 	function prepare($mode, $table, $values, $clause=NULL, $clauseBindVars=array()) {
-		if ($mode != DML_BUILDER_INSERT && $mode != DML_BUILDER_UPDATE)
+		if ($mode != DML_BUILDER_INSERT && $mode != DML_BUILDER_UPDATE && $mode != DML_BUILDER_UPDATE_MULTIPLE)
 			$mode = DML_BUILDER_INSERT;
 		$this->_mode = $mode;
 		$this->_table = $table;
@@ -229,6 +237,10 @@ class DMLBuilder extends PHP2Go
 		} elseif ($this->_mode == DML_BUILDER_UPDATE) {
 			if (!empty($this->_table) && !empty($this->_values) && !empty($this->_clause)) {
 				return $this->_updateSql();
+			}
+		} elseif ($this->_mode == DML_BUILDER_UPDATE_MULTIPLE) {
+			if (!empty($this->_table) && !empty($this->_values)) {
+				return $this->_updateMultipleSql();
 			}
 		}
 		return FALSE;
@@ -430,6 +442,64 @@ class DMLBuilder extends PHP2Go
 		}
 		return '';
 	}
+	
+	/**
+	 * Internal method used to build UPDATE statements on multiple records
+	 *
+	 * @return string
+	 * @access private
+	 */
+	function _updateMultipleSql() {
+		$setValues = '';
+		$rs =& $this->_getRecordSet();
+		$dbCols = $this->_getColumnsList();
+		$values = array_change_key_case($this->_values, CASE_UPPER);
+		$isOci = ($this->_Db->AdoDb->dataProvider == 'oci8');
+		foreach ($dbCols as $dbCol) {
+			$colUpper = strtoupper($dbCol->name);
+			if (array_key_exists($colUpper, $values)) {
+				$colQuote = (strpos($colUpper, ' ') !== FALSE ? $this->_Db->AdoDb->nameQuote . $colUpper . $this->_Db->AdoDb->nameQuote : $colUpper);
+				$colType = $rs->MetaType($dbCol->type);
+				// empty values
+				if ($this->_isEmpty($values[$colUpper])) {
+					if ($this->ignoreEmptyValues) {
+						continue;
+					} else {
+						$values[$colUpper] = NULL;
+					}
+				}
+				// bind variables enabled
+				if ($this->useBind) {
+					// special handling of empty CLOB/BLOB values for oracle
+					if ($isOci) {
+						if (($dbCol->type == 'CLOB' && $values[$colUpper] == OCI_EMPTY_CLOB) || ($dbCol->type == 'BLOB' && $values[$colUpper] == OCI_EMPTY_BLOB)) {
+							$setValues .= $colQuote . ' = ' . $values[$colUpper] . ', ';
+						} else {
+							$this->_bindVars[$colUpper] = $values[$colUpper];
+							$setValues .= $colQuote . ' = :' . $dbCol->name . ', ';
+						}
+					} else {
+						$this->_bindVars[] = $values[$colUpper];
+						$setValues .= $colQuote . ' = ?, ';
+					}
+				} else {
+					if ($values[$colUpper] === NULL)
+						$setValues .= $colQuote . ' = null, ';
+					else
+						$setValues .= $this->_getColumnSql($values[$colUpper], $colType, $dbCol->type, $colQuote);
+				}
+			}			
+		}
+		if (!empty($setValues)) {
+			$setValues = substr($setValues, 0, -2);
+			// empty clause (global update)
+			if (empty($this->_clause))
+				return sprintf(DML_BUILDER_UPDATEALLSQL, $this->_table, $setValues);
+			else
+				return sprintf(DML_BUILDER_UPDATESQL, $this->_table, $setValues, $this->_clause);
+		}
+		return '';					
+	}
 
 	/**
 	 * Build a fake record set using the same driver used
@@ -459,17 +529,13 @@ class DMLBuilder extends PHP2Go
 	 * @access private
 	 */
 	function _getColumnsList() {
-		static $cacheTable;
-		static $cacheColumns;
-		if (isset($cacheTable) && $cacheTable == $this->_table) {
-			$columns =& $cacheColumns;
-			return $columns;
-		} else {
-			$columns = $this->_Db->getColumns($this->_table);
-			$cacheTable = $this->_table;
-			$cacheColumns = $columns;
-			return $columns;
+		static $cache;
+		if (!isset($cache))
+			$cache = array();
+		if (!array_key_exists($this->_table, $cache)) {
+			$cache[$this->_table] = $this->_Db->getColumns($this->_table);
 		}
+		return $cache[$this->_table];
 	}
 
 	/**

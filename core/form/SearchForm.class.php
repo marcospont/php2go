@@ -286,10 +286,8 @@ class SearchForm extends Component
 	function isValid() {
 		if (!isset($this->valid))
 			$this->valid = ($this->Form->isPosted() && $this->Form->isValid());
-		if (!$this->valid && $this->useSession && !$this->preserveSession) {
-			unset($_SESSION[$this->paramName]);
-			unset($_SESSION[$this->paramName . '_description']);
-		}
+		if (!$this->valid && $this->useSession && !$this->preserveSession)
+			$this->clearSession();
 		return $this->valid;
 	}
 
@@ -468,6 +466,16 @@ class SearchForm extends Component
 	}
 
 	/**
+	 * Removes the filter string/description stored from the session scope
+	 */
+	function clearSession() {
+		if ($this->useSession) {
+			unset($_SESSION[$this->paramName]);
+			unset($_SESSION[$this->paramName . '_description']);
+		}
+	}
+
+	/**
 	 * Enable/disable automatic save/restore of the form
 	 * field values using the session scope
 	 *
@@ -558,6 +566,7 @@ class SearchForm extends Component
 					if ($this->filterPersistence) {
 						$signature = $this->Form->getSignature();
 						$formVars = ($this->Form->formMethod == 'POST' ? $_POST : $_GET);
+						consumeArray($formVars, FORM_SIGNATURE);
 						$_SESSION['p2g_filters'][$signature] = $formVars;
 					} else {
 						$this->clearFilterPersistence();

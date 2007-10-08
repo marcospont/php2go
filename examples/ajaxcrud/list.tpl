@@ -5,7 +5,7 @@
     <div id="person{$person.id_people}">
       <input type="checkbox" id="chk_{$person.id_people}" name="chk[]" value="{$person.id_people}" />&nbsp;
       <a href="javascript:;" onclick="loadPerson({$person.id_people})">[Edit]</a>&nbsp;
-	  <a href="javascript:;" onclick="deletePerson({$person.id_people})">[Delete]</a>
+	  <a href="javascript:;" onclick="showDeletePersonDialog({$person.id_people})">[Delete]</a>
       {$person.name} - {$person.sex}
     </div>
 <!-- else loop -->

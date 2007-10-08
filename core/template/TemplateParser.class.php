@@ -342,9 +342,11 @@ class TemplateParser extends PHP2Go
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_EMPTY_TEMPLATE_FILE'), E_USER_ERROR, __FILE__, __LINE__);
 			$cacheId = realpath($src);
 			$time = @filemtime($src);
-			$src = @file_get_contents($src);
-			if ($src === FALSE)
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $value), E_USER_ERROR, __FILE__, __LINE__);
+			$fileSrc = @file_get_contents($src);
+			if ($fileSrc === FALSE)
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CANT_READ_FILE', $src), E_USER_ERROR, __FILE__, __LINE__);
+			else
+				$src = $fileSrc;
 		} else {
 			$cacheId = dechex(crc32($src));
 		}
@@ -1427,7 +1429,7 @@ class TemplateParser extends PHP2Go
 				'array_push($outputStack, array($widget)); ' .
 				'$lastIndex = sizeof($outputStack) - 1; ' .
 				'$widget = Widget::factory("' . $widgetData['path'] . '", ' . $widgetData['properties'] . '); ' .
-				'$widget->attributes[\'localVars\'] =& $block[$instance][\'vars\']; ' .				
+				'$widget->attributes[\'localVars\'] =& $block[$instance][\'vars\']; ' .
 				'if ($outputStack[$lastIndex][0]) { ' .
 				'$widget->setParent($outputStack[$lastIndex][0]); ' .
 				'} ' .
@@ -1657,7 +1659,7 @@ class TemplateParser extends PHP2Go
 		$output = 'array(';
 		foreach ($props as $key => $value)
 			$output .= '\'' . $key . '\'=>' . $value . ',';
-		$output = substr($output, 0, -1) . ')';
+		$output = (!empty($props) ? substr($output, 0, -1) . ')' : $output . ')');
 		return array(
 			'path' => $path,
 			'properties' => $output

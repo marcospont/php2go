@@ -75,13 +75,16 @@ LookupChoiceField.prototype.setup = function() {
 	this.fld.component = this;
 	this.filter.auxiliary = true;
 	// equalize widths
-	var wid = this.fld.getStyle('width');
-	this.filter.style.width = wid;
+	this.filter.originalColor = this.filter.getComputedStyle('color');
 	this.filter.originalValue = this.filter.value;
+	this.filter.style.color = 'InactiveCaption';
+	this.filter.style.width = this.fld.getStyle('width');
 	// filter field event listeners
 	Event.addListener(this.filter, 'focus', function() {
-		if (self.filter.value == self.filter.originalValue)
+		if (self.filter.value == self.filter.originalValue) {
 			self.filter.value = '';
+			self.filter.style.color = self.filter.originalColor;
+		}
 	});
 	Event.addListener(this.filter, 'keyup', function() {
 		if (self.filter.value != self.lastFilter) {
@@ -93,8 +96,10 @@ LookupChoiceField.prototype.setup = function() {
 		self.updateList();
 	});
 	Event.addListener(this.filter, 'blur', function() {
-		if (self.filter.value.trim() == '')
+		if (self.filter.value.trim() == '') {
 			self.filter.value = self.filter.originalValue;
+			self.filter.style.color = 'InactiveCaption';
+		}
 	});
 	// initialize the internal options list
 	this.initializeList();

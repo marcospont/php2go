@@ -96,6 +96,23 @@ Ajax.getTransport = function() {
 };
 
 /**
+ * Binds an AJAX global event listener. The event name is case-sensitive,
+ * and the supported events are: onLoading, onLoaded, onIteractive, onComplete,
+ * onSuccess, onJSONResult, onXMLResult, onFailure and onException. More than
+ * one global listener can be bound to a single event
+ * @param {String} name Event name
+ * @param {Function} func Listener function
+ * @param {Object} scope Listener scope
+ * @param {Bool} unshift Add listener on the top of the stack
+ * @type void
+ */
+Ajax.bind = function(name, func, scope, unshift) {
+	unshift = !!unshift;
+	Ajax.listeners[name] = Ajax.listeners[name] || [];
+	Ajax.listeners[name][unshift ? 'unshift' : 'push']([func, scope || null]);
+};
+
+/**
  * Utility method that transforms a string of
  * HTTP headers in an associative hash
  * @type Hash
@@ -118,8 +135,13 @@ Ajax.parseHeaders = function(str) {
 Ajax.lastModified = {};
 
 /**
- * Holds the current active transaction count
- * @type Number
+ * Global AJAX event listeners
+ * @type Object
+ */
+Ajax.listeners = {};
+
+/**
+ * @ignore
  */
 Ajax.transactionCount = 0;
 
@@ -130,12 +152,14 @@ Ajax.transactionCount = 0;
  * More than one listener can be bound to a single event name
  * @param {String} name Event name
  * @param {Function} func Listener function
- * @param {Object} scope Listener scope. Defaults to 'this'
+ * @param {Object} scope Listener scope
+ * @param {Bool} unshift Add the listener on the top of the stack
  * @type void
  */
-Ajax.prototype.bind = function(name, func, scope) {
+Ajax.prototype.bind = function(name, func, scope, unshift) {
+	unshift = !!unshift;
 	this.listeners[name] = this.listeners[name] || [];
-	this.listeners[name].push([func, scope || this]);
+	this.listeners[name][unshift ? 'unshift' : 'push']([func, scope || null]);
 };
 
 /**
@@ -146,10 +170,9 @@ Ajax.prototype.bind = function(name, func, scope) {
  */
 Ajax.prototype.raise = function(name, args) {
 	args = args || [];
-	var listeners = this.listeners[name] || [];
-	listeners.walk(function(item, idx) {
-		item[0].apply(item[1], args);
-	});
+	var listeners = (Ajax.listeners[name] || []).concat(this.listeners[name] || []);
+	for (var i=0; i<listeners.length; i++)
+		listeners[i][0].apply(listeners[i][1] || this, args);
 };
 
 /**
@@ -357,6 +380,7 @@ AjaxRequest.prototype.send = function() {
  * contains one or more files to upload. Performs the request
  * by submitting the form through an IFRAME element
  * @type void
+ * @private
  */
 AjaxRequest.prototype.doFormUpload = function() {
 	try {
@@ -377,11 +401,14 @@ AjaxRequest.prototype.doFormUpload = function() {
 		// configure form
 		var frm = this.form;
 		frm.target = id;
-		frm.method = this.method;
+		frm.method = 'post';
 		frm.enctype = frm.encoding = 'multipart/form-data';
 		frm.action = this.uri;
 		// add hidden params
 		var hp = [];
+		this.params['X-Requested-With'] = 'XMLHttpRequest';
+		if (this.headers['X-Handler-ID'])
+			this.params['X-Handler-ID'] = this.headers['X-Handler-ID'];
 		for (var n in this.params) {
 			var input = $N('input');
 			input.type = 'hidden';
@@ -392,9 +419,9 @@ AjaxRequest.prototype.doFormUpload = function() {
 			hp.push(input);
 		}
 		// upload callback
-		var self = this;
+		var ajax = this;
 		var uploadCallback = function(e) {
-			self.conn = {
+			ajax.conn = {
 				status: 200,
 				statusText: 'OK',
 				readyState: 4,
@@ -405,26 +432,25 @@ AjaxRequest.prototype.doFormUpload = function() {
 			};
 			var doc = (PHP2Go.browser.ie ? ifr.contentWindow.document : (ifr.contentDocument || window.frames[id].document));
 			if (doc && doc.body) {
-				self.conn.responseText = doc.body.innerHTML;
-				self.conn.headers['Content-Type'] = 'text/html';
-				self.conn.headers['Content-Length'] = self.conn.responseText.length;
-				if (!self.conn.responseText.match(/\s*</)) {
+				var container = (doc.body.getElementsByTagName('textarea') || []);
+				ajax.conn.responseText = (container ? container[0].value : doc.body.innerHTML);
+				ajax.conn.headers['Content-Type'] = 'text/html';
+				ajax.conn.headers['Content-Length'] = ajax.conn.responseText.length;
+				if (!ajax.conn.responseText.match(/^\s*</)) {
 					try {
-						var json = eval('(' + resp.responseText + ')');
-						self.conn.json = json;
-						self.conn.headers['Content-Type'] = 'application/json';
+						var json = eval('(' + ajax.conn.responseText + ')');
+						ajax.conn.json = json;
+						ajax.conn.headers['Content-Type'] = 'application/json';
 					} catch (e) { }
 				}
 			}
 			if (doc && doc.XMLDocument) {
-				self.conn.responseXML = doc.XMLDocument;
-				self.conn.headers['Content-Type'] = 'text/xml';
-			} else {
-				self.conn.responseXML = doc;
+				ajax.conn.responseXML = doc.XMLDocument;
+				ajax.conn.headers['Content-Type'] = 'text/xml';
 			}
 			Event.removeListener(ifr, 'load', uploadCallback);
-			self.onStateChange();
-			setTimeout(function() { document.body.removeChild(ifr); }, 100);
+			ajax.onStateChange();
+			(function() { document.body.removeChild(ifr); }).delay(100);
 		};
 		// add load listener and submit form
 		frm.submit();
@@ -458,8 +484,8 @@ AjaxRequest.prototype.abort = function() {
  * onJSONResult (if a json object is available), onXMLResult
  * (if responseXML is available), onSuccess (successful HTTP
  * response code) and onFailure (HTTP error)
- * @access private
  * @type void
+ * @private 
  */
 AjaxRequest.prototype.onStateChange = function() {
 	if (this.conn) {
@@ -515,8 +541,8 @@ AjaxRequest.prototype.onStateChange = function() {
 /**
  * Internal method used by {@link AjaxRequest#send} to
  * build the query string included in the HTTP request
- * @access private
  * @type String
+ * @private 
  */
 AjaxRequest.prototype.buildQueryString = function() {
 	var item, key, subKey, buf = [];
@@ -546,8 +572,8 @@ AjaxRequest.prototype.buildQueryString = function() {
 /**
  * Internal method used by {@link AjaxRequest#onStateChange} to
  * create a new instance of the AjaxResponse class
- * @access private
  * @type AjaxResponse
+ * @private 
  */
 AjaxRequest.prototype.createResponse = function() {
 	var resp = new AjaxResponse(this.transId);
@@ -593,8 +619,8 @@ AjaxRequest.prototype.createResponse = function() {
 
 /**
  * Release the connection object
- * @access private
  * @type void
+ * @private 
  */
 AjaxRequest.prototype.release = function() {
 	if (this.conn) {
@@ -663,6 +689,7 @@ AjaxResponse = function(transId) {
 /**
  * Parses and executes command definitions
  * returned in the response in JSON format
+ * @type void
  */
 AjaxResponse.prototype.run = function() {
 	var skip = 0;
@@ -685,16 +712,36 @@ AjaxResponse.prototype.run = function() {
 				combo.setValue(item.arg.value);
 				break;
 			case 'enable' :
-				(item.frm) ? ($FF(item.frm, item.fld).enable()) : ($F(item.id).enable());
+				var fld = null, elm = null;
+				if (item.frm && (fld = $FF(item.frm, item.fld))) {
+					fld.enable();
+				} else if (fld = $F(item.id)) {
+					fld.enable();
+				} else if (elm = $(item.id)) {
+					elm.disabled = false;
+				}
 				break;
 			case 'disable' :
-				(item.frm) ? ($FF(item.frm, item.fld).disable()) : ($F(item.id).disable());
+				var fld = null, elm = null;
+				if (item.frm && (fld = $FF(item.frm, item.fld))) {
+					fld.disable();
+				} else if (fld = $F(item.id)) {
+					fld.disable();
+				} else if (elm = $(item.id)) {
+					elm.disabled = true;
+				}
 				break;
 			case 'focus' :
 				(item.frm) ? ($FF(item.frm, item.fld).focus()) : ($F(item.id).focus());
 				break;
 			case 'clear' :
-				(item.frm) ? ($FF(item.frm, item.fld).clear()) : ($F(item.id).clear());
+				if (item.frm) {
+					var fld = $FF(item.frm, item.fld);
+					(fld) && (fld.clear());
+				} else {
+					var fld = $F(item.id) || $(item.id);
+					(fld) && (fld.clear());
+				}
 				break;
 			case 'reset' :
 				Form.reset($(item.id));
@@ -716,11 +763,9 @@ AjaxResponse.prototype.run = function() {
 					elm.setStyle(p, item.arg[p]);
 				break;
 			case 'create' :
-				var elm = $N(item.arg.tag, $(item.arg.parent), item.arg.styles, item.arg.cont);
-				if (item.id)
-					elm.id = item.id;
-				for (var p in item.arg.attrs)
-					elm.setAttribute(p, item.arg.attrs[p]);
+				item.arg.attrs = item.arg.attrs || {};
+				(item.id) && (item.arg.attrs.id = id);
+				$N(item.arg.tag, $(item.arg.parent), item.arg.styles, item.arg.cont, item.arg.attrs);
 				break;
 			case 'clear' :
 				$(item.id).clear();
@@ -729,7 +774,7 @@ AjaxResponse.prototype.run = function() {
 				$(item.id).update(item.arg.code, item.arg.eval, item.arg.dom);
 				break;
 			case 'insert' :
-				$(item.id).insertHTML(item.arg.code, item.arg.pos, item.arg.eval);
+				$(item.id).insert(item.arg.code, item.arg.pos, item.arg.eval);
 				break;
 			case 'replace' :
 				$(item.id).replace(item.arg.code, item.arg.eval);
@@ -840,7 +885,7 @@ AjaxUpdater.prototype.update = function(response) {
 	if (response.success) {
 		if (this.success) {
 			if (this.insert)
-				this.success.insertHTML(resp, this.insert, true);
+				this.success.insert(resp, this.insert, true);
 			else
 				this.success.update(resp, true);
 			if (this.success.getStyle('display') == 'none')
@@ -849,7 +894,7 @@ AjaxUpdater.prototype.update = function(response) {
 	} else {
 		if (this.failure) {
 			if (this.insert)
-				this.failure.insertHTML(resp, this.insert, true);
+				this.failure.insert(resp, this.insert, true);
 			else
 				this.failure.update(resp, true);
 			if (this.failure.getStyle('display') == 'none')
@@ -871,10 +916,18 @@ AjaxUpdater.prototype.update = function(response) {
  */
 AjaxService = function(uri, args) {
 	this.AjaxRequest(uri, args);
-	this.bind('onJSONResult', this.parseResponse);
+	this.bind('onJSONResult', this.parseResponse, null, true);
 	this.setHandler(args.handler);
 };
 AjaxService.extend(AjaxRequest, 'AjaxRequest');
+
+/**
+ * Returns the active handler ID
+ * @type String
+ */
+AjaxService.prototype.getHandler = function() {
+	return this.headers['X-Handler-ID'] || '';
+};
 
 /**
  * Changes the service handler ID
@@ -889,6 +942,8 @@ AjaxService.prototype.setHandler = function(id) {
  * Tries to parse and execute commands from
  * the returned JSON string
  * @param {AjaxResponse} response Response
+ * @type void
+ * @private
  */
 AjaxService.prototype.parseResponse = function(response) {
 	try {
@@ -930,17 +985,18 @@ AjaxPeriodicalUpdater = function(uri, args) {
 	/**
 	 * Called before each request is performed
 	 * @type Function
-	 */	 
+	 */
 	this.onBeforeUpdate = args.onBeforeUpdate;
 	/**
 	 * @ignore
 	 */
-	this.timer = null;	
+	this.timer = null;
 	this.start();
 };
 
 /**
  * Starts the periodical updater
+ * @type void
  */
 AjaxPeriodicalUpdater.prototype.start = function() {
 	this.updater = new AjaxUpdater(this.uri, this.updaterArgs);
@@ -950,6 +1006,7 @@ AjaxPeriodicalUpdater.prototype.start = function() {
 
 /**
  * Stops the periodical updater
+ * @type void
  */
 AjaxPeriodicalUpdater.prototype.stop = function() {
 	if (this.updater)
@@ -959,6 +1016,8 @@ AjaxPeriodicalUpdater.prototype.stop = function() {
 
 /**
  * Executes an iteration by calling AjaxUpdater.send
+ * @type void
+ * @private
  */
 AjaxPeriodicalUpdater.prototype.onTimer = function() {
 	if (this.onBeforeUpdate)
@@ -968,9 +1027,11 @@ AjaxPeriodicalUpdater.prototype.onTimer = function() {
 
 /**
  * Called when updater response is returned
+ * @type void
+ * @private
  */
 AjaxPeriodicalUpdater.prototype.onUpdate = function() {
-	this.timer = setTimeout(this.onTimer.bind(this), this.frequency * 1000);
+	this.timer = this.onTimer.bind(this).delay(this.frequency * 1000);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'ajax.js'] = true;

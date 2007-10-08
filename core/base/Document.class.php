@@ -492,7 +492,7 @@ class Document extends PHP2Go
 	 * @uses DocumentHead::appendContent()
 	 */
 	function setShortcutIcon($url) {
-		$this->Head->appendContent(sprintf("<link rel=\"shortcut icon\" href=\"%s\" />", htmlentities($url)));
+		$this->Head->appendContent(sprintf("<link rel=\"shortcut icon\" href=\"%s\" />", htmlentities(html_entity_decode($url))));
 	}
 
 	/**

@@ -31,11 +31,14 @@
 	 * Define framework's root folder
 	 */
 	define("PHP2GO_ROOT", str_replace("\\", "/", dirname(__FILE__)) . '/');
+	/**
+	 * Indicates if we're running PHP 5.0.0 or higher
+	 */
+	define('IS_PHP5', (floatval(PHP_VERSION) >= 5));
 
 	/**
 	 * Require framework's initialization modules
 	 */
-	require_once(PHP2GO_ROOT . 'errorHandler.php');
 	require_once(PHP2GO_ROOT . 'p2gLib.php');
 	require_once(PHP2GO_ROOT . 'core/Conf.class.php');
 	require_once(PHP2GO_ROOT . 'core/Init.class.php');
@@ -83,11 +86,11 @@
 	/**
 	 * Framework's version
 	 */
-	define('PHP2GO_VERSION', '0.5.7');
+	define('PHP2GO_VERSION', '0.5.8');
 	/**
 	 * Date when latest framework's version was released
 	 */
-	define('PHP2GO_RELEASE_DATE', '15/07/2007');
+	define('PHP2GO_RELEASE_DATE', '07/10/2007');
 	/**
 	 * Special key representing framework's modules in import operations
 	 */
@@ -100,10 +103,6 @@
 	 * Path separator
 	 */
 	define('PHP2GO_PATH_SEPARATOR', (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? ';' : ':'));
-	/**
-	 * Indicates if we're running PHP 5.0.0 or higher
-	 */
-	define('IS_PHP5', (floatval(PHP_VERSION) >= 5));
 	/**
 	 * Indicates a file name parameter
 	 */

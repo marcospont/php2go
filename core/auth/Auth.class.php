@@ -681,10 +681,9 @@ class Auth extends PHP2Go
 	 * @param bool $rebuildLogin Whether to call the invalid session callback
 	 */
 	function logout($rebuildLogin=FALSE) {
-		$lastUser = $this->getCurrentUser();
-		$lastUser->unregister();
-		if ($this->User->isAuthenticated())
-			$this->User->logout();
+		$lastUser = cloneObject($this->getCurrentUser());
+		$lastUser->registered = FALSE;
+		$this->User->logout();
 		// check if session should be invalidated
 		$destroy = PHP2Go::getConfigVal('AUTH.DESTROY_ON_LOGOUT', FALSE);
 		if ($destroy === TRUE)

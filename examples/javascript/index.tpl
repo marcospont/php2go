@@ -66,7 +66,7 @@
 				// iterate through the array elements
 				// the iterator function receives the item and its index
 				[1,2,3,4,5,6,7,8,9,10].walk(function(item, idx) {
-					elm.insertHTML("This is item idx " + idx + " : " + item + '<br />', 'bottom');
+					elm.insert("This is item idx " + idx + " : " + item + '<br />', 'bottom');
 				});
 				break;
 
@@ -79,7 +79,7 @@
 				['a', 'b', 'c'].map(function(item, idx) {
 					return item.toUpperCase();
 				}).walk(function(item, idx) {
-					elm.insertHTML(item + '<br />', 'bottom');
+					elm.insert(item + '<br />', 'bottom');
 				});
 				break;
 
@@ -95,7 +95,7 @@
 					// apply a function, collecting false return values
 					"Reject (>2 == false) : " + base.reject(function(item, idx) { return (item>2); }) + "<br />" +
 					// apply a function, ignoring null return values
-					"Filter (>2 == null) : " + base.filter(function(item, idx) { return (item>2?null:item); }) + "<br />" +
+					"Valid (>2 == null) : " + base.valid(function(item, idx) { return (item>2?null:item); }) + "<br />" +
 					// filter array values by a given regexp
 					"Grep ^[345]$ : " + base.grep("^[345]$").serialize() + "<br />" +
 					// search for a value in the collection
@@ -183,7 +183,7 @@
 			 */
 			case "elements_by_class" :
 				elm.clear();
-				elm.update(document.getElementsByClassName('test'));
+				elm.update($('overall').getElementsByClassName('test'));
 				break;
 			/**
 			 * find a parent element by tag name
@@ -255,8 +255,8 @@
 				// clear inner HTML contents
 				elm.clear();
 				// add 2 HTML blocks in different positions
-				elm.insertHTML("<pre>loading...</pre>", "top");
-				elm.insertHTML("<b>please wait</b>", "bottom");
+				elm.insert("<pre>loading...</pre>", "top");
+				elm.insert("<b>please wait</b>", "bottom");
 				// redefine HTML contents after 1 second
 				setTimeout(function() {
 					elm.update("done.");
@@ -266,7 +266,7 @@
 	}
 </script>
 
-<table width="779" align="center" cellpadding="4" cellspacing="0" border="0">
+<table id="overall" width="779" align="center" cellpadding="4" cellspacing="0" border="0">
   <tr><td>
   <form id="frm" method="post" action="">
     <h3>Base Classes &amp; Core extensions</h3>
@@ -292,13 +292,13 @@
 	  <option value="set_style">setStyle</option>
 	  <option value="toggle_display">toggleDisplay</option>
 	  <option value="move">move</option>
-	  <option value="add_html">update, insertHTML</option>
+	  <option value="add_html">update, insert</option>
 	</select>&nbsp;
 	<button id="exec" type="button" onclick="executeDHTML($V('frm', 'dhtml'))">Execute</button><br /><br />
 	<div id="buffer"></div><br />
 	<div id="tglcls" class="test"
-		onmouseover="$(this).classNames().toggle('myclass')"
-		onmouseout="$(this).classNames().toggle('myclass')"
+		onmouseover="$(this).toggleClass('myclass')"
+		onmouseout="$(this).toggleClass('myclass')"
 	>Hover me to toggle my CSS class</div>
 	<div id="absolute">I'm absolute!</div>
   </form>

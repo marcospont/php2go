@@ -159,13 +159,13 @@ class SignedMailMessage extends MailMessage
 		$commandString = sprintf($this->commandTemplate, str_replace("\n", "\r\n", $this->body), $this->gnuPgPath, $this->keyName, $this->keyName);
 		if (parent::hasRecipients(MAIL_RECIPIENT_TO))
 			for ($i=0; $i<sizeof($this->to); $i++)
-				$commandString .= " -r \"" . parent::formatAddress($this->to[$i]) . "\"";
+				$commandString .= " -r \"" . parent::_formatAddress($this->to[$i]) . "\"";
 		if (parent::hasRecipients(MAIL_RECIPIENT_CC))
 			for ($i=0; $i<sizeof($this->cc); $i++)
-				$commandString .= " -r \"" . parent::formatAddress($this->cc[$i]) . "\"";
+				$commandString .= " -r \"" . parent::_formatAddress($this->cc[$i]) . "\"";
 		if (parent::hasRecipients(MAIL_RECIPIENT_BCC))
 			for ($i=0; $i<sizeof($this->bcc); $i++)
-				$commandString .= " -r \"" . parent::formatAddress($this->bcc[$i]) . "\"";
+				$commandString .= " -r \"" . parent::_formatAddress($this->bcc[$i]) . "\"";
 		return $commandString;
 	}
 

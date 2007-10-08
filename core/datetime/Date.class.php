@@ -96,7 +96,7 @@ class Date extends PHP2Go
 				Date::isSqlDate($date, $regs);
 				break;
 		}
-		if (!empty($regs) && $regs[2] >= 0 && $regs[2] <= 999 && checkdate($regs[2], $regs[1], $regs[3])) {
+		if (!empty($regs) && $regs[2] >= 0 && $regs[2] <= 9999 && checkdate($regs[2], $regs[1], $regs[3])) {
 			array_shift($regs);
 			return $regs;
 		}
@@ -835,7 +835,7 @@ class Date extends PHP2Go
 	 * @static
 	 */
 	function daysToDate($days, $format=NULL) {
-		if (empty($format) || !in_array($format, 'EURO', 'US', 'SQL'))
+		if (empty($format) || !in_array($format, array('EURO', 'US', 'SQL')))
 			$format = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 		$days = intval($days);
         $days -= 1721119;

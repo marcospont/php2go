@@ -92,8 +92,7 @@ MemoField.prototype.isEmpty = function() {
  * @type void
  */
 MemoField.prototype.keyHandler = function(e) {
-	var e = $EV(e), key = e.key();
-	var ign = '#33#34#35#36#37#38#39#40#45#4098#';
+	var key = $K(e), ign = '#33#34#35#36#37#38#39#40#45#4098#';
 	if (ign.indexOf('#'+key+'#') == -1 && (key < 112 || key > 123)) {
 		var len = this.fld.value.length;
 		if (len >= this.maxlength) {

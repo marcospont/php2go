@@ -51,7 +51,8 @@ $P2G_LANGUAGE['ERR_TYPES'] = array(
 	128 => "Kompiler Warnung",
 	256 => "User Fehler",
 	512 => "User Warnung",
-	1024=> "User Nachricht"
+	1024=> "User Nachricht",
+	4096 => "Catchable Fatal Error"
 );
 $P2G_LANGUAGE['ERR_ABSOLUTE_URI_NOT_FOUND'] = "Der 'ABSOLUTE_URI' Eintrag ist nicht gesetzt im globalen Konfigurationsarray!";
 $P2G_LANGUAGE['ERR_CONFIG_ENTRY_NOT_FOUND'] = "Das Konfigurationselement <I>%s</I> wurde nicht gesetzt im globalen Konfigurationsarray!";

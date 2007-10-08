@@ -35,25 +35,60 @@
 
 if (!PHP2Go.included[PHP2Go.baseUrl + 'structures.js']) {
 
-var $break = new Object();
-var $continue = new Object();
+var $break = {};
+var $continue = {};
 
 /**
  * @class Collection
  */
 var Collection = {
 	/**
+	 * Applies a filter function on all elements
+	 * of the collection. Returns true if at least
+	 * one member satisfy the filter.
+	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
+	 * @type Boolean
+	 */
+	some : function(filter, scope) {
+		var res = false;
+		this.walk(function(item, idx) {
+			if (res = !!filter.apply(scope || null, [item, idx]))
+				throw $break;
+		});
+		return res;
+	},
+	/**
+	 * Applies a filter function on all elements
+	 * of the collection. Returns true if all
+	 * member satisfy the filter.
+	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
+	 * @type Boolean
+	 */
+	every : function(filter, scope) {
+		var res = true;
+		this.walk(function(item, idx) {
+			if (!filter.apply(scope || null, [item, idx])) {
+				res = false;
+				throw $break;
+			}
+		});
+		return res;
+	},
+	/**
 	 * Applies a filter function on all the
 	 * elements of the collection. Returns back
 	 * an array of elements that satisfy the filter
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @return Array of members that satisfy the filter
 	 * @type Array
 	 */
-	accept : function(filter) {
+	accept : function(filter, scope) {
 		var res = [];
 		this.walk(function(item, idx) {
-			if (filter(item))
+			if (filter.apply(scope || null, [item, idx]))
 				res.push(item);
 		});
 		return res;
@@ -63,13 +98,14 @@ var Collection = {
 	 * elements, returning back an array of elements
 	 * that DON'T satisfy the filter
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @return Array of members that don't satisfy the filter
 	 * @type Array
 	 */
-	reject : function(filter) {
+	reject : function(filter, scope) {
 		var res = [];
 		this.walk(function(item, idx) {
-			if (!filter(item))
+			if (!filter.apply(scope || null, [item, idx]))
 				res.push(item);
 		});
 		return res;
@@ -79,12 +115,13 @@ var Collection = {
 	 * element, pushing the not null return values to
 	 * a resulting array
 	 * @param {Function} filter Filter function
+	 * @param {Object} scope Scope object
 	 * @type Array
 	 */
-	filter : function(filter) {
+	valid : function(filter, scope) {
 		var res = [], v = null;
 		this.walk(function(item, idx) {
-			v = filter(item);
+			v = filter.apply(scope || null, [item, idx]);
 			if (v != null)
 				res.push(v);
 		});
@@ -93,14 +130,14 @@ var Collection = {
 	/**
 	 * Collect the collection members that satisfy a
 	 * given regexp pattern. The return value of this
-	 * method is an array. Works better with string
+	 * method is an array. Works better on string
 	 * collections
 	 * @param {RegExp} pattern Regexp pattern
 	 * @type Array
 	 */
 	grep : function(pattern) {
 		var str, res = [];
-		var re = new RegExp(pattern);
+		var re = (Object.isString(pattern) ? new RegExp(pattern) : pattern);
 		this.walk(function(item, idx) {
 			str = (item.toString ? item.toString() : String(item));
 			if (str.match(pattern))
@@ -114,9 +151,11 @@ var Collection = {
 	 * @type Boolean
 	 */
 	contains : function(obj) {
+		if (Object.isFunc(this.indexOf))
+			return (this.indexOf(obj) != -1);
 		var found = false;
 		this.walk(function(item, idx) {
-			if (item == obj) {
+			if (item === obj) {
 				found = true;
 				throw $break;
 			}
@@ -133,7 +172,7 @@ var Collection = {
 	extract : function(property) {
 		var res = [];
 		this.walk(function(item, idx) {
-			if (typeof(item[property]) != 'undefined')
+			if (!Object.isUndef(item[property]))
 				res.push(item[property]);
 		});
 		return res;
@@ -145,11 +184,12 @@ var Collection = {
 	 * Every iteration must return the new value of 'memo'
 	 * @param {Object} memo Object to inject collection members
 	 * @param {Function} iterator Iterator function
+	 * @param {Object} scope Scope object
 	 * @type Object
 	 */
-	inject : function(memo, iterator) {
+	inject : function(memo, iterator, scope) {
 		this.walk(function(item, idx) {
-			memo = iterator(memo, item, idx);
+			memo = iterator.apply(scope || null, [memo, item, idx]);
 		});
 		return memo;
 	},
@@ -161,8 +201,8 @@ var Collection = {
 	 * @type void
 	 */
 	invoke : function(method) {
-		var args = (arguments.length == 1 ? [] : $A(arguments).slice(1));
-		return this.map(function(item, idx) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		this.walk(function(item, idx) {
 			(item[method]) && (item[method].apply(item, args));
 		});
 	},
@@ -170,12 +210,13 @@ var Collection = {
 	 * Returns a new copy of the collection applying
 	 * a given iterator to every element
 	 * @param {Function} iterator Iterator function
+	 * @param {Object} scope Scope object
 	 * @type Array
 	 */
-	map : function(iterator) {
+	map : function(iterator, scope) {
 		var res = [];
 		this.walk(function(item, idx) {
-			res.push(iterator(item));
+			res.push(iterator.apply(scope || null, [item, idx]));
 		});
 		return res;
 	},
@@ -183,23 +224,17 @@ var Collection = {
 	 * Applies an iterator function to all
 	 * the members of the collection. The iterator
 	 * receives the member and the current
-	 * iteration index. In order to emulate break and
-	 * continue funcionalities, you must throw
-	 * the exceptions named $break and $continue.
+	 * iteration index. In order to emulate the break
+	 * functionality, you must throw an exception named $break.
 	 * @param {Function} iterator Iterator function
 	 * @type void
 	 */
 	walk : function(iterator) {
-		if (typeof(iterator) == 'function') {
+		if (Object.isFunc(iterator)) {
 			var idx = 0;
 			try {
 				this.each(function(item) {
-					try {
-						iterator(item, idx++);
-					} catch(e) {
-						if (e != $continue)
-							throw e;
-					}
+					iterator(item, idx++);
 				});
 			} catch(e) {
 				if (e != $break)
@@ -207,6 +242,31 @@ var Collection = {
 			}
 		}
 	}
+};
+
+/**
+ * Convert an iterable object into an object
+ * that can be iterated as a collection. The second
+ * parameter indicates if the iterable must be handled
+ * as an associative collection (Hash) or an array
+ * @param {Object} o Iterable object
+ * @param {Boolean} assoc Indicates if the iterable object is associative or not
+ * @type Object
+ */
+$C = function(o, assoc) {
+	assoc = !!assoc;
+	if (o.walk && o.each)
+		return o;
+	else if (!o)
+		o = (assoc ? {} : []);
+	if (assoc) {
+		o = {data:o};
+		o.each = Hash.each;
+	} else {
+		o.each = Array.prototype.each;
+	}
+	Object.extend(o, Collection, false);
+	return o;
 };
 
 /**
@@ -253,7 +313,7 @@ var Hash = {
 	 * @type Boolean
 	 */
 	containsKey : function(key) {
-		return (this.data[key]);
+		return (!!this.data[key]);
 	},
 	/**
 	 * Set the value of a given key
@@ -273,15 +333,31 @@ var Hash = {
 		delete this.data[key];
 	},
 	/**
-	 * Searches for a given key and returns
-	 * back its value
+	 * Searches for a given value and
+	 * returns back its key
+	 * @param {Object} value Search value
+	 * @type Object
+	 */
+	findKey : function(value) {
+		var key = null;
+		this.walk(function(item) {
+			if (item.value === value) {
+				key = item.key;
+				throw $break;
+			}
+		});
+		return key;
+	},
+	/**
+	 * Searches for a given key and
+	 * returns back its value
 	 * @param {String} key Search key
 	 * @type Object
 	 */
 	findValue : function(key) {
 		var value = null;
 		this.walk(function(item) {
-			if (item.key == key) {
+			if (item.key === key) {
 				value = item.value;
 				throw $break;
 			}
@@ -318,24 +394,29 @@ var Hash = {
 		return '{' + this.map(function(pair) {
 			return pair.key + " : " + Object.serialize(pair.value);
 		}).join(', ') + '}';
+	},
+	/**
+	 * Builds a Hash object based on an iterable value
+	 * @param {Object} iterable Iterable object
+	 * @type Hash
+	 */
+	valueOf : function(iterable) {
+		var h = new Object();
+		h.data = iterable || {};
+		Object.extend(h, Hash);
+		return h;
 	}
 };
-
-/**
- * Add Collection class methods
- */
 Object.extend(Hash, Collection);
 
 /**
- * Builds a Hash object based on an iterable value
- * @param {Object} iterable Iterable object
+ * This function returns a hash object
+ * from a given iterable element
+ * @param {Object} obj Iterable object
  * @type Hash
  */
-Hash.valueOf = function(iterable) {
-	var h = new Object();
-	h.data = iterable || {};
-	Object.extend(h, Hash);
-	return h;
+$H = function(obj) {
+	return Hash.valueOf(obj);
 };
 
 /**
@@ -352,7 +433,7 @@ Array.valueOf = function(iterable) {
 		return [];
 	if (iterable.toArray)
 		return iterable.toArray();
-	if (typeof(iterable.length) == 'undefined')
+	if (Object.isUndef(iterable.length))
 		iterable = [iterable];
 	var res = [];
 	for (var i=0; i<iterable.length; i++)
@@ -409,21 +490,90 @@ if (!Array.prototype.unshift) {
 	};
 }
 
-/**
- * Private method that iterates over the
- * elements of the array. The walk method
- * of the Collection class should be used
- * instead of this
- * @param {Function} Iterator function
- * @private
- */
-Array.prototype.each = function(iterator) {
-	for (var i=0; i<this.length; i++)
-		iterator(this[i]);
-};
+if (PHP2Go.browser.opera) {
+	/**
+	 * Creates a new array containing the array's elements
+	 * followed by all provided arguments. Overriden only
+	 * on Opera browsers.
+	 * @type Array
+	 */
+	Array.prototype.concat = function() {
+		var res = [];
+		for (var i=0, len=this.length; i<len; i++)
+			res.push(this[i]);
+		for (var i=0, len=arguments.length; i<len; i++) {
+			if (Object.isArray(arguments[i])) {
+				for (var j=0, alen=arguments[i].length; j<alen; j++)
+					res.push(arguments[i][j]);
+			} else {
+				res.push(arguments[i]);
+			}
+		}
+		return res;
+	};
+}
+
+if (!Array.prototype.indexOf) {
+	/**
+	 * Searches for a given object inside the array.
+	 * Returns the index of the first occurrence of
+	 * the object inside array, or -1 if not found.
+	 * @param {Object} obj Object to be searched
+	 * @param {Number} idx From index
+	 * @type Number
+	 */
+	Array.prototype.indexOf = function(obj, idx) {
+		var len = this.length;
+		var idx = (idx < 0 ? idx + len : idx || 0);
+		for (; idx < len; idx++) {
+			if (this[idx] === obj)
+				return idx;
+		}
+		return -1;
+	};
+}
+
+if (!Array.prototype.lastIndexOf) {
+	/**
+	 * Returns the index of the last occurrence of
+	 * an object inside the array, or -1 if not found
+	 * @param {Object} obj Object to be searched
+	 * @param {Number} idx From index
+	 * @type Number
+	 */
+	Array.prototype.lastIndexOf = function(obj, idx) {
+		var len = this.length;
+		var idx = (isNaN(idx) ? len : (idx < 0 ? idx + len : (idx >= len ? len - 1 : idx)));
+		for (; idx > -1; idx--)
+			if (this[idx] === obj)
+				return idx;
+		return -1;
+	};
+}
+
+if (!Array.prototype.forEach) {
+	/**
+	 * Private method that iterates over the
+	 * elements of the array. The walk method
+	 * of the Collection class should be used
+	 * instead of this
+	 * @param {Function} Iterator function
+	 * @private
+	 */
+	Array.prototype.each = function(iterator) {
+		for (var i=0, len=this.length; i<len; i++)
+			iterator(this[i]);
+	};
+} else {
+	/**
+	 * @ignore
+	 */
+	Array.prototype.each = Array.prototype.forEach;
+}
 
 /**
  * Returns the first element of the array
+ * @type Object
  */
 Array.prototype.first = function() {
 	return this[0];
@@ -431,9 +581,39 @@ Array.prototype.first = function() {
 
 /**
  * Returns the first element of the array
+ * @type Object
  */
 Array.prototype.last = function() {
 	return this[this.length-1];
+};
+
+/**
+ * Includes the passed element in the array, only if not already present
+ * @param {Object} item Item to add
+ * @type Array
+ */
+Array.prototype.include = function(item) {
+	if (this.indexOf(item) == -1)
+		this.push(item);
+	return this;
+};
+
+/**
+ * Removes all occurrences of an item from the array
+ * @param {Object} item Array item
+ * @type Array
+ */
+Array.prototype.remove = function(item) {
+	var i = 0, len = this.length;
+	while (i < len) {
+		if (this[i] === item) {
+			this.splice(i, 1);
+			len--;
+		} else {
+			i++;
+		}
+	}
+	return this;
 };
 
 /**
@@ -442,22 +622,6 @@ Array.prototype.last = function() {
  */
 Array.prototype.empty = function() {
 	return (this.length == 0);
-};
-
-
-/**
- * Removes an element of the array given its index.
- * Indexes which are invalid or out of bounds will be ignored
- * @param {Number} idx Element index to remove
- * @type void
- */
-Array.prototype.remove = function(idx) {
-	idx = parseInt(idx, 10);
-	if (!isNaN(idx) && idx >= 0 && idx < this.length) {
-		for (var i=idx+1; i<this.length; i++)
-			this[i-1] = this[i];
-		this.length--;
-	}
 };
 
 /**
@@ -471,18 +635,11 @@ Array.prototype.clear = function() {
 };
 
 /**
- * Searches for a given object inside the array.
- * Returns the index of the first occurrence of
- * the object inside array, or -1 if the object
- * was not found
- * @param {Object} obj Object to be searched
- * @type Number
+ * Creates a clone of the array
+ * @type Array
  */
-Array.prototype.indexOf = function(obj) {
-	var self = this;
-	for (var i=0; i<self.length; i++)
-		if (self[i] == obj) return i;
-	return -1;
+Array.prototype.clone = function() {
+	return [].concat(this);
 };
 
 /**
@@ -493,10 +650,22 @@ Array.prototype.serialize = function() {
 	return '[' + this.map(Object.serialize).join(', ') + ']';
 };
 
+Array.implement(Collection);
+if (Array.prototype.filter)
+	Array.prototype.accept = Array.prototype.filter;
+
 /**
- * Add Collection class methods
+ * This function returns an array object from a given
+ * iterable element, or object that implements the
+ * toArray method
+ * @param {Object} o Iterable object
+ * @type Hash
  */
-Object.extend(Array.prototype, Collection);
+$A = function(o) {
+	if (o && o.constructor == Array)
+		return o;
+	return Array.valueOf(o);
+};
 
 PHP2Go.included[PHP2Go.baseUrl + 'structures.js'] = true;
 

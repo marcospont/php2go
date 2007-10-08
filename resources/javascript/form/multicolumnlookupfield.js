@@ -47,7 +47,7 @@ MultiColumnLookupField = function(id, height, style) {
 	this.text = $(id + '_text');
 	this.btn = $(id + '_button');
 	this.tblContainer = $(id + '_tableContainer');
-	this.tbl = this.tblContainer.getElementsByTagName('table')[0];
+	this.tbl = $E(this.tblContainer.getElementsByTagName('table')[0]);
 	this.height = height || 150;
 	this.style = {
 		normal: (style || {}).normal || 'mclookupNormal',
@@ -81,7 +81,7 @@ MultiColumnLookupField.prototype.setup = function() {
 	c.style.border = '1px solid ThreeDShadow';
 	c.style.display = 'block';
 	Event.addLoadListener(function() {
-		c.style.width = (t.offsetWidth + b.offsetWidth + (PHP2Go.browser.ie?2:0)) + 'px';
+		c.style.width = (t.offsetWidth + b.offsetWidth) + 'px';
 	});
 	// setup event listeners
 	Event.addListener(self.btn, 'focus', function(e) { self.raiseEvent('focus'); });
@@ -278,12 +278,15 @@ MultiColumnLookupField.prototype.toggleDisplay = function() {
 	if (!this.tblContainer.isVisible()) {
 		var b = document.body, c = this.container;
 		var t = this.tbl, tc = this.tblContainer;
-		var ss = (PHP2Go.browser.ie ? 18 : 16);
+		var ss = 16;
 		// adjust table container style
-		tc.style.left = c.getPosition().x;
+		tc.style.left = c.getPosition().x + 'px';
 		tc.style.height = this.height + 'px';
-		tc.style.zIndex = 2;
-		tc.show();
+		tc.style.zIndex = 1000;
+		tc.swapStyles({ visibility: 'hidden' }, function() {
+			tc.show();
+			tc.style.width = (t.offsetWidth + ss) + 'px';
+		});
 		// minimum width
 		if (t.offsetWidth < c.offsetWidth) {
 			tc.style.width = c.offsetWidth;
@@ -302,7 +305,7 @@ MultiColumnLookupField.prototype.toggleDisplay = function() {
 		if (this.selectedIndex >= 1)
 			this.tbl.rows[this.selectedIndex].scrollIntoView(false);
 		// add document listener
-		Event.addListener(document, 'mousedown', this.mouseDownHandler.bind(this), true);
+		Event.addListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 	} else {
 		this.tblContainer.hide();
 	}
@@ -322,7 +325,7 @@ MultiColumnLookupField.prototype.hide = function() {
 				this.selectedIndex = this.fld.selectedIndex;
 			}
 		}
-		Event.removeListener(document, 'mousedown', this.mouseDownHandler.bind(this), true);
+		Event.removeListener(document, 'mousedown', PHP2Go.method(this, 'mouseDownHandler'), true);
 	}
 };
 
@@ -373,10 +376,9 @@ MultiColumnLookupField.prototype.keyHandler = function(e) {
  * @type void
  */
 MultiColumnLookupField.prototype.mouseDownHandler = function(e) {
-	var e = $EV(e), t = $E(e.element());
-	if (!t.isChildOf(this.container)) {
+	var e = $EV(e);
+	if (!e.target.isChildOf(this.container))
 		this.hide();
-	}
 };
 
 /**
@@ -386,7 +388,7 @@ MultiColumnLookupField.prototype.mouseDownHandler = function(e) {
  * @type void
  */
 MultiColumnLookupField.prototype.cellHoverHandler = function(e) {
-	var elm = e.element();
+	var elm = e.target;
 	if (elm && elm.parentNode.index) {
 		var p = elm.parentNode;
 		if (e.type == 'mouseover') {
@@ -403,7 +405,7 @@ MultiColumnLookupField.prototype.cellHoverHandler = function(e) {
  * @type void
  */
 MultiColumnLookupField.prototype.cellClickHandler = function(e) {
-	var elm = e.element();
+	var elm = e.target;
 	if (elm && elm.parentNode.index) {
 		this.setValueByIndex(elm.parentNode.index);
 		this.hide();

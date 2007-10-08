@@ -1,6 +1,74 @@
 PHP2Go Web Development Framework - CHANGELOG
 =============================================
 
+	Version 0.5.8 - 07/10/2007
+	--------------------------------
+	
+	* All if statements that use array keys that might be undefined were changed to use the isset operator	
+	* Support was added for E_RECOVERABLE_ERROR (PHP 5.2.x)
+	* [ticket:22] - php2go.data.Report - fixed bad parsing of nested queries
+	* [ticket:23] - Init - fixed undefined variable bug
+	* [ticket:27] - php2go.gui.LayerMenu - Fixed initialization of relative positioned menus
+	* [ticket:30] - php2go.net.MailTransport - When using sendmail, the email address must be quoted in the command string
+	* [ticket:31] - php2go.net.MailTransport - Show debug information when using sendmail
+	* php2go.db.Db - new method added: quoteIdentifier
+	* php2go.db.DMLBuilder - new mode added: DML_BUILDER_UPDATE_MULTIPLE
+		* This new mode should be used to build update statements for multiple records or all records (empty condition clause)
+	* php2go.data.Report - changed to build "order by" clause using db->quoteIdentifier
+	* php2go.form.field.FieldField - evaluate variables on the SAVEPATH attribute
+	* php2go.net.HttpRequest - changed isAjax to understand iframe based Ajax calls (file upload)
+	* [ticket:32] - docs/dtd/php2go_reports.dtd - added STRING on the values supported by the MASK attribute
+	* [ticket:35] - javascript/validator.js - fixed wrong call to FormValidator.clearSummary (previously renamed to clearErrors)
+	* [ticket:38] - php2go.form.field.EditSearchField - changed to read its value from the request and use it to load the data source
+	* javascript/validator.js - call afterValidate handler only when global validation result is true
+	* javascript/php2go.js
+		* Added PHP2Go.method
+		* Added override parameter on Object.extend
+		* Added Object.ifUndef, Object.isUndef, Object.isElement, Object.isFunction, Object.isArray, Object.isString, Object.isNumber, Object.isIterable
+		* Added Function.prototype.delay, Function.prototype.methodize, Function.prototype.implement
+		* Rewritten String.prototype.escapeHTML, added String.prototype.toArray
+	* javascript/structures.js
+		* Removed support of $continue exception. A return statement must be used instead	
+		* Added Collection.some, Collection.every
+		* Collection.filter renamed to Collection.valid (avoid collision with native filter implementations)
+		* Added Hash.findKey
+		* Added Array.prototype.lastIndexOf, Array.prototype.clone, Array.prototype.include
+		* Use native functions Array.prototype.forEach and Array.prototype.filter when available
+		* Define Array.prototype.concat when undefined (some Opera versions)
+	* javascript/dom.js
+		* All element extensions were changed from static methods to members of the Element class prototype
+		* Element.extend can now be used to register more element extensions
+		* An element can now be created using "new Element(tag, parent, style, html, attrs)"
+		* Added Element.readAttribute, Element.writeAttribute, Element.recursivelySum, Element.getComputedStyle, Element.getComputedStyles, 
+		* Added Element.scrollTo, Element.hasClass, Element.toggleClass, Element.getPaddingBox, Element.getBorderBox, Element.getBorder
+		* Added Element.getTag, Element.setInnerText
+		* Removed Element.watch, Element.classNames and CSSClasses class
+		* Element.getPosition was rewritten
+		* Element.insertHTML renamed to Element.insert
+		* Bug fixes on Element.getElementsByClassName and WCH.attach
+		* Event.onDOMReady was rewritten and optimized
+		* Event extension model was reviewed. An extended event will now always contain target, relatedTarget, pageX and pageY members
+		* Changed the way event handlers are cached (and flushed on IE browsers). Added Event.fire
+		* Changed WCH detection to ignore IE7
+	* javascript/ajax.js - New static method added: Ajax.bind. Allows to defined global Ajax event listeners
+	* Added a dialog library, containing 3 classes: Dialog, ModalDialog and ImageDialog
+		* Dialog: builds simple modeless dialogs, supporting relative or absolute positioning
+		* ModalDialog: builds modal dialogs
+		* ImageDialog: displays images on modal dialogs
+	* php2go.base.Document, php2go.base.DocumentHead, php2go.util.HtmlUtils - fixed issues with entities encoding
+	* php2go.form.Form - encode entities inside setFormAction and setBackUrl methods
+	* php2go.form.FormRule, javascript/validator.js - REQIFXX rules wasn't working with empty string as peer value
+	* php2go.form.SearchForm - new method added: clearSession
+	* php2go.template.TemplateParser - fixed bug while parsing widgets attributes
+	* javascript/ajax.js - AjaxService
+		* new method added: getHandler
+		* enable, disable and clear should support elements and form fields transparently	
+	* javascript/form/editorfield.js, javascript/widgets/calculator.js, javascript/widgets/colorpicker.js - fixed positioning issues
+	* php2go.gui.widgets.DataTable - New attributes added: scrollable and maxHeight
+	* errorHandler.php file was removed. The content was moved to p2gLib.php
+	* Added p2gCompatv4.php and p2gCompatv5+.php, containing PHP 4.x and 5.x specific code
+	* php2go.auth.User - New abstract method added: onLogout
+
 	Version 0.5.7 - 15/07/2007
 	--------------------------------
 	
