@@ -1102,7 +1102,7 @@ class MailMessage extends PHP2Go
 	 * Formats a recipient address
 	 *
 	 * @param array $address Array containing e-mail address and name
-	 * @access private
+	 * @access protected
 	 * @return string
 	 */
 	function _formatAddress($address) {
