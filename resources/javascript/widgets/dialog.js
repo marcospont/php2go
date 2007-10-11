@@ -295,6 +295,35 @@ Dialog.prototype.setButtonAction = function(idx, fn) {
 };
 
 /**
+ * Enables all dialog's buttons
+ * @type void
+ */
+Dialog.prototype.enableButtons = function() {
+	for (var i=0; i<this.buttons.length; i++)
+		this.buttons[i].el.disabled = false;
+};
+
+/**
+ * Disables all dialog's buttons
+ * @type void
+ */
+Dialog.prototype.disableButtons = function() {
+	for (var i=0; i<this.buttons.length; i++)
+		this.buttons[i].el.disabled = true;
+};
+
+/**
+ * Change the dialog's container element
+ * @param {Object} New container (ID or element)
+ * @param {Boolean} Place the dialog based on the new container
+ * @type void
+ */
+Dialog.prototype.setContainer = function(cont, place) {
+	this.container = $(cont);
+	(!!place) && (this.place());
+};
+
+/**
  * Set dialog's contents
  * @param {Object} contents String or element reference
  * @type void
