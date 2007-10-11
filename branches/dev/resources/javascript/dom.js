@@ -969,7 +969,8 @@ Element.prototype.replace = function(rep, evalScripts) {
  */
 Element.prototype.clear = function(useDom) {
 	useDom = !!useDom;
-	if (useDom) {
+	var tag = this.tagName.toUpperCase();
+	if (useDom || tag in Element.translation.tags) {
 		while (this.firstChild)
 			this.removeChild(this.firstChild);
 	} else {
