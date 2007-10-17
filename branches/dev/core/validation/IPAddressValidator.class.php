@@ -43,9 +43,16 @@ class IPAddressValidator extends AbstractValidator
 	 * @return bool
 	 */
 	function execute($value) {
-		$value = strval($value);
-		$result = (preg_match("/^(0|([1-9]{1,2}\.)|(1[0-9]{1,2}\.)|(2[0-4][0-9]\.)|(25[0-5]\.)){3}(0|([1-9]{1,2})|(1[0-9]{1,2})|(2[0-4][0-9])|(25[0-5]))$/", $value));
-		if ($result === FALSE && isset($this->fieldLabel)) {
+		$result = FALSE;
+		// convert IP address to long
+		$value = (string)$value;
+		$long = ip2long((string)$value);
+		if ($long !== FALSE && $long != -1) {
+			// convert back to IP to prevent against incomplete matches
+			if (long2ip($long) == $value)
+				$result = TRUE;
+		}
+		if (!$result && isset($this->fieldLabel)) {
 			$maskLabels = PHP2Go::getLangVal('FORM_MASKS');
 			$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_INVALID_DATATYPE', array($this->fieldLabel, $maskLabels['IP']));
 		}
