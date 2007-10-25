@@ -38,12 +38,11 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/datatable.js']) {
  * by adding dynamic behaviors, such as sorting, row highlighting
  * and single/multiple row selection
  * @param {Object} attrs Widget's attributes
- * @param {Function} func Setup function
  * @constructor
  * @base Widget
  */
-function DataTable(attrs, func) {
-	this.Widget(attrs, func);
+function DataTable(attrs) {
+	this.Widget(attrs);
 	/**
 	 * Reference to the widget's root node
 	 * @type Object
