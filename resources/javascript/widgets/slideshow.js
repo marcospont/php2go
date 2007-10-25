@@ -37,12 +37,11 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/slideshow.js']) {
  * The SlideShow widget implements a control that display a
  * list of images sequentially, based on an interval.
  * @param {Object} attrs Widget's attributes
- * @param {Function} func Setup function
  * @constructor
  * @base Widget
  */
-function SlideShow(attrs, func) {
-	this.Widget(attrs, func);
+function SlideShow(attrs) {
+	this.Widget(attrs);
 	/**
 	 * First image
 	 * @type Object
