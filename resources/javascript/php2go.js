@@ -1421,17 +1421,14 @@ Observable = function() {
  * The Widget class is the base class of all widgets.
  * Implements {@link Observable} interface.
  * @param {Object} attrs Widget's attributes
- * @param {Function} func Setup function
  * @constructor
  */
-Widget = function(attrs, func) {
+Widget = function(attrs) {
 	/**
 	 * Widget's attributes
 	 * @type Object
 	 */
 	this.attributes = (attrs ? Object.extend({}, attrs) : {});
-	if (Object.isFunc(func))
-		func(this);
 };
 Widget.implement(new Observable);
 
