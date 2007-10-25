@@ -1609,7 +1609,9 @@ Event.prototype.stop = function() {
 Event.addLoadListener(function() {
 	for (var i=0; i<Widget.widgets.length; i++) {
 		var attrs = Widget.widgets[i];
-		var widget = new window[attrs[0]](attrs[1], attrs[2]);
+		var widget = new window[attrs[0]](attrs[1]);
+		if (Object.isFunc(attrs[2]))
+			attrs[2](widget);
 		widget.setup();
 	}
 });

@@ -41,10 +41,41 @@
  * # width : map width
  * # height : map height
  * # class : CSS class for the map container
+ * # type : map type (normal, satellite or hybrid)
  * # center : center point
  * # zoom : zoom level
+ * # controls : comma separated list of map controls; accepted values: maptype, smallmap, largemap, smallzoom, scale, overviewmap
  * # locations : array of locations, each one containing lat, lng and info* (mandatory)
  * # draggable : enable or disable map dragging
+ * # draggableMarkers : enable or disable dragging on markers
+ *
+ * Available client events:
+ * # onInit
+ * 
+ * All client events implemented by Google Maps API are also available:
+ * # onAddMapType
+ * # onRemoveMapType
+ * # onClick
+ * # onDblClick
+ * # onSingleRightClick
+ * # onMoveStart
+ * # onMove
+ * # onMoveEnd
+ * # onZoomEnd
+ * # onMapTypeChanged
+ * # onInfoWindowOpen
+ * # onInfoWindowBeforeClose
+ * # onInfoWindowClose
+ * # onAddOverlay
+ * # onRemoveOverlay
+ * # onClearOverlays
+ * # onMouseOver
+ * # onMouseOut
+ * # onMouseMove
+ * # onDragStart
+ * # onDrag
+ * # onDragEnd
+ * # onLoad
  *
  * @package gui
  * @subpackage widget
@@ -90,9 +121,12 @@ class GoogleMap extends Widget
 			'width' => '100%',
 			'height' => '100%',
 			'class' => '',
+			'type' => 'normal',
 			'center' => NULL,
 			'zoom' => NULL,
-			'draggable' => TRUE
+			'controls' => array('maptype', 'largemap'),
+			'draggable' => TRUE,
+			'draggableMarkers' => FALSE
 		);
 	}
 
@@ -107,6 +141,13 @@ class GoogleMap extends Widget
 			$attrs['width'] .= 'px';
 		if (is_int($attrs['height']))
 			$attrs['height'] .= 'px';
+		if (!in_array($attrs['type'], array('normal', 'satellite', 'hybrid')))
+			$attrs['type'] = 'normal';
+		if (!empty($attrs['controls']) && !is_array($attrs['controls'])) {
+			$attrs['controls'] = preg_replace("/\s/", '', $attrs['controls']);
+			$attrs['controls'] = explode(',', $attrs['controls']);
+			$attrs['controls'] = array_unique($attrs['controls']);
+		}
 		parent::loadAttributes($attrs);
 	}
 
@@ -133,16 +174,20 @@ class GoogleMap extends Widget
 		foreach ($this->attributes['locations'] as $location) {
 			$locations[] = array(
 				'lat' => $location['lat'],
-				'lng' => $location['lng']
+				'lng' => $location['lng'],
+				'title' => @$location['title']
 			);
 		}
 		print $code;
 		parent::renderJS(array(
 			'id' => $attrs['id'],
-			'center' => (is_array($attrs['center']) ? $attrs['center'] : $this->_calculateCenter($locations)),
-			'locations' => $locations,
+			'type' => $attrs['type'],
+			'center' => (is_array($attrs['center']) ? $attrs['center'] : $this->_calculateCenter($locations)),			
 			'zoom' => $attrs['zoom'],
-			'draggable' => $attrs['draggable']
+			'controls' => $attrs['controls'],
+			'locations' => $locations,
+			'draggable' => $attrs['draggable'],
+			'draggableMarkers' => $attrs['draggableMarkers']
 		));
 	}
 
