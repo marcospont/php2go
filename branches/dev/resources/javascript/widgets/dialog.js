@@ -258,7 +258,7 @@ Dialog.prototype.setupContents = function() {
 			Event.addListener(btn, 'click', function(e) {
 				var idx = $EV(e).target.index;
 				if (Object.isFunc(self.buttons[idx].fn))
-					self.buttons[idx].fn.apply(self);
+					self.buttons[idx].fn();
 			});
 			if (this.buttons[i].def)
 				this.defaultButton = btn;
@@ -278,7 +278,7 @@ Dialog.prototype.setupContents = function() {
 Dialog.prototype.addButton = function(text, fn, def) {
 	this.buttons.push({
 		text: text,
-		fn: fn || null,
+		fn: (Object.isFunc(fn) ? fn.bind(this) : null),
 		def: !!def
 	});
 };
@@ -287,11 +287,23 @@ Dialog.prototype.addButton = function(text, fn, def) {
  * Changes the handler function of a dialog's button
  * @param {Number} idx Button index (zero based)
  * @param {Function} fn Handler function
+ * @param {Object} scope Handler scope
  * @type void
  */
-Dialog.prototype.setButtonAction = function(idx, fn) {
+Dialog.prototype.setButtonAction = function(idx, fn, scope) {
 	if (this.buttons[idx])
-		this.buttons[idx].fn = fn;
+		this.buttons[idx].fn = fn.bind(scope || this);
+};
+
+/**
+ * Changes the contents of a dialog's button
+ * @param {Number} idx Button index (zero based)
+ * @param {String} cont New contents
+ * @type void
+ */
+Dialog.prototype.setButtonContents = function(idx, cont) {
+	if (this.buttons[idx])
+		this.buttons[idx].el.update(cont);
 };
 
 /**
