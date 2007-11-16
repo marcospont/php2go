@@ -1303,9 +1303,7 @@ class TemplateParser extends PHP2Go
 				$result = 'is_null' . $expr;
 				break;
 			case 'empty' :
-				if ($expr[0] != '(')
-					$expr = '(' . $expr . ')';
-				$result = 'TypeUtils::isEmpty' . $expr;
+				$result = 'TypeUtils::isEmpty(@' . $expr . ')';
 				break;
 			default :
 				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_TPLPARSE_INVALID_IS_EXPR', $operation), E_USER_ERROR, __FILE__, __LINE__);
