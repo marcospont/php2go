@@ -402,7 +402,16 @@ class DMLBuilder extends PHP2Go
 				if ($this->forceUpdate || strcmp($curVal, $values[$colUpper])) {
 					// empty values
 					if ($this->_isEmpty($values[$colUpper])) {
-						if (empty($curVal) && $this->ignoreEmptyValues) {
+						/* By Lenon: Código Antigo
+						 * if (empty($curVal) && $this->ignoreEmptyValues) {
+						 * Dessa forma não funcionam atualizações do tipo "0" para NULL
+						 * Não testei mas acredito que outros casos também não devam funcionar:
+						 * "" -> NULL
+						 * NULL -> ""
+						 * 0 -> NULL
+						 * NULL -> 0
+						 */
+						if (empty($curVal) && $curVal != "0" && $this->ignoreEmptyValues) {
 							continue;
 						} else {
 							$values[$colUpper] = NULL;
