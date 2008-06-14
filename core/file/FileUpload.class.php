@@ -432,7 +432,7 @@ class FileUpload extends PHP2Go
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_NOT_FOUND');
 			return FALSE;
 		}
-		else if (ereg("\.+.+\.+", $fileData['name'])){
+		else if (ereg("\.+\.+", $fileData['name'])){
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_NAME', $fileData['name']);
 			return FALSE;
 		}
