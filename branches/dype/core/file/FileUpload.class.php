@@ -245,6 +245,8 @@ class FileUpload extends PHP2Go
 			'save_callback' => NULL,
 			'error' => ''
 		);
+		if (is_null($callback))
+			$callback = PHP2Go::getConfigVal('UPLOAD_SAVE_CALLBACK');
 		if (!is_null($callback))
 			$newHandler['save_callback'] = new Callback($callback);
 		$this->uploadHandlers[] =& $newHandler;
@@ -430,7 +432,7 @@ class FileUpload extends PHP2Go
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_NOT_FOUND');
 			return FALSE;
 		}
-		else if (ereg("\.+\.+", $fileData['name'])){
+		else if (ereg("\.+.+\.+", $fileData['name'])){
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_NAME', $fileData['name']);
 			return FALSE;
 		}
