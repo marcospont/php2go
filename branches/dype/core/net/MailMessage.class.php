@@ -896,6 +896,8 @@ class MailMessage extends PHP2Go
 			$this->_addHeader('To', 'undisclosed-recipients:;' . $this->lineEnd);
 		if ($this->hasRecipients(MAIL_RECIPIENT_CC))
 			$this->_addHeader('Cc', $this->_buildAddressList(MAIL_RECIPIENT_CC));
+		if ($this->hasRecipients(MAIL_RECIPIENT_BCC))
+			$this->_addHeader('Bcc', $this->_buildAddressList(MAIL_RECIPIENT_BCC));
 		if ($this->hasRecipients(MAIL_RECIPIENT_REPLYTO))
 			$this->_addHeader('Reply-to', $this->_buildAddressList(MAIL_RECIPIENT_REPLYTO));
 		$this->_addHeader('Subject', $this->_encodeHeader(trim($this->subject)) . $this->lineEnd);

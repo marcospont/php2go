@@ -107,6 +107,7 @@ $P2G_MODIFIER['decimal_fraction'] = array('Number', 'fromDecimalToFraction');
 $P2G_MODIFIER['arabic_roman'] = array('Number', 'fromArabicToRoman');
 $P2G_MODIFIER['roman_arabic'] = array('Number', 'fromRomanToArabic');
 $P2G_MODIFIER['byte_amount'] = array('Number', 'formatByteAmount');
+$P2G_MODIFIER['sprintf'] = 'sprintf'; 
 return $P2G_MODIFIER;
 
 ?>
