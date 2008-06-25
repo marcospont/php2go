@@ -44,7 +44,7 @@ class UrlValidator extends AbstractValidator
 	 */
 	function execute($value) {
 		$value = strval($value);
-		$result = (ereg("^((https?|ftp):\/\/)?([[:alnum:]-]+)(\.[[:alnum:]-]+)+(\/[[:alnum:]\._-]+)*\/?(\?[[:alnum:]\.&~%=_-]+)?(#[[:alnum:]_-]+)?$", $value));
+		$result = (ereg("^((https?|ftp):\/\/)?([[:alnum:]-]+)(\.[[:alnum:]-]+)+(\/[[:alnum:]\.~_-]+)*\/?(\?[[:alnum:]\.&~%=_-]+)?(#[[:alnum:]_-]+)?$", $value));
 		if ($result === FALSE && isset($this->fieldLabel)) {
 			$maskLabels = PHP2Go::getLangVal('FORM_MASKS');
 			$this->errorMessage = PHP2Go::getLangVal('ERR_FORM_FIELD_INVALID_DATATYPE', array($this->fieldLabel, $maskLabels['URL']));

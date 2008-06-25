@@ -434,7 +434,7 @@ class FormButton extends Component
 				if (empty($this->_Form->backUrl))
 					$action = "history.back()";
 				else
-					$action = sprintf("window.location.href='%s'", $this->_Form->backUrl);
+					$action = sprintf("window.location.href='%s'", htmlentities($this->_Form->backUrl));
 				$this->addEventListener(new FormEventListener(FORM_EVENT_JS, 'onClick', $action), TRUE);
 			}
 			// normalized disable state
