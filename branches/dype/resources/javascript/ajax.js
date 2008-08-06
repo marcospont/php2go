@@ -299,6 +299,10 @@ AjaxRequest.prototype.readArguments = function(args) {
 					args.throbber = new Throbber({element: args.throbber});
 				this.throbber = args.throbber;
 				break;
+			case 'throbber_centralize' :
+				if (this.throbber)
+					this.throbber.centralize = args.throbber_centralize;
+				break;
 			default :
 				this[n] = args[n];
 				break;
