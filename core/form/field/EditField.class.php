@@ -131,6 +131,8 @@ class EditField extends EditableField
 	 * 
 	 * Available parameters:
 	 * # ALIGN : calendar aligment
+	 * # MINYEAR : minimum year allowed
+	 * # MAXYEAR : maximum year allowed
 	 * # SHOWOTHERMONTHS : whether to show days from other months
 	 * # SINGLECLICK : whether a single click on a day should select the date and close the calendar control
 	 * # STATUSFUNC : js function that defines the status of each calendar date
@@ -146,10 +148,10 @@ class EditField extends EditableField
 					$this->calendarParams['align'] = (string)$value;
 					break;
 				case 'SHOWOTHERMONTHS' :
-					$this->calendarParams['showOthers'] = resolveBooleanChoice($value);
+					$this->calendarParams['showOthers'] = TypeUtils::toBoolean(resolveBooleanChoice($value));
 					break;					
 				case 'SINGLECLICK' :
-					$this->calendarParams['singleClick'] = resolveBooleanChoice($value);
+					$this->calendarParams['singleClick'] = TypeUtils::toBoolean(resolveBooleanChoice($value));
 					break;					
 				case 'STATUSFUNC' :
 					$this->calendarParams['dateStatusFunc'] = JSONEncoder::jsIdentifier($value);
@@ -158,7 +160,7 @@ class EditField extends EditableField
 					$this->calendarParams['dateText'] = JSONEncoder::jsIdentifier($value);
 					break;
 				case 'WEEKNUMBERS' :
-					$this->calendarParams['weekNumbers'] = resolveBooleanChoice($value);
+					$this->calendarParams['weekNumbers'] = TypeUtils::toBoolean(resolveBooleanChoice($value));
 					break;
 			}
 		}

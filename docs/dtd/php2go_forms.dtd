@@ -246,7 +246,7 @@
 	%groupattrs;
 	shortcuts %boolean; #IMPLIED
 >
-<!ELEMENT editfield ( %rul.list.srch; )>
+<!ELEMENT editfield ( listener* | rule* | search? | calendar? )>
 <!ATTLIST editfield
 	%coreattrs;
 	%valueattrs;
@@ -474,4 +474,15 @@
 <!ELEMENT param ( #PCDATA )>
 <!ATTLIST param
 	name %word; #REQUIRED
+>
+<!ELEMENT calendar EMPTY>
+<!ATTLIST calendar
+	align %word; "Bl"
+	minyear %number; #IMPLIED
+	maxyear %number; #IMPLIED
+	showothermonths %boolean; "T"
+	singleclick %boolean; "T"
+	statusfunc %identifier; #IMPLIED
+	textfunc %identifier; #IMPLIED
+	weeknumbers %boolean; "F"
 >
