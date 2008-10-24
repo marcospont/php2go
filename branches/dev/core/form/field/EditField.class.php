@@ -29,6 +29,7 @@
 
 import('php2go.form.field.EditableField');
 import('php2go.datetime.Date');
+import('php2go.util.json.JSONEncoder');
 
 /**
  * Builds text inputs
@@ -42,6 +43,20 @@ import('php2go.datetime.Date');
  */
 class EditField extends EditableField
 {
+	/**
+	 * Calendar default parameters, when using DATE mask
+	 *
+	 * @var array
+	 * @access private
+	 */
+	var $calendarParams = array(
+		'align' => "Bl",
+		'cache' => TRUE,
+		'showOthers' => TRUE,
+		'singleClick' => TRUE,		
+		'weekNumbers' => TRUE
+	);
+	
 	/**
 	 * Component's constructor
 	 *
@@ -108,6 +123,48 @@ class EditField extends EditableField
 		else
 			$this->attributes['AUTOTRIM'] = "F";
 	}
+	
+	/**
+	 * Configures the embedded calendar control, when using DATE mask
+	 * 
+	 * The parameters can be set using the <calendar> tag, inside the <editfield> tag.
+	 * 
+	 * Available parameters:
+	 * # ALIGN : calendar aligment
+	 * # SHOWOTHERMONTHS : whether to show days from other months
+	 * # SINGLECLICK : whether a single click on a day should select the date and close the calendar control
+	 * # STATUSFUNC : js function that defines the status of each calendar date
+	 * # TEXTFUNC : js function that can be used to decorate each calendar date
+	 * # WEEKNUMBERS : whether to show week numbers on the calendar
+	 *
+	 * @param array $params Calendar parameters
+	 */
+	function setCalendarParams($params=array()) {
+		foreach ($params as $name => $value) {
+			switch (strtoupper($name)) {
+				case 'ALIGN' :					
+					$this->calendarParams['align'] = (string)$value;
+					break;
+				case 'SHOWOTHERMONTHS' :
+					$this->calendarParams['showOthers'] = resolveBooleanChoice($value);
+					break;					
+				case 'SINGLECLICK' :
+					$this->calendarParams['singleClick'] = resolveBooleanChoice($value);
+					break;					
+				case 'STATUSFUNC' :
+					$this->calendarParams['dateStatusFunc'] = JSONEncoder::jsIdentifier($value);
+					break;
+				case 'TEXTFUNC' :
+					$this->calendarParams['dateText'] = JSONEncoder::jsIdentifier($value);
+					break;
+				case 'WEEKNUMBERS' :
+					$this->calendarParams['weekNumbers'] = resolveBooleanChoice($value);
+					break;
+			}
+		}
+		if (isset($params['MINYEAR']) && isset($params['MAXYEAR']))
+			$this->calendarParams['range'] = array($params['MINYEAR'], $params['MAXYEAR']);
+	}
 
 	/**
 	 * Override parent class implementation to apply value transformations
@@ -139,6 +196,9 @@ class EditField extends EditableField
 		$this->setCapitalize(resolveBooleanChoice(@$attrs['CAPITALIZE']));
 		// autotrim
 		$this->setAutoTrim(resolveBooleanChoice(@$attrs['AUTOTRIM']));
+		// calendar properties
+		if (TypeUtils::isInstanceOf($children['CALENDAR'], 'XmlNode'))
+			$this->setCalendarParams($children['CALENDAR']->getAttributes());
 	}
 
 	/**
@@ -176,9 +236,11 @@ class EditField extends EditableField
 			$this->_Form->Document->importStyle(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar-system.css");
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar_stripped.js");
 			$this->_Form->Document->addScript(PHP2GO_JAVASCRIPT_PATH . "vendor/jscalendar/calendar-setup_stripped.js");
-			$this->_Form->Document->addScriptCode(sprintf("\tCalendar.setup( {\n\t\tinputField:\"%s\", ifFormat:\"%s\", button:\"%s\", singleClick:true, align:\"Bl\", cache:true, showOthers:true, weekNumbers:false\n\t} );",
-				$this->id, $settings['calendarFormat'], $this->id . '_calendar'
-			), 'Javascript', SCRIPT_END);
+			$calendarParams = $this->calendarParams;
+			$calendarParams['inputField'] = $this->id;
+			$calendarParams['ifFormat'] = $settings['calendarFormat'];
+			$calendarParams['button'] = $this->id . '_calendar';			
+			$this->_Form->Document->addScriptCode(sprintf("\tCalendar.setup(%s);", JSONEncoder::encode($calendarParams)), 'Javascript', SCRIPT_END);
 			$ua =& UserAgent::getInstance();
 			$this->attributes['CALENDAR'] = sprintf("<button id=\"%s\" type=\"button\" %s style=\"cursor:pointer;%s;background:transparent;border:none;vertical-align:text-bottom\"%s><img src=\"%s\" border=\"0\" alt=\"\" /></button>",
 					$this->id . '_calendar',
