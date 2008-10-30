@@ -1391,7 +1391,7 @@ Event.handlers = {
 	},
 	getEventName : function(type) {
 		type = type.replace(/^on/i, '').toLowerCase();
-		(type == 'keypress' && PHP2Go.browser.khtml) && (type = 'keydown');
+		//(type == 'keypress' && PHP2Go.browser.khtml) && (type = 'keydown');
 		return type;		
 	},
 	getHandlers : function(elm, type) {
@@ -1568,7 +1568,7 @@ Event.prototype.isRelated = function(elm) {
  * @type Number
  */
 Event.prototype.key = function() {
-	return this.keyCode || this.which;
+	return $K(this);
 };
 
 /**
@@ -1576,7 +1576,7 @@ Event.prototype.key = function() {
  * @type String
  */
 Event.prototype.char = function() {
-	return String.fromCharCode(this.keyCode || this.which).toLowerCase();
+	return String.fromCharCode(this.key()).toLowerCase();
 };
 
 /**
