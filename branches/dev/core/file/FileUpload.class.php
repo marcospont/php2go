@@ -441,28 +441,28 @@ class FileUpload extends PHP2Go
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_NOT_FOUND');
 			return FALSE;
 		}
-		else if (!empty($this->allowedFileTypes) && !in_array($fileData['type'], $this->allowedFileTypes)) {
-			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_TYPE', $fileData['type']);
-			return FALSE;
-		}
-		else if ($fileData['size'] > $this->maxFileSize) {
+		elseif ($fileData['size'] > $this->maxFileSize) {
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_TOO_BIG');
 			return FALSE;
 		}
-		else if (!empty($this->allowedFileExtensions) && !empty($fileData['extension']) && !in_array($fileData['extension'], $this->allowedFileExtensions)) {
+		elseif (empty($fileData['name']) || substr($fileData['name'], -1, 1) == '.' || strpos($fileData['name'], '..') !== FALSE || preg_match(",[[:cntrl:]]|[/\\:\*\?\"\<\>\|],", $fileData['name'])) {
+			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_NAME', $fileData['name']);
+			return FALSE;			
+		}
+		elseif (System::isGlobalsOn() && ( isset($_GET[$fileData['name']]) || isset($_POST[$fileData['name']]) || isset($_COOKIE[$fileData['name']]) )) {
+			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_NAME', $fileData['name']);
+			return FALSE;
+		}
+		elseif (!empty($this->allowedFileTypes) && !in_array($fileData['type'], $this->allowedFileTypes)) {
+			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_TYPE', $fileData['type']);
+			return FALSE;
+		}
+		elseif (!empty($this->allowedFileExtensions) && !empty($fileData['extension']) && !in_array($fileData['extension'], $this->allowedFileExtensions)) {
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_TYPE', $fileData['extension']);
 			return FALSE;
 		}
-		else if (!is_uploaded_file($fileData['tmp_name'])) {
+		elseif (!is_uploaded_file($fileData['tmp_name'])) {
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_NOT_FOUND');
-			return FALSE;
-		}
-		else if (ereg("\.+.+\.+", $fileData['name'])){
-			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_NAME', $fileData['name']);
-			return FALSE;
-		}
-		else if (System::isGlobalsOn() && ( isset($_GET[$fileData['name']]) || isset($_POST[$fileData['name']]) || isset($_COOKIE[$fileData['name']]) )) {
-			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_NAME', $fileData['name']);
 			return FALSE;
 		}
 		else {
