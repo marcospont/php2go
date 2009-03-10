@@ -199,7 +199,7 @@ InputMask.prototype.keyDownHandler = function(e) {
 	// toggle ctrl/shift flags on
 	(k == 17) && (this.ctrl = true);
 	(k == 16) && (this.shift = true);
-};
+}
 
 /**
  * The keypress handler queries the field mask to determine

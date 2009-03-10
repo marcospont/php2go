@@ -369,7 +369,7 @@ class DataGrid extends DbField
 				$Field->onPreRender();
 				$this->Template->createBlock('loop_cell');
 				$this->Template->assign(array(
-					'align' => 'center',
+					'align' => 'left',
 					'style' => $this->attributes['CELLSTYLE'],
 					'width' => (isset($this->cellSizes[$i+1]) ? " width=\"{$this->cellSizes[$i+1]}%\"" : ''),
 					'col_data' => $Field->getContent()

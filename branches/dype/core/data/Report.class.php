@@ -70,6 +70,10 @@ define('REPORT_PREVNEXT', 2);
  * Displays links or buttons pointing to first, previous, next and last pages
  */
 define('REPORT_FIRSTPREVNEXTLAST', 3);
+/**
+ * 
+ */
+define('REPORT_DYPE', 4);
 
 /**
  * Builds and displays paged data sets loaded from a database
@@ -1772,7 +1776,12 @@ class Report extends PagedDataSet
 					if (!in_array($colName, $this->groupDisplay) && !in_array($colName, $this->hidden)) {
 						$this->Template->createBlock('loop_cell');
 						$this->Template->assign('col_wid', ($this->colSizesMode == REPORT_COLUMN_SIZES_CUSTOM && isset($this->colSizes) ? $this->colSizes[$c] . '%' : ($this->colSizesMode == REPORT_COLUMN_SIZES_FIXED ? intval(100/$visibleCols) . '%' : '')));
-						(isset($colConfig['handler'])) && ($colData[$colName] = $colConfig['handler']->invoke($colData[$colName]));
+						if (isset($colConfig['handler'])) {
+							if (!is_a($colConfig['handler'],'CallBack')) {
+								$colConfig['handler'] = new Callback($colConfig['handler']);
+							}
+							$colData[$colName] = $colConfig['handler']->invoke($colData[$colName]);
+						}
 						(isset($colConfig['align']) && stristr($colConfig['align'], 'left') === FALSE) && ($colData[$colName] = "<div align=\"{$colConfig['align']}\">{$colData[$colName]}</div>");
 						$this->Template->assign('col_data', $colData[$colName]);
 						if (!empty($this->style['altstyle'])) {
@@ -2130,6 +2139,52 @@ class Report extends PagedDataSet
 			$this->_generateNavigationLink($links, @$this->pagination['nextPage'], 'next', '>', $lang['nextTit'], $lang['nextTip']);
 			$this->_generateNavigationLink($links, @$this->pagination['lastPage'], 'last', '>>', $lang['lastTit'], $lang['lastTip']);
 			return implode($linkGlue, $links);
+		} elseif ($this->pagination['style'][0] == REPORT_DYPE) {			
+			$meiaPagina = floor($this->pagination['visiblePages']/2);
+			
+			$totalPaginas = parent::getPageCount();		
+			$firstPage = (parent::getCurrentPage() > $meiaPagina) ? (parent::getCurrentPage() - $meiaPagina) : 1; 
+			if ($firstPage + 2*$meiaPagina < $totalPaginas)
+				$lastPage = $firstPage + 2*$meiaPagina;
+			else 
+				$lastPage = $totalPaginas;
+	
+			if (($lastPage - parent::getCurrentPage()) < $meiaPagina) {
+				$firstPage = $firstPage - ($meiaPagina + (parent::getCurrentPage() - $lastPage));
+				$firstPage = ($firstPage < 1) ? 1 : $firstPage;
+			}
+				 
+			$linkStr = '';
+			$paginaAnterior = parent::getCurrentPage() - 1;
+			$paginaProxima = parent::getCurrentPage() + 1;
+			if (parent::getCurrentPage() > 1)			
+				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($paginaAnterior), '« Anterior', 'Ir para a página anterior do relatório', $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $paginaAnterior . '})') : array())) . $linkLimiter;
+			else
+				$linkStr .= '« Anterior' . $linkLimiter;
+				
+			if ($firstPage > 1)
+				$linkStr .= HtmlUtils::anchor($this->_generatePageLink(1), '1', 'Ir para a primeira página do relatório', $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . 1 . '})') : array())) . ' ... ';
+				
+			// loop through all visible pages
+			for ($i = $firstPage; $i <= $lastPage; $i++) {
+				if ($i == parent::getCurrentPage()) {
+					$linkStr .= sprintf("<span class=\"%s\"><b>%d</b></span>\n", $this->style['link'], $i);
+				} else {
+					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($i), "<u>$i</u>", sprintf($lang['pageTip'], $i, parent::getPageCount()), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $i . '})') : array()));
+				}
+				if ($i < $lastPage)
+					$linkStr .= $linkLimiter;
+			}
+			
+			if ($lastPage != parent::getPageCount()) 
+				$linkStr .=  ' ... ' . HtmlUtils::anchor($this->_generatePageLink(parent::getPageCount()), parent::getPageCount(), 'Ir para a última página do relatório', $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . parent::getPageCount() . '})') : array()));
+			
+			if (parent::getCurrentPage() < parent::getPageCount())
+				$linkStr .=  $linkLimiter . HtmlUtils::anchor($this->_generatePageLink($paginaProxima), 'Próxima »', 'Ir para a próxima página do relatório', $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $paginaProxima . '})') : array()));
+			else
+				$linkStr .=  $linkLimiter . 'Próxima »';
+			
+			return $linkStr;
 		}
 		return '';
 	}
@@ -2350,10 +2405,13 @@ class Report extends PagedDataSet
 		// 2) order by user requested column
 		// If the user requested sort column is on the first position of the default
 		// orderby clause, it is removed from the default clause
-		if (isset($this->_order) && !in_array($this->_order, $this->unsortable) && !in_array($this->_order, $this->hidden)) {
-			$orderMembers[] = $Db->quoteIdentifier($this->_order) . ($this->_orderType == 'd' ? ' DESC' : ' ASC');
+		$orderField = $this->_order;
+		if (isset($this->columns[$this->_order]['orderfield']))
+			$orderField = $this->columns[$this->_order]['orderfield']; 
+		if (isset($orderField) && !in_array($this->_order, $this->unsortable) && !in_array($this->_order, $this->hidden)) {
+			$orderMembers[] = $Db->quoteIdentifier($orderField) . ($this->_orderType == 'd' ? ' DESC' : ' ASC');
 			$matches = array();
-			if (preg_match("/^\s*{$this->_order}(\s*(asc|desc)?\s*,?)?/is", $this->_dataSource['ORDERBY'], $matches)) {
+			if (preg_match("/^\s*{$orderField}(\s*(asc|desc)?\s*,?)?/is", $this->_dataSource['ORDERBY'], $matches)) {
 				$this->_dataSource['ORDERBY'] = preg_replace('/' . $matches[0] . '/', '', $this->_dataSource['ORDERBY']);
 			}
 		}

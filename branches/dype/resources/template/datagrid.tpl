@@ -6,7 +6,7 @@
 	<th {$width}align="center" valign="top"{$style}>{$col_name}</th>
 <!-- end block : loop_header_cell -->
 <!-- start block : loop_cell -->
-    <td {$width}align="{$align}" valign="top">{$col_data}</td>
+    <td {$width}align="{$align}" valign="top"{$style}>{$col_data}</td>
 <!-- end block : loop_cell -->
   </tr>
 <!-- end block : loop_line -->

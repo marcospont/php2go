@@ -494,7 +494,7 @@ class LayerMenu extends Menu
 					$rootWidth[$i] = (strlen($this->tree[$i]['CAPTION']) * $this->charWidth) + 15;
 			}
 			$this->menuCode .=
-				"\n\t{$this->id}.useBar = 1;" .
+				"\n\t{$this->id}.useBar = 0;" .
 				"\n\t{$this->id}.barWidth = " . (isset($this->width) ? $this->width : "screen.width") . "-" . ($this->offsetX) . "-22;" .
 				"\n\t{$this->id}.barHeight = {$this->height};" .
 				"\n\t{$this->id}.barX = {$this->offsetX};" .

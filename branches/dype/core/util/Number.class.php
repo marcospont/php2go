@@ -123,7 +123,7 @@ class Number extends PHP2Go
 	 * @return string Formatted number
 	 * @static
 	 */
-	function fromDecimalToCurrency($number, $currencySign=NULL, $decSep=NULL, $thousSep=NULL, $precision=NULL, $currencySignPos=NULL) {
+	function fromDecimalToCurrency($number, $currencySign=NULL, $decSep=NULL, $thousSep=NULL, $precision=NULL, $currencySignPos='left') {
 		$locale = localeconv();
 		$currencySign = (is_null($currencySign) ? $locale['currency_symbol'] : (empty($currencySign) ? '' : $currencySign));
 		if (empty($decSep))
@@ -132,6 +132,12 @@ class Number extends PHP2Go
 			$thousSep = $locale['mon_thousands_sep'];
 		if (empty($precision))
 			$precision = $locale['frac_digits'];
+			
+		if ($precision == 127) {
+			$precision = 2;
+			$thousSep = '.';
+			$decSep = ',';
+		}
 		$number = floatval(trim($number));
 		if (TypeUtils::isFloat($number)) {
 			if (!empty($currencySign)) {
