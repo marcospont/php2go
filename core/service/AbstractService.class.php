@@ -80,6 +80,13 @@ class AbstractService extends PHP2Go
 	 */
 	var $fallbackHandler = NULL;
 	/**
+	 * Request filter
+	 *
+	 * @var object Callback
+	 * @access private
+	 */
+	var $requestFilter = NULL;
+	/**
 	 * Error handling flag
 	 *
 	 * @var bool
@@ -106,7 +113,7 @@ class AbstractService extends PHP2Go
 	function setErrorHandling($setting) {
 		$this->errorHandling = (bool)$setting;
 	}
-
+	
 	/**
 	 * Registers a new handler
 	 *
@@ -193,6 +200,25 @@ class AbstractService extends PHP2Go
 	}
 
 	/**
+	 * Registers a request filter
+	 * 
+	 * A function that will be called before a
+	 * request is processed. The filter callback
+	 * can change the handler name and the handler
+	 * parameters
+	 *
+	 * @param string|array $handler Handler spec
+	 */
+	function setRequestFilter($handler) {
+		$callback = new Callback();
+		$callback = new Callback();
+		$callback->throwErrors = FALSE;
+		$callback->setFunction($handler);
+		if ($callback->isValid())
+			$this->requestFilter = $callback;		
+	}
+
+	/**
 	 * Triggers request handling and processing
 	 *
 	 * Parses the request parameters. If the request is a valid request,
@@ -200,6 +226,13 @@ class AbstractService extends PHP2Go
 	 */
 	function handleRequest() {
 		if ($this->acceptRequest()) {
+			// request filter
+			if ($this->requestFilter) {
+				$params = array();
+				$params[] =& $this->handlerId;
+				$params[] =& $this->handlerParams;
+				$this->requestFilter->invoke($params, TRUE);
+			}
 			// missing handler
 			if (empty($this->handlerId)) {
 				$this->onMissingHandler();

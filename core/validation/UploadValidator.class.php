@@ -68,6 +68,8 @@ class UploadValidator extends AbstractValidator
 	function execute($upload) {
 		if (isset($upload['MAXFILESIZE']))
 			$this->Uploader->setMaxFileSize($upload['MAXFILESIZE']);
+		if (isset($upload['ALLOWEDEXTENSIONS']))
+			call_user_func_array(array(&$this->Uploader, 'setAllowedExtensions'), TypeUtils::toArray($upload['ALLOWEDEXTENSIONS']));
 		if (isset($upload['ALLOWEDTYPES']))
 			call_user_func_array(array(&$this->Uploader, 'setAllowedTypes'), TypeUtils::toArray($upload['ALLOWEDTYPES']));
 		if (isset($upload['OVERWRITE']))

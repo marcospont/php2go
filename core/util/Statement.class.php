@@ -366,6 +366,19 @@ class Statement extends PHP2Go
 		}
 		return FALSE;
 	}
+	
+	/**
+	 * Sets a given array of variables
+	 *
+	 * @param array $array Variables hash array
+	 * @param bool $quote Add quotes on string values
+	 */
+	function bindArray($array, $quote=TRUE) {
+		if (is_array($array)) {
+			foreach ($array as $name => $value)
+				$this->bindByName($name, $value, $quote);
+		}
+	}
 
 	/**
 	 * Tries to assign values to all declared variables based on the global scope

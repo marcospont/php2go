@@ -969,7 +969,8 @@ Element.prototype.replace = function(rep, evalScripts) {
  */
 Element.prototype.clear = function(useDom) {
 	useDom = !!useDom;
-	if (useDom) {
+	var tag = this.tagName.toUpperCase();
+	if (useDom || tag in Element.translation.tags) {
 		while (this.firstChild)
 			this.removeChild(this.firstChild);
 	} else {
@@ -1390,7 +1391,7 @@ Event.handlers = {
 	},
 	getEventName : function(type) {
 		type = type.replace(/^on/i, '').toLowerCase();
-		(type == 'keypress' && PHP2Go.browser.khtml) && (type = 'keydown');
+		//(type == 'keypress' && PHP2Go.browser.khtml) && (type = 'keydown');
 		return type;		
 	},
 	getHandlers : function(elm, type) {
@@ -1567,7 +1568,7 @@ Event.prototype.isRelated = function(elm) {
  * @type Number
  */
 Event.prototype.key = function() {
-	return this.keyCode || this.which;
+	return $K(this);
 };
 
 /**
@@ -1575,7 +1576,7 @@ Event.prototype.key = function() {
  * @type String
  */
 Event.prototype.char = function() {
-	return String.fromCharCode(this.keyCode || this.which).toLowerCase();
+	return String.fromCharCode(this.key()).toLowerCase();
 };
 
 /**
@@ -1608,7 +1609,9 @@ Event.prototype.stop = function() {
 Event.addLoadListener(function() {
 	for (var i=0; i<Widget.widgets.length; i++) {
 		var attrs = Widget.widgets[i];
-		var widget = new window[attrs[0]](attrs[1], attrs[2]);
+		var widget = new window[attrs[0]](attrs[1]);
+		if (Object.isFunc(attrs[2]))
+			attrs[2](widget);
 		widget.setup();
 	}
 });
