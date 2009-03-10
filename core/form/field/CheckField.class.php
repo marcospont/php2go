@@ -69,7 +69,7 @@ class CheckField extends FormField
 				if ($pos !== FALSE)
 					$caption = substr($caption, 0, $pos) . '<u>' . $caption[$pos] . '</u>' . substr($caption, $pos+1);
 			}
-			$captionString = sprintf("&nbsp;<label for=\"%s\" id=\"%s\"%s>%s</label>",
+			$captionString = sprintf("<label for=\"%s\" id=\"%s\"%s>&nbsp;%s</label>",
 				$this->id, $this->id . "_label", $this->_Form->getLabelStyle(), $caption
 			);
 		}
@@ -162,6 +162,7 @@ class CheckField extends FormField
 		$$method["V_{$this->name}"] = $_REQUEST["V_{$this->name}"] = $value;
 		// set CHECKED attribute
 		$this->attributes['CHECKED'] = ($value == 'T' ? ' checked="checked"' : '');
+		if ($value == 'F') $this->searchable = false;
 		$this->value = $value;
 	}
 

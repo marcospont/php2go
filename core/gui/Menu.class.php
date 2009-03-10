@@ -269,9 +269,21 @@ class Menu extends Component
 		$cCount = 0;
 		for ($i=0,$s=$Node->getChildrenCount(); $i<$s; $i++) {
 			$Child = $Node->getChild($i);
+			
+			$link = $Child->getAttribute('LINK');
+
+			static $Stmt;
+			if (!isset($Stmt)) {
+				$Stmt = new Statement();
+				$Stmt->setVariablePattern('~', '~');
+				$Stmt->setShowUnassigned();
+			}
+			$Stmt->setStatement($link);
+			$link = $Stmt->getResult();		
+			
 			$Tree[$cCount] = array(
 				'CAPTION' => $Child->getAttribute('CAPTION'),
-				'LINK' => $Child->getAttribute('LINK'),
+				'LINK' => $link,
 				'TARGET' => $Child->getAttribute('TARGET'),
 				'CHILDREN' => array()
 			);

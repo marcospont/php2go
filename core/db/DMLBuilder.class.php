@@ -375,10 +375,18 @@ class DMLBuilder extends PHP2Go
 	function _updateSql() {
 		$setValues = '';
 		$oldMode = $this->_Db->setFetchMode(ADODB_FETCH_ASSOC);
-		$rs =& $this->_Db->query(sprintf("SELECT * FROM %s WHERE %s", $this->_table, $this->_clause), TRUE, $this->_clauseBindVars);
+		$isOci = ($this->_Db->AdoDb->dataProvider == 'oci8');
+		
+		if ($isOci) {
+			// Para evitar o problema com updates no blob		
+			foreach ($this->_clauseBindVars as $key => $value) {
+				$this->_clause = str_replace(":$key",$value,$this->_clause);
+			}		
+			$rs =& $this->_Db->query(sprintf("SELECT * FROM %s WHERE %s", $this->_table, $this->_clause), TRUE);
+		} else
+			$rs =& $this->_Db->query(sprintf("SELECT * FROM %s WHERE %s", $this->_table, $this->_clause), TRUE, $this->_clauseBindVars);
 		$this->_Db->setFetchMode($oldMode);
 		$values = array_change_key_case($this->_values, CASE_UPPER);
-		$isOci = ($this->_Db->AdoDb->dataProvider == 'oci8');
 		for ($i=0,$s=$rs->FieldCount(); $i<$s; $i++) {
 			$dbCol = $rs->FetchField($i);
 			$colUpper = strtoupper($dbCol->name);
