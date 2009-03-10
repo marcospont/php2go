@@ -100,6 +100,18 @@ class FileField extends FormField
 	}
 
 	/**
+	 * Set allowed extensions for the uploaded file
+	 *
+	 * @param string $extensions Comma separated list of file extensions
+	 */
+	function setAllowedExtensions($extensions) {
+		if (!empty($extensions)) {
+			$extensions = explode(',', strval($extensions));
+			$this->attributes['ALLOWEDEXTENSIONS'] = $extensions;
+		}
+	}
+
+	/**
 	 * Set allowed mime types for the uploaded file
 	 *
 	 * @param string $types Comma separated list of mime types
@@ -214,6 +226,8 @@ class FileField extends FormField
 			$this->setSize(15);
 		// maximum file size
 		$this->setMaxFileSize(@$attrs['MAXFILESIZE']);
+		// allowed file extensions
+		$this->setAllowedExtensions(@$attrs['ALLOWEDEXTENSIONS']);
 		// allowed mime types
 		$this->setAllowedTypes(@$attrs['ALLOWEDTYPES']);
 		// save callback function
