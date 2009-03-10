@@ -40,12 +40,11 @@ PHP2Go.include(PHP2Go.baseUrl + 'ajax.js');
  * (tabbed views). The class contains methods to manipulate
  * these panels, as well as add and remove them
  * @param {Object} attrs Widget's attributes
- * @param {Function} func Setup function
  * @constructor
  * @base Widget
  */
-function TabView(attrs, func) {
-	this.Widget(attrs, func);
+function TabView(attrs) {
+	this.Widget(attrs);
 	/**
 	 * Root element
 	 * @type Object

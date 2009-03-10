@@ -146,17 +146,17 @@ class CacheableSAXParser extends AbstractSAXParser
 	 */
 	function parse($xmlContent, $srcType=T_BYFILE) {
 		$Cache = CacheManager::factory('file');
-		if ($this->cacheOptions['baseDir'])
+		if (isset($this->cacheOptions['baseDir']))
 			$Cache->Storage->setBaseDir($this->cacheOptions['baseDir']);
 		if ($srcType == T_BYFILE) {
 			$cacheId = realpath($xmlContent);
-			if ($this->cacheOptions['useMTime'])
+			if (@$this->cacheOptions['useMTime'] == TRUE)
 				$Cache->Storage->setLastValidTime(@filemtime($xmlContent));
-			elseif ($this->cacheOptions['lifeTime'] > 0)
+			elseif (@$this->cacheOptions['lifeTime'] > 0)
 				$Cache->Storage->setLifeTime($this->cacheOptions['lifeTime']);
 		} else {
 			$cacheId = dechex(crc32($xmlContent));
-			($this->cacheOptions['lifeTime'] > 0) && ($Cache->Storage->setLifeTime($this->cacheOptions['lifeTime']));
+			(@$this->cacheOptions['lifeTime'] > 0) && ($Cache->Storage->setLifeTime($this->cacheOptions['lifeTime']));
 		}
 		$cacheData = $Cache->load($cacheId, $this->cacheOptions['group']);
 		if ($cacheData !== FALSE) {

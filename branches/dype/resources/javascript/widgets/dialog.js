@@ -258,7 +258,7 @@ Dialog.prototype.setupContents = function() {
 			Event.addListener(btn, 'click', function(e) {
 				var idx = $EV(e).target.index;
 				if (Object.isFunc(self.buttons[idx].fn))
-					self.buttons[idx].fn.apply(self);
+					self.buttons[idx].fn();
 			});
 			if (this.buttons[i].def)
 				this.defaultButton = btn;
@@ -278,7 +278,7 @@ Dialog.prototype.setupContents = function() {
 Dialog.prototype.addButton = function(text, fn, def) {
 	this.buttons.push({
 		text: text,
-		fn: fn || null,
+		fn: (Object.isFunc(fn) ? fn.bind(this) : null),
 		def: !!def
 	});
 };
@@ -287,11 +287,52 @@ Dialog.prototype.addButton = function(text, fn, def) {
  * Changes the handler function of a dialog's button
  * @param {Number} idx Button index (zero based)
  * @param {Function} fn Handler function
+ * @param {Object} scope Handler scope
  * @type void
  */
-Dialog.prototype.setButtonAction = function(idx, fn) {
+Dialog.prototype.setButtonAction = function(idx, fn, scope) {
 	if (this.buttons[idx])
-		this.buttons[idx].fn = fn;
+		this.buttons[idx].fn = fn.bind(scope || this);
+};
+
+/**
+ * Changes the contents of a dialog's button
+ * @param {Number} idx Button index (zero based)
+ * @param {String} cont New contents
+ * @type void
+ */
+Dialog.prototype.setButtonContents = function(idx, cont) {
+	if (this.buttons[idx])
+		this.buttons[idx].el.update(cont);
+};
+
+/**
+ * Enables all dialog's buttons
+ * @type void
+ */
+Dialog.prototype.enableButtons = function() {
+	for (var i=0; i<this.buttons.length; i++)
+		this.buttons[i].el.disabled = false;
+};
+
+/**
+ * Disables all dialog's buttons
+ * @type void
+ */
+Dialog.prototype.disableButtons = function() {
+	for (var i=0; i<this.buttons.length; i++)
+		this.buttons[i].el.disabled = true;
+};
+
+/**
+ * Change the dialog's container element
+ * @param {Object} New container (ID or element)
+ * @param {Boolean} Place the dialog based on the new container
+ * @type void
+ */
+Dialog.prototype.setContainer = function(cont, place) {
+	this.container = $(cont);
+	(!!place) && (this.place());
 };
 
 /**
