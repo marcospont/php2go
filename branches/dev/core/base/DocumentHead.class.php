@@ -346,6 +346,7 @@ class DocumentHead
 	 */
 	function display() {
 		// doctype, head tag
+		print "<?xml version=\"1.0\"?>\n";
 		print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
 		print sprintf("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"%s\" lang=\"%s\">\n<head>\n", $this->language, $this->language);
 		// meta tags
