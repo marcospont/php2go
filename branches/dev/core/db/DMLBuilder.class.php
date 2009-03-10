@@ -402,7 +402,7 @@ class DMLBuilder extends PHP2Go
 				if ($this->forceUpdate || strcmp($curVal, $values[$colUpper])) {
 					// empty values
 					if ($this->_isEmpty($values[$colUpper])) {
-						if (empty($curVal) && $this->ignoreEmptyValues) {
+						if ($this->_isEmpty($curVal) && $this->ignoreEmptyValues) {
 							continue;
 						} else {
 							$values[$colUpper] = NULL;
