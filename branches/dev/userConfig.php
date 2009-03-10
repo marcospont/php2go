@@ -357,6 +357,15 @@ $P2G_USER_CFG['REPORTS'] = array(
 );
 
 /**
+ * Default callback to handle file uploads. When an upload
+ * handler is registered (manually or through a FileField form
+ * component) without a custom callback, this one will be used
+ * by default. This entry must contain a callback definition:
+ * function name, array(class, method) or array(object, method)
+ */
+$P2G_USER_CFG['UPLOAD_SAVE_CALLBACK'] = NULL;
+
+/**
  * This config key tells PHP2Go if it needs to load its
  * Javascript libraries from the 'jsrun' folder (compressed)
  * or from the 'javascript' folder (uncompressed).
