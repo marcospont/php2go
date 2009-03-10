@@ -262,6 +262,7 @@ class FileUpload extends PHP2Go
 			'save_callback' => NULL,
 			'error' => ''
 		);
+		$callback = TypeUtils::ifNull($callback, PHP2Go::getConfigVal('UPLOAD_SAVE_CALLBACK', FALSE));
 		if (!is_null($callback))
 			$newHandler['save_callback'] = new Callback($callback);
 		$this->uploadHandlers[] =& $newHandler;
