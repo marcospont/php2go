@@ -76,6 +76,13 @@ class FileUpload extends PHP2Go
 	var $uploadHandlers = array();
 
 	/**
+	 * Allowed file extensions
+	 *
+	 * @var array
+	 */
+	var $allowedFileExtensions = array();
+
+	/**
 	 * Allowed mime-types
 	 *
 	 * @var array
@@ -136,12 +143,22 @@ class FileUpload extends PHP2Go
 	 * Reset class defaults
 	 *
 	 * Returns to the default settings for max file size,
-	 * allowed file types and overwrite files flag.
+	 * allowed file extensions and file types and overwrite files flag.
 	 */
 	function resetDefaults() {
 		$this->maxFileSize = FILE_UPLOAD_MAX_SIZE;
+		$this->allowedFileExtensions = array();
 		$this->allowedFileTypes = array();
 		$this->overwriteFiles = TRUE;
+	}
+
+	/**
+	 * Set allowed file extensions
+	 *
+	 * @param string $extension,... Expects a list of file extensions
+	 */
+	function setAllowedExtensions() {
+		$this->allowedFileExtensions = func_get_args();
 	}
 
 	/**
@@ -359,9 +376,13 @@ class FileUpload extends PHP2Go
 		} else {
 			$fileData =& $this->uploadHandlers[$i];
 			if (isset($_FILES[$fileData['field']]) && !empty($_FILES[$fileData['field']]['name'])) {
+				$matches = array();
 				$file = $_FILES[$fileData['field']];
 				$fileData['uploaded'] = TRUE;
 				$fileData['name'] = $file['name'];
+				$fileData['extension'] = '';
+				if (preg_match("~\.([^\.]+)$~", $fileData['name'], $matches))
+					$fileData['extension'] = $matches[1];
 				$fileData['type'] = $file['type'];
 				$fileData['tmp_name'] = $file['tmp_name'];
 				$fileData['size'] = $file['size'];
@@ -407,7 +428,8 @@ class FileUpload extends PHP2Go
 	 * Validates:
 	 * # mime-type, according to {@link allowedFileTypes}
 	 * # file size, according to {@link maxFileSize}
-	 * # file name and extension
+	 * # file extension, according to {@link allowedFileExtensions}
+	 * # file name
 	 *
 	 * @param int $index Handler index
 	 * @return bool
@@ -424,6 +446,10 @@ class FileUpload extends PHP2Go
 		}
 		else if ($fileData['size'] > $this->maxFileSize) {
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_TOO_BIG');
+			return FALSE;
+		}
+		else if (!empty($this->allowedFileExtensions) && !empty($fileData['extension']) && !in_array($fileData['extension'], $this->allowedFileExtensions)) {
+			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_TYPE', $fileData['extension']);
 			return FALSE;
 		}
 		else if (!is_uploaded_file($fileData['tmp_name'])) {
