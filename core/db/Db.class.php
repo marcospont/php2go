@@ -608,9 +608,9 @@ class Db extends PHP2Go
 			// oci8
 			if ($this->AdoDb->dataProvider == 'oci8') {
 				if (preg_match('#/\\*+.*?\\*\\/#', $sql, $matches))
-					$rewriteSql = "select {$matches[0]} count(*) from (" . $query->getQuery() . ") _p2g_alias_";
+					$rewriteSql = "select {$matches[0]} count(*) from (" . $query->getQuery() . ") p2g_alias";
 				else
-					$rewriteSql = "select count(*) from (" . $query->getQuery() . ") _p2g_alias_";
+					$rewriteSql = "select count(*) from (" . $query->getQuery() . ") p2g_alias";
 			}
 			// db2, interbase, firebird, mssql, pdo, postgres
 			elseif (preg_match("/^(db2|ibase|mssql|pdo|postgres)$/", $this->AdoDb->dataProvider)) {
