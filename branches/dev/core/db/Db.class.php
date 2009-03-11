@@ -614,14 +614,14 @@ class Db extends PHP2Go
 			}
 			// db2, interbase, firebird, mssql, pdo, postgres
 			elseif (preg_match("/^(db2|ibase|mssql|pdo|postgres)$/", $this->AdoDb->dataProvider)) {
-				$rewriteSql = "select count(*) from (" . $query->getQuery() . ") _p2g_alias_";
+				$rewriteSql = "select count(*) from (" . $query->getQuery() . ") p2g_alias";
 			}
 			// mysql >= 4.1
 			elseif (strncmp($this->AdoDb->databaseType, 'mysql', 5) == 0) {
 				$info = $this->AdoDb->ServerInfo();
 				$version = (float)$info['version'];
 				if ($version >= 4.1)
-					$rewriteSql = "select count(*) from (" . $query->getQuery() . ") _p2g_alias_";
+					$rewriteSql = "select count(*) from (" . $query->getQuery() . ") p2g_alias";
 			}
 		}
 		// other queries, when not using "top" and "limit" keywords: replace query fields by "count(*)"
