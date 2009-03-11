@@ -228,9 +228,9 @@ class FormButton extends Component
 	 * @param string $swpImg Swap image URL
 	 */
 	function setImage($img, $swpImg='') {
-		$this->attributes['IMG'] = trim(strval($img));
+		$this->attributes['IMG'] = resolveI18nEntry(trim(strval($img)));
 		if ($swpImg && trim($swpImg) != '')
-			$this->attributes['SWPIMG'] = $swpImg;
+			$this->attributes['SWPIMG'] = resolveI18nEntry($swpImg);
 		else
 			$this->attributes['SWPIMG'] = '';
 	}
