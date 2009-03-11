@@ -27,6 +27,8 @@
  * @version $Id$
  */
 
+import('php2go.util.Statement');
+
 /**
  * Absolute positioning
  */
@@ -269,10 +271,13 @@ class Menu extends Component
 		$cCount = 0;
 		for ($i=0,$s=$Node->getChildrenCount(); $i<$s; $i++) {
 			$Child = $Node->getChild($i);
+			$childCaption = resolveI18nEntry($Child->getAttribute('CAPTION'));
+			$childLink = Statement::evaluate($Child->getAttribute('LINK'));
+			$childTarget = $Child->getAttribute('TARGET');
 			$Tree[$cCount] = array(
-				'CAPTION' => $Child->getAttribute('CAPTION'),
-				'LINK' => $Child->getAttribute('LINK'),
-				'TARGET' => $Child->getAttribute('TARGET'),
+				'CAPTION' => $childCaption,
+				'LINK' => $childLink,
+				'TARGET' => $childTarget,
 				'CHILDREN' => array()
 			);
 			if ($i < $this->limit || $this->limit == 0) {
