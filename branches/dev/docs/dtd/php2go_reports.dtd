@@ -69,6 +69,8 @@
 <!ATTLIST column
 	name %colname; #REQUIRED
 	alias %text; #IMPLIED
+	handler %text; #IMPLIED
+	orderfield %text; #IMPLIED
 	help %text; #IMPLIED
 	align %align; #IMPLIED
 	hidden %boolean; #IMPLIED
@@ -88,6 +90,7 @@
 <!ELEMENT clause ( #PCDATA )>
 <!ELEMENT groupby ( #PCDATA )>
 <!ELEMENT orderby ( #PCDATA )>
+<!ELEMENT limit ( #PCDATA )>
 <!ELEMENT datafilters ( datafilter+ )>
 <!ELEMENT datafilter EMPTY>
 <!ATTLIST datafilter
