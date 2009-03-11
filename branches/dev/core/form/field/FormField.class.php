@@ -611,12 +611,13 @@ class FormField extends Component
 	}
 
 	/**
-	 * Processes attributes and child nodes loaded from the XML specification
+	 * Processes attributes, child nodes and CDATA loaded from the XML specification
 	 *
 	 * @param array $attrs Node attributes
 	 * @param array $children Node children
+	 * @param string $data Node CDATA
 	 */
-	function onLoadNode($attrs, $children) {
+	function onLoadNode($attrs, $children, $data='') {
 		$isDataBind = $this->_Form->isA('FormDataBind');
 		// id
 		$this->setId(TypeUtils::ifNull(@$attrs['ID'], @$attrs['NAME']));
