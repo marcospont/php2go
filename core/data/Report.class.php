@@ -459,6 +459,7 @@ class Report extends PagedDataSet
 		$this->baseUri = HttpRequest::basePath();
 		$this->pagination = array(
 			'visiblePages' => REPORT_DEFAULT_VISIBLE_PAGES,
+			'handler' => NULL,
 			'style' => array(
 				REPORT_PAGING_DEFAULT, array(
 					'useSymbols' => FALSE,
@@ -750,6 +751,17 @@ class Report extends PagedDataSet
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Set a callback to be used to build the report's page links
+	 *
+	 * This callback receives a reference to the Report instance.
+	 *
+	 * @param mixed $callback Function name, class/method or object/method
+	 */
+	function setPagingHandler($callback) {
+		$this->pagination['handler'] = new Callback($callback);	
 	}
 
 	/**
@@ -1286,6 +1298,8 @@ class Report extends PagedDataSet
 							$this->setPagingStyle(constant($style), $paramList);
 						}
 					}
+					if ($handler = @$attrs['HANDLER'])
+						$this->setPagingHandler($handler);
 					break;
 				// js listeners
 				case 'LISTENER' :
@@ -2089,56 +2103,60 @@ class Report extends PagedDataSet
 	function _pageLinks($lang) {
 		if ($this->pagination['lastVisiblePage'] == 0)
 			return NULL;
-		$links = array();
-		$linkLimiter = sprintf("<span class=\"%s\"> | </span>", $this->style['link']);
-		$linkGlue = ($this->pagination['style'][1]['useButtons'] || $this->pagination['style'][1]['useSymbols'] ? "&nbsp;&nbsp;" : $linkLimiter);
-		$onChangePage = @$this->jsListeners['onChangePage'];
-		if ($this->pagination['style'][0] == REPORT_PAGING_DEFAULT) {
-			$linkStr = '';
-			// loop through all visible pages
-			for ($i = $this->pagination['firstVisiblePage']; $i <= $this->pagination['lastVisiblePage']; $i++) {
-				if ($i == parent::getCurrentPage()) {
-					$linkStr .= sprintf("<span class=\"%s\">%d</span>\n", $this->style['link'], $i);
-				} else {
-					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($i), "<u>$i</u>", sprintf($lang['pageTip'], $i, parent::getPageCount()), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $i . '})') : array()));
+		if (TypeUtils::isInstanceOf($this->pagination['handler'], 'Callback')) {
+			return $this->pagination['handler']->invoke(array($this, $lang), TRUE);
+		} else {
+			$links = array();
+			$linkLimiter = sprintf("<span class=\"%s\"> | </span>", $this->style['link']);
+			$linkGlue = ($this->pagination['style'][1]['useButtons'] || $this->pagination['style'][1]['useSymbols'] ? "&nbsp;&nbsp;" : $linkLimiter);
+			$onChangePage = @$this->jsListeners['onChangePage'];
+			if ($this->pagination['style'][0] == REPORT_PAGING_DEFAULT) {
+				$linkStr = '';
+				// loop through all visible pages
+				for ($i = $this->pagination['firstVisiblePage']; $i <= $this->pagination['lastVisiblePage']; $i++) {
+					if ($i == parent::getCurrentPage()) {
+						$linkStr .= sprintf("<span class=\"%s\">%d</span>\n", $this->style['link'], $i);
+					} else {
+						$linkStr .= HtmlUtils::anchor($this->_generatePageLink($i), "<u>$i</u>", sprintf($lang['pageTip'], $i, parent::getPageCount()), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $i . '})') : array()));
+					}
+					if ($i < $this->pagination['lastVisiblePage'])
+						$linkStr .= $linkLimiter;
+					else
+						$linkStr .= '<br />';
 				}
-				if ($i < $this->pagination['lastVisiblePage'])
-					$linkStr .= $linkLimiter;
-				else
-					$linkStr .= '<br />';
-			}
-			// link to first page, back N pages, forward N pages and last page
-			if (isset($this->pagination['firstPage'])) {
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['firstPage']), $lang['firstTit'], $lang['firstTip'], $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['firstPage'] . '})') : array()));
-			}
-			if (isset($this->pagination['previousScreen'])) {
-				if (isset($this->pagination['firstPage']))
-					$linkStr .= $linkLimiter;
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['previousScreen']), sprintf($lang['prevScrTit'], $this->pagination['visiblePages']), sprintf($lang['prevScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['previousScreen'] . '})') : array()));
-			}
-			if (isset($this->pagination['nextScreen'])) {
-				if (isset($this->pagination['firstPage']) || isset($this->pagination['previousScreen']))
-					$linkStr .= $linkLimiter;
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['nextScreen']), sprintf($lang['nextScrTit'], $this->pagination['visiblePages']), sprintf($lang['nextScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['nextScreen'] . '})') : array()));
-			}
-			if (isset($this->pagination['lastPage'])) {
-				if (isset($this->pagination['firstPage']) || isset($this->pagination['previousScreen']) || isset($this->pagination['nextScreen']))
-					$linkStr .= $linkLimiter;
-				$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['lastPage']), $lang['lastTit'], $lang['lastTip'], $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['lastPage'] . '})') : array()));
-			}
-			return $linkStr;
-		} elseif ($this->pagination['style'][0] == REPORT_PREVNEXT) {
-			$this->_generateNavigationLink($links, @$this->pagination['previousPage'], 'prev', '<', $lang['prevTit'], $lang['prevTip']);
-			$this->_generateNavigationLink($links, @$this->pagination['nextPage'], 'next', '>', $lang['nextTit'], $lang['nextTip']);
-			return implode($linkGlue, $links);
-		} elseif ($this->pagination['style'][0] == REPORT_FIRSTPREVNEXTLAST) {
-			$this->_generateNavigationLink($links, @$this->pagination['firstPage'], 'first', '<<', $lang['firstTit'], $lang['firstTip']);
-			$this->_generateNavigationLink($links, @$this->pagination['previousPage'], 'prev', '<', $lang['prevTit'], $lang['prevTip']);
-			$this->_generateNavigationLink($links, @$this->pagination['nextPage'], 'next', '>', $lang['nextTit'], $lang['nextTip']);
-			$this->_generateNavigationLink($links, @$this->pagination['lastPage'], 'last', '>>', $lang['lastTit'], $lang['lastTip']);
-			return implode($linkGlue, $links);
+				// link to first page, back N pages, forward N pages and last page
+				if (isset($this->pagination['firstPage'])) {
+					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['firstPage']), $lang['firstTit'], $lang['firstTip'], $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['firstPage'] . '})') : array()));
+				}
+				if (isset($this->pagination['previousScreen'])) {
+					if (isset($this->pagination['firstPage']))
+						$linkStr .= $linkLimiter;
+					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['previousScreen']), sprintf($lang['prevScrTit'], $this->pagination['visiblePages']), sprintf($lang['prevScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['previousScreen'] . '})') : array()));
+				}
+				if (isset($this->pagination['nextScreen'])) {
+					if (isset($this->pagination['firstPage']) || isset($this->pagination['previousScreen']))
+						$linkStr .= $linkLimiter;
+					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['nextScreen']), sprintf($lang['nextScrTit'], $this->pagination['visiblePages']), sprintf($lang['nextScrTip'], $this->pagination['visiblePages']), $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['nextScreen'] . '})') : array()));
+				}
+				if (isset($this->pagination['lastPage'])) {
+					if (isset($this->pagination['firstPage']) || isset($this->pagination['previousScreen']) || isset($this->pagination['nextScreen']))
+						$linkStr .= $linkLimiter;
+					$linkStr .= HtmlUtils::anchor($this->_generatePageLink($this->pagination['lastPage']), $lang['lastTit'], $lang['lastTip'], $this->style['link'], ($onChangePage ? array('onclick' => $onChangePage . '({from:' . parent::getCurrentPage() . ',to:' . $this->pagination['lastPage'] . '})') : array()));
+				}
+				return $linkStr;
+			} elseif ($this->pagination['style'][0] == REPORT_PREVNEXT) {
+				$this->_generateNavigationLink($links, @$this->pagination['previousPage'], 'prev', '<', $lang['prevTit'], $lang['prevTip']);
+				$this->_generateNavigationLink($links, @$this->pagination['nextPage'], 'next', '>', $lang['nextTit'], $lang['nextTip']);
+				return implode($linkGlue, $links);
+			} elseif ($this->pagination['style'][0] == REPORT_FIRSTPREVNEXTLAST) {
+				$this->_generateNavigationLink($links, @$this->pagination['firstPage'], 'first', '<<', $lang['firstTit'], $lang['firstTip']);
+				$this->_generateNavigationLink($links, @$this->pagination['previousPage'], 'prev', '<', $lang['prevTit'], $lang['prevTip']);
+				$this->_generateNavigationLink($links, @$this->pagination['nextPage'], 'next', '>', $lang['nextTit'], $lang['nextTip']);
+				$this->_generateNavigationLink($links, @$this->pagination['lastPage'], 'last', '>>', $lang['lastTit'], $lang['lastTip']);
+				return implode($linkGlue, $links);
+			}			
+			return '';
 		}
-		return '';
 	}
 
 	/**
@@ -2396,6 +2414,7 @@ class Report extends PagedDataSet
 			(isset($pagination['STYLE']) && defined($pagination['STYLE'])) && ($this->pagination['style'][0] = constant($pagination['STYLE']));
 			(isset($pagination['PAGESIZE']) && $pagination['PAGESIZE'] > 0) && (parent::setPageSize($pagination['PAGESIZE']));
 			(isset($pagination['VISIBLEPAGES']) && $pagination['VISIBLEPAGES'] > 0) && ($this->pagination['visiblePages'] = $pagination['VISIBLEPAGES']);
+			(isset($pagination['HANDLER'])) && ($this->setPagingHandler($pagination['HANDLER']));
 			if (is_array($pagination['PARAMS'])) {
 				foreach ($pagination['PARAMS'] as $name => $value)
 					$this->pagination['style'][1][$name] = $value;
