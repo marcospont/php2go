@@ -56,10 +56,12 @@ class AjaxResponse extends PHP2Go
 	/**
 	 * Class constructor
 	 *
+	 * @param string $charset Charset
 	 * @return AjaxResponse
 	 */
-	function AjaxResponse() {
+	function AjaxResponse($charset='') {
 		parent::PHP2Go();
+		$this->setCharset($charset);
 	}
 
 	/**
@@ -68,7 +70,8 @@ class AjaxResponse extends PHP2Go
 	 * @param string $charset Charset
 	 */
 	function setCharset($charset) {
-		$this->charset = $charset;
+		if (!empty($charset))
+			$this->charset = $charset;
 	}
 
 	/**
@@ -82,9 +85,15 @@ class AjaxResponse extends PHP2Go
 	function render($isIframe=FALSE) {
 		if (!$isIframe) {
 			header("Content-type: application/json; charset={$this->charset}");
-			print JSONEncoder::encode(array(
-				'commands' => $this->commands
-			));
+			if ($this->charset == 'utf-8') {
+				print utf8_encode(JSONEncoder::encode(array(
+					'commands' => $this->commands
+				)));
+			} else {
+				print JSONEncoder::encode(array(
+					'commands' => $this->commands
+				));
+			}
 		} else {
 			print '<html><body><textarea>';
 			print JSONEncoder::encode(array(
