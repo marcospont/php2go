@@ -3,7 +3,7 @@
 <!-- start block : loop_line -->
   <tr id="{$id}_{$row_id}">
 <!-- start block : loop_header_cell -->
-	<th {$width}align="center" valign="top"{$style}>{$col_name}</th>
+	<th {$width}align="{$align}" valign="top"{$style}>{$col_name}</th>
 <!-- end block : loop_header_cell -->
 <!-- start block : loop_cell -->
     <td {$width}align="{$align}" valign="top">{$col_data}</td>

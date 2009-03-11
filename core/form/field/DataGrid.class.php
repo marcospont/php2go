@@ -129,6 +129,15 @@ class DataGrid extends DbField
 			$this->attributes['HEADERS'] = $headers;
 		}
 	}
+	
+	/**
+	 * Set grid headers horizontal alignment
+	 *
+	 * @param string $headerAlign Alignment: left, center or right
+	 */
+	function setHeaderAlign($headerAlign) {
+		$this->attributes['HEADERALIGN'] = (!empty($headerAlign) ? $headerAlign : 'center');			
+	}
 
 	/**
 	 * Set grid headers CSS class
@@ -140,6 +149,15 @@ class DataGrid extends DbField
 			$this->attributes['HEADERSTYLE'] = " class=\"$headerStyle\"";
 		else
 			$this->attributes['HEADERSTYLE'] = $this->_Form->getLabelStyle();
+	}
+	
+	/**
+	 * Set grid cells horizontal alignment
+	 *
+	 * @param string $cellAlign Alignment: left, center or right
+	 */
+	function setCellAlign($cellAlign) {
+		$this->attributes['CELLALIGN'] = (!empty($cellAlign) ? $cellAlign : 'center');
 	}
 
 	/**
@@ -255,8 +273,12 @@ class DataGrid extends DbField
 				$this->setShowHeader(TRUE);
 			// headers
 			$this->setHeaders(@$attrs['HEADERS']);
+			// headers alignment
+			$this->setHeaderAlign(@$attrs['HEADERALIGN']);
 			// headers CSS class
 			$this->setHeaderStyle(@$attrs['HEADERSTYLE']);
+			// cells alignment
+			$this->setCellAlign(@$attrs['CELLALIGN']);
 			// cells CSS class
 			$this->setCellStyle(@$attrs['CELLSTYLE']);
 			// cell sizes
@@ -308,6 +330,7 @@ class DataGrid extends DbField
 			for ($i=1,$s=$this->_Rs->fieldCount(); $i<$s; $i++) {
 				$Column =& $this->_Rs->fetchField($i);
 				$this->Template->createAndAssign('loop_header_cell', array(
+					'align' => $this->attributes['HEADERALIGN'],
 					'style' => $this->attributes['HEADERSTYLE'],
 					'width' => (isset($this->cellSizes[$i-1]) ? " WIDTH=\"{$this->cellSizes[$i-1]}%\"" : ''),
 					'col_name' => (isset($headers[$i-1]) ? $headers[$i-1] : $Column->name)
@@ -334,7 +357,7 @@ class DataGrid extends DbField
 			else
 				$identifier = sprintf("<span%s>%s</span>", $this->_Form->getLabelStyle(), $dataRow[1]);
 			$this->Template->createAndAssign('loop_cell', array(
-				'align' => 'left',
+				'align' => $this->attributes['CELLALIGN'],
 				'style' => $this->attributes['CELLSTYLE'],
 				'width' => (isset($this->cellSizes[0]) ? " width=\"{$this->cellSizes[0]}%\"" : ''),
 				'col_data' => $identifier
@@ -369,7 +392,7 @@ class DataGrid extends DbField
 				$Field->onPreRender();
 				$this->Template->createBlock('loop_cell');
 				$this->Template->assign(array(
-					'align' => 'center',
+					'align' => $this->attributes['CELLALIGN'],
 					'style' => $this->attributes['CELLSTYLE'],
 					'width' => (isset($this->cellSizes[$i+1]) ? " width=\"{$this->cellSizes[$i+1]}%\"" : ''),
 					'col_data' => $Field->getContent()
