@@ -219,6 +219,7 @@ class FormAjaxListener extends FormEventListener
 				case 'headers' :
 				case 'formFields' :
 				case 'formValidate' :
+				case 'throbberCentralize' :
 					$value = trim($value);
 					$buf .= "\t\tparams.{$name} = {$value};\n";
 					break;
