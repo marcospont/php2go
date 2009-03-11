@@ -9,7 +9,7 @@
 		<editfield name="short_desc" label="Short Description">
 			<search alias="p.short_desc" fieldfunc="trim(%s)" valuefunc="trim"/>
 		</editfield>
-		<combofield name="category" label="Category" autotrim="T" multiple="T" size="2">
+		<combofield name="category" label="Category" multiple="T" size="2">
 			<option value="1" caption="Books"/>
 			<option value="2" caption="DVD"/>
 			<search alias="p.id_category" datatype="INTEGER"/>

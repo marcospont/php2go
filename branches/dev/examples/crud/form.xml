@@ -33,7 +33,7 @@
 		<checkfield name="active" caption="Is active" default="T"/>
 		<buttons>
 			<button name="send" value="Send" type="SUBMIT"/>
-			<button mame="cancel" value="Cancel" type="BACK"/>
+			<button name="cancel" value="Cancel" type="BACK"/>
 		</buttons>
 	</section>
 </form>

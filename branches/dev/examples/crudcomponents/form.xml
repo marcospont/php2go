@@ -49,7 +49,7 @@
 				</datasource>
 			</lookupfield>
 		</lookupselectionfield>
-		<condsection id="details" name="Details" evalfunction="evalCondSection">
+		<condsection id="details" evalfunction="evalCondSection">
 			<!-- new task -->
 			<editfield name="task_name" label="Name" size="10" length="20" tabindex="7"/>
 			<editfield name="task_description" label="Description" size="25" length="200" tabindex="8"/>
