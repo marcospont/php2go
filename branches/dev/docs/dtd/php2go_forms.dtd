@@ -8,7 +8,7 @@
 <!ENTITY % text "CDATA">
 <!ENTITY % weekdays "( 0 | 1 | 2 | 3 | 4 | 5 | 6 )">
 <!ENTITY % align "( LEFT | CENTER | RIGHT )">
-<!ENTITY % mask "( DIGIT | INTEGER | FLOAT | CURRENCY | CPFCNPJ | DATE | TIME | URL | EMAIL | WORD | ZIP )">
+<!ENTITY % mask "( STRING | DIGIT | INTEGER | FLOAT | CURRENCY | CPFCNPJ | DATE | TIME | TIME-AMPM | URL | EMAIL | WORD | ZIP )">
 <!ENTITY % method "( GET | POST )">
 <!ENTITY % type.btn "( SUBMIT | RESET | BUTTON | CLEAR | BACK )">
 <!ENTITY % type.list "( JS | JSRS | AJAX )">
@@ -86,13 +86,13 @@
 >
 <!ENTITY % fld "%fld.basic; | %fld.special;">
 <!ENTITY % fld.cond "%fld; | buttons | button | condsection">
-<!ENTITY % rul.list "listener* | rule*">
-<!ENTITY % rul.list.srch "listener* | rule* | search?">
-<!ENTITY % rul.list.srch.opt "option+ | listener* | rule* | search?">
-<!ENTITY % rul.list.srch.opto "option* | listener* | rule* | search?">
-<!ENTITY % rul.list.srch.ds "datasource, ( listener* | rule* | search? )">
-<!ENTITY % rul.list.srch.dso "datasource?, ( listener* | rule* | search? )">
-<!ELEMENT form ( style? | errors? | help? | section+ | variable* )>
+<!ENTITY % rul.list "listener*, rule*">
+<!ENTITY % rul.list.srch "listener*, rule*, search?">
+<!ENTITY % rul.list.srch.opt "option+, listener*, rule*, search?">
+<!ENTITY % rul.list.srch.opto "option*, listener*, rule*, search?">
+<!ENTITY % rul.list.srch.ds "datasource, listener*, rule*, search?">
+<!ENTITY % rul.list.srch.dso "datasource?, listener*, rule*, search?">
+<!ELEMENT form ( style?, errors?, help?, section+, variable* )>
 <!ATTLIST form
 	method %method; #IMPLIED
 	action %text; #IMPLIED
@@ -177,7 +177,7 @@
 <!ELEMENT captchafield ( %rul.list; )>
 <!ATTLIST captchafield
 	%coreattrs;
-	%textattrs;
+	%lengthattrs;
 	%sizeattrs;
 	noiselevel %number; "15"
 	fontsize %number; "15"
@@ -212,10 +212,12 @@
 >
 <!ELEMENT datagrid ( fieldset, datasource )>
 <!ATTLIST datagrid
-	%baseattrs;
+	%coreattrs;
 	showheader %boolean; "T"
 	headers %text; #IMPLIED
+	headeralign %align; #IMPLIED
 	headerstyle %text; #IMPLIED
+	cellalign %align; #IMPLIED
 	cellstyle %text; #IMPLIED
 	cellsizes %text; #IMPLIED
 	tablewidth %number; #IMPLIED
@@ -278,7 +280,7 @@
 	debug %boolean; "F"
 	url %text; #IMPLIED
 >
-<!ELEMENT editselectionfield ( editfield, lookupfield, listener+ )>
+<!ELEMENT editselectionfield ( editfield, lookupfield, listener* )>
 <!ATTLIST editselectionfield
 	%baseattrs;
 	insfield %identifier; #IMPLIED
@@ -319,7 +321,7 @@
 	%comboattrs;
 	default %text; #IMPLIED
 >
-<!ELEMENT lookupselectionfield ( lookupfield, lookupfield, listener+ )>
+<!ELEMENT lookupselectionfield ( lookupfield, lookupfield, listener* )>
 <!ATTLIST lookupselectionfield
 	%coreattrs;
 	insfield %identifier; #IMPLIED
