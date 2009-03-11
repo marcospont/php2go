@@ -219,6 +219,13 @@ class LayerMenu extends Menu
 	 * @var int
 	 */
 	var $minimumChildWidth = 0;
+	
+	/**
+	 * Value of the useBar property of horizontal layer menus
+	 *
+	 * @var bool
+	 */
+	var $useBar = TRUE;
 
 	/**
 	 * Generated JS code
@@ -388,6 +395,18 @@ class LayerMenu extends Menu
 	function setMininumChildWidth($min) {
 		$this->minimumChildWidth = $min;
 	}
+	
+	/**
+	 * Sets the value of the useBar property of horizontal layer menus
+	 * 
+	 * This property defines whether the top level of the menu will be
+	 * included in a container div element or not.
+	 *
+	 * @param unknown_type $useBar
+	 */
+	function setUseBar($useBar) {
+		$this->useBar = (bool)$useBar;
+	}
 
 	/**
 	 * Prepares the menu to be rendered
@@ -494,7 +513,7 @@ class LayerMenu extends Menu
 					$rootWidth[$i] = (strlen($this->tree[$i]['CAPTION']) * $this->charWidth) + 15;
 			}
 			$this->menuCode .=
-				"\n\t{$this->id}.useBar = 1;" .
+				"\n\t{$this->id}.useBar = " . ($this->useBar ? 1 : 0) . ";" .
 				"\n\t{$this->id}.barWidth = " . (isset($this->width) ? $this->width : "screen.width") . "-" . ($this->offsetX) . "-22;" .
 				"\n\t{$this->id}.barHeight = {$this->height};" .
 				"\n\t{$this->id}.barX = {$this->offsetX};" .
