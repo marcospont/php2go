@@ -1772,7 +1772,11 @@ class Report extends PagedDataSet
 					if (!in_array($colName, $this->groupDisplay) && !in_array($colName, $this->hidden)) {
 						$this->Template->createBlock('loop_cell');
 						$this->Template->assign('col_wid', ($this->colSizesMode == REPORT_COLUMN_SIZES_CUSTOM && isset($this->colSizes) ? $this->colSizes[$c] . '%' : ($this->colSizesMode == REPORT_COLUMN_SIZES_FIXED ? intval(100/$visibleCols) . '%' : '')));
-						(isset($colConfig['handler'])) && ($colData[$colName] = $colConfig['handler']->invoke($colData[$colName]));
+						if (isset($colConfig['handler'])) {
+							if (!is_a($colConfig['handler'], 'Callback'))
+								$colConfig['handler'] = new Callback($colConfig['handler']);
+							$colData[$colName] = $colConfig['handler']->invoke($colData[$colName]);
+						}
 						(isset($colConfig['align']) && stristr($colConfig['align'], 'left') === FALSE) && ($colData[$colName] = "<div align=\"{$colConfig['align']}\">{$colData[$colName]}</div>");
 						$this->Template->assign('col_data', $colData[$colName]);
 						if (!empty($this->style['altstyle'])) {
@@ -1790,8 +1794,11 @@ class Report extends PagedDataSet
 					$colName = parent::getFieldName($i);
 					$colConfig =& $this->columns[$colName];
 					if (!in_array($colName, $this->groupDisplay) && !in_array($colName, $this->hidden)) {
-						if (isset($colConfig['handler']))
+						if (isset($colConfig['handler'])) {
+							if (!is_a($colConfig['handler'], 'Callback'))
+								$colConfig['handler'] = new Callback($colConfig['handler']);
 							$colData[$colName] = $colConfig['handler']->invoke($colData[$colName]);
+						}
 						$this->Template->assign("{$colName}", $colData[$colName]);
 					}
 				}
@@ -2348,14 +2355,22 @@ class Report extends PagedDataSet
 				$orderMembers[] = $Db->quoteIdentifier($field);
 		}
 		// 2) order by user requested column
+		// If the requested order by corresponds to a known column and this column has a custom order field, it will be used;
 		// If the user requested sort column is on the first position of the default
 		// orderby clause, it is removed from the default clause
-		if (isset($this->_order) && !in_array($this->_order, $this->unsortable) && !in_array($this->_order, $this->hidden)) {
-			$orderMembers[] = $Db->quoteIdentifier($this->_order) . ($this->_orderType == 'd' ? ' DESC' : ' ASC');
-			$matches = array();
-			if (preg_match("/^\s*{$this->_order}(\s*(asc|desc)?\s*,?)?/is", $this->_dataSource['ORDERBY'], $matches)) {
-				$this->_dataSource['ORDERBY'] = preg_replace('/' . $matches[0] . '/', '', $this->_dataSource['ORDERBY']);
+		$customOrderField = FALSE;
+		$orderField = $this->_order;
+		if (isset($orderField)) {
+			if (isset($this->columns[$this->_order]) && isset($this->columns[$this->_order]['orderfield'])) {
+				$customOrderField = TRUE;
+				$orderField = $this->columns[$this->_order]['orderfield'];
 			}
+		}
+		if (isset($orderField) && !in_array($this->_order, $this->unsortable) && !in_array($this->_order, $this->hidden)) {
+			$orderMembers[] = ($customOrderField ? $orderField : $Db->quoteIdentifier($orderField)) . ($this->_orderType == 'd' ? ' DESC' : ' ASC');
+			$matches = array();
+			if (preg_match("/^\s*" . preg_quote($orderField) . "(\s*(asc|desc)?\s*,?)?/is", $this->_dataSource['ORDERBY'], $matches))
+				$this->_dataSource['ORDERBY'] = preg_replace('/' . preg_quote($matches[0]) . '/', '', $this->_dataSource['ORDERBY']);
 		}
 		// 3) default orderby clause, defined in the XML specification
 		if (!empty($this->_dataSource['ORDERBY']))
