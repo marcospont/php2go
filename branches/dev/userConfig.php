@@ -318,6 +318,8 @@ $P2G_USER_CFG['REPORTS'] = array(
 		'PAGESIZE' => 20,
 		// Pages per screen (when style=REPORT_PAGING_DEFAULT) => int
 		'VISIBLEPAGES' => 10,
+		// Custom pagination function (function, class/method or object/method)
+		'HANDLER' => 'myPaginationHandler',
 		// Other parameters
 		'PARAMS' => array(
 			'useButtons' => true,

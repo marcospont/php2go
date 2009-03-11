@@ -5,7 +5,7 @@
 <!ENTITY % word "NMTOKEN">
 <!ENTITY % number "CDATA">
 <!ENTITY % text "CDATA">
-<!ENTITY % colname "NMTOKENS">
+<!ENTITY % colname "NMTOKEN">
 <!ENTITY % align "( left | center | right )">
 <!ENTITY % mask "( DIGIT | INTEGER | FLOAT | CURRENCY | CPFCNPJ | DATE | TIME | URL | EMAIL | WORD | ZIP | STRING )">
 <!ENTITY % pagingstyle "( REPORT_PAGING_DEFAULT | REPORT_PREVNEXT | REPORT_FIRSTPREVNEXTLAST )">
@@ -31,6 +31,7 @@
 	pagesize %number; "30"
 	visiblepages %number; "10"
 	style %pagingstyle; "REPORT_PAGING_DEFAULT"
+	handler %text #IMPLIED
 >
 <!ELEMENT style EMPTY>
 <!ATTLIST style
