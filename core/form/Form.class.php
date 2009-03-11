@@ -1124,12 +1124,13 @@ class Form extends Component
 				case 'RADIOFIELD' : $fieldClassName = 'RadioField'; break;
 				case 'RANGEFIELD' : $fieldClassName = 'RangeField'; break;
 				case 'TEXTFIELD' : $fieldClassName = 'TextField'; break;
+				case 'TINYMCEFIELD' : $fieldClassName = 'TinyMCEField'; break;
 				default : PHP2Go::raiseError(PHP2Go::getLangVal('ERR_FORM_INVALID_FIELDTYPE', $field->getTag()), E_USER_ERROR, __FILE__, __LINE__); break;
 			}
 			if (!is_null($fieldClassName)) {
 				import("php2go.form.field.{$fieldClassName}");
 				$obj = new $fieldClassName($this);
-				$obj->onLoadNode($field->getAttributes(), $field->getChildrenTagsArray());
+				$obj->onLoadNode($field->getAttributes(), $field->getChildrenTagsArray(), $field->getData());
 				// add the field in the parent section
 				$parentSection->addChild($obj);
 				// register the field in the form
