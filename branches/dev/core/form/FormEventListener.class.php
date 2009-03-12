@@ -236,7 +236,7 @@ class FormEventListener extends PHP2Go
 	function setOwner(&$Owner, $ownerIndex=NULL) {
 		$this->_Owner =& $Owner;
 		$this->_ownerIndex = $ownerIndex;
-		if (TypeUtils::isInstanceOf($Owner, 'FormField') && in_array(strtolower($this->eventName), $Owner->customEvents))
+		if (TypeUtils::isInstanceOf($Owner, 'FormField') && array_key_exists(strtolower($this->eventName), $Owner->customEvents))
 			$this->custom = TRUE;
 	}
 
@@ -260,8 +260,9 @@ class FormEventListener extends PHP2Go
 			if (preg_match("/^([\t]+)/", $funcBody, $matches))
 				$funcBody = preg_replace("/^\t{" . strlen($matches[1]) . "}/m", "\t\t", $funcBody);
 			if ($this->custom) {
-				$Form->Document->addScriptCode("\tfunction {$funcName}(obj, args) {\n{$funcBody}\n\t}", 'Javascript', SCRIPT_END);
-				$this->action = "{$funcName}(this, args)";
+				$ctorArgs = implode(', ', $this->_Owner->customEvents[strtolower($this->eventName)]);
+				$Form->Document->addScriptCode("\tfunction {$funcName}({$ctorArgs}) {\n{$funcBody}\n\t}", 'Javascript', SCRIPT_END);
+				$this->action = "return {$funcName}({$ctorArgs})";
 			} else {
 				$funcBody = preg_replace('/\bthis\b/', 'element', $funcBody);
 				$Form->Document->addScriptCode("\tfunction {$funcName}(element, event) {\n{$funcBody}\n\t}", 'Javascript', SCRIPT_END);

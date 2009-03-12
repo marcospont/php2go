@@ -170,18 +170,19 @@ class FormAjaxListener extends FormEventListener
 			$funcName = PHP2Go::generateUniqueId(preg_replace("~[^\w]+~", "", $this->_Owner->getName()) . ucfirst($this->eventName));
 			if ($this->custom) {
 				$params = $this->getParamsScript();
-				$ctorArgs = 'args';
+				$ctorArgs = implode(', ', $this->_Owner->customEvents[strtolower($this->eventName)]);
+				$this->action = "{$funcName}({$ctorArgs})";
 			} else {
 				$params = preg_replace('/\bthis\b/', 'element', $this->getParamsScript());
 				$ctorArgs = 'element, event';
+				$this->action = "{$funcName}(this, event)";
 			}
 			$Form->Document->addScriptCode(
 				"\tfunction {$funcName}({$ctorArgs}) {\n{$params}" .
 				"\t\tvar request = new {$this->class}('{$this->url}', params);\n" .
 				"\t\trequest.send();\n" .
 				"\t}",
-			'Javascript', SCRIPT_END);
-			$this->action = "{$funcName}(this, event)";
+			'Javascript', SCRIPT_END);			
 			parent::renderAutoDispatch($targetIndex);
 			return $this->action;
 		}
