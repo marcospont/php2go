@@ -9,8 +9,10 @@
 </table><input type="hidden" id="{$addedName}" name="{$addedName}" /><input type="hidden" id="{$removedName}" name="{$removedName}" />
 <script type="text/javascript">
 {$id}_instance = new EditSelectionField('{$id}', '{$editId}', '{$lookupId}', '{$addedName}', '{$removedName}', '{$separator}');
-<!-- loop var=$customListeners item="listener" key="event" -->
-{$id}_instance.addEventListener('{$event|lower|substring:2}', {$listener});
+<!-- loop var=$customListeners item="actions" key="event" -->
+<!-- loop var=$actions item="action" -->
+{$id}_instance.addEventListener('{$event|lower|substring:2}', {$action});
+<!-- end loop -->
 <!-- end loop -->
 </script>
 </fieldset>

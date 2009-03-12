@@ -43,8 +43,9 @@ PHP2Go.include(PHP2Go.baseUrl + 'vendor/tinymce/jscripts/tiny_mce/tiny_mce.js');
  * @base ComponentField
  * @param {Object} fld Textares that must be transformed by tinyMCE
  * @param {Object} params tinyMCE parameters
+ * @param {Object} listeners tinyMCE event listeners
  */
-TinyMCEField = function(fld, params) {
+TinyMCEField = function(fld, params, listeners) {
 	this.ComponentField(fld, 'TinyMCEField');
 	/**
 	 * @ignore
@@ -62,7 +63,7 @@ TinyMCEField = function(fld, params) {
 	 * @ignore
 	 */
 	this.type = 'iframe';
-	this.setup(params);
+	this.setup(params, listeners);
 };
 TinyMCEField.extend(ComponentField, 'ComponentField');
 
@@ -70,15 +71,24 @@ TinyMCEField.extend(ComponentField, 'ComponentField');
  * Performs all the setup routines of the HTML editor. This method
  * is called after the creation of the instance
  * @param {Object} params tinyMCE parameters
+ * @param {Object} listeners tinyMCE event listeners
  * @type void
  */
-TinyMCEField.prototype.setup = function(params) {
+TinyMCEField.prototype.setup = function(params, listeners) {
 	this.fld.component = this;
 	var self = this;
 	if (params.readonly) {
 		this.readOnly = true;
 		params.readonly = 0;
 	}
+	var userSetup = params.setup;
+	params.setup = function(ed) {
+		for (var ev in listeners) {
+			(ed[ev]) && (listeners[ev].walk(function(fn, i) { ed[ev].add(fn); }));
+		}
+		(Object.isFunc(userSetup)) && (userSetup(ed));
+	};
+	var userInit = params.oninit;
 	params.oninit = function() {
 		self.mce = tinyMCE.get(self.fld.id);
 		self.mce.iframe = self.mce.contentAreaContainer.firstChild;
@@ -91,6 +101,7 @@ TinyMCEField.prototype.setup = function(params) {
 				self.mustFocus = false;
 			}
 		}
+		(Object.isFunc(userInit)) && (userInit());
 	};
 	tinyMCE.init(params);
 };

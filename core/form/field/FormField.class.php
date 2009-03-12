@@ -806,8 +806,9 @@ class FormField extends Component
 		foreach ($events as $name => $actions)
 			$this->attributes['SCRIPT'] .= " " . strtolower($name) . "=\"" . str_replace('\"', '\'', implode(';', $actions)) . ";\"";
 		foreach ($custom as $name => $actions) {
-			$actions = implode(';', $actions);
-			$this->customListeners[$name] = "function(args) {\n\t" . $actions . ";\n}";
+			$this->customListeners[$name] = array();
+			foreach ($actions as $action)
+				$this->customListeners[$name][] = "function(" . implode(', ', $this->customEvents[strtolower($name)]) . ") {\n\t" . $action . ";\n}";
 		}
 	}
 

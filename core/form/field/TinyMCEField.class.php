@@ -108,6 +108,44 @@ class TinyMCEField extends FormField
 	function TinyMCEField(&$Form, $child=FALSE) {
 		parent::FormField($Form, $child);
 		$this->htmlType = 'TEXTAREA';
+		$this->searchable = FALSE;
+		$this->customEvents = array(
+			'onpreinit' => array('ed'),
+			'onbeforerenderui' => array('ed', 'cm'),
+			'onpostrender' => array('ed', 'cm'),
+			'oninit' => array('ed'),
+			'onremove' => array('ed'),
+			'onactivate' => array('ed', 'oed'),
+			'ondeactivate' => array('ed', 'aed'),
+			'onclick' => array('ed', 'e'),
+			'onevent' => array('ed', 'e'),
+			'onmouseup' => array('ed', 'e'),
+			'onmousedown' => array('ed', 'e'),
+			'ondblclick' => array('ed', 'e'),
+			'onkeydown' => array('ed', 'e'),
+			'onkeyup' => array('ed', 'e'),
+			'onkeypress' => array('ed', 'e'),
+			'oncontextmenu' => array('ed', 'e'),
+			'onsubmit' => array('ed', 'e'),
+			'onreset' => array('ed', 'e'),
+			'onpaste' => array('ed', 'e', 'o'),
+			'onpreprocess' => array('ed', 'o'),
+			'onpostprocess' => array('ed', 'o'),
+			'onbeforesetcontent' => array('ed', 'o'),
+			'onbeforegetcontent' => array('ed', 'o'),
+			'onsetcontent' => array('ed', 'o'),
+			'ongetcontent' => array('ed', 'o'),
+			'onloadcontent' => array('ed', 'o'),
+			'onsavecontent' => array('ed', 'o'),
+			'onnodechange' => array('ed', 'cm', 'e', 'c', 'o'),
+			'onchange' => array('ed', 'l', 'um'),
+			'onbeforeexeccommand' => array('ed', 'cmd', 'ui', 'val', 'o'),
+			'onexeccommand' => array('ed', 'cmd', 'ui', 'val'),
+			'onundo' => array('ed', 'l', 'um'),
+			'onredo' => array('ed', 'l', 'um'),
+			'onvisualaid' => array('ed', 'e', 's'),
+			'onsetprogressstate' => array('ed', 'b', 'ti', 'o')
+		);
 		$this->editorParams = array(
 			'theme' => TINYMCE_DEFAULT_THEME,
 			'tabfocus_elements' => ':prev,:next',
@@ -125,8 +163,15 @@ class TinyMCEField extends FormField
 		print sprintf("<textarea id=\"%s\" name=\"%s\" cols=\"\" rows=\"\" title=\"%s\"%s style=\"width:%spx;height:%spx;\"%s%s%s>%s</textarea>",
 			$this->id, $this->name, $this->label, $this->attributes['STYLE'], $this->editorParams['width'], $this->editorParams['height'], $this->attributes['DISABLED'], $this->attributes['DATASRC'], $this->attributes['DATAFLD'], $this->value
 		);
-		print sprintf("<script type=\"text/javascript\">new TinyMCEField($('%s'), %s);</script>",
-			$this->id, $this->_getParamsString()
+		$listeners = array();
+		foreach ($this->customListeners as $name => $actions) {
+			$name = substr($name, 0, 2) . ucfirst(substr($name, 2));
+			$listeners[$name] = array();
+			foreach ($actions as $action)
+				$listeners[$name][] = JSONEncoder::jsIdentifier($action);
+		}
+		print sprintf("<script type=\"text/javascript\">new TinyMCEField($('%s'), %s, %s);</script>",
+			$this->id, $this->_getParamsString(), (!empty($listeners) ? JSONEncoder::encode($listeners) : '{}')
 		);
 	}
 
