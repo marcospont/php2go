@@ -167,6 +167,16 @@ class Document extends PHP2Go
 	 * @var int
 	 */
 	var $compressionLevel;
+	
+	/**
+	 * Whether jQuery library must be loaded or not
+	 * 
+	 * If jQuery is loaded, the jQuery function will be redefined to $j, 
+	 * as the PHP2Go Javascript Framework already uses the $ identifier.
+	 *
+	 * @var bool
+	 */
+	var $jQuery = FALSE;
 
 	/**
 	 * Set of document elements detected in the layout template
@@ -429,7 +439,7 @@ class Document extends PHP2Go
 		$instruction = rtrim($instruction, ';') . ';';
 		$this->onLoadCode[] = $instruction;
 	}
-
+	
 	/**
 	 * Add a stylesheet file in the document's head
 	 *
@@ -761,6 +771,10 @@ class Document extends PHP2Go
 		if (!empty($this->onLoadCode)) {
 			$this->Head->addScriptCode("\tfunction p2gOnLoad() {\n\t\t" . join("\n\t\t", $this->onLoadCode) . "\n\t}", 'Javascript');
 			$this->attachBodyEvent('onload', 'p2gOnLoad();', TRUE);
+		}
+		if ($this->jQuery) {
+			$this->Head->addScript('http://jqueryjs.googlecode.com/files/jquery-1.3.1.min.js');
+			$this->addScriptCode("\t\$j = jQuery.noConflict();");			
 		}
 		if (!$this->cacheEnabled) {
 			if ($display && !headers_sent() && !$this->compressionEnabled) {
