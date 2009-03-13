@@ -762,6 +762,7 @@ Element.prototype.show = function() {
 	this.style.display = (this.tagName.equalsIgnoreCase('div') ? 'block' : '');
 	if (PHP2Go.browser.wch && this.getComputedStyle('position') == 'absolute')
 		WCH.attach(this);
+	Event.fire(this, 'show');
 	return this;
 };
 
@@ -773,6 +774,7 @@ Element.prototype.hide = function() {
 	this.style.display = 'none';
 	if (PHP2Go.browser.wch && this.getComputedStyle('position') == 'absolute')
 		WCH.detach(this);
+	Event.fire(this, 'hide');
 	return this;
 };
 
@@ -919,6 +921,7 @@ Element.prototype.update = function(upd, evalScripts, useDom) {
 	} else {
 		this.innerHTML = upd.stripScripts();
 	}
+	Event.fire(this, 'update');
 	(evalScripts) && (upd.evalScriptsDelayed());
 	return this;
 };
@@ -976,6 +979,7 @@ Element.prototype.clear = function(useDom) {
 	} else {
 		this.innerHTML = '';
 	}
+	Event.fire(this, 'update');
 	return this;
 };
 
@@ -1310,7 +1314,7 @@ Event.onDOMReady = function(fn) {
 	if (this.done) {
 		fn();
 		return;
-	}	
+	}
 	if (!this.queue) {
 		var self = this, b = PHP2Go.browser, d = document;
 		var ready = function() {
@@ -1392,7 +1396,7 @@ Event.handlers = {
 	getEventName : function(type) {
 		type = type.replace(/^on/i, '').toLowerCase();
 		//(type == 'keypress' && PHP2Go.browser.khtml) && (type = 'keydown');
-		return type;		
+		return type;
 	},
 	getHandlers : function(elm, type) {
 		var id = this.getCacheId(elm);
@@ -1418,9 +1422,7 @@ Event.handlers = {
 	},
 	fire : function(elm, type) {
 		var h = this.getHandlers(elm, type);
-		h.walk(function(h, i) {
-			h.apply(elm);
-		});
+		(h.length > 0) && h.walk(function(h, i) { h.apply(elm); });
 	},
 	destroy : function() {
 		for (var id in this.cache)
