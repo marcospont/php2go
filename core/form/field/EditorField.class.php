@@ -28,7 +28,6 @@
  */
 
 import('php2go.form.field.FormField');
-import('php2go.net.HttpRequest');
 import('php2go.template.Template');
 
 /**
@@ -49,7 +48,6 @@ define('EDITOR_DEFAULT_HEIGHT', 200);
  *
  * @package form
  * @subpackage field
- * @uses HttpRequest
  * @uses Template
  * @author Marcos Pont <mpont@users.sourceforge.net>
  * @version $Revision$
