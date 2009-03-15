@@ -820,11 +820,14 @@ Element.prototype.resizeTo = function(w, h) {
 
 /**
  * Scrolls the window to the element's position
+ * @param {Boolean} always If false, scroll will be performed only if the element is not on the window's viewport
  * @type Object
  */
-Element.prototype.scrollTo = function() {
+Element.prototype.scrollTo = function(always) {
+	always = Object.ifUndef(always, true);
 	var pos = this.getPosition();
-	window.scrollTo(pos.x, pos.y);
+	if (always || Window.inside(pos))
+		window.scrollTo(pos.x, pos.y);
 	return this;
 };
 

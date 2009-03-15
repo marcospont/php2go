@@ -862,7 +862,9 @@ FormValidator.prototype.showErrors = function() {
 		if (trg) {
 			trg.update(this.buildErrors());
 			trg.show();
-			window.scrollTo(0, trg.getPosition().y);
+			var p = trg.getPosition();
+			if (!Window.inside({x:0, y:p.y}))
+				window.scrollTo(0, p.y);
 		}
 	}
 };

@@ -1257,6 +1257,17 @@ var Window = {
 			x : (w.pageXOffset || e.scrollLeft || 0),
 			y : (w.pageYOffset || e.scrollTop || 0)
 		};
+	},
+	/**
+	 * Verifies if a given point is inside the window's viewport
+	 * @param Object p Point (with x and y properties)
+	 * @type Boolean
+	 */
+	inside: function(p) {
+		var sz = Window.size(); 
+		var sc = Window.scroll();
+		return ((p.x >= sc.x && p.x < sc.x+sz.width) &&
+				(p.y >= sc.y && p.y < sc.y+sz.height));
 	}
 };
 
