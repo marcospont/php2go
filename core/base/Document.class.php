@@ -400,10 +400,11 @@ class Document extends PHP2Go
 	 * @param string $language Script language
 	 * @param string $type Script type
 	 * @param string $charset Script charset
+	 * @param int $priority Priority
 	 * @uses DocumentHead::addScript()
 	 */
-	function addScript($path, $language="Javascript", $type='text/javascript', $charset=NULL) {
-		$this->Head->addScript($path, $language, $type, $charset);
+	function addScript($path, $language="Javascript", $type='text/javascript', $charset=NULL, $priority=1) {
+		$this->Head->addScript($path, $language, $type, $charset, $priority);
 	}
 
 	/**
@@ -446,10 +447,12 @@ class Document extends PHP2Go
 	 * @param string $path Relative or absolute path to the stylesheet file
 	 * @param string $media Media type
 	 * @param string $charset Charset of the stylesheet file
+	 * @param string $condition Conditional expression
+	 * @param int $priority Priority
 	 * @uses DocumentHead::addStyle()
 	 */
-	function addStyle($path, $media=NULL, $charset=NULL) {
-		$this->Head->addStyle($path, $media, $charset);
+	function addStyle($path, $media=NULL, $charset=NULL, $condition=NULL, $priority=1) {
+		$this->Head->addStyle($path, $media, $charset, $condition, $priority);
 	}
 
 	/**
@@ -731,7 +734,7 @@ class Document extends PHP2Go
 			$this->elements[$elements[$i]] = '';
 		// add basic JS libraries
 		$Conf =& Conf::getInstance();
-		$this->addScript(PHP2GO_JAVASCRIPT_PATH . 'php2go.js?locale=' . $Conf->getConfig('LANGUAGE_CODE') . '&date=' . $Conf->getConfig('LOCAL_DATE_FORMAT') . '&charset=' . $Conf->getConfig('CHARSET'));
+		$this->Head->addScript(PHP2GO_JAVASCRIPT_PATH . 'php2go.js?locale=' . $Conf->getConfig('LANGUAGE_CODE') . '&date=' . $Conf->getConfig('LOCAL_DATE_FORMAT') . '&charset=' . $Conf->getConfig('CHARSET'), '', 'text/javascript', NULL, 0);
 	}
 
 	/**
@@ -773,7 +776,7 @@ class Document extends PHP2Go
 			$this->attachBodyEvent('onload', 'p2gOnLoad();', TRUE);
 		}
 		if ($this->jQuery) {
-			$this->Head->addScript('http://jqueryjs.googlecode.com/files/jquery-1.3.1.min.js');
+			$this->Head->addScript('http://jqueryjs.googlecode.com/files/jquery-1.3.1.min.js', '', 'text/javascript', NULL, 0);
 			$this->addScriptCode("\t\$j = jQuery.noConflict();");			
 		}
 		if (!$this->cacheEnabled) {

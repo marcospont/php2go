@@ -251,18 +251,20 @@ class DocumentHead
 	 * @param string $language Script language
 	 * @param string $type Script type
 	 * @param string $charset Script charset
+	 * @param int $priority Priority
 	 */
-	function addScript($path, $language='Javascript', $type='text/javascript', $charset=NULL) {
+	function addScript($path, $language='Javascript', $type='text/javascript', $charset=NULL, $priority=1) {
 		$path = htmlentities(html_entity_decode($path));
 		if (!array_key_exists($path, $this->scriptFiles)) {
+			$priority = max(array($priority, 0));
 			if (!empty($language)) {
-				$this->scriptFiles[$path] = sprintf("<script language=\"%s\" src=\"%s\" type=\"%s\"%s></script>\n",
+				$this->scriptFiles[$path] = array(sprintf("<script language=\"%s\" src=\"%s\" type=\"%s\"%s></script>\n",
 					$language, $path, $type, (!empty($charset) ? " charset=\"{$charset}\"" : '')
-				);
+				), $priority);
 			} else {
-				$this->scriptFiles[$path] = sprintf("<script src=\"%s\" type=\"%s\"%s></script>\n",
+				$this->scriptFiles[$path] = array(sprintf("<script src=\"%s\" type=\"%s\"%s></script>\n",
 					$path, $type, (!empty($charset) ? " charset=\"{$charset}\"" : '')
-				);
+				), $priority);
 			}
 		}
 	}
@@ -283,13 +285,17 @@ class DocumentHead
 	 * @param string $path Relative or absolute path to the stylesheet file
 	 * @param string $media Media type
 	 * @param string $charset Charset of the stylesheet file
+	 * @param string $condition Conditional expression
+	 * @param int $priority Priority
 	 */
-	function addStyle($path, $media=NULL, $charset=NULL) {
+	function addStyle($path, $media=NULL, $charset=NULL, $condition=NULL, $priority=1) {
 		$path = htmlentities(html_entity_decode($path));
 		if (!array_key_exists($path, $this->styleFiles)) {
-			$this->styleFiles[$path] = sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s />\n",
-				$path, (!empty($media) ? " media=\"{$media}\"" : ''), (!empty($charset) ? " charset=\"{$charset}\"" : '')
-			);
+			$priority = max(array($priority, 0));
+			$this->styleFiles[$path] = array(sprintf("%s<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s />\n%s",
+				(!empty($condition) ? "<!--[if {$condition}]>\n\t" : ""), $path, (!empty($media) ? " media=\"{$media}\"" : ''), 
+				(!empty($charset) ? " charset=\"{$charset}\"" : ''), (!empty($condition) ? "<![endif]-->\n" : "")
+			), $priority);
 		}
 	}
 
@@ -368,14 +374,26 @@ class DocumentHead
 			print sprintf("<base href=\"%s\" />\n", $baseUrl);
 		}
 		// style files
-		print join("", array_values($this->styleFiles));
+		$files = $this->_arrangeByPriority($this->styleFiles, $max);
+		for ($i=0; $i<=$max; $i++) {
+			if (isset($files[$i])) {
+				foreach ($files[$i] as $file)
+					print $file;
+			}
+		}
 		// style blocks
 		if (!empty($this->styleCode))
 			print sprintf("<style type=\"text/css\">\n%s</style>\n", $this->styleCode);
 		// alternate links
 		print join("", array_values($this->alternateLinks));
 		// script files
-		print join("", array_values($this->scriptFiles));
+		$files = $this->_arrangeByPriority($this->scriptFiles, $max);
+		for ($i=0; $i<=$max; $i++) {
+			if (isset($files[$i])) {
+				foreach ($files[$i] as $file)
+					print $file;
+			}
+		}
 		// inline script blocks
 		if (isset($this->scriptBlocks)) {
 			foreach($this->scriptBlocks as $language => $scripts) {
@@ -387,6 +405,27 @@ class DocumentHead
 		// extra content
 		print $this->extraContent;
 		print "</head>\n";
+	}
+	
+	/**
+	 * Arranges elements by priority
+	 *
+	 * @param array $src Source array
+	 * @param int $max Highest priority found
+	 * @return int
+	 * @access private
+	 */
+	function _arrangeByPriority($src, &$max) {
+		$elms = array();
+		$max = 0;
+		foreach ($src as $item) {
+			if ($item[1] > $max)
+				$max = $item[1];
+			if (!isset($elms[$item[1]]))
+				$elms[$item[1]] = array();
+			$elms[$item[1]][] = $item[0];
+		}
+		return $elms;
 	}
 }
 ?>
