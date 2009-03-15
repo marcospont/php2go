@@ -523,12 +523,34 @@ InputSelectorField.prototype.getValue = function() {
 };
 
 /**
+ * This method is used to defined the value of the checked
+ * property by testing if the new value of the field is
+ * a truthy value (T, 1, on)
+ * @param {Object} val New value
+ * @type void
+ */
+InputSelectorField.prototype.setValue = function(val) {
+	if (this.fld.type == 'checkbox') {
+		var truthy = (val == 1 || val == '1' || val == 'T' || val == 'on');
+		if (!this.fld.checked && truthy) {
+			this.setChecked(true);
+		} else if (this.fld.checked && !truthy) {
+			this.setChecked(false);
+		}
+	} else {
+		InputSelectorField.superclass.setValue.apply(this, [val]);
+	}
+};
+
+/**
  * Changes the checked status of the input
  * @param {Boolean} b New checked status
  * @type void
  */
 InputSelectorField.prototype.setChecked = function(b) {
 	this.fld.checked = !!b;
+	if (this.fld.onchange)
+		this.fld.onchange();	
 };
 
 /**
