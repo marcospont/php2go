@@ -127,7 +127,7 @@ Throbber.prototype.hide = function() {
  * @type Boolean
  */
 Throbber.prototype.isActive = function() {
-	return (this.element.isVisible());
+	return (this.element && this.element.isVisible());
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'util/throbber.js'] = true;

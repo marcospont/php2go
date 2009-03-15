@@ -295,7 +295,7 @@ AjaxRequest.prototype.readArguments = function(args) {
 				this[n] = !!args[n];
 				break;
 			case 'throbber' :
-				if ((args.throbber.constructor || $EF) != Throbber)
+				if (args.throbber && (args.throbber.constructor || $EF) != Throbber)
 					args.throbber = new Throbber({element: args.throbber});
 				this.throbber = args.throbber;
 				break;
