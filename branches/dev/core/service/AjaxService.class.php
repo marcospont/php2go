@@ -114,6 +114,8 @@ class AjaxService extends AbstractService
 	 */
 	function sendResponse($response) {
 		if (TypeUtils::isInstanceOf($response, 'AjaxResponse')) {
+			if ($response->isException)
+				header('HTTP/1.0 500', TRUE, 500);
 			$response->render($this->isIframe);
 		} else {
 			$response = (string)$response;

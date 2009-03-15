@@ -52,6 +52,12 @@ class AjaxResponse extends PHP2Go
 	 * @access private
 	 */
 	var $charset = 'iso-8859-1';
+	/**
+	 * Exception flag
+	 *
+	 * @var bool
+	 */
+	var $isException = FALSE;
 
 	/**
 	 * Class constructor
@@ -73,7 +79,7 @@ class AjaxResponse extends PHP2Go
 		if (!empty($charset))
 			$this->charset = $charset;
 	}
-
+	
 	/**
 	 * Renders all response commands as a JSON string
 	 *
