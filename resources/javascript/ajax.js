@@ -919,6 +919,7 @@ AjaxUpdater.prototype.update = function(response) {
  */
 AjaxService = function(uri, args) {
 	this.AjaxRequest(uri, args);
+	this.bind('onFailure', this.parseResponse, null, true);
 	this.bind('onJSONResult', this.parseResponse, null, true);
 	this.setHandler(args.handler);
 };
