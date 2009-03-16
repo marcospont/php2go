@@ -272,9 +272,9 @@ AjaxRequest.extend(Ajax, 'Ajax');
  * Acceptable argument names: <ul><li>method</li><li>async</li><li>headers</li>
  * <li>contentType</li><li>encoding</li><li>ifModified</li><li>params</li><li>form</li>
  * <li>formFields</li><li>formUpload</li><li>formValidate</li><li>body</li><li>throbber</li>
- * <li>secureUri</li><li>scope</li><li>onLoading</li><li>onLoaded</li><li>onInteractive</li>
- * <li>onComplete</li><li>onSuccess</li><li>onFailure</li><li>onJSONResult</li>
- * <li>onXMLResult</li><li>onException</li></ul>
+ * <li>secureUri</li><li>scope</li><li>onInit</li><li>onLoading</li><li>onLoaded</li>
+ * <li>onInteractive</li><li>onComplete</li><li>onSuccess</li><li>onFailure</li>
+ * <li>onJSONResult</li><li>onXMLResult</li><li>onException</li></ul>
  *
  * @param {Object} args Arguments
  * @type void
@@ -282,10 +282,12 @@ AjaxRequest.extend(Ajax, 'Ajax');
 AjaxRequest.prototype.readArguments = function(args) {
 	for (var n in args) {
 		switch (n) {
-			case 'onLoading' : case 'onLoaded' : case 'onInteractive' :
-			case 'onComplete' : case 'onSuccess' : case 'onFailure' :
-			case 'onJSONResult' : case 'onXMLResult' : case 'onException' :
-				this.bind(n, args[n], args.scope || null);
+			case 'onInit' : case 'onLoading' : 
+			case 'onLoaded' : case 'onInteractive' : 
+			case 'onComplete' : case 'onSuccess' : 
+			case 'onFailure' : case 'onJSONResult' : 
+			case 'onXMLResult' : case 'onException' :
+				(Object.isFunc(args[n])) && (this.bind(n, args[n], args.scope || null));
 				break;
 			case 'headers' : case 'params' :
 				for (var pn in args[n])
@@ -370,6 +372,7 @@ AjaxRequest.prototype.send = function() {
 		}
 		for (var name in this.headers)
 			this.conn.setRequestHeader(name, this.headers[name]);
+		this.raise('onInit');
 		this.conn.send(body);
 		if (!this.async && this.conn.overrideMimeType)
 			this.onStateChange();
@@ -456,6 +459,7 @@ AjaxRequest.prototype.doFormUpload = function() {
 			(function() { document.body.removeChild(ifr); }).delay(100);
 		};
 		// add load listener and submit form
+		this.raise('onInit');
 		frm.submit();
 		Event.addListener(ifr, 'load', uploadCallback);
 		// remove hidden fields
@@ -516,7 +520,7 @@ AjaxRequest.prototype.onStateChange = function() {
 				this.raise('onComplete', [resp]);
 				if (resp.success) {
 					// script responses
-					if ((resp.headers['Content-type'] || '').match(/^(text|application)\/(x-)?(java|ecma)script(;.*)?$/i)) {
+					if ((resp.headers['Content-Type'] || '').match(/^(text|application)\/(x-)?(java|ecma)script(;.*)?$/i)) {
 						try {
 							PHP2Go.eval(resp.responseText);
 							this.raise('onSuccess', [resp]);
@@ -755,10 +759,10 @@ AjaxResponse.prototype.run = function() {
 			case 'show' :
 				$(item.id).show();
 				break;
-			case 'prop' :
+			case 'attr' :
 				var elm = $(item.id);
 				for (var p in item.arg)
-					elm.setAttribute(p, item.arg[p]);
+					elm[p] = item.arg[p];
 				break;
 			case 'style' :
 				var elm = $(item.id);
