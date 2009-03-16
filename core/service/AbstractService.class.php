@@ -154,9 +154,12 @@ class AbstractService extends PHP2Go
 	 *
 	 * @param object &$object Object
 	 * @param string $methodPrefix Method prefix
+	 * @param string $propName Object's property where a reference to the service should be stored
 	 */
-	function registerObject(&$object, $methodPrefix='') {
+	function registerObject(&$object, $methodPrefix='', $propName='') {
 		if (is_object($object)) {
+			if ($propName)
+				$object->{$propName} =& $this;
 			$methods = get_class_methods(get_class($object));
 			foreach ($methods as $method) {
 				// protect special methods
