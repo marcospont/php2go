@@ -51,7 +51,7 @@ class AjaxResponse extends PHP2Go
 	 * @var string
 	 * @access private
 	 */
-	var $charset = 'iso-8859-1';
+	var $charset = 'utf-8';
 	/**
 	 * Exception flag
 	 *
