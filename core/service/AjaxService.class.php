@@ -87,6 +87,9 @@ class AjaxService extends AbstractService
 		$this->isIframe = FALSE;
 		$method = strtolower(HttpRequest::method());
 		$headers = array_change_key_case(HttpRequest::getHeaders(), CASE_LOWER);
+		// skin p2g autocomplete ajax calls
+		if (array_key_exists('x-p2g-autocomplete', $headers))
+			return FALSE;
 		// normal ajax call
 		if (array_key_exists('x-requested-with', $headers)) {
 			$this->handlerId = @$headers['x-handler-id'];

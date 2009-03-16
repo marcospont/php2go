@@ -203,6 +203,7 @@ AutoCompleteField.prototype.disable = function() {
 AutoCompleteField.prototype.showChoices = function() {
 	var elm = this.autoComplete;
 	if (!elm.isVisible()) {
+		var sc = Window.scroll();
 		var pos = this.fld.getPosition();
 		var dim = this.fld.getDimensions();
 		elm.show();
@@ -210,7 +211,7 @@ AutoCompleteField.prototype.showChoices = function() {
 			elm.resizeTo(dim.width, this.options.height);
 		else
 			elm.setStyle('width', dim.width);
-		elm.moveTo(pos.x, pos.y+dim.height);
+		elm.moveTo(pos.x+sc.x, pos.y+sc.y+dim.height);
 	}
 };
 
@@ -235,6 +236,7 @@ AutoCompleteField.prototype.getChoices = function() {
 	if (op.ajax) {
 		var ajax = new AjaxRequest(op.url, op.ajaxOptions);
 		ajax.async = true;
+		ajax.headers['X-P2g-AutoComplete'] = '1';
 		ajax.addParam(this.fld.name, tok);
 		ajax.addParam('ignorecase', (ign?1:0));
 		ajax.addParam('fullsearch', (op.fullSearch?1:0));
