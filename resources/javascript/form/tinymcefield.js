@@ -248,13 +248,16 @@ TinyMCEField.prototype.focus = function() {
  * Serialize the component so that the value
  * can be used to perform HTTP requests or
  * to build query param strings
+ * @param {Boolean} Force serialization
  * @type String
  */
-TinyMCEField.prototype.serialize = function() {
-	this.mce.save();
+TinyMCEField.prototype.serialize = function(force) {	
+	if (!force && this.fld.disabled)
+		return null;
+	this.mce.save();	
 	if (this.fld.value != '')
 		return this.name + '=' + this.fld.value.urlEncode();
-	return null;
+	return this.name + '=';
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'form/tinymcefield.js'] = true;

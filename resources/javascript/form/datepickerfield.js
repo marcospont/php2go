@@ -193,12 +193,15 @@ DatePickerField.prototype.focus = $EF;
 
 /**
  * Serialize the component's value
+ * @param {Boolean} Force serialization
  * @type String
  */
-DatePickerField.prototype.serialize = function() {
-	if (this.fld.value.trim() == '')
-		return null;
+DatePickerField.prototype.serialize = function(force) {
+	if (!force && this.fld.disabled)
+		return null;	
 	if (this.options.multiple) {
+		if (this.fld.value.trim() == '')
+			return null;		
 		var self = this;
 		return this.fld.value.split(this.options.dateSep).map(function(item, idx) {
 			return self.name + '[]=' + item.urlEncode();

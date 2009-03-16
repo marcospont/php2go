@@ -195,9 +195,12 @@ LookupSelectionField.prototype.focus = function() {
  * LookupSelectionField is serialized in the form
  * of a 2-dimension array: the added values list
  * and the removed values list
+ * @param {Boolean} Force serialization 
  * @type String
  */
-LookupSelectionField.prototype.serialize = function() {
+LookupSelectionField.prototype.serialize = function(force) {
+	if (!force && this.available.disabled && this.selected.disabled)
+		return null;
 	var self = this, name = this.name, val = [];
 	if (!this.addedList.empty())
 		val.push(this.addedList.toArray().map(function(item) {
