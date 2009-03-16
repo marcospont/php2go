@@ -189,13 +189,14 @@ var Form = {
 	 * and HTTP requests
 	 * @param {Object} form Form reference or id
 	 * @param {Array} flds Optional list of fields to be serialized
+	 * @param {Boolean} force Force serialization of all elements, even when disabled
 	 */
-	serialize : function(form, fld) {
+	serialize : function(form, fld, force) {
 		fld = fld || [];
 		this.updateCheckboxes(form);
 		return this.getFields(form).valid(function(el) {
 			if (fld.empty() || fld.contains(el.key))
-				return el.value.serialize();
+				return el.value.serialize(!!force);
 		}).join('&');
 	},
 	/**
@@ -445,23 +446,23 @@ Field.prototype.beforeFocus = function() {
  * Serialize field's name and value so that
  * the returning value can be used to build
  * query strings or HTTP requests
+ * @param {Boolean} Force serialization
  * @type String
  */
-Field.prototype.serialize = function() {
-	if (this.fld.disabled == true)
+Field.prototype.serialize = function(force) {
+	if (!force && this.fld.disabled == true)
 		return null;
 	var nm = this.name.replace(/\[\]$/, '');
 	var self = this, v = this.getValue();
-	if (v != null && v != '') {
-		if (v.constructor == Array) {
-			return v.map(function(el) {
-				return nm + '[]=' + el.urlEncode();
-			}).join('&');
-		} else {
-			return this.name + '=' + v.urlEncode();
-		}
+	if (Object.isArray(v)) {
+		return v.map(function(el) {
+			return nm + '[]=' + el.urlEncode();
+		}).join('&');
+	} else if (v != null && v != '') {
+		return this.name + '=' + v.urlEncode();
+	} else {
+		return this.name + '=';
 	}
-	return null;
 };
 
 /**
@@ -977,12 +978,13 @@ GroupField.prototype.focus = function() {
  * selected value(s). The returning value could
  * be used to build query strings
  * or HTTP requests
+ * @param {Boolean} Force serialization 
  * @type String
  */
-GroupField.prototype.serialize = function() {
+GroupField.prototype.serialize = function(force) {
 	var self = this, nm = this.name.replace(/\[\]$/, '');
 	var v = this.grp.valid(function(el) {
-		if (el.checked && !el.disabled) {
+		if (el.checked && (!el.disabled || force)) {
 			if (self.multiple)
 				return nm + '[]=' + el.value.urlEncode();
 			return nm + '=' + el.value.urlEncode();

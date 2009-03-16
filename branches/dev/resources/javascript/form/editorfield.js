@@ -438,13 +438,16 @@ EditorField.prototype.focus = function() {
  * Serialize the component so that the value
  * can be used to perform HTTP requests or
  * to build query param strings
+ * @param {Boolean} Force serialization 
  * @type String
  */
-EditorField.prototype.serialize = function() {
+EditorField.prototype.serialize = function(force) {
+	if (!force && this.fld.disabled)
+		return null;	
 	this.fld.value = (!this.isEmpty() ? this.getValue() : '');
 	if (this.fld.value != '')
 		return this.name + '=' + this.fld.value.urlEncode();
-	return null;
+	return this.name + '=';
 };
 
 /**

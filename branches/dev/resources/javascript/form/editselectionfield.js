@@ -196,9 +196,12 @@ EditSelectionField.prototype.focus = function() {
  * EditSelectionField is serialized in the form
  * of a 2-dimension array: the added values list
  * and the removed values list
+ * @param {Boolean} Force serialization 
  * @type String
  */
-EditSelectionField.prototype.serialize = function() {
+EditSelectionField.prototype.serialize = function(force) {
+	if (!force && this.edit.disabled && this.lookup.disabled)
+		return null;
 	var self = this, name = this.name, val = [];
 	if (!this.addedList.empty())
 		val.push(this.addedList.toArray().map(function(item) {
