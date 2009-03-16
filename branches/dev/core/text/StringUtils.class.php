@@ -593,15 +593,22 @@ class StringUtils extends PHP2Go
 	 *
 	 * Replaces all chars from positions 192-223 and 224-225 of the
 	 * ASCII table by their 'normal' versions: áéíÁÈÒÖ by aeiAEOO.
+	 * 
+	 * The extra parameter $removeSpaces can also remove 
+	 * all whitespace characters from the string.
 	 *
 	 * @param string $str Input string
+	 * @param bool $removeSpaces Remove whitespace chars?
 	 * @return string
 	 * @static
 	 */
-	function normalize($str) {
+	function normalize($str, $removeSpaces=FALSE) {
 		$ts = array("/[À-Å]/", "/Æ/", "/Ç/", "/[È-Ë]/", "/[Ì-Ï]/", "/Ð/", "/Ñ/", "/[Ò-ÖØ]/", "/×/", "/[Ù-Ü]/", "/Ý/", "/ß/", "/[à-å]/", "/æ/", "/ç/", "/[è-ë]/", "/[ì-ï]/", "/ð/", "/ñ/", "/[ò-öø]/", "/÷/", "/[ù-ü]/", "/[ý-ÿ]/");
 		$tn = array("A", "AE", "C", "E", "I", "D", "N", "O", "X", "U", "Y", "ss", "a", "ae", "c", "e", "i", "d", "n", "o", "x", "u", "y");
-		return preg_replace($ts, $tn, $str);
+		$res = preg_replace($ts, $tn, $str);
+		if ($removeSpaces)
+			return StringUtils::stripBlank($res, '');
+		return $res;
 	}
 
 	/**
