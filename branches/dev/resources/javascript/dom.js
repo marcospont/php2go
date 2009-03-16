@@ -154,7 +154,7 @@ Element.prototype.recursivelyCollect = function(prop) {
  * @type Number
  */
 Element.prototype.recursivelySum = function(prop) {
-	var res = 0, elm = this;
+	var res = 0, elm = this, end = document.documentElement || document.body;
 	while (elm) {
 		if (elm.getComputedStyle('position') == 'fixed')
 			return 0;
@@ -162,7 +162,7 @@ Element.prototype.recursivelySum = function(prop) {
 		if (val) {
 			res += val - 0;
 		}
-		if (elm == document.body)
+		if (elm == end)
 			break;
 		elm = elm.parentNode;
 	}
@@ -377,6 +377,9 @@ Element.prototype.getPosition = function(tbt) {
 		p.x += (isNaN(this.x) ? 0 : this.x);
 		p.y += (isNaN(this.y) ? 0 : this.y);
 	}
+	var sc = Window.scroll();
+	p.x += sc.x;
+	p.y += sc.y;
 	var extents = ['padding', 'border', 'margin'];
 	if (nbt > tbt) {
 		for (var i=tbt; i<nbt; i++) {
