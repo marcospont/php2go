@@ -203,7 +203,6 @@ AutoCompleteField.prototype.disable = function() {
 AutoCompleteField.prototype.showChoices = function() {
 	var elm = this.autoComplete;
 	if (!elm.isVisible()) {
-		var sc = Window.scroll();
 		var pos = this.fld.getPosition();
 		var dim = this.fld.getDimensions();
 		elm.show();
@@ -211,7 +210,7 @@ AutoCompleteField.prototype.showChoices = function() {
 			elm.resizeTo(dim.width, this.options.height);
 		else
 			elm.setStyle('width', dim.width);
-		elm.moveTo(pos.x+sc.x, pos.y+sc.y+dim.height);
+		elm.moveTo(pos.x, pos.y+dim.height);
 	}
 };
 
@@ -445,17 +444,18 @@ AutoCompleteField.prototype.choiceClickHandler = function(e) {
  */
 AutoCompleteField.prototype.navigate = function(fw) {
 	if (this.choiceCount > 0) {
-		this.showChoices();
-		var items = this.choiceItems;
+		this.showChoices();		
+		var it = this.choiceItems, ac = this.autoComplete;
 		if (this.selectedIndex > -1)
-			items[this.selectedIndex].className = this.options.style.normal;
+			it[this.selectedIndex].className = this.options.style.normal;
 		this.selectedIndex = (
 			fw > 0
 			? (this.selectedIndex+fw < this.choiceCount ? this.selectedIndex+fw : 0)
 			: (this.selectedIndex+fw >= 0 ? this.selectedIndex+fw : this.choiceCount-1)
-		);
-		items[this.selectedIndex].className = this.options.style.selected;
-		items[this.selectedIndex].scrollIntoView(false);
+		);		
+		it[this.selectedIndex].className = this.options.style.selected;
+		if (it[this.selectedIndex].offsetTop < ac.scrollTop || it[this.selectedIndex].offsetTop > ac.offsetHeight)
+			ac.scrollTop = it[this.selectedIndex].offsetTop;
 	} else {
 		this.choosing = false;
 		this.hideChoices();
