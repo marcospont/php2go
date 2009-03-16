@@ -253,7 +253,7 @@ class TinyMCEField extends FormField
 	 */
 	function setHeight($height) {
 		if (TypeUtils::isInteger($height))
-			$this->attributes['height'] = $height;
+			$this->editorParams['height'] = $height;
 	}
 
 	/**
