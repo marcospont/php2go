@@ -101,11 +101,12 @@ class AutoCompleteField extends EditableField
 		}
 		if ($this->options['incremental']) {
 			print sprintf(
-"\n<textarea id=\"%s\" name=\"%s\" cols=\"%s\" rows=\"5\" title=\"%s\"%s%s%s%s%s%s%s%s>%s</textarea>%s" .
+"\n<textarea id=\"%s\" name=\"%s\" cols=\"%s\" title=\"%s\"%s%s%s%s%s%s%s%s%s>%s</textarea>%s" .
 "\n<div id=\"%s_choices\" style=\"position:absolute;display:none\" class=\"autoCompleteChoices\"></div>" .
 "\n<script type=\"text/javascript\">\n\tnew AutoCompleteField('%s', %s);\n</script>",
 				$this->id, $this->name, $this->attributes['SIZE'], $this->label, $this->attributes['SCRIPT'],
 				$this->attributes['ACCESSKEY'], $this->attributes['TABINDEX'],  $this->attributes['STYLE'],
+				(!empty($this->attributes['HEIGHT']) ? " style=\"height:{$this->attributes['HEIGHT']}px;\"" : ""),
 				$this->attributes['READONLY'], $this->attributes['DISABLED'], $this->attributes['DATASRC'],
 				$this->attributes['DATAFLD'], $this->value, $throbber, $this->id, $this->id, JSONEncoder::encode($this->options)
 			);
@@ -175,14 +176,20 @@ class AutoCompleteField extends EditableField
 	}
 
 	/**
-	 * Set the height of the container used to display search results
+	 * Set height for results container and input field
+	 * 
+	 * The field height is only applicable when multiple selection is enabled.
 	 *
-	 * @param int $height Height
+	 * @param int $resultsHeight Results height
+	 * @param int $fieldHeight Field height
 	 */
-	function setHeight($height) {
-		$height = intval($height);
-		if ($height)
-			$this->options['height'] = $height;
+	function setHeight($resultsHeight, $fieldHeight=NULL) {
+		$resultsHeight = intval($resultsHeight);
+		if ($resultsHeight)
+			$this->options['height'] = $resultsHeight;
+		$fieldHeight = intval($fieldHeight);
+		if ($fieldHeight)
+			$this->attributes['HEIGHT'] = $fieldHeight;
 	}
 
 	/**
@@ -308,8 +315,8 @@ class AutoCompleteField extends EditableField
 			$this->setDelay($attrs['DELAY']);
 		// multiple choices
 		$this->setMultiple($multiple, @$attrs['SEPARATOR']);
-		// container height
-		$this->setHeight(@$attrs['HEIGHT']);
+		// results and field height
+		$this->setHeight(@$attrs['RESULTSHEIGHT'], @$attrs['HEIGHT']);
 		// max choices
 		$this->setMaxChoices(@$attrs['MAXCHOICES']);
 		// minimum chars for a search token
