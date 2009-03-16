@@ -57,8 +57,8 @@ class HiddenField extends FormField
 	 */
 	function display() {
 		(!$this->preRendered && parent::onPreRender());
-		print sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\"%s%s />",
-				$this->id, $this->name, $this->value, $this->attributes['DATASRC'], $this->attributes['DATAFLD']
+		print sprintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\"%s%s%s/>",
+				$this->id, $this->name, $this->value, $this->attributes['SCRIPT'], $this->attributes['DATASRC'], $this->attributes['DATAFLD']
 		);
 	}
 }
