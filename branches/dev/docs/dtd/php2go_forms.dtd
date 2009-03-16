@@ -161,6 +161,7 @@
 	multiple %boolean; #IMPLIED
 	separator %boolean; #IMPLIED
 	height %number; #IMPLIED
+	resultsheight %number; #IMPLIED
 	maxchoices %number; #IMPLIED
 	minchars %number; #IMPLIED
 	ignorecase %boolean; #IMPLIED
