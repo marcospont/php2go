@@ -480,8 +480,7 @@ class FileUpload extends PHP2Go
 	function _moveFile($index) {
 		$fileData =& $this->uploadHandlers[$index];
 		$fileData['save_name'] = empty($fileData['save_name']) ? $fileData['name'] : $fileData['save_name'];
-		if (substr($fileData['save_path'], -1) != '/')
-			$fileData['save_path'] .= '/';
+		$fileData['save_path'] = rtrim($fileData['save_path'], '/') . '/';
 		if (is_object($fileData['save_callback'])) {
 			$ret = $fileData['save_callback']->invoke($fileData);
 			if (!is_array($ret)) {

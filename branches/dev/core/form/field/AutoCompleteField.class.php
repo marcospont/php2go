@@ -358,8 +358,9 @@ class AutoCompleteField extends EditableField
 		}
 		// search and print choices, responding to an AJAX request
 		if (HttpRequest::isAjax()) {
+			$headers = array_change_key_case(HttpRequest::getHeaders(), CASE_LOWER);
 			$token = HttpRequest::post($this->name);
-			if ($token !== NULL) {
+			if ($token !== NULL && array_key_exists('x-p2g-autocomplete', $headers)) {
 				$this->_printChoices($token);
 				exit;
 			}
@@ -377,6 +378,7 @@ class AutoCompleteField extends EditableField
 						if (!empty($item))
 							$val[] = $item;
 					}
+					$val = array_unique($val);
 					parent::setSubmittedValue($val);
 				}
 			} elseif (is_array($this->value)) {
