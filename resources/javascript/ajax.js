@@ -439,7 +439,7 @@ AjaxRequest.prototype.doFormUpload = function() {
 			var doc = (PHP2Go.browser.ie ? ifr.contentWindow.document : (ifr.contentDocument || window.frames[id].document));
 			if (doc && doc.body) {
 				var container = (doc.body.getElementsByTagName('textarea') || []);
-				ajax.conn.responseText = (container ? container[0].value : doc.body.innerHTML);
+				ajax.conn.responseText = (container.length > 0 ? container[0].value : doc.body.innerHTML);
 				ajax.conn.headers['Content-Type'] = 'text/html';
 				ajax.conn.headers['Content-Length'] = ajax.conn.responseText.length;
 				if (!ajax.conn.responseText.match(/^\s*</)) {
