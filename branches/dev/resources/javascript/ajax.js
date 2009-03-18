@@ -436,7 +436,12 @@ AjaxRequest.prototype.doFormUpload = function() {
 				abort: $EF,
 				headers: {}
 			};
-			var doc = (PHP2Go.browser.ie ? ifr.contentWindow.document : (ifr.contentDocument || window.frames[id].document));
+			var doc;
+			try { 
+				doc = (PHP2Go.browser.ie ? ifr.contentWindow.document : (ifr.contentDocument || window.frames[id].document));	
+			} catch(e) { 
+				doc = null;
+			}
 			if (doc && doc.body) {
 				var container = (doc.body.getElementsByTagName('textarea') || []);
 				ajax.conn.responseText = (container.length > 0 ? container[0].value : doc.body.innerHTML);
