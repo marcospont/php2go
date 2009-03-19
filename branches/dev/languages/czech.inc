@@ -198,7 +198,6 @@ $P2G_LANGUAGE['ERR_REPORT_MISSING_BLOCK_VARIABLE'] = "Prom&#283;nná <I>%s</I> bl
 $P2G_LANGUAGE['ERR_REPORT_INVALID_COLSIZES'] = "Hodnota <I>%s</I> není platná pro definici &#353;í&#345;ky sloupce!";
 $P2G_LANGUAGE['ERR_REPORT_COL_SIZES_SUM'] = "Sou&#269;et velikostí sloupc&#367; p&#345;edan&#253;ch funkci setColumnSizes musí b&#253;t roven 100!";
 $P2G_LANGUAGE['ERR_REPORT_COL_COUNT_MISMATCH'] = "Po&#269;et zadan&#253;ch velikostí sloupc&#367; (%s) není roven po&#269;tu sloupc&#367; v reportu (%s, %s skupina)";
-$P2G_LANGUAGE['ERR_REPORT_MISSING_SEARCH_VARIABLE'] = "Nebylo mo&#382;né vytvo&#345;it formulá&#345; vyhledávání, proto&#382;e prom&#283;nná <I>%s</I> nebyla nalezena.<br />Deklarujte {%s} v p&#345;edloze reportupro pokra&#269;ování.";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_PARS_MALFORMED'] = "Musíte poskytnout Název (\"Label\"), Název pole (\"Field Name\") a Masku (\"Mask\") p&#345;i vytvá&#345;ení parametr&#367; vyhledávání!";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_INVALID_MASK'] = "Maska <I>%s</I> pro parametry vyhledávání <I>#%d</I> není platná!";
 $P2G_LANGUAGE['ERR_REPORT_MIN_ALT_STYLE'] = "Funkce setAlternateStyle musí obdr&#382;et alespo&#328; 2 parametry (jména CSS)!";

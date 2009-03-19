@@ -199,7 +199,6 @@ $P2G_LANGUAGE['ERR_REPORT_MISSING_BLOCK_VARIABLE'] = "La variable <I>%s</I> du b
 $P2G_LANGUAGE['ERR_REPORT_INVALID_COLSIZES'] = "La valeur <I>%s</I> n'est pas une définition valide aux tailles des colonnes!";
 $P2G_LANGUAGE['ERR_REPORT_COL_SIZES_SUM'] = "La somme des tailles de colonnes passée à la fonction setColumnSizes doit être égale à 100!";
 $P2G_LANGUAGE['ERR_REPORT_COL_COUNT_MISMATCH'] = "Le nombre de colonnes fourni (%s) n'est pas égal au nombre de colonnes du report (%s, %s grouping)";
-$P2G_LANGUAGE['ERR_REPORT_MISSING_SEARCH_VARIABLE'] = "Impossible de consruire le formulaire de recherche, parce que la variable <I>%s</I> est introuvable. <br />Déclarez {%s} dans le gabarit du document.";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_PARS_MALFORMED'] = "Vous devez fournir le Label, le Field Name et la Mask dans la construction des paramètres de recherche!";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_INVALID_MASK'] = "Le masque <I>%s</I> du paramètre de recherche <I>#%d</I> est invalide!";
 $P2G_LANGUAGE['ERR_REPORT_MIN_ALT_STYLE'] = "La fonction setAlternateStyle doit recevoir au moins deux paramètres (CSS names)!";

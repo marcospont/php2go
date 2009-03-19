@@ -198,7 +198,6 @@ $P2G_LANGUAGE['ERR_REPORT_MISSING_BLOCK_VARIABLE'] = "Die Variable <I>%s</I> im 
 $P2G_LANGUAGE['ERR_REPORT_INVALID_COLSIZES'] = "Der Wert <I>%s</I> ist keine korrekte Definition der Spaltengröße!";
 $P2G_LANGUAGE['ERR_REPORT_COL_SIZES_SUM'] = "Die Summe der Spaltengrößen die zur Funktion setColumnSizes muss 100 ergeben!";
 $P2G_LANGUAGE['ERR_REPORT_COL_COUNT_MISMATCH'] = "Die Anzahl an Spaltengrößen die (%s) nutzen ist nicht die gleiche Anzahl wie die Spalten vom Report (%s, %s gruppiert)";
-$P2G_LANGUAGE['ERR_REPORT_MISSING_SEARCH_VARIABLE'] = "Das Suchformular konnte leider nicht erstellt werden, weil die Variable <I>%s</I> nicht gefunden wurde.<br />Deklarieren Sie bitte {%s} im Template.";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_PARS_MALFORMED'] = "Sie müssen den Text, den Feldnamen und die Art der Suche als Parameter, vor dem Suchen angeben!";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_INVALID_MASK'] = "Die Maskierung <I>%s</I> des Suchparameters <I>#%d</I> ist nicht korrekt!";
 $P2G_LANGUAGE['ERR_REPORT_MIN_ALT_STYLE'] = "Die setAlternateStyle Funktion muss zum Schluss zwei Parameter bekommen (CSS names)!";
