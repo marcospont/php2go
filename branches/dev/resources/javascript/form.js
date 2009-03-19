@@ -66,14 +66,16 @@ var Form = {
 	 * are not listed. Only the top elements declared in the XML
 	 * specification might be returned
 	 * @param {Object} form Form instance or id
+	 * @param {Object} btns Include buttons?
 	 * @type Hash
 	 */
-	getFields : function(form) {
+	getFields : function(form, btns) {
 		var res = $H();
 		form = $(form);
 		if (form) {
+			btns = !!btns;
 			$C(form.elements).walk(function(el, idx) {
-				if (el.auxiliary == true || ((!el.type || !el.name) && !el.component) || (el.type && (/^submit|reset|button$/.test(el.type))))
+				if (el.auxiliary == true || ((!el.type || !el.name) && !el.component) || (!btns && el.type && (/^submit|reset|button$/.test(el.type))))
 					return;
 				var key = (el.name || el.id);
 				if (!res.containsKey(key))
@@ -131,13 +133,14 @@ var Form = {
 	 * Enable all fields in a form
 	 * @param {Object} form Form instance or id
 	 * @param {Array} prsv Field names to be skipped
+	 * @param {Boolean} btns Include btns?
 	 * @type void
 	 */
-	enableAll : function(form, prsv) {
+	enableAll : function(form, prsv, btns) {
 		form = $(form), prsv = $A(prsv);
-		var flds = this.getFields(form);
+		var flds = this.getFields(form, btns);
 		flds.walk(function(el, idx) {
-			if (!prsv.contains(el.name))
+			if (!prsv.contains(el.key))
 				el.value.enable();
 		});
 	},
@@ -159,13 +162,14 @@ var Form = {
 	 * Disable all fields in a form
 	 * @param {Object} form Form instance or id
 	 * @param {Array} prsv Field names to be preserved
+	 * @param {Boolean} btns Include btns?
 	 * @type void
 	 */
-	disableAll : function(form, prsv) {
+	disableAll : function(form, prsv, btns) {
 		form = $(form), prsv = $A(prsv);
-		var flds = this.getFields(form);
+		var flds = this.getFields(form, btns);
 		flds.walk(function(el, idx) {
-			if (!prsv.contains(el.name))
+			if (!prsv.contains(el.key))
 				el.value.disable();
 		});
 	},
@@ -216,9 +220,11 @@ var Form = {
 				frm = evt.findElement('form');
 				if (frm) {
 					var ajax = frm.ajax();
-					ajax.form = frm.id;
-					ajax.formValidate = true;
-					ajax.send();
+					if (ajax) {
+						ajax.form = frm.id;
+						ajax.formValidate = true;
+						ajax.send();
+					}
 				}
 			}, true);
 		}
