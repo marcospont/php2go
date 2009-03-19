@@ -67,8 +67,10 @@ class Date extends PHP2Go
 	 * the specified format, an array containing day,
 	 * month, year, hours, minutes and seconds is returned.
 	 *
-	 * Returns NULL when the specified date string is not
-	 * written in the specified format.
+	 * If the format is not specified, the method tries to
+	 * determine it.
+	 * 
+	 * Returns NULL when a valid date can't be parsed from the input string.
 	 *
 	 * @param string $date Date string (defaults to today's date)
 	 * @param string $format EURO, US or SQL (defaults to local date format)
@@ -77,8 +79,6 @@ class Date extends PHP2Go
 	 */
 	function parse($date=NULL, $format=NULL) {
 		$regs = array();
-		if (empty($format) || !in_array($format, array('EURO', 'US', 'SQL')))
-			$format = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 		switch ($format) {
 			case 'EURO' :
 				if (empty($date))
@@ -95,6 +95,18 @@ class Date extends PHP2Go
 					$date = date('Y-m-d H:i:s');
 				Date::isSqlDate($date, $regs);
 				break;
+			default :
+				$formats = array('EURO', 'US', 'SQL');
+				$localFormat = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
+				$params = array();
+				$params[] = $date;
+				$params[] =& $regs;
+				if (!call_user_func_array(array('Date', 'is' . ucfirst(strtolower($localFormat)) . 'Date'), $params)) {
+					foreach ($formats as $format) {
+						if ($format != $localFormat && call_user_func_array(array('Date', 'is' . ucfirst(strtolower($format)) . 'Date'), $params))
+							break;
+					}
+				}				
 		}
 		if (!empty($regs) && $regs[2] >= 0 && $regs[2] <= 9999 && checkdate($regs[2], $regs[1], $regs[3])) {
 			array_shift($regs);
@@ -553,16 +565,17 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string
 	 * @static
 	 */
-	function fromSqlDate($date, $preserveTime=FALSE) {
+	function fromSqlDate($date, $preserveTime=FALSE, $sep='/') {
 		$format = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 		switch ($format) {
 			case 'EURO' :
-				return Date::fromSqlToEuroDate($date, $preserveTime);
+				return Date::fromSqlToEuroDate($date, $preserveTime, $sep);
 			case 'US' :
-				return Date::fromSqlToUsDate($date, $preserveTime);
+				return Date::fromSqlToUsDate($date, $preserveTime, $sep);
 		}
 		return $date;
 	}
@@ -574,16 +587,17 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string
 	 * @static
 	 */
-	function toSqlDate($date, $preserveTime=FALSE) {
+	function toSqlDate($date, $preserveTime=FALSE, $sep='-') {
 		$format = PHP2Go::getConfigVal('LOCAL_DATE_FORMAT');
 		switch ($format) {
 			case 'EURO' :
-				return Date::fromEuroToSqlDate($date, $preserveTime);
+				return Date::fromEuroToSqlDate($date, $preserveTime, $sep);
 			case 'US' :
-				return Date::fromUsToSqlDate($date, $preserveTime);
+				return Date::fromUsToSqlDate($date, $preserveTime, $sep);
 		}
 		return $date;
 	}
@@ -596,13 +610,14 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string New date
 	 * @static
 	 */
-	function fromEuroToSqlDate($date, $preserveTime=FALSE) {
+	function fromEuroToSqlDate($date, $preserveTime=FALSE, $sep='-') {
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {
-			$res = "{$regs[3]}-{$regs[2]}-{$regs[1]}";
+			$res = "{$regs[3]}{$sep}{$regs[2]}{$sep}{$regs[1]}";
 			if ($preserveTime && $regs[4] !== FALSE && $regs[5] !== FALSE) {
 				$res .= " {$regs[4]}:{$regs[5]}";
 				if ($regs[6] !== FALSE)
@@ -622,13 +637,14 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string New date
 	 * @static
 	 */
-	function fromEuroToUsDate($date, $preserveTime=FALSE) {
+	function fromEuroToUsDate($date, $preserveTime=FALSE, $sep='/') {
 		$regs = array();
 		if (Date::isEuroDate($date, $regs)) {
-			$res = "{$regs[3]}/{$regs[2]}/{$regs[1]}";
+			$res = "{$regs[3]}{$sep}{$regs[2]}{$sep}{$regs[1]}";
 			if ($preserveTime && $regs[4] !== FALSE && $regs[5] !== FALSE) {
 				$res .= " {$regs[4]}:{$regs[5]}";
 				if ($regs[6] !== FALSE)
@@ -648,13 +664,14 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string New date
 	 * @static
 	 */
-	function fromUsToSqlDate($date, $preserveTime=FALSE) {
+	function fromUsToSqlDate($date, $preserveTime=FALSE, $sep='-') {
 		$regs = array();
 		if (Date::isUsDate($date, $regs)) {
-			$res = "{$regs[3]}-{$regs[2]}-{$regs[1]}";
+			$res = "{$regs[3]}{$sep}{$regs[2]}{$sep}{$regs[1]}";
 			if ($preserveTime && $regs[4] !== FALSE && $regs[5] !== FALSE) {
 				$res .= " {$regs[4]}:{$regs[5]}";
 				if ($regs[6] !== FALSE)
@@ -674,13 +691,14 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string New date
 	 * @static
 	 */
-	function fromUsToEuroDate($date, $preserveTime=FALSE) {
+	function fromUsToEuroDate($date, $preserveTime=FALSE, $sep='/') {
 		$regs = array();
 		if (Date::isUsDate($date, $regs)) {
-			$res = "{$regs[1]}/{$regs[2]}/{$regs[3]}";
+			$res = "{$regs[1]}{$sep}{$regs[2]}{$sep}{$regs[3]}";
 			if ($preserveTime && $regs[4] !== FALSE && $regs[5] !== FALSE) {
 				$res .= " {$regs[4]}:{$regs[5]}";
 				if ($regs[6] !== FALSE)
@@ -700,13 +718,14 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string New date
 	 * @static
 	 */
-	function fromSqlToEuroDate($date, $preserveTime=FALSE) {
+	function fromSqlToEuroDate($date, $preserveTime=FALSE, $sep='/') {
 		$regs = array();
 		if (Date::isSqlDate($date, $regs)) {
-			$res = "{$regs[1]}/{$regs[2]}/{$regs[3]}";
+			$res = "{$regs[1]}{$sep}{$regs[2]}{$sep}{$regs[3]}";
 			if ($preserveTime && $regs[4] !== FALSE && $regs[5] !== FALSE) {
 				$res .= " {$regs[4]}:{$regs[5]}";
 				if ($regs[6] !== FALSE)
@@ -726,13 +745,14 @@ class Date extends PHP2Go
 	 *
 	 * @param string $date Input date
 	 * @param bool $preserveTime Preserve time values (hour, minute, second)
+	 * @param string $sep Date part separator
 	 * @return string New date
 	 * @static
 	 */
-	function fromSqlToUsDate($date, $preserveTime=FALSE) {
+	function fromSqlToUsDate($date, $preserveTime=FALSE, $sep='/') {
 		$regs = array();
 		if (Date::isSqlDate($date, $regs)) {
-			$res = "{$regs[2]}/{$regs[1]}/{$regs[3]}";
+			$res = "{$regs[2]}{$sep}{$regs[1]}{$sep}{$regs[3]}";
 			if ($preserveTime && $regs[4] !== FALSE && $regs[5] !== FALSE) {
 				$res .= " {$regs[4]}:{$regs[5]}";
 				if ($regs[6] !== FALSE)

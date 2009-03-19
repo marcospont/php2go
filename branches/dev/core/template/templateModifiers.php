@@ -102,6 +102,7 @@ $P2G_MODIFIER['date_us_euro'] = array('Date', 'fromUsToEuroDate');
 $P2G_MODIFIER['date_us_sql'] = array('Date', 'fromUsToSqlDate');
 $P2G_MODIFIER['date_sql_euro'] = array('Date', 'fromSqlToEuroDate');
 $P2G_MODIFIER['date_sql_us'] = array('Date', 'fromSqlToUsDate');
+$P2G_MODIFIER['date_weekday'] = array('Date', 'dayOfWeek');
 $P2G_MODIFIER['decimal_currency'] = array('Number', 'fromDecimalToCurrency');
 $P2G_MODIFIER['decimal_fraction'] = array('Number', 'fromDecimalToFraction');
 $P2G_MODIFIER['arabic_roman'] = array('Number', 'fromArabicToRoman');
