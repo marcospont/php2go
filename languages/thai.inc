@@ -198,7 +198,6 @@ $P2G_LANGUAGE['ERR_REPORT_MISSING_BLOCK_VARIABLE'] = "The variable <I>%s</I> of 
 $P2G_LANGUAGE['ERR_REPORT_INVALID_COLSIZES'] = "The value <I>%s</I> isn't a valid definition to the column sizes!";
 $P2G_LANGUAGE['ERR_REPORT_COL_SIZES_SUM'] = "The sum of the column sizes passed to the function setColumnSizes must be equal to 100!";
 $P2G_LANGUAGE['ERR_REPORT_COL_COUNT_MISMATCH'] = "The count of column sizes provided (%s) is not equal to the number of columns of the report (%s, %s grouping)";
-$P2G_LANGUAGE['ERR_REPORT_MISSING_SEARCH_VARIABLE'] = "It wasn't possible to build the search form, because the variable <I>%s</I> wasn't found.<br />Declare {%s} in the report template to proceed.";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_PARS_MALFORMED'] = "You must provide the Label, the Field Name and the Mask in the construction of the search parameters!";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_INVALID_MASK'] = "The mask <I>%s</I> of the search parameter <I>#%d</I> is invalid!";
 $P2G_LANGUAGE['ERR_REPORT_MIN_ALT_STYLE'] = "The setAlternateStyle function must receive at least two parameters (CSS names)!";

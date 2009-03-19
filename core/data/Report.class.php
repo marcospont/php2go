@@ -1683,10 +1683,11 @@ class Report extends PagedDataSet
 			if (isset($this->handlers['pageEnd']) && TypeUtils::isInstanceOf($this->handlers['pageEnd'], 'Callback'))
 				$this->handlers['pageEnd']->invokeByRef($this);
 		}
-		// expose the report title
-		$this->Template->globalAssign("title", (!empty($this->title) ? sprintf("<span class=\"%s\">%s</span>", $this->style['title'], $this->title) : ''));
+		// expose report title
+		$this->Template->globalAssign('title', (!empty($this->title) ? sprintf("<span class=\"%s\">%s</span>", $this->style['title'], $this->title) : ''));
 		// expose the $report control variable
 		$this->Template->globalAssign('report', array(
+			'name' => $this->id,
 			'base_uri' => $this->baseUri,
 			'use_header' => $this->hasHeader,
 			'printable' => $this->isPrintable,
@@ -1982,8 +1983,6 @@ class Report extends PagedDataSet
 	 */
 	function _buildSearchForm() {
 		if (!$this->_SimpleSearch->isEmpty()) {
-			if (!$this->Template->isVariableDefined('simple_search'))
-				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_REPORT_MISSING_SEARCH_VARIABLE', array('simple_search', 'simple_search')));
 			if (isset($this->searchTemplate)) {
 				$SearchTpl = new Template($this->searchTemplate['file']);
 				$SearchTpl->parse();

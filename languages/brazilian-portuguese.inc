@@ -198,7 +198,6 @@ $P2G_LANGUAGE['ERR_REPORT_MISSING_BLOCK_VARIABLE'] = "A variável <I>%s</I> do bl
 $P2G_LANGUAGE['ERR_REPORT_INVALID_COLSIZES'] = "O valor <I>%s</I> não é uma definição válida para os tamanhos das colunas!";
 $P2G_LANGUAGE['ERR_REPORT_COL_SIZES_SUM'] = "A soma dos tamanhos das colunas fornecido é função setColumnSizes deve ser igual a 100!";
 $P2G_LANGUAGE['ERR_REPORT_COL_COUNT_MISMATCH'] = "O número de tamanhos de colunas fornecido (%s) é diferente do número de colunas do relatório (%s, %s agrupadas)";
-$P2G_LANGUAGE['ERR_REPORT_MISSING_SEARCH_VARIABLE'] = "Não foi possível gerar o formulário de busca, pois a variável <I>%s</I> não foi encontrada.<br />Declare {%s} no template do relatório para prosseguir.";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_PARS_MALFORMED'] = "Você deve informar Rótulo, Nome do Campo e Máscara obrigatoriamente na montagem dos parâmetros de busca!";
 $P2G_LANGUAGE['ERR_REPORT_SEARCH_INVALID_MASK'] = "A máscara do <I>%s</I> do parâmetro <I>%d</I> de busca é inválida!";
 $P2G_LANGUAGE['ERR_REPORT_MIN_ALT_STYLE'] = "A função setAlternateStyle deve ser chamada com pelo menos dois parâmetros (nomes de estilos CSS)!";
