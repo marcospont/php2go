@@ -303,7 +303,13 @@ class XmlRender extends PHP2Go
 		}
 		if (TypeUtils::isHashArray($array)) {
 			$arrayEntryAsRepeat = (bool)$options['arrayEntryAsRepeat'];
-			foreach ($array as $key => $value) {
+			foreach ($array as $key => $value) {				
+				if (sizeof(($parts = explode(':', $key))) > 1) {
+					$InnerChild =& $Child->addChild(new XmlNode($parts[0], array()));
+					$opt = array('defaultNodeName' => $parts[1]);
+					$this->addContentAt($InnerChild, $value, $opt);
+					continue;
+				}
 				if (is_object($value)) {
 					$opt = array('defaultNodeName' => $key, 'classAsNodeName' => FALSE);
 					$this->_addObject($Child, $value, $opt);
