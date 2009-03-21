@@ -118,6 +118,7 @@ var Form = {
 			});
 			if (form.validator)
 				form.validator.clearErrors();
+			Event.fire(form, 'clear');
 		}
 	},
 	/**
