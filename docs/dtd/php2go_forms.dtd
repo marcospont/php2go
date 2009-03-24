@@ -80,7 +80,7 @@
 <!ENTITY % fld.special
 	"autocompletefield | captchafield | colorpickerfield | datagrid | datepickerfield | editorfield |
 	editsearchfield | editselectionfield | lookupchoicefield | lookupselectionfield |
-	multicolumnlookupfield | rangefield">
+	multicolumnlookupfield | rangefield | tinymcefield">
 <!ENTITY % fld.range
 	"combofield | datepickerfield | editfield | lookupfield"
 >
@@ -389,6 +389,19 @@
 	label %text; #IMPLIED
 	style %text; #IMPLIED
 	help %text; #IMPLIED
+>
+<!ELEMENT tinymcefield ( ( %rul.list; ), #PCDATA )>
+<!ATTLIST tinymcefield
+	%regattrs;
+	%baseattrs;
+	%valueattrs;
+	%sizeattrs;
+	readonly %boolean; 'F'
+	theme %text; 'advanced'
+	skin %text; #IMPLIED
+	skinvariant %text; #IMPLIED
+	plugins %text; #IMPLIED
+	contentcss %text; #IMPLIED
 >
 <!ELEMENT buttons ( button+ )>
 <!ELEMENT button ( listener* )>
