@@ -160,8 +160,8 @@ class TinyMCEField extends FormField
 	 */
 	function display() {
 		(!$this->preRendered && $this->onPreRender());
-		print sprintf("<textarea id=\"%s\" name=\"%s\" cols=\"\" rows=\"\" title=\"%s\"%s style=\"width:%spx;height:%spx;\"%s%s%s>%s</textarea>",
-			$this->id, $this->name, $this->label, $this->attributes['STYLE'], $this->editorParams['width'], $this->editorParams['height'], $this->attributes['DISABLED'], $this->attributes['DATASRC'], $this->attributes['DATAFLD'], $this->value
+		print sprintf("<textarea id=\"%s\" name=\"%s\" cols=\"\" rows=\"\" title=\"%s\" style=\"width:%spx;height:%spx;\"%s%s%s>%s</textarea>",
+			$this->id, $this->name, $this->label, $this->editorParams['width'], $this->editorParams['height'], $this->attributes['DISABLED'], $this->attributes['DATASRC'], $this->attributes['DATAFLD'], $this->value
 		);
 		$listeners = array();
 		foreach ($this->customListeners as $name => $actions) {
