@@ -366,9 +366,9 @@ class Document extends PHP2Go
 	function setFocus($formName, $fieldName=NULL) {
 		$this->Head->addScript(PHP2GO_JAVASCRIPT_PATH . 'form.js');
 		if (empty($fieldName))
-			$this->addOnloadCode(sprintf("Form.focusFirstField('%s');", $formName));
+			$this->addOnloadCode(sprintf("try { Form.focusFirstField('%s'); } catch(e) {}", $formName));
 		else
-			$this->addOnloadCode(sprintf("if (__fld = \$FF('%s', '%s')) { __fld.focus(); }", $formName, $fieldName));
+			$this->addOnloadCode(sprintf("try { if (__fld = \$FF('%s', '%s')) { __fld.focus(); } } catch(e) {}", $formName, $fieldName));
 	}
 
 	/**
