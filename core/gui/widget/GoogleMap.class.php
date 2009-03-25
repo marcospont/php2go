@@ -42,16 +42,16 @@
  * # height : map height
  * # class : CSS class for the map container
  * # type : map type (normal, satellite or hybrid)
- * # center : center point
+ * # center : center point (mandatory when no locations are provided)
  * # zoom : zoom level
  * # controls : comma separated list of map controls; accepted values: maptype, smallmap, largemap, smallzoom, scale, overviewmap
- * # locations : array of locations, each one containing lat, lng and info* (mandatory)
+ * # locations : array of locations, each one containing lat, lng and info
  * # draggable : enable or disable map dragging
  * # draggableMarkers : enable or disable dragging on markers
  *
  * Available client events:
  * # onInit
- * 
+ *
  * All client events implemented by Google Maps API are also available:
  * # onAddMapType
  * # onRemoveMapType
@@ -85,17 +85,6 @@
 class GoogleMap extends Widget
 {
 	/**
-	 * Widget constructor
-	 *
-	 * @param array $attrs Attributes
-	 * @return GoogleMap
-	 */
-	function GoogleMap($attrs) {
-		parent::Widget($attrs);
-		$this->mandatoryAttributes[] = "locations";
-	}
-
-	/**
 	 * Loads the resources needed by the
 	 * widget onto the active DocumentHead
 	 *
@@ -106,7 +95,7 @@ class GoogleMap extends Widget
 		$apiKey = PHP2Go::getConfigVal('WIDGETS.GOOGLE_MAPS_KEY', FALSE);
 		if (!$apiKey)
 			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_CONFIG_ENTRY_NOT_FOUND', 'WIDGETS.GOOGLE_MAPS_KEY'), E_USER_ERROR, __FILE__, __LINE__);
-		$Head->addScript("http://maps.google.com/maps?file=api&v=2&key=" . $apiKey, '', 'text/javascript', 'utf-8');
+		$Head->addScript("http://maps.google.com/maps?file=api&v=2.x&key=" . $apiKey, '', 'text/javascript', 'utf-8');
 	}
 
 	/**
@@ -125,6 +114,7 @@ class GoogleMap extends Widget
 			'center' => NULL,
 			'zoom' => NULL,
 			'controls' => array('maptype', 'largemap'),
+			'locations' => array(),
 			'draggable' => TRUE,
 			'draggableMarkers' => FALSE
 		);
@@ -156,8 +146,10 @@ class GoogleMap extends Widget
 	 */
 	function validate() {
 		parent::validate();
-		if (empty($this->attributes['locations']))
-			PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_MANDATORY_PROPERTY', array('locations', parent::getClassName())), E_USER_ERROR, __FILE__, __LINE__);
+		if (empty($this->attributes['locations'])) {
+			if (empty($this->attributes['center']))
+				PHP2Go::raiseError(PHP2Go::getLangVal('ERR_WIDGET_MANDATORY_PROPERTY', array('center', parent::getClassName())), E_USER_ERROR, __FILE__, __LINE__);
+		}
 	}
 
 	/**
@@ -167,22 +159,26 @@ class GoogleMap extends Widget
 		$attrs =& $this->attributes;
 		$code = sprintf("\n<div id=\"%s\"%s style=\"width:%s;height:%s;\"></div>", $attrs['id'], (!empty($attrs['class']) ? " class=\"{$attrs['class']}\"" : ""), $attrs['width'], $attrs['height']);
 		$code .= sprintf("\n<div id=\"%s_locations\" style=\"display:none\">", $attrs['id']);
-		foreach ($this->attributes['locations'] as $location)
-			$code .= sprintf("\n  <div>%s</div>", @$location['info']);
+		if (is_array($this->attributes['locations'])) {
+			foreach ($this->attributes['locations'] as $location)
+				$code .= sprintf("\n  <div>%s</div>", @$location['info']);
+		}
 		$code .= "\n</div>";
 		$locations = array();
-		foreach ($this->attributes['locations'] as $location) {
-			$locations[] = array(
-				'lat' => $location['lat'],
-				'lng' => $location['lng'],
-				'title' => @$location['title']
-			);
+		if (is_array($this->attributes['locations'])) {
+			foreach ($this->attributes['locations'] as $location) {
+				$locations[] = array(
+					'lat' => $location['lat'],
+					'lng' => $location['lng'],
+					'title' => @$location['title']
+				);
+			}
 		}
 		print $code;
 		parent::renderJS(array(
 			'id' => $attrs['id'],
 			'type' => $attrs['type'],
-			'center' => (is_array($attrs['center']) ? $attrs['center'] : $this->_calculateCenter($locations)),			
+			'center' => (is_array($attrs['center']) ? $attrs['center'] : $this->_calculateCenter($locations)),
 			'zoom' => $attrs['zoom'],
 			'controls' => $attrs['controls'],
 			'locations' => $locations,

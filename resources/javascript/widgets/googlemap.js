@@ -45,10 +45,10 @@ if (!PHP2Go.included[PHP2Go.baseUrl + 'widgets/googlemap.js']) {
 function GoogleMap(attrs, func) {
 	this.Widget(attrs, func);
 	var apiOk;
-	try { 
-		apiOk = GBrowserIsCompatible(); 
-	} catch (e) { 
-		apiOk = false; 
+	try {
+		apiOk = GBrowserIsCompatible();
+	} catch (e) {
+		apiOk = false;
 	}
 	/**
 	 * Map container
@@ -71,7 +71,7 @@ GoogleMap.extend(Widget, 'Widget');
 GoogleMap.instances = {};
 
 /**
- * Events implemented by GMaps2 API
+ * GMap2 class events
  * @type Array
  */
 GoogleMap.events = ['addmaptype', 'removemaptype', 'click', 'dblclick', 'singlerightclick', 'movestart', 'move', 'moveend', 'zoomend', 'maptypechanged', 'infowindowopen', 'infowindowbeforeclose', 'infowindowclose', 'addoverlay', 'removeoverlay', 'clearoverlays', 'mouseover', 'mouseout', 'mousemove', 'dragstart', 'drag', 'dragend', 'load'];
@@ -82,7 +82,7 @@ GoogleMap.events = ['addmaptype', 'removemaptype', 'click', 'dblclick', 'singler
 GoogleMap.prototype.setup = function() {
 	if (this.map) {
 		var self = this, map = this.map, attrs = this.attributes;
-		var info = $(attrs.id + '_locations').getElementsByTagName('div');	
+		var info = $(attrs.id + '_locations').getElementsByTagName('div');
 		var bounds = new GLatLngBounds(), locations = [];
 		for (var i=0; i<attrs.locations.length; i++) {
 			var pnt = new GLatLng(attrs.locations[i].lat, attrs.locations[i].lng);
@@ -119,7 +119,10 @@ GoogleMap.prototype.setup = function() {
 			}
 		});
 		map.setCenter(new GLatLng(attrs.center.lat, attrs.center.lng));
-		map.setZoom(attrs.zoom || map.getBoundsZoomLevel(bounds));
+		if (attrs.zoom || attrs.locations.length > 0)
+			map.setZoom(attrs.zoom || map.getBoundsZoomLevel(bounds));
+		else
+			map.setZoom(8);
 		switch (attrs.type) {
 			case 'normal' : map.setMapType(G_NORMAL_MAP); break;
 			case 'satellite' : map.setMapType(G_SATELLITE_MAP); break;
@@ -135,15 +138,15 @@ GoogleMap.prototype.setup = function() {
 			if (!info[idx].innerHTML.empty())
 				marker.bindInfoWindow(info[idx]);
 			map.addOverlay(marker);
-		});		
+		});
 		this.raiseEvent('init');
-		Event.addListener(window, 'unload', GUnload);		
+		Event.addListener(window, 'unload', GUnload);
 	}
 	GoogleMap.instances[this.attributes.id] = this;
 };
 
 /**
- * Registers an event listener in the widget. Overrides
+ * Registers an event listener on the widget. Overrides
  * {@link Observable#addEventListener}.
  * @param {String} name Event name
  * @param {Function} func Handler function
@@ -159,6 +162,59 @@ GoogleMap.prototype.addEventListener = function(name, func, scope, unshift) {
 	} else {
 		GoogleMap.superclass.addEventListener.apply(this, arguments);
 	}
+};
+
+/**
+ * Registers an event listener on a map object, using the GEvent class
+ * @param {Object} obj Map, marker, overlay, polyline, ...
+ * @param {String} name Event name
+ * @param {Function} func Handler function
+ * @param {Object} scope Handler scope
+ * @type void
+ */
+GoogleMap.prototype.bindListener = function(obj, name, func, scope) {
+	GEvent.bind(obj, name, scope || this, func);
+};
+
+/**
+ * Adds a marker on the map
+ * @param {GPoint} point Marker point
+ * @param {Object} opts Marker options
+ * @param {Boolean} center Set the new marker as the center of the map?
+ * @param {Number} zoom New zoom level
+ * @type GMarker
+ */
+GoogleMap.prototype.addMarker = function(point, opts, center, zoom) {
+	opts = Object.extend({draggable: true}, (opts || {}));
+	var marker = new GMarker(point, opts);
+	if (opts.info)
+		marker.bindInfoWindowHtml(opts.info);
+	if (!!center)
+		this.map.setCenter(point);
+	if (zoom > 0)
+		this.map.setZoom(zoom);
+	this.map.addOverlay(marker);
+	return marker;
+};
+
+/**
+ * Removes all overlays from the map
+ * @type void
+ */
+GoogleMap.prototype.clear = function() {
+	this.map.clearOverlays();
+};
+
+/**
+ * Searches for a given address using the Google Geocode Client
+ * @param {String} address Address
+ * @param {Function} callback Callback function
+ * @type void
+ */
+GoogleMap.prototype.findAddress = function(address, callback) {
+	var geocoder = new GClientGeocoder();
+	if (geocoder)
+		geocoder.getLatLng(address, callback);
 };
 
 PHP2Go.included[PHP2Go.baseUrl + 'widgets/googlemap.js'] = true;
