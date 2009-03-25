@@ -596,8 +596,8 @@ SelectField = function(fld) {
 SelectField.extend(Field, 'Field');
 
 /**
- * Gets the current selected option(s). In multiple
- * choice select inputs, this method returns an array
+ * Gets the current selected option(s). On multiple
+ * choice select inputs, returns an array
  * of values
  * @type Object
  */
@@ -640,6 +640,28 @@ SelectField.prototype.setValue = function(val) {
 };
 
 /**
+ * Gets the text of the current selected option(s). On 
+ * multiple choice select inputs, returns an array
+ * of values
+ * @type Object
+ */
+SelectField.prototype.getText = function() {
+	if (this.multiple) {
+		var res = $C(this.fld.options).valid(function(el) {
+			if (el.selected == true)
+				return el.text;
+			return null;
+		});
+		return (res.empty() ? null : res);		
+	} else {
+		var idx = this.fld.selectedIndex;
+		if (idx >= 0 && this.fld.options[idx].value != "")
+			return this.fld.options[idx].text;
+		return null;		
+	}
+};
+
+/**
  * Select an option by its text
  * @param {String} text Option text
  * @type void
@@ -660,6 +682,8 @@ SelectField.prototype.clear = function() {
 	$C(this.fld.options).walk(function(el, idx) {
 		el.selected = false;
 	});
+	if (this.fld.onchange)
+		this.fld.onchange();	
 };
 
 /**
@@ -668,6 +692,8 @@ SelectField.prototype.clear = function() {
  */
 SelectField.prototype.clearOptions = function() {
 	this.fld.options.length = 0;
+	if (this.fld.onchange)
+		this.fld.onchange();	
 };
 
 /**
@@ -737,6 +763,8 @@ SelectField.prototype.importOptions = function(str, lsep, csep, pos, val) {
 			if (val && val == opt[0])
 				self.fld.value = val;
 		});
+		if (this.fld.onchange)
+			this.fld.onchange();		
 	}
 };
 
