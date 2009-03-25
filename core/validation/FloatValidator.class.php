@@ -112,7 +112,7 @@ class FloatValidator extends AbstractValidator
 			// simple float validation (no length validation)
 			$result = preg_match("/^\-?[0-9]+(" . preg_quote($this->decimalPoint, '/') . "[0-9]+)?$/", $value);
 		}
-		if ($result === FALSE && isset($this->fieldLabel)) {
+		if ($result == FALSE && isset($this->fieldLabel)) {
 			if (isset($this->limiters)) {
 				$this->errorMessage = str_replace("\\n", "<br />", PHP2Go::getLangVal('ERR_FORM_FIELD_INVALID_FLOAT', array($this->fieldLabel, $this->limiters[0], $this->limiters[1])));
 			} else {
