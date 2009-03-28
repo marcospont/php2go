@@ -65,7 +65,7 @@ define('TEMPLATE_VARIABLE', '\$?[\w\:\[\]]+(?:\.\$?[\w\:\[\]]+|->\$?[\w\:\[\]]+(
  */
 define('TEMPLATE_VARIABLE_NAME', '([\w\:\[\]]+)');
 /**
- * Inner variable (used as a tag argument) pattern
+ * Inner variable pattern
  */
 define('TEMPLATE_INNER_VARIABLE', '\$[\w\:\[\]]+(?:\.\$?[\w\:\[\]]+|->\$?[\w\:\[\]]+(?:\(\))?)*');
 /**
@@ -73,13 +73,17 @@ define('TEMPLATE_INNER_VARIABLE', '\$[\w\:\[\]]+(?:\.\$?[\w\:\[\]]+|->\$?[\w\:\[
  */
 define('TEMPLATE_CONFIG_VARIABLE', '\#\w+(?:\.\w+)?\#');
 /**
+ * Complex variable pattern
+ */
+define('TEMPLATE_COMPLEX_VARIABLE', '\[(?:\s*(?:\w+\s*:\s*)?(?:\w+|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_NUMBER . '|' . TEMPLATE_QUOTED_STRING .')\s*,?\s*)*\]');
+/**
  * Functions pattern
  */
 define('TEMPLATE_FUNCTION', '[a-zA-Z_]\w*(::[a-zA-Z_]\w*)?');
 /**
  * Variable modifier pattern
  */
-define('TEMPLATE_MODIFIER', '((?:\|@?\w+(?::(?:\w+|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_NUMBER . '|' . TEMPLATE_QUOTED_STRING .'))*)*)');
+define('TEMPLATE_MODIFIER', '((?:\|@?\w+(?::(?:\w+|' . TEMPLATE_COMPLEX_VARIABLE . '|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_NUMBER . '|' . TEMPLATE_QUOTED_STRING .'))*)*)');
 /**
  * Dynamic blocks pattern
  */
@@ -846,6 +850,9 @@ class TemplateParser extends PHP2Go
 	 * @access private
 	 */
 	function _compileVariableName($name) {
+		// complex variable (arrays, hashes)
+		if (substr($name, 0, 1) == '[' && substr($name, -1) == ']')
+			return $this->_compileComplexVariable($name);
 		// internal variables access
 		if ($variableBase = $this->_compileInternalVariable($name)) {
 			$p2gInternal = TRUE;
@@ -893,6 +900,31 @@ class TemplateParser extends PHP2Go
 		if ($state == 3)
 			$compiled .= "]";
 		return "{$variableBase}{$compiled}";
+	}
+	
+	/**
+	 * Compiles a complex variable (array or hash)
+	 *
+	 * @param string $name Variable definition
+	 * @access private
+	 * @return string
+	 */
+	function _compileComplexVariable($name) {
+		$name = trim(substr($name, 1, -1));
+		$name = preg_replace('/(^|,)(?:\s*(\w+)\s*:\s*)/', '$1\'$2\'=>', $name);
+		$name = preg_replace_callback('/' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '/', array($this, '_compileComplexVariableMember'), $name);
+		return 'array(' . $name . ')';
+	}
+	
+	/**
+	 * Compiles a variable inside a complex variable
+	 *
+	 * @param array $matches Match result
+	 * @access private
+	 * @return string
+	 */
+	function _compileComplexVariableMember($matches) {
+		return $this->_compileVariableName($matches[0]);
 	}
 
 	/**
@@ -966,7 +998,7 @@ class TemplateParser extends PHP2Go
 	 */
 	function _compileAssign($expression) {
 		$exprParts = array();
-		if (preg_match('~^' . TEMPLATE_VARIABLE_NAME . '\s*[=]\s*((' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '|' . TEMPLATE_QUOTED_STRING . '|' . TEMPLATE_NUMBER . '|\b\w+\b)$~', trim($expression), $exprParts)) {
+		if (preg_match('~^' . TEMPLATE_VARIABLE_NAME . '\s*[=]\s*((' . TEMPLATE_COMPLEX_VARIABLE . '|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '|' . TEMPLATE_QUOTED_STRING . '|' . TEMPLATE_NUMBER . '|\b\w+\b)$~', trim($expression), $exprParts)) {
 			return $this->_compilePHPBlock(
 				'$block[$instance][\'vars\'][\'' . $exprParts[1] . '\'] = ' .
 				(isset($exprParts[4]) ? $this->_compileVariable($exprParts[3], $exprParts[4]) : $exprParts[2]) . ';'
@@ -1159,7 +1191,7 @@ class TemplateParser extends PHP2Go
 	function _compileIf($expression, $elseif=FALSE) {
 		$match = array();
         preg_match_all('~(?>
-        		' . TEMPLATE_FUNCTION . ' | ' . TEMPLATE_INNER_VARIABLE . ' | ' . TEMPLATE_CONFIG_VARIABLE . ' | ' . TEMPLATE_QUOTED_STRING . ' |
+        		' . TEMPLATE_FUNCTION . ' | ' . TEMPLATE_COMPLEX_VARIABLE . ' | ' . TEMPLATE_INNER_VARIABLE . ' | ' . TEMPLATE_CONFIG_VARIABLE . ' | ' . TEMPLATE_QUOTED_STRING . ' |
                 \-?0[xX][0-9a-fA-F]+|\-?\d+(?:\.\d+)?|\.\d+|!==|===|==|!=|<>|<<|>>|<=|>=|\&\&|\|\||\(|\)|,|\!|\^|=|\&|\~|<|>|\||\%|\+|\-|\/|\*|\@|
                 \b\w+\b|\S+)~x', $expression, $match);
         $tokens = $match[0];
@@ -1251,7 +1283,7 @@ class TemplateParser extends PHP2Go
                 	if (preg_match('~^' . TEMPLATE_FUNCTION . '$~', $token)) {
                 	}
                 	// variables: parse
-                	elseif (preg_match('~^(?:' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . ')$~', $token, $tokenParts)) {
+                	elseif (preg_match('~^(?:' . TEMPLATE_COMPLEX_VARIABLE . '|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . ')$~', $token, $tokenParts)) {
                 		$token = $this->_compileVariable($tokenParts[0], NULL);
                 	}
                 	// strings and numbers: do nothing
@@ -1560,6 +1592,12 @@ class TemplateParser extends PHP2Go
 		);
 	}
 
+	/**
+	 * Compiles a "config" tag
+	 *
+	 * @param array $configProperties Tag properties
+	 * @access private
+	 */
 	function _compileConfig($configProperties) {
 		$props = $this->_parseProperties($configProperties);
 		if (!isset($props['file'])) {
@@ -1586,7 +1624,7 @@ class TemplateParser extends PHP2Go
 	 */
 	function _parseProperties($properties, $compileToString=TRUE) {
 		$match = array();
-		preg_match_all('~(?:' . TEMPLATE_QUOTED_STRING . TEMPLATE_MODIFIER . '|' . TEMPLATE_NUMBER . '|(?:' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . ')' . TEMPLATE_MODIFIER . '|(?>[^"\'=\s]+))+|[=]~m', $properties, $match);
+		preg_match_all('~(?:' . TEMPLATE_QUOTED_STRING . TEMPLATE_MODIFIER . '|' . TEMPLATE_NUMBER . '|(?:' . TEMPLATE_COMPLEX_VARIABLE . '|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . ')' . TEMPLATE_MODIFIER . '|(?>[^"\'=\s]+))+|[=]~m', $properties, $match);
 		$tokens = $match[0];
 		$props = array();
 		$state = 0;
@@ -1620,7 +1658,7 @@ class TemplateParser extends PHP2Go
 							$token = ($compileToString ? 'NULL' : NULL);
 						elseif (!$compileToString && preg_match('~^' . TEMPLATE_QUOTED_STRING . '$~', $token))
 							$token = substr($token, 1, -1);
-						elseif (preg_match('~^(' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '$~', $token, $tokenParts))
+						elseif (preg_match('~^(' . TEMPLATE_COMPLEX_VARIABLE . '|' . TEMPLATE_INNER_VARIABLE . '|' . TEMPLATE_CONFIG_VARIABLE . '|' . TEMPLATE_QUOTED_STRING . ')' . TEMPLATE_MODIFIER . '$~', $token, $tokenParts))
 							$token = $this->_compileVariable($tokenParts[1], $tokenParts[2]);
 						elseif (!$compileToString && preg_match('~^' . TEMPLATE_NUMBER . '$~', $token))
 							$token = floatval($token);
