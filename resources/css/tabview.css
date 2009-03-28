@@ -55,14 +55,14 @@
 	zoom: 1;
 	padding: 5px;
 }
-.tabContainer div {
+.tabContainer > div {
 	overflow: auto;
-	display: none;
+	display: none;	
 }
-.tabContainer div.tabViewVisible {
+.tabContainer > div.tabViewVisible {
 	display: block;
 }
-.tabContainer div.tabViewLoading {
+.tabContainer > div.tabViewLoading {
 	visibility: hidden;
 }
 /* tob, bottom and left orientation */
