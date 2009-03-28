@@ -76,9 +76,12 @@
   <!-- end if -->
   <!-- end loop -->
   </p>
-  <b>assign command:</b>
+  <b>Assign command:</b>
   <!-- assign currentTime=$p2g.time -->
   <p>{$currentTime|format_time}</p>
+  <b>Assign command with array variable:</b>
+  <!-- assign myArray=[1, true, "string", $p2g.time] -->
+  <p>{','|@join:$myArray}</p>  
   <b>Capture blocks:</b>
   <!-- capture -->
   this code was captured and printed out later
@@ -89,6 +92,7 @@
   procedural function:&nbsp;<!-- call function="strlen" p1="PHP2Go Framework" --><br />
   static class method:&nbsp;<!-- call function="HttpRequest::uri" --><br />
   object method:&nbsp;<!-- call function="$p2g.user->getElapsedTime" --><br />
+  object method with hash parameter:&nbsp;<!-- call function="$object->buildProps" p1=[number:1,string:"string",bool:true,var:$p2g.time] --><br/>
   <!-- call function="ucfirst" p1="php2go framework" assign="output" -->
   assigning result to a variable: {$output}<br />
   <!-- function name="parseEntities" -->

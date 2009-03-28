@@ -87,6 +87,13 @@
 			 */
 			$this->rs =& $db->query("select * from products where active = 1");
 		}
+		
+		function buildProps($props) {
+			$tmp = array();
+			foreach ($props as $n => $v)
+				$tmp[] = $n . '=>' . $v;
+			return '[' . join(', ', $tmp) . ']';
+		}
 
 		function sum($line) {
 			$this->total += (float)$line['price'];
