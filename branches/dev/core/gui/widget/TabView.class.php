@@ -173,7 +173,7 @@ class TabView extends Widget
 		);
 		$attrs =& $this->attributes;
 		$code = "\n<style type=\"text/css\">";
-		$code .= sprintf("\n#%s .tabContainer div { height: %s; }", $attrs['id'], $attrs['contentHeight']);
+		$code .= sprintf("\n#%s .tabContainer > div { height: %s; -moz-box-sizing: border-box; }", $attrs['id'], $attrs['contentHeight']);
 		if ($attrs['orientation'] == TABVIEW_ORIENTATION_TOP || $attrs['orientation'] == TABVIEW_ORIENTATION_BOTTOM) {
 			$code .= sprintf("\n#%s .tabScrollContainer { width: %s; }", $attrs['id'], $attrs['width']);
 		} else {
