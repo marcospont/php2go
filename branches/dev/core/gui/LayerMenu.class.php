@@ -518,7 +518,6 @@ class LayerMenu extends Menu
 				"\n\t{$this->id}.barHeight = {$this->height};" .
 				"\n\t{$this->id}.barX = {$this->offsetX};" .
 				"\n\t{$this->id}.barY = {$this->offsetY};" .
-				"\n\t{$this->id}.barClass = \"" . $this->_getStyle(0, 'reg') . "\";" .
 				"\n\t{$this->id}.barBorderX = 0;" .
 				"\n\t{$this->id}.barBorderY = 0;";
 			for ($i = 0; $i <= $this->lastLevel; $i++)
