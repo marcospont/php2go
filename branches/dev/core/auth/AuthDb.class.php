@@ -77,6 +77,24 @@ class AuthDb extends Auth
 	 * @var string
 	 */
 	var $dbFields = '';
+	
+	/**
+	 * Database field that represents the username
+	 * 
+	 * Defaults to the login field name set on {@link Auth} class properties.
+	 *
+	 * @var string
+	 */
+	var $dbLoginFieldName = '';
+
+	/**
+	 * Database field that represents the password
+	 * 
+	 * Defaults to the password field name set on {@link Auth} class properties.
+	 *
+	 * @var string
+	 */
+	var $dbPasswordFieldName = '';
 
 	/**
 	 * Extra condition clause to be used in the authentication query
@@ -133,7 +151,7 @@ class AuthDb extends Auth
 	}
 
 	/**
-	 * Set the field names that must be used in the authentication query
+	 * Set the database field names that must be used in the authentication query
 	 *
 	 * Array or comma separated list of field names
 	 * <code>
@@ -155,6 +173,24 @@ class AuthDb extends Auth
 				$fields = substr($fields, 1);
 			$this->dbFields = $fields;
 		}
+	}
+	
+	/**
+	 * Set the database field name that represents the username
+	 *
+	 * @param string $dbLoginFieldName Database username field
+	 */
+	function setDbLoginFieldName($dbLoginFieldName) {
+		$this->dbLoginFieldName = $dbLoginFieldName;
+	}
+	
+	/**
+	 * Set the database field name that represents the password
+	 *
+	 * @param string $dbPasswordFieldName Database password field
+	 */
+	function setDbPasswordFieldName($dbPasswordFieldName) {
+		$this->dbPasswordFieldName = $dbPasswordFieldName;
 	}
 
 	/**
@@ -233,27 +269,29 @@ class AuthDb extends Auth
 	function authenticate() {
 		$Db =& Db::getInstance($this->connectionId);
 		$queryParams = array();
+		$loginField = (!empty($this->dbLoginFieldName) ? $this->dbLoginFieldName : $this->loginFieldName);
+		$passwordField = (!empty($this->dbPasswordFieldName) ? $this->dbPasswordFieldName : $this->passwordFieldName);
 		$Query = new QueryBuilder();
 		$Query->addTable($this->tableName);
 		if ($this->dbFields == '*') {
 			$Query->setFields('*');
 		} else {
-			$Query->setFields($this->loginFieldName);
+			$Query->setFields($loginField);
 			if (!empty($this->dbFields))
 				$Query->addFields($this->dbFields);
 		}
-		$Query->setClause("{$this->loginFieldName} = ?");
+		$Query->setClause("{$loginField} = ?");
 		$queryParams[] = $this->_login;
 		if (is_array($this->cryptFunction)) {
 			if ($this->cryptFunction['type'] == 'db') {
-				$Query->addClause("{$this->passwordFieldName} = {$this->cryptFunction['func']}(?)");
+				$Query->addClause("{$passwordField} = {$this->cryptFunction['func']}(?)");
 				$queryParams[] = $this->_password;
 			} else {
-				$Query->addClause("{$this->passwordFieldName} = ?");
+				$Query->addClause("{$passwordField} = ?");
 				$queryParams[] = call_user_func($this->cryptFunction['func'], $this->_password);
 			}
 		} else {
-			$Query->addClause("{$this->passwordFieldName} = ?");
+			$Query->addClause("{$passwordField} = ?");
 			$queryParams[] = $this->_password;
 		}
 		if (!empty($this->extraClause)) {
