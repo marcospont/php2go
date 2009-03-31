@@ -230,6 +230,7 @@ $P2G_LANGUAGE['ERR_MAIL_INVALID_TYPE'] = "Nicht unterstützter Nachrichten Transp
 $P2G_LANGUAGE['ERR_MAIL_INCOMPLETE_PARAMS'] = "Ungenügend Parameter für Transport Type %s!";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "Es gibt keine Empfänger für die Nachricht!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "Der Nachrichteninhalt konnte nicht signiert werden.<br />%s";
+$P2G_LANGUAGE['ERR_CANT_EXECUTE_COMMAND'] = "Das %s Kommando konnte nicht ausgeführt werden!";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Fehler bei der Verbindung zum SMTP- Server %s!<br />[Error %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_COMMAND'] = "Fehler beim ausführen des Kommandos %s zum SMTP- Server!<br />[Error %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_AUTHENTICATE'] = "Es war nicht möglich sich beim SMTP- Server zu authentifizieren!!";

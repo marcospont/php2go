@@ -231,6 +231,7 @@ $P2G_LANGUAGE['ERR_MAIL_INCOMPLETE_PARAMS'] = "Insufficient parameters for trans
 $P2G_LANGUAGE['ERR_MAIL_MESSAGE_NOT_BUILT'] = "message สร้างอย่างไม่สมบูรณ์�?ละส่งไม่ได้!<br />Run the build() method.";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "ไม่มีผู้รับ message!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "It wasn't possible to sign the message content.<br />%s";
+$P2G_LANGUAGE['ERR_CANT_EXECUTE_COMMAND'] = "It wasn't possible to run the %s command!";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Error while connecting to the SMTP server %s!<br />[Error %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_COMMAND'] = "Error while executing the command %s in the SMTP server!<br />[Error %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_AUTHENTICATE'] = "It wasn't possible to authenticate with the SMTP server!";

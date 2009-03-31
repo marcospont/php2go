@@ -230,6 +230,7 @@ $P2G_LANGUAGE['ERR_MAIL_INVALID_TYPE'] = "Invalid message transport type!";
 $P2G_LANGUAGE['ERR_MAIL_INCOMPLETE_PARAMS'] = "Insufficient parameters for transport type %s!";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "Nejsou zadáni &#382;ádní adresáti pro zprávu!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "Nebylo mo&#382;né podepsat obsah zprávy.<br />%s";
+$P2G_LANGUAGE['ERR_CANT_EXECUTE_COMMAND'] = "Nebylo mo&#382;né provést p&#345;íkaz %s!";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Chyba p&#345;i spojování se serverem SMTP %s!<br />[Chyby %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_COMMAND'] = "Chyba p&#345;i vykonávání p&#345;íkazu %s SMTP serverem!<br />[Chyby %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_AUTHENTICATE'] = "Nebylo mo&#382;né ov&#283;&#345;it u&#382;ivatele se serverem SMTP!";
