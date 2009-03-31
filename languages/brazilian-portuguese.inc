@@ -230,6 +230,7 @@ $P2G_LANGUAGE['ERR_MAIL_INVALID_TYPE'] = "Tipo de transporte de mensagem inválid
 $P2G_LANGUAGE['ERR_MAIL_INCOMPLETE_PARAMS'] = "Parâmetros insuficientes para o tipo de transporte %s!";
 $P2G_LANGUAGE['ERR_MAIL_EMPTY_RCPT'] = "Não foi fornecido nenhum destinatário à mensagem!";
 $P2G_LANGUAGE['ERR_SIGNED_MESSAGE_SIGN'] = "Não foi possível assinar o conteúdo da mensagem.<br />%s";
+$P2G_LANGUAGE['ERR_CANT_EXECUTE_COMMAND'] = "Não foi possível executar o comando %s!";
 $P2G_LANGUAGE['ERR_SMTP_CONNECTION'] = "Erro ao conectar ao servidor SMTP %s!<br />[Erro %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_COMMAND'] = "Erro ao executar o comando %s no servidor SMTP!<br />[Erro %d] - %s";
 $P2G_LANGUAGE['ERR_SMTP_AUTHENTICATE'] = "Não foi possível realizar a autenticação com o servidor SMTP!";
