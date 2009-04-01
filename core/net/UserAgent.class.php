@@ -473,7 +473,7 @@ class UserAgent extends PHP2Go
 	 * @access private
 	 */
 	function _detectBrowserFlags($agent) {
-        $this->browser['ns'] = ($this->_match('mozilla', $agent) && $this->_dontMatch('spoofer|compatible|hotjava|opera|webtv', $agent));
+        $this->browser['ns'] = ($this->_match('mozilla', $agent) && $this->_dontMatch('spoofer|compatible|hotjava|opera|webtv|firefox|chrome', $agent));
         $this->browser['ns2'] = ($this->browser['ns'] && $this->majorVersion == 2);
         $this->browser['ns3'] = ($this->browser['ns'] && $this->majorVersion == 3);
         $this->browser['ns4'] = ($this->browser['ns'] && $this->majorVersion == 4);
@@ -481,16 +481,17 @@ class UserAgent extends PHP2Go
         $this->browser['nav'] = ($this->browser['ns'] && $this->majorVersion < 5);
         $this->browser['ns6'] = ($this->browser['ns'] && $this->majorVersion == 5);
         $this->browser['ns6+'] = ($this->browser['ns'] && $this->majorVersion >= 5);
+        $this->browser['gecko'] = ($this->_match('gecko', $agent));
+        $this->browser['khtml'] = ($this->_match('webkit|khtml', $agent));        
         $this->browser['galeon'] = $this->_match('galeon', $agent);
-        $this->browser['konqueror'] = $this->_match('konqueror|safari', $agent);
-        $this->browser['nautilus'] = $this->_match('nautilus', $agent);
-        $this->browser['safari'] = $this->_match('konqueror|safari', $agent);
         $this->browser['text'] = $this->_match('links|lynx|w3m', $agent);
-        $this->browser['gecko'] = ($this->_match('gecko', $agent) && !$this->browser['konqueror']);
         $this->browser['firefox'] = ($this->browser['gecko'] && $this->_match("firefox|firebird", $agent));
         $this->browser['firefox0x'] = ($this->browser['firefox'] && $this->_match("firebird/0.|firefox/0.", $agent));
         $this->browser['firefox1x'] = ($this->browser['firefox'] && $this->_match("firefox/1.", $agent));
         $this->browser['firefox2x'] = ($this->browser['firefox'] && $this->_match("firefox/2.", $agent));
+        $this->browser['firefox3x'] = ($this->browser['firefox'] && $this->_match("firefox/3.", $agent));
+        $this->browser['chrome'] = ($this->browser['gecko'] && $this->_match("chrome", $agent));
+        $this->browser['chrome1x'] = ($this->browser['chrome'] && $this->_match('chrome/1.', $agent));
         $this->browser['ie'] = ($this->_match('msie', $agent) && $this->_dontMatch('opera', $agent));
         $this->browser['ie3'] = ($this->browser['ie'] && $this->majorVersion == 3);
         $this->browser['ie4'] = ($this->browser['ie'] && $this->majorVersion == 4 && $this->_match('msie 4', $agent));
@@ -503,6 +504,9 @@ class UserAgent extends PHP2Go
         $this->browser['ie6+'] = ($this->browser['ie5+'] && !$this->browser['ie5'] && !$this->browser['ie5_5']);
         $this->browser['ie7'] = $this->_match('msie 7', $agent);
         $this->browser['myie'] = ($this->browser['ie'] && $this->_match('myie', $agent));
+        $this->browser['konqueror'] = ($this->_match('konqueror|safari', $agent) && !$this->browser['chrome']);
+        $this->browser['nautilus'] = $this->_match('nautilus', $agent);
+        $this->browser['safari'] = ($this->_match('konqueror|safari', $agent) && !$this->browser['chrome']);
         $this->browser['opera'] = $this->_match('opera', $agent);
         $this->browser['opera2'] = $this->_match('opera[ /]2', $agent);
         $this->browser['opera3'] = $this->_match('opera[ /]3', $agent);
@@ -553,9 +557,9 @@ class UserAgent extends PHP2Go
         $this->os['winme'] = $this->_match('win 9x 4.90|wi(n|ndows)[ -]?me', $agent);
         $this->os['win2k'] = $this->_match('wi(n|ndows)[ -]?(2000|nt 5.0)', $agent);
         $this->os['winxp'] = $this->_match('wi(n|ndows)[ -]?(xp|nt 5.1)', $agent);
-        $this->os['win2003'] = $this->_match('win(n|ndows)[ -]?(2003|nt 5.2)', $agent);
-		$this->os['winvista'] = $this->_match('win(n|ndows)[ -]}(vista|nt 6.0)', $agent);
-        $this->os['winnt'] = $this->_match('wi(n|ndows)[ -]?nt', $agent);
+        $this->os['win2003'] = $this->_match('wi(n|ndows)[ -]?(2003|nt 5.2)', $agent);
+		$this->os['winvista'] = $this->_match('wi(n|ndows)[ -]?(vista|nt 6.0)', $agent);
+        $this->os['winnt'] = ($this->_match('wi(n|ndows)[ -]?nt', $agent) && !$this->os['win2k'] && !$this->os['winxp'] && !$this->os['win2003'] && !$this->os['winvista']);
         $this->os['win32'] = ($this->os['win95'] || $this->os['win98'] || $this->os['winnt'] || $this->_match('win32', $agent) || $this->_match('32bit', $agent));
         $this->os['aix'] = $this->_match('aix', $agent);
         $this->os['aix1'] = $this->_match('aix[ ]?1', $agent);
@@ -616,9 +620,9 @@ class UserAgent extends PHP2Go
         	if (preg_match(';gecko/([\d]+)\b;i', $agent, $matches))
         		$this->features['gecko'] = $matches[1];
         }
-        if ($this->browser['ns6+'] || $this->browser['opera5+'] || $this->browser['konqueror'] || $this->browser['netgem'])
+        if ($this->browser['gecko'] || $this->browser['khtml'] || $this->browser['ie5+'] || $this->browser['ns6+'] || $this->browser['opera5+'] || $this->browser['konqueror'] || $this->browser['netgem'])
         	$this->features['dom'] = TRUE;
-        if ($this->browser['ie4+'] || $this->browser['ns4+'] || $this->browser['opera5+'] || $this->browser['konqueror'] || $this->browser['netgem'])
+        if ($this->browser['gecko'] || $this->browser['khtml'] || $this->browser['ie4+'] || $this->browser['ns4+'] || $this->browser['opera5+'] || $this->browser['konqueror'] || $this->browser['netgem'])
         	$this->features['dhtml'] = TRUE;
 	}
 
@@ -672,9 +676,11 @@ class UserAgent extends PHP2Go
 			'ie4+' => 'Microsoft Internet Explorer 4.x',
 			'ie' => 'Microsoft Internet Explorer',
 			'nav' => 'Netscape Navigator',
+			'firefox3x' => 'Mozilla Firefox 3.x',
 			'firefox2x' => 'Mozilla Firefox 2.x',
 			'firefox1x' => 'Mozilla Firefox 1.x',
 			'firefox0x' => 'Mozilla Firefox 0.x',
+			'chrome1x' => 'Google Chrome 1.x',
 			'ns6+' => 'Mozilla/Netscape 6.x',
 			'ns4' => 'Netscape 4.x',
 			'ns' => 'Netscape'

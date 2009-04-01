@@ -153,10 +153,10 @@ var PHP2Go = {
 	 *
 	 * <br>Properties:
 	 * <ul><li>ie (Boolean)</li><li>ie7 (Boolean)</li><li>ie6 (Boolean)</li><li>
-	 * ie5 (Boolean)</li><li>wch (Boolean)</li><li>opera (Boolean)</li><li>khtml
-	 * (Boolean)</li><li>safari (Boolean)</li><li>mozilla (Boolean)</li><li>gecko
-	 * (Boolean)</li><li>windows (Boolean)</li><li>linux (Boolean)</li><li>mac
-	 * (Boolean)</li><li>unix (Boolean)</li><li>os (String)</li></ul>
+	 * ie5 (Boolean)</li><li>wch (Boolean)</li><li>gecko (Boolean)</li><li>khtml 
+	 * (Boolean)</li><li>opera (Boolean)</li><li>chrome (Boolean)</li><li>safari 
+	 * (Boolean)</li><li>mozilla (Boolean)</li><li>windows (Boolean)</li><li>linux 
+	 * (Boolean)</li><li>mac (Boolean)</li><li>unix (Boolean)</li><li>os (String)</li></ul>
 	 *
 	 * @type Object
 	 */
@@ -167,11 +167,12 @@ var PHP2Go = {
 		bw.ie6 = bw.ie && /msie 6/i.test(ua);
 		bw.ie5 = bw.ie && /msie 5\.0/i.test(ua);
 		bw.wch = bw.ie && !bw.ie7;
-		bw.opera = /opera/i.test(ua);
-		bw.khtml = /konqueror|safari|webkit|khtml/i.test(ua);
-		bw.safari = /safari|webkit/i.test(ua);
-		bw.mozilla = !bw.ie && !bw.opera && !bw.khtml && /mozilla/i.test(ua);
 		bw.gecko = /gecko/i.test(ua);
+		bw.khtml = /konqueror|safari|webkit|khtml/i.test(ua);
+		bw.opera = /opera/i.test(ua);		
+		bw.chrome = /chrome/i.test(ua);		
+		bw.safari = /safari|webkit/i.test(ua);
+		bw.mozilla = !bw.ie && !bw.opera && !bw.khtml && /mozilla/i.test(ua);		
 		bw.windows = bw.linux = bw.mac = bw.unix = false;
 		bw.os = (/windows/i.test(ua) ? 'windows' : (/linux/i.test(ua) ? 'linux' : (/mac/i.test(ua) ? 'mac' : (/unix/i.test(ua) ? 'unix' : 'unknown'))));
 		(bw.os != 'unknown') && (bw[bw.os] = true);
