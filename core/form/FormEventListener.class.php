@@ -304,6 +304,11 @@ class FormEventListener extends PHP2Go
 	 * @access protected
 	 */
 	function onDataBind() {
+		$Form =& $this->getOwnerForm();
+		// resolve variables in the listener body
+		if (preg_match("/~[^~]+~/", $this->functionBody)) {
+			$this->functionBody = $Form->resolveVariables($this->functionBody);
+		}
 	}
 
 	/**
