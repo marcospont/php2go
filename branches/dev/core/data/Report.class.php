@@ -1998,11 +1998,8 @@ class Report extends PagedDataSet
 			if (isset($this->extraVars) && !empty($this->extraVars))
 				$vars['searchUrl'] .= (strpos($this->baseUri, '?') !== FALSE ? '&' : '?') . $this->extraVars;
 			$vars['labelStyle'] = (!empty($this->style['link']) ? " class=\"{$this->style['link']}\"" : '');
-			$Agent =& UserAgent::getInstance();
-			if ($Agent->matchBrowserList(array('ie5+', 'ns6+', 'opera5+'))) {
-				$vars['inputStyle'] = (!empty($this->style['filter']) ? " class=\"{$this->style['filter']}\"" : '');
-				$vars['buttonStyle'] = (!empty($this->style['button']) ? " class=\"{$this->style['button']}\"" : '');
-			}
+			$vars['inputStyle'] = (!empty($this->style['filter']) ? " class=\"{$this->style['filter']}\"" : '');
+			$vars['buttonStyle'] = (!empty($this->style['button']) ? " class=\"{$this->style['button']}\"" : '');
 			$masks = array();
 			$vars['filterOptions'] = '';
 			$filters = $this->_SimpleSearch->iterator();
