@@ -193,11 +193,6 @@ class HtmlUtils extends PHP2Go
 			$type = 'button';
 		if (empty($id))
 			$id = PHP2Go::generateUniqueId('htmlbutton');
-		if (!empty($cssClass)) {
-			$Agent =& UserAgent::getInstance();
-			if (!$Agent->matchBrowserList(array('ie5+', 'ns6+', 'opera5+')))
-				$cssClass = '';
-		}
 		$Lang =& LanguageBase::getInstance();
 		return sprintf ("<button type=\"%s\" id=\"%s\"%s%s%s%s>%s</button>",
 			$type, $id,

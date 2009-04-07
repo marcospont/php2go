@@ -438,8 +438,7 @@ class Form extends Component
 	 * @return string
 	 */
 	function getInputStyle() {
-		$Agent =& UserAgent::getInstance();
-		if (!empty($this->inputStyle) && $Agent->matchBrowserList(array('ie5+', 'ns6+', 'opera5+')))
+		if (!empty($this->inputStyle))
 			return " class=\"{$this->inputStyle}\"";
 		return '';
 	}
@@ -481,8 +480,7 @@ class Form extends Component
 	 * @return string
 	 */
 	function getButtonStyle() {
-		$Agent =& UserAgent::getInstance();
-		if (!empty($this->buttonStyle) && $Agent->matchBrowserList(array('ie5+', 'ns6+', 'opera5+')))
+		if (!empty($this->buttonStyle))
 			return " class=\"{$this->buttonStyle}\"";
 		return '';
 	}

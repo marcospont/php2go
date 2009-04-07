@@ -319,19 +319,14 @@ class FormBasic extends Form
 		// configure client errors display mode
 		if ($this->clientErrorOptions['mode'] == FORM_CLIENT_ERROR_DHTML)
 			$this->clientErrorOptions['placeholder'] = 'form_client_errors';
-		$Agent =& UserAgent::getInstance();
-		$compatMode = ($Agent->matchBrowserList(array('ie5+', 'ns6+', 'opera5+')) === FALSE);
 		$sectionIds = array_keys($this->sections);
 		foreach ($sectionIds as $sectionId) {
 			$section =& $this->sections[$sectionId];
 			if ($section->isVisible() && $section->hasChildren()) {
 				$this->_Template->createBlock('loop_section');
-				$this->_Template->assign('compatMode', $compatMode);
 				$this->_Template->assign('sectionName', $section->name);
 				$this->_Template->assign('sectionTitleStyle', (!empty($this->sectionTitleStyle) ? $this->getSectionTitleStyle() : parent::getLabelStyle()));
 				$this->_Template->assign('fieldsetStyle', $this->getFieldsetStyle());
-				if ($compatMode)
-					$this->_Template->assign('sectionTableStyle', $this->getFieldsetStyle());
 				$this->_Template->assign("tablePadding", $this->tblCPadding);
 				$this->_Template->assign("tableSpacing", $this->tblCSpacing);
 				// generate sections with their children

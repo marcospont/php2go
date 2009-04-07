@@ -4,14 +4,9 @@
   <tr><td>
     <div{$errorStyle} id="form_client_errors"{$errorDisplay}>{$errorTitle}{$errorMessages}</div>
     <!-- start block : loop_section -->
-    <!-- if $compatMode eq false -->
     <fieldset{$fieldsetStyle}>
       <!-- if $sectionName is not empty --><legend{$sectionTitleStyle}>{$sectionName}</legend><!-- end if -->
-    <!-- end if -->
       <table cellpadding="{$tablePadding}" cellspacing="{$tableSpacing}" width="100%"{$sectionTableStyle}>
-        <!-- if ($compatMode eq true && $sectionName is not empty) -->
-        <tr><td colspan="2">&nbsp;&nbsp;<span{$sectionTitleStyle}>{$sectionName}</span><br /><hr /></td></tr>
-        <!-- end if -->
         <!-- start block : section_item -->
         <!-- if $itemType eq 'field' -->
         <tr>
@@ -36,9 +31,7 @@
         <!-- end if -->
         <!-- end block : section_item -->
       </table>
-    <!-- if $compatMode eq false -->
-    </fieldset>
-    <!-- end if --><br />
+    </fieldset><br />
     <!-- end block : loop_section -->
   </td></tr>
 </table>
