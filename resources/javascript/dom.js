@@ -1304,8 +1304,10 @@ if (!window.Event) {
 	 * @class Event
 	 */
 	var Event = {};
-	if (!PHP2Go.nativeEventExtension)
-		Event.prototype = {};
+	Event.prototype = {};
+} else {
+	if (!Event.prototype && document.createEvent)
+		Event.prototype = document.createEvent('HTMLEvents')['__proto__'];	
 }
 
 /**
