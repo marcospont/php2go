@@ -21,13 +21,11 @@
 			t.editor = ed;
 
 			ed.onInit.add(function() {
-				if (!s.readonly) {
-					ed.onNodeChange.add(function(ed, cm) {
-						tinymce.each(states, function(c) {
-							cm.get(c.toLowerCase()).setActive(ed.queryCommandState(c));
-						});
+				ed.onNodeChange.add(function(ed, cm) {
+					tinymce.each(states, function(c) {
+						cm.get(c.toLowerCase()).setActive(ed.queryCommandState(c));
 					});
-				}
+				});
 
 				ed.dom.loadCSS(url + "/skins/" + s.skin + "/content.css");
 			});
@@ -45,27 +43,25 @@
 			// Create iframe container
 			n = DOM.add(tb, 'tr');
 			n = ic = DOM.add(DOM.add(n, 'td'), 'div', {'class' : 'mceIframeContainer'});
-			
-			if (!ed.settings.readonly) {
-				// Create toolbar container
-				n = DOM.add(DOM.add(tb, 'tr', {'class' : 'last'}), 'td', {'class' : 'mceToolbar mceLast', align : 'center'});
 
-				// Create toolbar
-				tb = t.toolbar = cf.createToolbar("tools1");
-				tb.add(cf.createButton('bold', {title : 'simple.bold_desc', cmd : 'Bold'}));
-				tb.add(cf.createButton('italic', {title : 'simple.italic_desc', cmd : 'Italic'}));
-				tb.add(cf.createButton('underline', {title : 'simple.underline_desc', cmd : 'Underline'}));
-				tb.add(cf.createButton('strikethrough', {title : 'simple.striketrough_desc', cmd : 'Strikethrough'}));
-				tb.add(cf.createSeparator());
-				tb.add(cf.createButton('undo', {title : 'simple.undo_desc', cmd : 'Undo'}));
-				tb.add(cf.createButton('redo', {title : 'simple.redo_desc', cmd : 'Redo'}));
-				tb.add(cf.createSeparator());
-				tb.add(cf.createButton('cleanup', {title : 'simple.cleanup_desc', cmd : 'mceCleanup'}));
-				tb.add(cf.createSeparator());
-				tb.add(cf.createButton('insertunorderedlist', {title : 'simple.bullist_desc', cmd : 'InsertUnorderedList'}));
-				tb.add(cf.createButton('insertorderedlist', {title : 'simple.numlist_desc', cmd : 'InsertOrderedList'}));
-				tb.renderTo(n);
-			}
+			// Create toolbar container
+			n = DOM.add(DOM.add(tb, 'tr', {'class' : 'last'}), 'td', {'class' : 'mceToolbar mceLast', align : 'center'});
+
+			// Create toolbar
+			tb = t.toolbar = cf.createToolbar("tools1");
+			tb.add(cf.createButton('bold', {title : 'simple.bold_desc', cmd : 'Bold'}));
+			tb.add(cf.createButton('italic', {title : 'simple.italic_desc', cmd : 'Italic'}));
+			tb.add(cf.createButton('underline', {title : 'simple.underline_desc', cmd : 'Underline'}));
+			tb.add(cf.createButton('strikethrough', {title : 'simple.striketrough_desc', cmd : 'Strikethrough'}));
+			tb.add(cf.createSeparator());
+			tb.add(cf.createButton('undo', {title : 'simple.undo_desc', cmd : 'Undo'}));
+			tb.add(cf.createButton('redo', {title : 'simple.redo_desc', cmd : 'Redo'}));
+			tb.add(cf.createSeparator());
+			tb.add(cf.createButton('cleanup', {title : 'simple.cleanup_desc', cmd : 'mceCleanup'}));
+			tb.add(cf.createSeparator());
+			tb.add(cf.createButton('insertunorderedlist', {title : 'simple.bullist_desc', cmd : 'InsertUnorderedList'}));
+			tb.add(cf.createButton('insertorderedlist', {title : 'simple.numlist_desc', cmd : 'InsertOrderedList'}));
+			tb.renderTo(n);
 
 			return {
 				iframeContainer : ic,
