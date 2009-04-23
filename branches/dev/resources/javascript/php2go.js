@@ -76,6 +76,12 @@ var PHP2Go = {
 	 */
 	nativeElementExtension : !!window.HTMLElement,
 	/**
+	 * Indicates if it was possible to add
+	 * methods in the Event native prototype
+	 * @type Boolean
+	 */ 
+	nativeEventExtension : (window.Event ? (typeof(Event.prototype) != 'undefined' || document.createEvent) : false),
+	/**
 	 * Includes a given JS libray
 	 * @param {String} lib Library path
 	 * @param {String} charset Library charset
@@ -234,17 +240,6 @@ var PHP2Go = {
 		return obj._methods[method];
 	}
 };
-
-/**
- * Indicates if it was possible to add
- * methods in the Event native prototype
- * @type Boolean
- */
-try {
-	PHP2Go.nativeEventExtension = (typeof(Event.prototype) != 'undefined');
-} catch(e) {
-	PHP2Go.nativeEventExtension = false;
-}
 
 /**
  * Makes all properties and methods of src available to dst
