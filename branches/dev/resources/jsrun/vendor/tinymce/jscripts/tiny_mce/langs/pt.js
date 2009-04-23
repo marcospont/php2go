@@ -90,7 +90,7 @@ desc:"Editar CSS"
 paste:{
 paste_text_desc:"Colar como texto simples",
 paste_word_desc:"Colar (copiado do WORD)",
-selectall_desc:"Seleccionar tudo"
+selectall_desc:"Selecionar tudo"
 },
 paste_dlg:{
 text_title:"Use CTRL+V para colar o texto na janela.",

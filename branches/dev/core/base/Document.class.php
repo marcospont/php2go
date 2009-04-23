@@ -776,7 +776,7 @@ class Document extends PHP2Go
 			$this->attachBodyEvent('onload', 'p2gOnLoad();', TRUE);
 		}
 		if ($this->jQuery) {
-			$this->Head->addScript('http://jqueryjs.googlecode.com/files/jquery-1.3.1.min.js', '', 'text/javascript', NULL, 0);
+			$this->Head->addScript('http://jqueryjs.googlecode.com/files/jquery-1.3.2.min.js', '', 'text/javascript', NULL, 0);
 			$this->addScriptCode("\t\$j = jQuery.noConflict();");			
 		}
 		if (!$this->cacheEnabled) {

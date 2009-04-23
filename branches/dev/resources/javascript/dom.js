@@ -190,7 +190,9 @@ if (document.evaluate) {
 	 * @ignore
 	 */
 	document.getElementsByXPath = function(expr, parent) {
-		var res = [], qry = document.evaluate(expr, $(parent) || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+		parent = $(parent);
+		var d = document, res = []; 
+		var qry = d.evaluate(expr, parent || d, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 		for (var i=0,s=qry.snapshotLength; i<s; i++)
 			res.push($E(qry.snapshotItem(i)));
 		return res;
@@ -214,15 +216,6 @@ if (document.evaluate) {
 			return res;
 		}
 		return [];
-	};
-}
-
-/**
- * Define document.getElementsByClassName only when not already present
- */
-if (!document.getElementsByClassName) {
-	document.getElementsByClassName = function(clsNames) {
-		return Element.getElementsByClassName(document, clsNames);
 	};
 }
 
