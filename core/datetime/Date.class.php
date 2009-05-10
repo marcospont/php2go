@@ -110,6 +110,7 @@ class Date extends PHP2Go
 		}
 		if (!empty($regs) && $regs[2] >= 0 && $regs[2] <= 9999 && checkdate($regs[2], $regs[1], $regs[3])) {
 			array_shift($regs);
+			array_push($regs, mktime($regs[3], $regs[4], $regs[5], $regs[1], $regs[0], $regs[2]));
 			return $regs;
 		}
 		return NULL;
