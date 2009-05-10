@@ -140,7 +140,7 @@ class FormTemplate extends Form
 	 */
 	function getContent() {
 		$this->onPreRender();
-		return $this->_buildFormStart() . $this->Template->getContent() . "</form>";
+		return $this->_buildFormStart() . $this->Template->getContent() . "\n</form>";
 	}
 
 	/**
@@ -150,7 +150,7 @@ class FormTemplate extends Form
 		$this->onPreRender();
 		print $this->_buildFormStart();
 		$this->Template->display();
-		print "</form>";
+		print "\n</form>";
 	}
 
 	/**
