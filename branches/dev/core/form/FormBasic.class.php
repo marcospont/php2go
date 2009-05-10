@@ -280,7 +280,7 @@ class FormBasic extends Form
 	 */
 	function getContent() {
 		$this->onPreRender();
-		return $this->_buildFormStart() . $this->_Template->getContent() . "</form>";
+		return $this->_buildFormStart() . $this->_Template->getContent() . "\n</form>";
 	}
 
 	/**
@@ -290,7 +290,7 @@ class FormBasic extends Form
 		$this->onPreRender();
 		print $this->_buildFormStart();
 		$this->_Template->display();
-		print "</form>";
+		print "\n</form>";
 	}
 
 	/**
