@@ -140,10 +140,15 @@ Dialog = function(opts) {
 	 */
 	this.buttonsClass = opts.buttonsClass || '';
 	/**
+	 * Whether the dialog will be closed manually (won't close upon onclick)
+	 * @type Boolean
+	 */
+	this.customClose = !!opts.customClose;
+	/**
 	 * Whether the dialog must be closed upon mouseout event
 	 * @type Boolean
 	 */
-	this.hoverClose = !!opts.hoverClose;
+	this.hoverClose = !!opts.hoverClose;	
 	/**
 	 * Called before opening the dialog, can be used to cancel this event
 	 * @type Function
@@ -263,7 +268,7 @@ Dialog.prototype.setupContents = function() {
 			if (this.buttons[i].def)
 				this.defaultButton = btn;
 		}
-	} else {
+	} else if (!this.customClose) {
 		Event.addListener(this.el, 'click', this.close.bind(this));
 	}
 };
@@ -359,7 +364,7 @@ Dialog.prototype.setContents = function(contents) {
  * @type void
  */
 Dialog.prototype.open = function() {
-	if (this.onBeforeOpen && this.onBeforeOpen.apply(this) == false)
+	if (this.visible || (this.onBeforeOpen && this.onBeforeOpen.apply(this) == false))
 		return;
 	this.setup();
 	this.show();
@@ -372,7 +377,7 @@ Dialog.prototype.open = function() {
  * @type void
  */
 Dialog.prototype.close = function() {
-	if (this.onBeforeClose && this.onBeforeClose.apply(this) == false)
+	if (!this.visible || (this.onBeforeClose && this.onBeforeClose.apply(this) == false))
 		return;
 	this.hide();
 	this.visible = false;
@@ -650,6 +655,11 @@ ImageDialog = function(opts) {
 	 * @type String
 	 */
 	this.imgUri = (opts.img || (this.trigger || {}).src || null);
+	/**
+	 * URI transformation function
+	 * @type Function
+	 */
+	this.uriFunc = (opts.uriFunc || $IF);
 };
 ImageDialog.extend(ModalDialog, 'ModalDialog');
 
@@ -658,15 +668,16 @@ ImageDialog.extend(ModalDialog, 'ModalDialog');
  * class name and configures them to show in a centered modal
  * dialog box
  * @param {String} cls Class name
+ * @param {Object} opts Configuration options
  * @type void
  */
-ImageDialog.setup = function(cls) {
+ImageDialog.setup = function(cls, opts) {
 	var imgs = document.getElementsByTagName('img');
 	for (var i=0; i<imgs.length; i++) {
 		if (Element.hasClass(imgs[i], cls)) {
-			new ImageDialog({
+			new ImageDialog(Object.extend(opts, {
 				trigger: imgs[i]
-			});
+			}));
 		}
 	}
 };
@@ -686,7 +697,7 @@ ImageDialog.prototype.setup = function() {
 			this.img.style.display = '';
 			this.place();
 		}.bind(this);
-		this.img.src = this.imgUri;
+		this.img.src = this.uriFunc(this.imgUri);
 	}
 };
 

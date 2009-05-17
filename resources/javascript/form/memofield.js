@@ -69,6 +69,19 @@ MemoField.prototype.setup = function() {
 };
 
 /**
+ * Sets the value of the field
+ * @param {Object} val New value
+ * @type void
+ */
+MemoField.prototype.setValue = function(val) {
+	val = val || '';
+	this.fld.value = val.substring(0, this.maxlength);
+	this.count.value = this.maxlength - this.fld.value.length;
+	if (this.fld.onchange)
+		this.fld.onchange();
+};
+
+/**
  * Clears the textarea value
  * @type void
  */
