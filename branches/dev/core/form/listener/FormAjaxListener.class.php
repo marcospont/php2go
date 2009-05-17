@@ -148,7 +148,7 @@ class FormAjaxListener extends FormEventListener
 		$isSubmit = (TypeUtils::isInstanceOf($this->_Owner, 'FormButton') && $this->_Owner->getAttribute('TYPE') == 'SUBMIT');
 		// form submission
 		if ($this->formSubmit || $isSubmit) {
-			$this->url = $Form->formAction;
+			$this->url = (!empty($this->url) ? $this->url : $Form->formAction);
 			$this->params['method'] = $Form->formMethod;
 			$this->params['form'] = $Form->formName;
 			$this->params['formValidate'] = 'true';
