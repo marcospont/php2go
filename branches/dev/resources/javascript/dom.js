@@ -359,10 +359,10 @@ Element.prototype.getPosition = function(tbt) {
 		}
 		var cur = this, end = (b.safari && this.style.getPropertyValue('position') == 'absolute' && this.parentNode == db ? db : db.parentNode);
 		do {
-			var l = this.offsetLeft;
+			var l = cur.offsetLeft;
 			if (!b.opera || l > 0)
 				p.x += (isNaN(l) ? 0 : l);
-			var t = this.offsetTop;
+			var t = cur.offsetTop;
 			p.y += (isNaN(t) ? 0 : t);
 			cur = cur.offsetParent;
 		} while (cur != end && cur != null);
