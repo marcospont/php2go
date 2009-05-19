@@ -366,7 +366,7 @@ class DocumentHead
 				print sprintf("<meta name=\"%s\" content=\"%s\" />\n", $name, htmlspecialchars($content));
 		}
 		// title
-		print sprintf("<title>%s</title>\n", $this->title);
+		print sprintf("<title>%s</title>\n", htmlspecialchars($this->title));
 		// base URL
 		$baseUrl = PHP2Go::getConfigVal('BASE_URL', FALSE);
 		if (!empty($baseUrl)) {
