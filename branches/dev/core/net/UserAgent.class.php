@@ -482,7 +482,7 @@ class UserAgent extends PHP2Go
         $this->browser['ns6'] = ($this->browser['ns'] && $this->majorVersion == 5);
         $this->browser['ns6+'] = ($this->browser['ns'] && $this->majorVersion >= 5);
         $this->browser['gecko'] = ($this->_match('gecko', $agent));
-        $this->browser['khtml'] = ($this->_match('webkit|khtml', $agent));        
+        $this->browser['khtml'] = ($this->_match('webkit|khtml', $agent));
         $this->browser['galeon'] = $this->_match('galeon', $agent);
         $this->browser['text'] = $this->_match('links|lynx|w3m', $agent);
         $this->browser['firefox'] = ($this->browser['gecko'] && $this->_match("firefox|firebird", $agent));
@@ -498,11 +498,14 @@ class UserAgent extends PHP2Go
         $this->browser['ie4+'] = ($this->browser['ie'] && !$this->browser['ie3']);
         $this->browser['ie5'] = ($this->browser['ie4+'] && $this->_match('msie 5.0', $agent));
         $this->browser['ie55'] = ($this->browser['ie4+'] && $this->_match('msie 5.5', $agent));
-        $this->browser['ie5+'] = ($this->browser['ie4+'] && !$this->browser['ie3'] && !$this->browser['ie4']);
+        $this->browser['ie5+'] = ($this->browser['ie4+'] && !$this->browser['ie4']);
         $this->browser['ie55+'] = ($this->browser['ie5+'] && !$this->browser['ie5']);
         $this->browser['ie6'] = $this->_match('msie 6', $agent);
         $this->browser['ie6+'] = ($this->browser['ie5+'] && !$this->browser['ie5'] && !$this->browser['ie5_5']);
         $this->browser['ie7'] = $this->_match('msie 7', $agent);
+        $this->browser['ie7+'] = ($this->browser['ie6+'] && !$this->browser['ie6']);
+        $this->browser['ie8'] = $this->_match('msie 8', $agent);
+        $this->browser['ie8+'] = ($this->browser['ie7+'] && !$this->browser['ie7']);
         $this->browser['myie'] = ($this->browser['ie'] && $this->_match('myie', $agent));
         $this->browser['konqueror'] = ($this->_match('konqueror|safari', $agent) && !$this->browser['chrome']);
         $this->browser['nautilus'] = $this->_match('nautilus', $agent);
@@ -670,7 +673,8 @@ class UserAgent extends PHP2Go
 			'opera5+' => 'Opera 5.x',
 			'opera4' => 'Opera 4.x',
 			'opera' => 'Opera',
-			'ie7' => 'Microsoft Internet Explorer 7.x',
+			'ie8' => 'Microsoft Internet Explorer 8.x',
+			'ie7+' => 'Microsoft Internet Explorer 7.x',
 			'ie6+' => 'Microsoft Internet Explorer 6.x',
 			'ie5+' => 'Microsoft Internet Explorer 5.x',
 			'ie4+' => 'Microsoft Internet Explorer 4.x',
