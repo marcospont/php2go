@@ -293,7 +293,7 @@ class DocumentHead
 		if (!array_key_exists($path, $this->styleFiles)) {
 			$priority = max(array($priority, 0));
 			$this->styleFiles[$path] = array(sprintf("%s<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s%s />\n%s",
-				(!empty($condition) ? "<!--[if {$condition}]>\n\t" : ""), $path, (!empty($media) ? " media=\"{$media}\"" : ''), 
+				(!empty($condition) ? "<!--[if {$condition}]>\n\t" : ""), $path, (!empty($media) ? " media=\"{$media}\"" : ''),
 				(!empty($charset) ? " charset=\"{$charset}\"" : ''), (!empty($condition) ? "<![endif]-->\n" : "")
 			), $priority);
 		}
@@ -351,8 +351,11 @@ class DocumentHead
 	 * Generates and displays the contents of the document's HEAD
 	 */
 	function display() {
+		// xml declaration - only on browsers that can correctly handle it
+		$agent =& UserAgent::getInstance();
+		if ($agent->matchBrowser('ie7+') || !$agent->matchBrowser('ie'))
+			print "<?xml version=\"1.0\"?>\n";
 		// doctype, head tag
-		print "<?xml version=\"1.0\"?>\n";
 		print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
 		print sprintf("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"%s\" lang=\"%s\">\n<head>\n", $this->language, $this->language);
 		// meta tags
@@ -406,7 +409,7 @@ class DocumentHead
 		print $this->extraContent;
 		print "</head>\n";
 	}
-	
+
 	/**
 	 * Arranges elements by priority
 	 *
