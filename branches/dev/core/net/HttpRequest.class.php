@@ -270,11 +270,14 @@ class HttpRequest extends PHP2Go
 	function getHeaders() {
 		if (function_exists('apache_request_headers'))
 			return apache_request_headers();
-		$headers = array();
-		foreach ($_SERVER as $key => $value) {
-			if (substr($key, 0, 5) == 'HTTP_') {
-				$name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
-				$headers[$name] = $value;
+		static $headers;
+		if (!isset($headers)) {
+			$headers = array();
+			foreach ($_SERVER as $key => $value) {
+				if (substr($key, 0, 5) == 'HTTP_') {
+					$name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+					$headers[$name] = $value;
+				}
 			}
 		}
 		return $headers;
