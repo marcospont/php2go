@@ -1,0 +1,33 @@
+
+/* 	RESULT STYLE  */
+.jquery_passStrengthener{
+  display: inline-block;
+  width: 150px;
+  margin: 0 10px;
+}
+
+.jquery_passStrengthener span.score{
+  white-space: nowrap;
+  width: 100% !important;	
+}
+
+.jquery_passStrengthener span.score span{
+	display:block;
+	white-space: nowrap;
+}
+
+.jquery_passStrengthener.shortPass span.score span{
+	background-color:#F4715B;
+}
+
+.jquery_passStrengthener.badPass span.score span{
+	background-color:#F4715B;
+}
+
+.jquery_passStrengthener.goodPass span.score span{
+	background-color:#EEF042;
+}
+
+.jquery_passStrengthener.strongPass span.score span{
+	background-color:#64FD58;
+}

@@ -1,0 +1,23 @@
+/* general */
+* { font-size: 12px !important; font-family: "Trebuchet MS", sans-serif; }
+body { background-color: #fff; margin: 10px; color: #000; }
+
+/* anchors */
+a { color: #000; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* required */
+span.required { color: red; }
+
+/* error */
+.error { color: red; }
+input.error, select.error, textarea.error { border: 1px solid red; color: #000 !important; }
+
+/* menu */
+ul.menu, ul.menu ul { margin: 0; padding: 0; height: 28px; }
+ul.menu li { margin: 0; padding: 0; width: 100px; float: left; list-style: none; border: 1px solid #999; margin-right: -1px; }
+ul.menu li.menuActive > a, ul.menu li.menuActive > span { background-color: #bbb; font-weight: bold; }
+ul.menu ul { display: none; position: absolute; margin-left: -1px; }
+ul.menu ul ul { left: 102px; }
+ul.menu a, ul.menu span { padding: 5px; display: block; text-decoration: none; color: #000; background-color: #ddd; }
+ul.menu li a:hover, ul.menu li span:hover { background-color: #666; color: #fff; }

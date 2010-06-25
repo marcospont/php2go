@@ -1,0 +1,4 @@
+.ui-pane { }
+.ui-pane-title { margin: 0.2em; padding: 0.2em 0.5em; }
+.ui-pane-title .ui-icon { cursor: pointer; float: right; }
+.ui-pane-content { display: block; padding: 1em; }
