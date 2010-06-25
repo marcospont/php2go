@@ -1,0 +1,10 @@
+<?=$this->doctype()?>
+<html>
+<head>
+<?=$this->head()?>
+</head>
+<body>
+<?=$this->content?>
+<?=$this->scriptBuffer()?>
+</body>
+</html>
