@@ -3,6 +3,8 @@
 abstract class ModelValidator
 {
 	private static $defaultValidatorClasses = array(
+		'cnpj' => 'ValidatorCnpj',
+		'cpf' => 'ValidatorCpf',
 		'compare' => 'ValidatorComparison',
 		'date' => array('ValidatorDataType', 'dataType'),
 		'datetime' => array('ValidatorDataType', 'dataType'),
