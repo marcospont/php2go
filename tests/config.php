@@ -19,7 +19,7 @@ return array(
 			'dsn' => 'mysqli://root:@localhost/test'
 		),
 		'errorHandler' => array(
-			'discardOutput' => !FRAMEWORK_DEBUG_MODE
+			'discardOutput' => !PHP2GO_DEBUG_MODE
 		),
 		'logger' => array(
 			'appenders' => array(
