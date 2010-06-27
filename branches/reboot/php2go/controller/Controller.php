@@ -2,10 +2,10 @@
 
 class Controller extends Component
 {
+	public $defaultAction = 'index';
 	protected $id;
 	protected $app;
 	protected $module = null;
-	protected $defaultAction = 'index';
 	protected $action;
 	protected $view;
 	protected $viewPath;

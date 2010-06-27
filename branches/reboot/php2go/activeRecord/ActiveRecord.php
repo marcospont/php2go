@@ -21,6 +21,7 @@ abstract class ActiveRecord extends Model
 	private $relations = null;
 	private $associations = array();
 	private $collections = array();
+	private $criteria = array();
 	private $formatter;
 
 	public static function model($class=__CLASS__) {
@@ -34,8 +35,10 @@ abstract class ActiveRecord extends Model
 			$alias = $model->getTableName();
 		$pattern = '/\b(^|[^\.])(' . implode('|', $model->getAttributeNames()) . ')\b/i';
 		foreach ($criteria as $key => $value) {
-			foreach ($value as $idx => $item)
-				$criteria[$key][$idx] = preg_replace($pattern, "{$alias}.$2", $item);
+			if ($key != 'distinct') {
+				foreach ($value as $idx => $item)
+					$criteria[$key][$idx] = preg_replace($pattern, "{$alias}.$2", $item);
+			}
 		}
 	}
 
@@ -121,18 +124,10 @@ abstract class ActiveRecord extends Model
 		if (isset($scopes[$name])) {
 			if (!is_string($scopes[$name]) && !is_array($scopes[$name]))
 				throw new Exception(__(PHP2GO_LANG_DOMAIN, 'Invalid scope definition: "%s"', array($name)));
-			$criteria = @$params[0];
-			$bind = (array)@$params[1];
-			$this->mergeScope($scopes[$name], $criteria, $bind);
-			return $this->findAll($criteria, $bind);
-		}
-		$matches = array();
-		if (preg_match('/(find(?:all)?|count|exists)by(\w+)/i', $name, $matches)) {
-			$method = $matches[1];
-			$attr = strtolower($matches[2]);
-			$value = array_shift($params);
-			$criteria = array('condition' => "{$attr} = ?");
-			return $this->{$method}($criteria, array($value));
+			if (isset($params[0]) && $params[0] === true)
+				$this->resetScopes();
+			$this->mergeCriteria($this->criteria, $scopes[$name]);
+			return $this;
 		}
 		return parent::__call($name, $params);
 	}
@@ -238,6 +233,8 @@ abstract class ActiveRecord extends Model
 	}
 
 	public function setAttribute($name, $value) {
+		if ($value === '')
+			$value = null;
 		if (array_key_exists($name, $this->attributes)) {
 			if ($value !== $this->{$name}) {
 				$current = $this->attributes[$name];
@@ -250,11 +247,13 @@ abstract class ActiveRecord extends Model
 			return true;
 		}
 		if ($this->getMetaData()->hasColumn($name)) {
-			if (isset($this->formatter->formats[$name]))
-				$this->attributes[$name] = $this->formatter->formatSet($name, $value);
-			else
-				$this->attributes[$name] = $value;
-			$this->modified[$name] = array(null, $this->attributes[$name]);
+			if ($value !== null) {
+				if (isset($this->formatter->formats[$name]))
+					$this->attributes[$name] = $this->formatter->formatSet($name, $value);
+				else
+					$this->attributes[$name] = $value;
+				$this->modified[$name] = array(null, $this->attributes[$name]);
+			}
 			return true;
 		}
 		return false;
@@ -305,6 +304,7 @@ abstract class ActiveRecord extends Model
 				$class = $relation->getClass();
 				if (!$value instanceof $class)
 					throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" relation value must be a "%s" instance', array($name, $class)));
+				$value->setNamePrefix($this->getNamePrefix() . '[' . $name . ']');
 				$this->associations[$name] = $value;
 				if ($value->isNew())
 					$this->setAttribute($relation->getOption('foreignKey'), null);
@@ -316,6 +316,7 @@ abstract class ActiveRecord extends Model
 				if (!$value instanceof $class)
 					throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" relation value must be a "%s" instance', array($name, $class)));
 				$relation->setOption('mustDelete', true);
+				$value->setNamePrefix($this->getNamePrefix() . '[' . $name . ']');
 				$this->associations[$name] = $value;
 				break;
 			case ActiveRecord::HAS_MANY :
@@ -323,9 +324,10 @@ abstract class ActiveRecord extends Model
 				if (!is_array($value))
 					throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" relation value must be an array', array($name)));
 				$this->collections[$name] = new ArrayObject();
-				foreach ($value as $record) {
+				foreach ($value as $idx => $record) {
 					if (!$record instanceof $class)
 						throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" relation value must be an array of "%s" instances', array($name, $class)));
+					$record->setNamePrefix($this->getNamePrefix() . '[' . $name . '][' . $idx . ']');
 					$this->collections[$name][] = $record;
 				}
 				break;
@@ -373,10 +375,53 @@ abstract class ActiveRecord extends Model
 			foreach ($this->getValidators() as $validator) {
 				$validator->validateModel($this, $attrs);
 			}
+			$result = !$this->hasErrors();
+			foreach ($this->associations as $relation => $model) {
+				if (!$model->validate())
+					$result = false;
+			}
+			foreach ($this->collections as $relation => $models) {
+				foreach ($models as $model) {
+					if (!$model->validate())
+						$result = false;
+				}
+			}
 			$this->raiseEvent('onAfterValidate', new Event($this));
-			return (!$this->hasErrors());
+			return $result;
 		}
 		return false;
+	}
+
+	public function getAllErrors() {
+		$errors = parent::getErrors();
+		if (!isset($errors[0]))
+			$errors[0] = array();
+		foreach ($this->associations as $relation => $model) {
+			$assocErrors = $model->getErrors();
+			foreach ($assocErrors as $name => $data) {
+				if ($name === 0)
+					$errors[0] = array_merge($errors[0], $data);
+				else
+					$errors[$relation . '.' . $name] = $data;
+			}
+		}
+		foreach ($this->collections as $relation => $models) {
+			foreach ($models as $idx => $model) {
+				$collectionErrors = $model->getErrors();
+				foreach ($collectionErrors as $name => $data) {
+					if ($name === 0)
+						$errors[0] = array_merge($errors[0], $data);
+					else
+						$errors[$relation . '.' . $idx . '.' . $name] = $data;
+				}
+			}
+		}
+		return $errors;
+	}
+
+	public function resetScopes() {
+		$this->criteria = array();
+		return $this;
 	}
 
 	public function find($criteria=null, array $bind=array()) {
@@ -399,15 +444,27 @@ abstract class ActiveRecord extends Model
 		return $this->query($this->createPKCriteria($value));
 	}
 
-	public function findPairs($display, $criteria=null, array $bind=array()) {
+	public function findPairs($display=null, $criteria=null, array $bind=array()) {
+		$criteria = $this->createCriteria($criteria, $bind);
+		if (@$criteria['lazy'] !== true)
+			$this->mergeAssociations($criteria);
+		$bind = Util::consumeArray($criteria, 'bind', array());
 		return DAO::instance()->findPairs($this->getTableName(), $display, $criteria, $bind);
 	}
 
 	public function count($criteria=null, array $bind=array()) {
+		$criteria = $this->createCriteria($criteria, $bind);
+		if (@$criteria['lazy'] !== true)
+			$this->mergeAssociations($criteria);
+		$bind = Util::consumeArray($criteria, 'bind', array());
 		return DAO::instance()->count($this->getTableName(), $criteria, $bind);
 	}
 
 	public function exists($criteria=null, array $bind=array()) {
+		$criteria = $this->createCriteria($criteria, $bind);
+		if (@$criteria['lazy'] !== true)
+			$this->mergeAssociations($criteria);
+		$bind = Util::consumeArray($criteria, 'bind', array());
 		return DAO::instance()->exists($this->getTableName(), $criteria, $bind);
 	}
 
@@ -646,46 +703,45 @@ abstract class ActiveRecord extends Model
 		$data = DAO::instance()->{$find}($this->getTableName(), $criteria, $bind);
 		if ($all) {
 			return $this->createCollection($data);
-		} else {
+		} elseif ($data) {
 			$instance = $this->createInstance($data);
 			return $instance;
-		}
-	}
-
-	protected function mergeScope($scope, &$criteria=null, array &$bind) {
-		if (is_string($criteria))
-			$criteria = array('condition' => array($criteria));
-		elseif (!is_array($criteria))
-			$criteria = array();
-		if (is_string($scope))
-			$scope = array('condition' => $scope);
-		foreach ($scope as $k => $v) {
-			if ($k == 'bind')
-				$bind = array_merge($scope[$k], $bind);
-			elseif (!isset($criteria[$k]))
-				$criteria[$k] = $v;
-			else
-				$criteria[$k] = array_merge((array)$criteria[$k], (array)$scope[$k]);
+		} else {
+			return null;
 		}
 	}
 
 	protected function mergeAssociations(&$criteria) {
 		if (!empty($this->relations)) {
 			$db = DAO::instance()->getAdapter();
-			foreach (array('fields', 'condition', 'group', 'having', 'order') as $member) {
+			foreach (array('fields', 'join', 'condition', 'group', 'having', 'order') as $member) {
 				if (isset($criteria[$member]))
 					$criteria[$member] = (array)$criteria[$member];
-			}
+				else
+					$criteria[$member] = array();
+ 			}
 			ActiveRecord::normalizeAliases($this, $criteria);
 			if (!isset($criteria['fields'])) {
 				foreach ($this->getAttributeNames() as $name)
 					$criteria['fields'][] = sprintf("%s.%s as %s", $this->tableName, $name, $db->quote("{$this->tableName}.{$name}"));
 			}
-			$criteria['join'] = array();
 			foreach ($this->relations as $name => $relation) {
 				if (!$relation->isCollection())
 					$relation->merge($this, $criteria);
 			}
+		}
+	}
+
+	protected function mergeCriteria(array &$target, $source) {
+		if (is_string($source))
+			$source = array('condition' => $source);
+		foreach ($source as $k => $v) {
+			if ($k == 'distinct' && $v)
+				$target['distinct'] = $v;
+			elseif (!isset($target[$k]))
+				$target[$k] = $v;
+			else
+				$target[$k] = array_merge((array)$target[$k], (array)$source[$k]);
 		}
 	}
 
@@ -694,10 +750,16 @@ abstract class ActiveRecord extends Model
 			$criteria = array('condition' => $criteria);
 		elseif (!is_array($criteria))
 			$criteria = array();
+		$criteria['bind'] = $bind;
 		if ($all && !empty($this->order) && !isset($criteria['order']))
 			$criteria['order'] = $this->order;
-		$criteria['bind'] = $bind;
-		return $criteria;
+		if (!empty($this->criteria)) {
+			$source = $this->criteria;
+			$this->mergeCriteria($source, $criteria);
+			return $source;
+		} else {
+			return $criteria;
+		}
 	}
 
 	protected function createPKCriteria($value=null) {
@@ -720,28 +782,28 @@ abstract class ActiveRecord extends Model
 		if (is_string($criteria))
 			$criteria = array('condition' => array($criteria));
 		elseif (!is_array($criteria))
-			$criteria = array('condition' => array());
-		elseif (isset($criteria['condition']))
-			$criteria['condition'] = (array)$criteria['condition'];
-		else
-			$criteria['condition'] = array();
-		$conditions = array();
-		$values = array();
+			$criteria = array();
+		$criteria['condition'] = (isset($criteria['condition']) ? (array)$criteria['condition'] : array());
+		$criteria['bind'] = $bind;
 		foreach ($attributes as $name=>$value) {
 			if ($this->hasAttribute($name)) {
 				if ($value !== null) {
-					$conditions[] = "{$this->tableName}.{$name} = ?";
-					$values[] = $value;
+					$criteria['condition'][] = "{$this->tableName}.{$name} = ?";
+					$criteria['bind'][] = $value;
 				} else {
-					$conditions[] = "{$this->tableName}.{$name} is null";
+					$criteria['condition'][] = "{$this->tableName}.{$name} is null";
 				}
 			}
 		}
-		return array(
-			'condition' => array_merge($conditions, $criteria['condition']),
-			'bind' => array_merge($values, $bind),
-			'order' => (isset($criteria['order']) ? $criteria['order'] : ($all && isset($this->order) ? $this->order : null))
-		);
+		if ($all && !empty($this->order) && !isset($criteria['order']))
+			$criteria['order'] = $this->order;
+		if (!empty($this->criteria)) {
+			$source = $this->criteria;
+			$this->mergeCriteria($source, $criteria);
+			return $source;
+		} else {
+			return $criteria;
+		}
 	}
 
 	protected function loadAttributes(array $attrs) {

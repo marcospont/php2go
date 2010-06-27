@@ -46,18 +46,20 @@ final class DAO
 		return $this->adapter->fetchRow($query, $bind);
 	}
 
-	public function findPairs($table, $display, $criteria=null, array $bind=array()) {
+	public function findPairs($table, $display=null, $criteria=null, array $bind=array()) {
 		$adapter = $this->getAdapter();
 		$key = $adapter->getMetaData($table)->primaryKey;
 		if (is_array($key)) {
 			$keys = $key;
 			$key = array();
-			for ($i=0,$l=sizeof($pk); $i<$l; $i++) {
-				$key[] = $pk[$i];
+			for ($i=0,$l=sizeof($keys); $i<$l; $i++) {
+				$key[] = sprintf('%s.%s', $table, $keys[$i]);
 				if ($i < ($l-1))
 					$key[] = $adapter->quote('-');
 			}
 			$key = $adapter->concat($key);
+		} else {
+			$key = sprintf('%s.%s', $table, $key);
 		}
 		if (is_array($display)) {
 			$cols = $display;
@@ -70,7 +72,7 @@ final class DAO
 			$display = $adapter->concat($display);
 		}
 		$criteria = $this->normalizeCriteria($criteria);
-		$criteria['fields'] = array($key, $display);
+		$criteria['fields'] = ($display !== null ? array($key, $display) : $key);
 		$query = $this->getCommandBuilder()->buildFind($table, $criteria);
 		return $adapter->fetchPairs($query, $bind);
 	}
