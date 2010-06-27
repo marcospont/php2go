@@ -142,7 +142,8 @@ class ViewHelperForm extends ViewHelper
 		if (isset($attrs['multiple']) && $attrs['multiple'] && substr($attrs['name'], -2) != '[]')
 			$attrs['name'] .= '[]';
 		$this->defineId($attrs);
-		return $this->html->tag('select', $attrs, $this->selectOptions($value, $options, $attrs));
+		$options = $this->selectOptions($value, $options, $attrs);
+		return $this->html->tag('select', $attrs, $options);
 	}
 
 	public function button($label, array $attrs=array()) {

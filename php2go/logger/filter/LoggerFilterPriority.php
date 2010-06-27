@@ -27,11 +27,11 @@ class LoggerFilterPriority extends LoggerFilter
 				$this->operator = self::$operators[$operator];
 			}
 		} else {
-			$this->operator = '>=';
+			$this->operator = '<=';
 		}
 	}
 
 	public function accept(LoggerEvent $event) {
-		return version_compare(-$event->priority, -$this->priority, $this->operator);
+		return version_compare($event->priority, $this->priority, $this->operator);
 	}
 }

@@ -81,7 +81,8 @@ class ViewHelperModel extends ViewHelper
 
 	public function errorSummary(Model $model, $headerTemplate='<p>%s</p>', $headerText=null) {
 		$items = array();
-		foreach ($model->getErrors() as $attr => $errors) {
+		$errors = ($model instanceof ActiveRecord ? $model->getAllErrors() : $model->getErrors());
+		foreach ($errors as $attr => $errors) {
 			if ($attr === 0) {
 				foreach ($errors as $error)
 					$items[] = '<p>' . $this->view->escape($error) . '</p>';

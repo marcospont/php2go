@@ -105,8 +105,9 @@ abstract class DbAdapter extends Component
 	public function fetchCell($query, array $bind=array(), $col=null) {
 		$this->connect();
 		$stmt = $this->execute($query, $bind);
-		$row = $stmt->fetch();
-		return ($col !== null && isset($row[$col]) ? $row[$col] : reset($row));
+		if ($row = $stmt->fetch())
+			return ($col !== null && isset($row[$col]) ? $row[$col] : reset($row));
+		return false;
 	}
 
 	public function fetchCol($query, array $bind=array(), $col=null) {
@@ -134,6 +135,8 @@ abstract class DbAdapter extends Component
 		$stmt = $this->execute($query, $bind);
 		while ($row = $stmt->fetch()) {
 			$row = array_values($row);
+			if (!isset($row[1]))
+				$row[1] = $row[0];
 			$result[$row[0]] = $row[1];
 		}
 		return $result;

@@ -2,17 +2,17 @@
 
 class LoggerFilterPriorityRange extends LoggerFilter
 {
-	protected $highest;
 	protected $lowest;
+	protected $highest;
 
-	public function __construct($highest, $lowest) {
-		if (!is_int($highest) || !is_int($lowest) || $highest >= $lowest)
+	public function __construct($lowest, $highest) {
+		if (!is_int($lowest) || !is_int($highest) || $lowest >= $highest)
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid log priority range.'));
-		$this->highest = $highest;
 		$this->lowest = $lowest;
+		$this->highest = $highest;
 	}
 
 	public function accept(LoggerEvent $event) {
-		return (-$event->getPriority() <= -$this->highest && -$event->priority >= -$this->lowest);
+		return ($event->priority >= $this->lowest && $event->priority <= $this->highest);
 	}
 }
