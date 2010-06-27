@@ -35,7 +35,10 @@ class DbAdapterADO extends DbAdapter
 					$connFunc = ($this->options['persistent'] ? 'pconnect' : 'connect');
 					$this->driver->{$connFunc}($this->options['host'], $this->options['user'], $this->options['pass'], $this->options['base']);
 				}
-				$this->driver->debug = 1;
+				if (isset($options['debug']) && $options['debug']) {
+					define('ADODB_OUTP', 'adoLog');
+					$this->driver->debug = 1;
+				}
 				$this->raiseEvent('onAfterConnect', new Event($this));
 			} catch (ADODB_Exception $e) {
 				throw new DbException($e->getMessage(), $e->getCode());
@@ -287,7 +290,6 @@ class DbAdapterADO extends DbAdapter
 	}
 }
 
-define('ADODB_OUTP', 'adoLog');
 function adoLog($msg) {
 	$msg = trim(preg_replace('/&nbsp;\s*$/', '', strip_tags($msg)));
 	Php2Go::app()->getLogger()->debug($msg, 'DbAdapterADO');
