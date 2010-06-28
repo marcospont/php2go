@@ -33,21 +33,21 @@ class ViewHelperAjax extends ViewHelper
 		return ($confirm ? 'if (' . $confirm . ') {' . PHP_EOL . $ajax . '}' . PHP_EOL : $ajax);
 	}
 
-	public function link($label, $url, array $options=array(), array $attrs=array()) {
+	public function link($url, $content, array $options=array(), array $attrs=array()) {
 		if (!isset($attrs['id']))
 			$attrs['id'] = Util::id('AjaxLink');
 		$this->view->html()->event($attrs['id'], 'click', $this->ajax(array_merge($options, array(
 			'url' => $this->view->url($url)
 		))));
-		return $this->view->html()->link($label, '#', $attrs);
+		return $this->view->html()->link('#', $content, $attrs);
 	}
 
-	public function button($label, $url, array $options=array(), array $attrs=array()) {
+	public function button($url, $content, array $options=array(), array $attrs=array()) {
 		$this->defineId($attrs, 'AjaxButton');
 		$this->view->html()->event($attrs['id'], 'click', $this->ajax(array_merge($options, array(
 			'url' => $this->view->url($url)
 		))));
 		$attrs['type'] = 'button';
-		return $this->view->html()->button($label, $attrs);
+		return $this->view->html()->button($content, $attrs);
 	}
 }

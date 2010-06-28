@@ -1,14 +1,14 @@
 <?$this->beginWidget('ContentWrapper', array('layout' => 'wrapper'))?>
 
 <p>
-	<?=$this->htmlLink('Widgets 1', 'widgets1', array('post' => true))?>
+	<?=$this->htmlLink('widgets1', 'Widgets 1', array('post' => true))?>
 	<?=$this->htmlMailto('marcos.pont@gmail.com')?>
 	<?=$this->htmlMailto('marcos.pont@gmail.com?subject=Olá', 'Marcos Pont', array('encode' => 'js'))?>
 	<?=$this->htmlMailto('marcos.pont@gmail.com', 'Marcos Pont', array('encode' => 'hex'))?>
 </p>
 <p>
 	<?=$this->htmlButton('HtmlButton')?>
-	<?=$this->htmlButtonTo('HtmlButtonTo', 'widgets1')?>
+	<?=$this->htmlButtonTo('widgets1', 'HtmlButtonTo')?>
 	<?=$this->formButton('FormButton')?>
 	<?=$this->formSubmit('FormSubmit')?>
 	<?=$this->formReset('FormReset')?>
@@ -16,19 +16,19 @@
 
 </p>
 <p>
-	<?=$this->ajaxLink('AjaxLink', 'ajax', array('confirm' => 'Confirm?', 'update' => 'updateMe'))?>
-	<?=$this->ajaxButton('AjaxButton', 'ajax', array('confirm' => 'Confirm?', 'update' => 'updateMe'))?>
+	<?=$this->ajaxLink('ajax', 'AjaxLink', array('confirm' => 'Confirm?', 'update' => 'updateMe'))?>
+	<?=$this->ajaxButton('ajax', 'AjaxButton', array('confirm' => 'Confirm?', 'update' => 'updateMe'))?>
 </p>
 <p>
-	<?=$this->popupLink('PopupLink', 'xml', array('confirm' => 'Confirm?', 'specs' => 'width=300,height=300'))?>
-	<?=$this->popupButton('PopupButton', 'xml', array('confirm' => 'Confirm?', 'specs' => 'width=300,height=300'))?>
+	<?=$this->popupLink('xml', 'PopupLink', array('confirm' => 'Confirm?', 'specs' => 'width=300,height=300'))?>
+	<?=$this->popupButton('xml', 'PopupButton', array('confirm' => 'Confirm?', 'specs' => 'width=300,height=300'))?>
 </p>
 <p>
 	<?=$this->juiButton('JuiButton')?>
-	<?=$this->juiButtonTo('JuiButtonTo', 'widgets1')?>
+	<?=$this->juiButtonTo('widgets1', 'JuiButtonTo')?>
 	<?=$this->juiSubmitButton('JuiSubmit')?>
 	<?=$this->juiResetButton('JuiReset')?>
-	<?=$this->juiAjaxButton('JuiAjax', 'ajax', array('confirm' => 'Confirm?', 'type' => 'POST', 'update' => 'updateMe'))?>
+	<?=$this->juiAjaxButton('ajax', 'JuiAjax', array('confirm' => 'Confirm?', 'type' => 'POST', 'update' => 'updateMe'))?>
 </p>
 
 <div id="updateMe"></div>

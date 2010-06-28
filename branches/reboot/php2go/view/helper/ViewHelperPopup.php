@@ -17,14 +17,14 @@ class ViewHelperPopup extends ViewHelper
 		return ($confirm ? 'if (' . $confirm . ') {' . PHP_EOL . $popup . '}' . PHP_EOL : $popup);
 	}
 
-	public function link($label, $url, array $options=array(), array $attrs=array()) {
+	public function link($url, $label, array $options=array(), array $attrs=array()) {
 		if (!isset($attrs['id']))
 			$attrs['id'] = Util::id('PopupLink');
 		$this->view->html()->event($attrs['id'], 'click', $this->popup($url, $options));
-		return $this->view->html()->link($label, '#', $attrs);
+		return $this->view->html()->link('#', $label, $attrs);
 	}
 
-	public function button($label, $url, array $options=array(), array $attrs=array()) {
+	public function button($url, $label, array $options=array(), array $attrs=array()) {
 		$this->defineId($attrs, 'PopupButton');
 		$this->view->html()->event($attrs['id'], 'click', $this->popup($url, $options));
 		$attrs['type'] = 'button';

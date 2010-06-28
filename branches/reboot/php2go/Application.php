@@ -106,6 +106,17 @@ abstract class Application extends Module
 		return $this->modules;
 	}
 
+	public function hasModule($id) {
+		if (isset($this->modules[$id]))
+			return true;
+		if (isset($this->moduleOptions[$id])) {
+			$disabled = Util::consumeArray($this->moduleOptions[$id], 'disabled', false);
+			if ($disabled !== true)
+				return true;
+		}
+		return false;
+	}
+
 	public function getModule($id) {
 		if (isset($this->modules[$id]))
 			return $this->modules[$id];
@@ -115,7 +126,7 @@ abstract class Application extends Module
 			$parentClass = ($this instanceof WebApplication ? 'WebModule' : 'Module');
 			if (isset($this->moduleClasses[$id])) {
 				$class = $this->moduleClasses[$id];
-				return Php2Go::newInstance(array(
+				return $this->modules[$id] = Php2Go::newInstance(array(
 					'class' => $class,
 					'parent' => $parentClass
 				), $id, $options);
@@ -124,7 +135,7 @@ abstract class Application extends Module
 				$file = $this->getModulePath() . DS . $id . DS . $class . '.php';
 				if (is_file($file)) {
 					require_once($file);
-					return Php2Go::newInstance(array(
+					return $this->modules[$id] = Php2Go::newInstance(array(
 						'class' => $class,
 						'parent' => $parentClass
 					), $id, $options);

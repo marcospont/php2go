@@ -7,22 +7,23 @@ class RouterRule
 		'controller' => '[a-zA-Z]\w*',
 		'action' => '[a-zA-Z]\w*',
 		'id' => '\d+',
+		'page' => '\d+',
 		'year' => '[12][0-9]{3}',
 		'month' => '0[1-9]|1[012]',
 		'day' => '0[1-9]|[12][0-9]|3[01]'
 	);
-	private $router;	
+	private $router;
 	private $route;
 	private $routeRegex;
 	private $routeRefs = array();
-	private $template;	
-	private $regex;	
+	private $template;
+	private $regex;
 	private $params = array();
 	private $defaults = array();
 	private $requirements = array();
 	private $partial = false;
 	private $suffix;
-	
+
 	public function __construct(Router $router, $template, $route) {
 		$this->router = $router;
 		$this->template = ltrim($template, '/');
@@ -40,7 +41,7 @@ class RouterRule
 		$this->suffix = $this->parseSuffix($this->template);
 		$this->compile();
 	}
-	
+
 	public function parse($pathInfo) {
 		$suffix = $this->parseSuffix($pathInfo);
 		if ($suffix !== $this->suffix)
@@ -50,7 +51,7 @@ class RouterRule
 			return $route;
 		return false;
 	}
-	
+
 	public function create($route, array $params, $ampersand='&') {
 		$this->compile();
 		$trans = array('*' => '');
@@ -58,7 +59,7 @@ class RouterRule
 			$matches = array();
 			if ($this->routeRegex !== null && preg_match($this->routeRegex, $route, $matches)) {
 				foreach ($this->routeRefs as $key => $name)
-					$trans[$name] = $matches[$key];	
+					$trans[$name] = $matches[$key];
 			} else {
 				return false;
 			}
@@ -83,9 +84,9 @@ class RouterRule
 				$url .= '?' . Util::buildPathInfo($params, '=', $ampersand);
 			}
 		}
-		return $url;	
+		return $url;
 	}
-	
+
 	private function compile() {
 		if (!$this->regex) {
 			// detect route references
@@ -100,7 +101,7 @@ class RouterRule
 			// build regex
 			$regexParts = array();
 			$parts = explode('/', $this->template);
-			foreach ($parts as $part) {				
+			foreach ($parts as $part) {
 				$q = null;
 				$m = array();
 				$part = trim($part);
@@ -149,24 +150,29 @@ class RouterRule
 				$this->routeRegex = '#^' . strtr($this->route, $routeRegexParts) . '$#';
 		}
 	}
-	
+
 	private function match($pathInfo) {
 		$matches = array();
 		if (preg_match('#^' . $this->regex . '$#', $pathInfo, $matches)) {
 			// collect route references
 			$routeTrans = array();
 			foreach ($this->routeRefs as $key => $name) {
+				// module reference needs to be validated
+				if ($key == 'module') {
+					if (!Php2Go::app()->hasModule($matches[$key]))
+						return false;
+				}
 				$routeTrans[$this->routeRefs[$key]] = $matches[$key];
-				unset($matches[$name]);
+				unset($matches[$key]);
 			}
 			// inject params
-			$params = $this->defaults;			
+			$params = $this->defaults;
 			foreach ($this->params as $name) {
 				if (!empty($matches[$name]))
 					$params[$name] = $matches[$name];
 			}
 			if ($this->partial) {
-				$key = count($this->routeRefs) + count($this->params) + 1;				
+				$key = count($this->routeRefs) + count($this->params) + 1;
 				if (isset($matches[$key]))
 					$params = array_merge($params, Util::parsePathInfo($matches[$key]));
 			}
@@ -177,8 +183,8 @@ class RouterRule
 			return strtr($this->route, $routeTrans);
 		}
 		return false;
-	}		
-	
+	}
+
 	private function parseSuffix(&$url) {
 		$matches = array();
 		if (preg_match('/\.[a-z]+$/', $url, $matches)) {

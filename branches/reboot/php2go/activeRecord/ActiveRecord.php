@@ -35,7 +35,7 @@ abstract class ActiveRecord extends Model
 			$alias = $model->getTableName();
 		$pattern = '/\b(^|[^\.])(' . implode('|', $model->getAttributeNames()) . ')\b/i';
 		foreach ($criteria as $key => $value) {
-			if ($key != 'distinct') {
+			if ($key != 'distinct' && $key != 'limit' && $key != 'offset') {
 				foreach ($value as $idx => $item)
 					$criteria[$key][$idx] = preg_replace($pattern, "{$alias}.$2", $item);
 			}
@@ -392,6 +392,24 @@ abstract class ActiveRecord extends Model
 		return false;
 	}
 
+	public function hasErrors($attr=null) {
+		if ($attr !== null)
+			return (!empty($this->errors[$attr]));
+		if (!empty($this->errors))
+			return true;
+		foreach ($this->associations as $name => $model) {
+			if ($model->hasErrors())
+				return true;
+		}
+		foreach ($this->collections as $name => $models) {
+			foreach ($models as $model) {
+				if ($model->hasErrors())
+					return true;
+			}
+		}
+		return false;
+	}
+
 	public function getAllErrors() {
 		$errors = parent::getErrors();
 		if (!isset($errors[0]))
@@ -714,17 +732,16 @@ abstract class ActiveRecord extends Model
 	protected function mergeAssociations(&$criteria) {
 		if (!empty($this->relations)) {
 			$db = DAO::instance()->getAdapter();
-			foreach (array('fields', 'join', 'condition', 'group', 'having', 'order') as $member) {
+			foreach (array('join', 'condition', 'group', 'having', 'order') as $member) {
 				if (isset($criteria[$member]))
 					$criteria[$member] = (array)$criteria[$member];
 				else
 					$criteria[$member] = array();
  			}
 			ActiveRecord::normalizeAliases($this, $criteria);
-			if (!isset($criteria['fields'])) {
-				foreach ($this->getAttributeNames() as $name)
-					$criteria['fields'][] = sprintf("%s.%s as %s", $this->tableName, $name, $db->quote("{$this->tableName}.{$name}"));
-			}
+			$criteria['fields'] = array();
+			foreach ($this->getAttributeNames() as $name)
+				$criteria['fields'][] = sprintf("%s.%s as %s", $this->tableName, $name, $db->quote("{$this->tableName}.{$name}"));
 			foreach ($this->relations as $name => $relation) {
 				if (!$relation->isCollection())
 					$relation->merge($this, $criteria);
