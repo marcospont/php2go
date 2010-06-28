@@ -20,6 +20,12 @@ abstract class Widget extends ViewHelper
 		return parent::__get($name);
 	}
 
+	public function __isset($name) {
+		if ($this->view->__isset($name))
+			return true;
+		return parent::__isset($name);
+	}
+
 	public function __call($name, $args) {
 		return call_user_func_array(array($this->view, $name), $args);
 	}

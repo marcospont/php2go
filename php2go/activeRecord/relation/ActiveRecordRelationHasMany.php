@@ -1,10 +1,10 @@
 <?php
 
-class ActiveRecordRelationHasMany extends ActiveRecordRelation 
-{	
+class ActiveRecordRelationHasMany extends ActiveRecordRelation
+{
 	protected $collection = true;
 	protected $requiredOptions = array('class', 'foreignKey');
-	
+
 	public function find(ActiveRecord $base, $criteria=null, array $bind=array()) {
 		$model = ActiveRecord::model($this->options['class']);
 		if (is_string($criteria))
@@ -28,7 +28,7 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 
 	public function save(ActiveRecord $base, $models) {
 		if (!empty($models) && count($models) > 0) {
-			$dao = DAO::instance();			
+			$dao = DAO::instance();
 			$model = ActiveRecord::model($this->options['class']);
 			$currKeys = $dao->findPairs($model->getTableName(), $model->getMetaData()->primaryKey, sprintf('%s = ?', $this->options['foreignKey']), array($base->getPrimaryKey()));
 			foreach ($models as $instance) {
@@ -52,22 +52,22 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 		}
 		return true;
 	}
-	
+
 	public function delete(ActiveRecord $base) {
 		$models = $base->getRelation($this->name);
 		if (!empty($models)) {
-			if ($this->options['deleteRestrict'] === true) {
+			if (isset($this->options['deleteRestrict']) && $this->options['deleteRestrict'] === true) {
 				$base->addError($this->name, __(PHP2GO_LANG_DOMAIN, 'This record can not be removed because it is referenced elsewhere in the system.'));
 				return false;
 			}
 			foreach ($models as $model) {
 				if (!$model->delete())
-					return false;	
+					return false;
 			}
 		}
-		return true;		
+		return true;
 	}
-	
+
 	protected function buildCriteria(array $criteria) {
 		$condition = sprintf('%s = ?', $this->options['foreignKey']);
 		if (!isset($criteria['condition'])) {
@@ -77,5 +77,5 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 			$criteria['condition'][] = $condition;
 		}
 		return $criteria;
-	}	
+	}
 }

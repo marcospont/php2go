@@ -30,36 +30,40 @@ class ViewHelperHtml extends ViewHelper
 		return '<![CDATA[' . $content . ']]>';
 	}
 
-	public function link($label, $url=null, array $attrs=array()) {
+	public function link($url=null, $content, array $attrs=array()) {
 		$url = $this->view->url($url);
 		if (($post = Util::consumeArray($attrs, 'post')) && strpos($url, 'javascript:') === false) {
 			$this->view->head()->addLibrary('php2go');
-			$attrs['onclick'] = @$attrs['onclick'] . 'php2go.post(this, "' . $url . '");';
+			if (($confirm = Util::consumeArray($attrs, 'confirm')))
+				$handler = 'if (confirm("' . Js::escape($confirm) . '")) { php2go.post(this, "' . $url . '"); }';
+			else
+				$handler = 'php2go.post(this, "' . $url . '");';
+			$attrs['onclick'] = @$attrs['onclick'] . $handler;
 			$attrs['href'] = '#';
 		} else {
 			$attrs['href'] = $url;
 		}
-		return $this->tag('a', $attrs, $this->view->escape($label));
+		return $this->tag('a', $attrs, $content);
 	}
 
-	public function mailto($email, $label=null, array $attrs=array()) {
+	public function mailto($email, $content=null, array $attrs=array()) {
 		if (!empty($email)) {
-			if (empty($label))
-				$label = $email;
+			if (empty($content))
+				$content = $email;
 			if (($encode = Util::consumeArray($attrs, 'encode'))) {
 				switch ($encode) {
 					case 'js' :
 						$encoded = '';
-						$js = 'document.write(\'' . $this->link($label, 'mailto:' . $email, $attrs) . '\');';
+						$js = 'document.write(\'' . $this->link('mailto:' . $email, $content, $attrs) . '\');';
 						for ($i=0; $i<strlen($js); $i++)
 							$encoded .= '%' . bin2hex($js[$i]);
 						return '<script type="text/javascript">eval(unescape("' . $encoded . '"));</script>';
 					case 'hex' :
 						if (preg_match('/^(.*)(\?.*)$/', $email))
 							throw new Exception(__(PHP2GO_LANG_DOMAIN, 'Hex encoding does not work with extra parameters.'));
-						$encodedLabel = '';
-						for ($i=0; $i<strlen($label); $i++)
-							$encodedLabel .= '&#x' . bin2hex($label[$i]);
+						$encodedContent = '';
+						for ($i=0; $i<strlen($content); $i++)
+							$encodedContent .= '&#x' . bin2hex($content[$i]);
 						$encodedEmail = '&#109;&#97;&#105;&#108;&#116;&#111;&#58;';
 						for ($i=0; $i<strlen($email); $i++) {
 							if (preg_match('/\w/', $email[$i]))
@@ -67,26 +71,30 @@ class ViewHelperHtml extends ViewHelper
 							else
 								$encodedEmail .= $email[$i];
 						}
-						return '<a href="' . $encodedEmail . '"' . $this->renderAttrs($attrs) . '>' . $encodedLabel . '</a>';
+						return '<a href="' . $encodedEmail . '"' . $this->renderAttrs($attrs) . '>' . $encodedContent . '</a>';
 					default :
 						throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid e-mail encoding type.'));
 				}
 			} else {
-				return $this->link($label, 'mailto:' . $email, $attrs);
+				return $this->link('mailto:' . $email, $content, $attrs);
 			}
 		}
 	}
 
-	public function button($label, array $attrs=array()) {
-		return $this->tag('button', $attrs, $this->view->escape($label));
+	public function button($content, array $attrs=array()) {
+		return $this->tag('button', $attrs, $content);
 	}
 
-	public function buttonTo($label, $url, array $attrs=array()) {
+	public function buttonTo($url, $content, array $attrs=array()) {
 		$url = $this->view->url($url);
 		if (strpos($url, 'javascript:') === false) {
 			if (($post = Util::consumeArray($attrs, 'post'))) {
 				$this->view->head()->addLibrary('php2go');
-				$attrs['onclick'] = @$attrs['onclick'] . 'php2go.post(this, "' . $url . '");';
+				if (($confirm = Util::consumeArray($attrs, 'confirm')))
+					$handler = 'if (confirm("' . Js::escape($confirm) . '")) { php2go.post(this, "' . $url . '"); }';
+				else
+					$handler = 'php2go.post(this, "' . $url . '");';
+				$attrs['onclick'] = @$attrs['onclick'] . $handler;
 			} else {
 				$attrs['onclick'] = @$attrs['onclick'] . 'document.location.href="' . Js::escape($this->view->url($url)) . '";';
 			}
@@ -94,7 +102,7 @@ class ViewHelperHtml extends ViewHelper
 			$attrs['onclick'] = @$attrs['onclick'] . $url;
 		}
 		$attrs['type'] = 'button';
-		return $this->button($label, $attrs);
+		return $this->button($content, $attrs);
 	}
 
 	public function image($src, array $attrs=array()) {

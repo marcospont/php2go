@@ -32,6 +32,12 @@ class View extends Component
 		return parent::__get($name);
 	}
 
+	public function __isset($name) {
+		if ($this->__context && isset($this->__context->{$name}))
+			return true;
+		return parent::__isset($name);
+	}
+
 	public function __call($name, $args) {
 		$helper = $this->resolveHelper($name, $method);
 		if ($helper) {
@@ -141,8 +147,9 @@ class View extends Component
 
 	public function url($url=null, array $params=array(), $absolute=false, $ampersand='&') {
 		if (is_array($url)) {
-			$url = (isset($url[0]) ? $url[0] : '');
+			$tmp = (isset($url[0]) ? array_shift($url) : '');
 			$params = $url;
+			$url = $tmp;
 		} elseif (strpos($url, '://') !== false || strpos($url, 'javascript:') === 0 || strpos($url, 'mailto:') === 0 || strpos($url, '#') === 0) {
 			return $url;
 		} elseif (is_file($this->app->getRootPath() . DS . ltrim($url, '/'))) {

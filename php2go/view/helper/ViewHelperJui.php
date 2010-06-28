@@ -12,9 +12,9 @@ class ViewHelperJui extends ViewHelper
 		return $this->view->html()->button($label, $attrs);
 	}
 
-	public function buttonTo($label, $url, array $attrs=array()) {
+	public function buttonTo($url, $label, array $attrs=array()) {
 		$this->setupButton($attrs, 'button');
-		return $this->view->html()->buttonTo($label, $url, $attrs);
+		return $this->view->html()->buttonTo($url, $label, $attrs);
 	}
 
 	public function submitButton($label, array $attrs=array()) {
@@ -27,7 +27,7 @@ class ViewHelperJui extends ViewHelper
 		return $this->view->html()->button($label, $attrs);
 	}
 
-	public function ajaxButton($label, $url, array $options=array(), array $attrs=array()) {
+	public function ajaxButton($url, $label, array $options=array(), array $attrs=array()) {
 		$this->defineId($attrs, 'JuiButton');
 		$this->view->html()->event($attrs['id'], 'click', $this->view->ajax(array_merge($options, array(
 			'url' => $this->view->url($url)

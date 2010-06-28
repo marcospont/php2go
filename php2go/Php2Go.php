@@ -104,7 +104,7 @@ final class Php2Go
 		'NavigationContainer' => '/navigation/NavigationContainer.php',
 		'NavigationItem' => '/navigation/NavigationItem.php',
 		'Paginator' => '/paginator/Paginator.php',
-		'PaginationAdapter' => '/paginator/PaginatorAdapter.php',
+		'PaginatorAdapter' => '/paginator/PaginatorAdapter.php',
 		'Router' => '/router/Router.php',
 		'RouterRule' => '/router/RouterRule.php',
 		'Translator' => '/translator/Translator.php',
