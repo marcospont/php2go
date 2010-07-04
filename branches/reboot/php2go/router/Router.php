@@ -7,11 +7,11 @@ class Router extends Component
 	public $showScriptFile = true;
 	protected $suffix;
 	protected $rules = array();
-	
+
 	public function init() {
 		$this->addDefaultRules();
 	}
-	
+
 	public function getBaseUrl($absolute=false) {
 		if (!$this->baseUrl) {
 			$request = Php2Go::app()->getRequest();
@@ -22,17 +22,17 @@ class Router extends Component
 		}
 		return $this->baseUrl;
 	}
-	
+
 	public function setSuffix($suffix) {
 		if (!preg_match('/^\.?[a-z]+$/', $suffix))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid URL suffix.'));
 		$this->suffix = '.' . ltrim($suffix, '.');
 	}
-	
+
 	public function getRules() {
 		return $this->rules;
 	}
-	
+
 	public function setRules($rules) {
 		if (is_array($rules)) {
 			$this->rules = array();
@@ -42,19 +42,19 @@ class Router extends Component
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid rules specification.'));
 		}
 	}
-	
+
 	public function parseUrl(Request $request) {
 		$pathInfo = urldecode($request->getPathInfo());
 		if (!empty($pathInfo)) {
 			$pathInfo = '/' . $pathInfo;
-			foreach ($this->rules as $rule) {				
+			foreach ($this->rules as $rule) {
 				if (($result = $rule->parse($pathInfo)) !== false)
 					return $result;
 			}
 		}
 		return $pathInfo;
 	}
-	
+
 	public function createUrl($route, array $params=array(), $absolute=false, $ampersand='&') {
 		foreach ($params as &$param) {
 			if ($param === null)
@@ -73,7 +73,7 @@ class Router extends Component
 		}
 		return $this->buildUrl($route, $params, $absolute, $ampersand) . $anchor;
 	}
-	
+
 	protected function buildUrl($route, array $params=array(), $absolute=false, $ampersand='&') {
 		$url = rtrim($this->getBaseUrl($absolute) . '/' . $route, '/');
 		if ($this->appendParams) {
@@ -84,9 +84,9 @@ class Router extends Component
 			return ($query === '' ? $url : $url . '?' . $query);
 		}
 	}
-	
+
 	protected function addDefaultRules() {
-		$this->rules[] = new RouterRule($this, ':module/:controller/:action/:id', ':module/:controller/:action');
-		$this->rules[] = new RouterRule($this, ':controller/:action/:id', ':controller/:action');
+		$this->rules[] = new RouterRule($this, ':module/:controller/:action/:id/*', ':module/:controller/:action');
+		$this->rules[] = new RouterRule($this, ':controller/:action/:id/*', ':controller/:action');
 	}
 }

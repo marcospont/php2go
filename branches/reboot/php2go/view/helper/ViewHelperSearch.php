@@ -18,7 +18,7 @@ class ViewHelperSearch extends ViewHelper
 			'starting' => __(PHP2GO_LANG_DOMAIN, 'Starting with'),
 			'ending' => __(PHP2GO_LANG_DOMAIN, 'Ending with'),
 			'eq' => __(PHP2GO_LANG_DOMAIN, 'Equal to'),
-			'neq' => __(PHP2GO_LANG_DOMAIN, 'Not Equal to')
+			'neq' => __(PHP2GO_LANG_DOMAIN, 'Not equal to')
 		);
 		$selectAttrs['disableEmpty'] = true;
 		$separator = Util::consumeArray($options, 'separator', '&nbsp;');

@@ -54,7 +54,7 @@ class RouterRule
 
 	public function create($route, array $params, $ampersand='&') {
 		$this->compile();
-		$trans = array('*' => '');
+		$trans = array('/*' => '');
 		if ($route != $this->route) {
 			$matches = array();
 			if ($this->routeRegex !== null && preg_match($this->routeRegex, $route, $matches)) {
