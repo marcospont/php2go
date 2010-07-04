@@ -1,18 +1,18 @@
 <?php
 
-class FormModel extends Model
+abstract class FormModel extends Model
 {
 	public static $attributes = array();
-	
+
 	public function __construct($scenario='') {
 		parent::__construct();
 		$this->setScenario($scenario);
 		$this->init();
 	}
-	
-	public function init() {		
+
+	public function init() {
 	}
-	
+
 	public function getAttributeNames() {
 		$class = get_class($this);
 		if (!isset(self::$attributes[$class])) {

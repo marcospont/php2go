@@ -3,13 +3,13 @@
 class ValidatorComparison extends Validator
 {
 	private static $operators = array('eq', 'neq', 'gt', 'goet', 'lt', 'loet');
-	private static $dataTypes = array('integer', 'decimal', 'currency', 'string');
-	protected $operator = '=';
+	private static $dataTypes = array('string', 'integer', 'decimal', 'date', 'datetime');
+	protected $operator = 'eq';
 	protected $peer = null;
 	protected $peerAttribute = null;
 	protected $dataType = 'string';
 	protected $localized = false;
-	
+
 	public function __construct() {
 		$this->defaultMessages = array(
 			'eq' => __(PHP2GO_LANG_DOMAIN, 'Value must be equal to "{peer}".'),
@@ -26,17 +26,17 @@ class ValidatorComparison extends Validator
 			'loet' => __(PHP2GO_LANG_DOMAIN, '{attribute} must be less or equal than {peer}.'),
 			'gt' => __(PHP2GO_LANG_DOMAIN, '{attribute} must be greater than {peer}.'),
 			'goet' => __(PHP2GO_LANG_DOMAIN, '{attribute} must be greater or equal than {peer}.')
-		);		
+		);
 	}
-	
+
 	protected function validateOptions() {
-		$invalidPeer = (!empty($this->attributes) ? ($this->peer === null && $this->peerAttribute === null) : ($this->peer === null));
+		$invalidPeer = (!empty($this->modelAttributes) ? ($this->peer === null && $this->peerAttribute === null) : ($this->peer === null));
 		$invalidOperator = (!in_array(strtolower($this->operator), self::$operators));
 		$invalidDataType = (!in_array(strtolower($this->dataType), self::$dataTypes));
 		if ($invalidPeer || $invalidOperator || $invalidDataType)
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid %s specification.', array(__CLASS__)));
 	}
-	
+
 	public function validate($value) {
 		if (!$this->compare($value, $this->peer, $this->localized)) {
 			$this->setError($this->resolveMessage($this->operator), array('peer' => $this->peer));
@@ -44,7 +44,7 @@ class ValidatorComparison extends Validator
 		}
 		return true;
 	}
-	
+
 	protected function validateModelAttribute(Model $model, $attr) {
 		$value = (string)$model->{$attr};
 		if ($this->allowEmpty && Util::isEmpty($value))
@@ -61,7 +61,7 @@ class ValidatorComparison extends Validator
 		if (!$this->compare($value, $peer, $localized, $peerLocalized))
 			$this->addModelError($model, $attr, $this->resolveModelMessage($this->operator), array('peer' => $peerLabel));
 	}
-	
+
 	private function compare($value, $peer, $localized, $peerLocalized=null) {
 		if ($this->dataType !== null) {
 			if ($peerLocalized === null)
@@ -77,11 +77,9 @@ class ValidatorComparison extends Validator
 						$peer = LocaleNumber::getInteger($peer);
 					if (!is_numeric($peer))
 						return false;
-					if (!is_int($peer))
-						$peer = intval($peer);
+					$peer = intval($peer);
 					break;
 				case 'decimal' :
-				case 'currency' :
 					if ($localized && LocaleNumber::isFloat($value))
 						$value = LocaleNumber::getFloat($value);
 					if (!is_numeric($value))
@@ -91,8 +89,45 @@ class ValidatorComparison extends Validator
 						$peer = LocaleNumber::getFloat($peer);
 					if (!is_numeric($peer))
 						return false;
-					if (!is_int($peer))
-						$peer = floatval($peer);
+					$peer = floatval($peer);
+					break;
+				case 'date' :
+					$format = Php2Go::app()->getLocale()->getDateInputFormat();
+					if ($localized) {
+						try {
+							$value = DateTimeParser::parseIso($value, $format);
+						} catch (Exception $e) { return false; }
+					} else {
+						if (($value = strtotime($value)) === false)
+							return false;
+					}
+					if ($peerLocalized) {
+						try {
+							$peer = DateTimeParser::parseIso($peer, $format);
+						} catch (Exception $e) { return false; }
+					} else {
+						if (($peer = strtotime($peer)) === false)
+							return false;
+					}
+					break;
+				case 'datetime' :
+					$format = Php2Go::app()->getLocale()->getDateTimeInputFormat();
+					if ($localized) {
+						try {
+							$value = DateTimeParser::parseIso($value, $format);
+						} catch (Exception $e) { return false; }
+					} else {
+						if (($value = strtotime($value)) === false)
+							return false;
+					}
+					if ($peerLocalized) {
+						try {
+							$peer = DateTimeParser::parseIso($peer, $format);
+						} catch (Exception $e) { return false; }
+					} else {
+						if (($peer = strtotime($peer)) === false)
+							return false;
+					}
 					break;
 			}
 		}

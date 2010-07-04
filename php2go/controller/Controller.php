@@ -55,6 +55,15 @@ class Controller extends Component
 		return $this->app->getResponse();
 	}
 
+	public function getSession() {
+		return $this->app->getSession();
+	}
+
+	public function getUser() {
+		$auth = $this->app->getAuthenticator();
+		return ($auth->getValid() ? $auth->getUser() : null);
+	}
+
 	public function getView() {
 		return $this->view;
 	}
@@ -130,15 +139,15 @@ class Controller extends Component
 			$this->app->stop();
 	}
 
-	public function redirect($url=null, $statusCode=302) {
-		if ((strpos($url, '://')) === false) {
+	public function redirect($url=null, array $params=array(), $statusCode=302) {
+		if (is_array($url) || strpos($url, '://') === false || strpos($url, '#') === 0) {
 			if (is_array($url)) {
 				$route = (isset($url[0]) ? array_shift($url) : '');
 				$url = $this->createUrl($route, $url);
 			} elseif (empty($url)) {
-				$url = $this->createUrl($this->defaultAction);
+				$url = $this->createUrl($this->defaultAction, $params);
 			} else {
-				$url = $this->createUrl($url);
+				$url = $this->createUrl($url, $params);
 			}
 		}
 		$this->getResponse()->redirect($url, $statusCode);
