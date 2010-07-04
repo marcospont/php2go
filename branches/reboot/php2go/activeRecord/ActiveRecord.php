@@ -30,18 +30,6 @@ abstract class ActiveRecord extends Model
 		return self::$models[$class];
 	}
 
-	public static function normalizeAliases(ActiveRecord $model, array &$criteria, $alias=null) {
-		if (!$alias)
-			$alias = $model->getTableName();
-		$pattern = '/\b(^|[^\.])(' . implode('|', $model->getAttributeNames()) . ')\b/i';
-		foreach ($criteria as $key => $value) {
-			if ($key != 'distinct' && $key != 'limit' && $key != 'offset') {
-				foreach ($value as $idx => $item)
-					$criteria[$key][$idx] = preg_replace($pattern, "{$alias}.$2", $item);
-			}
-		}
-	}
-
 	public function __construct($scenario='insert') {
 		parent::__construct();
 		$this->registerEvents(array(
@@ -75,7 +63,7 @@ abstract class ActiveRecord extends Model
 			return $this->getAttribute($name);
 		elseif ($this->getMetaData()->hasColumn($name))
 			return null;
-		elseif ($this->relations[$name])
+		elseif (isset($this->relations[$name]))
 			return $this->getRelation($name);
 		return parent::__get($name);
 	}
@@ -219,10 +207,6 @@ abstract class ActiveRecord extends Model
 		return $this->getMetaData()->hasColumn($name);
 	}
 
-	public function getAttributeFormat($name) {
-		return $this->formatter->getFormat($name);
-	}
-
 	public function getAttribute($name, $format=true) {
 		if (isset($this->attributes[$name])) {
 			if ($format && isset($this->formatter->formats[$name]))
@@ -230,6 +214,10 @@ abstract class ActiveRecord extends Model
 			return $this->attributes[$name];
 		}
 		return null;
+	}
+
+	public function getAttributeFormat($name) {
+		return $this->formatter->getFormat($name);
 	}
 
 	public function setAttribute($name, $value) {
@@ -738,10 +726,16 @@ abstract class ActiveRecord extends Model
 				else
 					$criteria[$member] = array();
  			}
-			ActiveRecord::normalizeAliases($this, $criteria);
 			$criteria['fields'] = array();
 			foreach ($this->getAttributeNames() as $name)
 				$criteria['fields'][] = sprintf("%s.%s as %s", $this->tableName, $name, $db->quote("{$this->tableName}.{$name}"));
+			$pattern = '/(^|[^\.]|\s)\b(' . implode('|', $this->getAttributeNames()) . ')\b/i';
+			foreach ($criteria as $key => $value) {
+				if ($key != 'distinct' && $key != 'limit' && $key != 'offset') {
+					foreach ($value as $idx => $item)
+						$criteria[$key][$idx] = preg_replace($pattern, "$1{$this->getTableName()}.$2", $item);
+				}
+			}
 			foreach ($this->relations as $name => $relation) {
 				if (!$relation->isCollection())
 					$relation->merge($this, $criteria);

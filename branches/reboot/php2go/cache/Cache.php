@@ -5,65 +5,65 @@ Php2Go::import('php2go.cache.backend.*');
 class Cache extends Component
 {
 	const BACKEND_APC = 'apc';
-	const BACKEND_EACCELERATOR = 'eaccelerator';	
+	const BACKEND_EACCELERATOR = 'eaccelerator';
 	const BACKEND_FILE = 'file';
 	const BACKEND_MEMCACHE = 'memcache';
 	const CLEANING_MODE_ALL = 'all';
 	const CLEANING_MODE_EXPIRED = 'expired';
 	const CLEANING_MODE_PATTERN = 'pattern';
-	
+
 	protected $backend;
 	protected $idPrefix = null;
-	protected $autoSerialization = false;
+	protected $autoSerialization = true;
 	protected $autoCleaningFactor = 100;
 	protected $lifetime = 3600;
 	protected $lastId = null;
-	
+
 	public function getBackend() {
 		if ($this->backend === null)
 			$this->setBackend(new CacheBackendFile());
 		return $this->backend;
 	}
-	
+
 	public function setBackend($backend) {
 		if (!$backend instanceof CacheBackend)
 			$backend = CacheBackend::factory($backend);
 		$this->backend = $backend;
 		$this->backend->setLifetime($this->lifetime);
 	}
-	
+
 	public function getIdPrefix() {
 		return $this->idPrefix;
 	}
-	
+
 	public function setIdPrefix($prefix) {
 		if (empty($prefix) || !is_string($prefix))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The cache ID prefix must be a non empty string.'));
 		$this->idPrefix = $prefix;
 	}
-	
+
 	public function getAutoSerialization() {
 		return $this->autoSerialization;
 	}
-	
+
 	public function setAutoSerialization($autoSerialization) {
 		$this->autoSerialization = !!$autoSerialization;
 	}
-	
+
 	public function getAutoCleaningFactor() {
 		return $this->autoCleaningFactor;
 	}
-	
+
 	public function setAutoCleaningFactor($factor) {
 		if (!is_int($factor) || $factor < 0)
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The cleaning factor must be a positive number.'));
 		$this->autoCleaningFactor = $factor;
 	}
-	
+
 	public function getLifetime() {
 		return $this->lifetime;
 	}
-	
+
 	public function setLifetime($lifetime) {
 		if ($lifetime === null || $lifetime < 0)
 			$lifetime = 0;
@@ -71,8 +71,8 @@ class Cache extends Component
 		if ($this->backend)
 			$this->backend->setLifetime($lifetime);
 	}
-	
-	public function load($id, $unserialize=true) {		
+
+	public function load($id, $unserialize=true) {
 		$this->lastId = $id = $this->cacheId($id);
 		$this->validateId($id);
 		$data = $this->getBackend()->load($id);
@@ -83,16 +83,16 @@ class Cache extends Component
 		}
 		return false;
 	}
-	
+
 	public function contains($id) {
 		$this->lastId = $id = $this->cacheId($id);
 		$this->validateId($id);
 		return $this->getBackend()->contains($id);
 	}
-	
+
 	public function save($data, $id=null, $lifetime=false) {
 		$id = ($id === null ? $this->lastId : $this->cacheId($id));
-		$this->validateId($id);		
+		$this->validateId($id);
 		if ($this->autoSerialization)
 			$data = serialize($data);
 		elseif (!is_string($data))
@@ -113,19 +113,19 @@ class Cache extends Component
 			return false;
 		}
 	}
-	
+
 	public function touch($id, $lifetime) {
 		$id = $this->cacheId($id);
 		$this->validateId($id);
 		return $this->getBackend()->touch($id);
 	}
-	
+
 	public function delete($id) {
 		$this->lastId = $id = $this->cacheId($id);
 		$this->validateId($id);
 		return $this->getBackend()->delete($id);
 	}
-	
+
 	public function clean($mode=self::CLEANING_MODE_ALL, $param=null) {
 		if (!in_array($mode, array(Cache::CLEANING_MODE_ALL, Cache::CLEANING_MODE_EXPIRED, Cache::CLEANING_MODE_PATTERN)))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid cache cleaning mode: "%s".', array($mode)));
@@ -136,7 +136,7 @@ class Cache extends Component
 		}
 		return $this->getBackend()->clean($mode, $param);
 	}
-	
+
 	public function getIds() {
 		$backend = $this->getBackend();
 		if ($backend->hasFeature('list')) {
@@ -146,26 +146,26 @@ class Cache extends Component
 				for ($i=0,$l=sizeof($result); $i<$l; $i++) {
 					if (strpos($result[$i], $this->idPrefix) === 0)
 						$result[$i] = substr($result[$i], $len);
-				}				
+				}
 			}
 			return $result;
 		}
 		return array();
 	}
-	
+
 	public function getUsage() {
 		$backend = $this->getBackend();
 		if ($backend->hasFeature('usage'))
 			return $backend->getUsage();
 		return 0;
 	}
-	
+
 	protected function cacheId($id) {
 		if (!empty($this->idPrefix))
 			return $this->idPrefix . $id;
 		return $id;
 	}
-	
+
 	protected function validateId($id) {
 		if (!is_string($id))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Cache id must be a string.'));

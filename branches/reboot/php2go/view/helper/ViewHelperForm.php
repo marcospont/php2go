@@ -6,6 +6,7 @@ class ViewHelperForm extends ViewHelper
 	protected $beforeRequiredLabel = '';
 	protected $errorClass;
 	protected $requiredClass;
+	protected $maskPlaceholder = '_';
 	protected $html;
 	protected $translator;
 	protected $translatorDomain;
@@ -31,6 +32,19 @@ class ViewHelperForm extends ViewHelper
 
 	public function setRequiredClass($class) {
 		$this->requiredClass = $class;
+	}
+
+	public function setMaskPlaceholder($maskPlaceholder) {
+		$this->maskPlaceholder = $maskPlaceholder;
+	}
+
+	public function setMaskDefinitions(array $maskDefinitions) {
+		$buf = array();
+		foreach ($maskDefinitions as $from => $to)
+			$buf[] = '$.mask.definitions["' . $from . '"] = "' . Js::escape($to) . '";';
+		$maskDefinitions = implode(PHP_EOL, $buf);
+		$this->view->head()->addLibrary('jquery-maskedinput');
+		$this->view->jQuery()->addOnLoad($maskDefinitions);
 	}
 
 	public function begin(array $attrs=array()) {
@@ -77,6 +91,14 @@ class ViewHelperForm extends ViewHelper
 	}
 
 	public function text($name, $value=null, array $attrs=array()) {
+		if (($mask = Util::consumeArray($attrs, 'mask'))) {
+			$attrs['name'] = $name;
+			$this->defineId($attrs);
+			$this->view->head()->addLibrary('jquery-maskedinput');
+			$this->view->jQuery()->addCallById($attrs['id'],
+				'mask', array($this->resolveMask($mask), array('placeholder' => $this->maskPlaceholder))
+			);
+		}
 		return $this->input('text', $name, $value, $attrs);
 	}
 
@@ -262,6 +284,22 @@ class ViewHelperForm extends ViewHelper
 				$attrs['class'] = explode(' ', (string)$attrs['class']);
 			if (!in_array($class, $attrs['class']))
 				$attrs['class'][] = $class;
+		}
+	}
+
+	protected function resolveMask($mask) {
+		switch ($mask) {
+			case 'date' :
+				$format = Php2Go::app()->getLocale()->getDateInputFormat();
+				return preg_replace('/[dMy]/', '9', $format);
+			case 'datetime' :
+				$format = Php2Go::app()->getLocale()->getDateTimeInputFormat();
+				return preg_replace('/[dMyHms]/', '9', $format);
+			case 'time' :
+				$format = Php2Go::app()->getLocale()->getTimeInputFormat();
+				return preg_replace('/[Hms]/', '9', $format);
+			default :
+				return $mask;
 		}
 	}
 }

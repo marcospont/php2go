@@ -6,7 +6,7 @@ class ValidatorLength extends Validator
 	protected $min;
 	protected $max;
 	protected $encoding = false;
-	
+
 	public function __construct() {
 		$this->defaultMessages = array(
 			'wrongLength' => __(PHP2GO_LANG_DOMAIN, 'Value must have {length} characters.'),
@@ -17,14 +17,14 @@ class ValidatorLength extends Validator
 			'wrongLength' => __(PHP2GO_LANG_DOMAIN, '{attribute} must have {length} characters.'),
 			'tooShort' => __(PHP2GO_LANG_DOMAIN, '{attribute} must have at least {min} characters.'),
 			'tooLong' => __(PHP2GO_LANG_DOMAIN, '{attribute} must have until {max} characters.')
-		);		
+		);
 	}
-	
+
 	protected function validateOptions() {
 		if ($this->length === null && $this->min === null && $this->max === null)
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid %s specification.', array(__CLASS__)));
 	}
-	
+
 	public function validate($value) {
 		if ($this->encoding !== false && function_exists('mb_strlen'))
 			$length = mb_strlen($value);
@@ -44,7 +44,7 @@ class ValidatorLength extends Validator
 		}
 		return true;
 	}
-	
+
 	protected function validateModelAttribute(Model $model, $attr) {
 		$value = (string)$model->{$attr};
 		if ($this->allowEmpty && Util::isEmpty($value))
@@ -59,5 +59,5 @@ class ValidatorLength extends Validator
 			$this->addModelError($model, $attr, $this->resolveModelMessage('tooLong'), array('max' => $this->max));
 		elseif ($this->length !== null && $length !== $this->length)
 			$this->addModelError($model, $attr, $this->resolveModelMessage('wrongLength'), array('length' => $this->length));
-	}	
+	}
 }

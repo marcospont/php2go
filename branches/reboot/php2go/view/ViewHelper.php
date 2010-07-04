@@ -23,7 +23,7 @@ abstract class ViewHelper extends Component
 	}
 
 	protected function getIdByName($name) {
-		return str_replace(array('[]', '][', '[', ']'), array('', '-', '-', ''), $name);
+		return str_replace(array('_', '[]', '][', '[', ']'), array('-', '', '-', '-', ''), $name);
 	}
 
 	protected function getIdByModelAttr(Model $model, &$attr) {

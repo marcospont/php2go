@@ -107,6 +107,7 @@ final class Php2Go
 		'PaginatorAdapter' => '/paginator/PaginatorAdapter.php',
 		'Router' => '/router/Router.php',
 		'RouterRule' => '/router/RouterRule.php',
+		'SearchModel' => '/search/SearchModel.php',
 		'Translator' => '/translator/Translator.php',
 		'TranslatorAdapter' => '/translator/TranslatorAdapter.php',
 		'UploadFile' => '/upload/UploadFile.php',

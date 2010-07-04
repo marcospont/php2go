@@ -57,10 +57,6 @@ class JuiDatePicker extends JuiInput
 		$this->params['hideIfNoPrevNext'] = (bool)$hideIfNoPrevNext;
 	}
 
-	public function setMaskPlaceholder($maskPlaceholder) {
-		$this->params['maskPlaceholder'] = $maskPlaceholder;
-	}
-
 	public function setMaxDate($maxDate) {
 		$this->params['maxDate'] = $maxDate;
 	}
@@ -116,7 +112,6 @@ class JuiDatePicker extends JuiInput
 	public function preInit() {
 		parent::preInit();
 		$this->view->head()->addLibrary('jquery-ui-datepicker');
-		$this->view->head()->addLibrary('jquery-maskedinput');
 		$this->registerJsEvents(array(
 			'beforeShow' => array('input', 'inst'),
 			'beforeShowDay' => array('date'),
@@ -131,12 +126,12 @@ class JuiDatePicker extends JuiInput
 	}
 
 	public function run() {
+		$attrs = array_merge($this->attrs, array('mask' => 'date'));
 		if ($this->hasModel())
-			echo $this->view->model()->text($this->model, $this->modelAttr, $this->attrs);
+			echo $this->view->model()->text($this->model, $this->modelAttr, $attrs);
 		else
-			echo $this->view->form()->text($this->name, $this->value, $this->attrs);
+			echo $this->view->form()->text($this->name, $this->value, $attrs);
 		$this->view->jQuery()->addCallById($this->getId(),
-			'mask', array($this->getMask(), array('placeholder' => Util::consumeArray($this->params, 'maskPlaceholder'))),
 			'datepicker', array($this->getSetupParams()),
 			'parents', array(),
 			'find', array('.ui-datepicker-trigger'),

@@ -11,7 +11,6 @@ class ActiveRecordRelationBelongsTo extends ActiveRecordRelation
 		$model = ActiveRecord::model($this->options['class']);
 		foreach ($model->getAttributeNames() as $name)
 			$criteria['fields'][] = sprintf("%s.%s as %s", $this->name, $name, $db->quote("{$this->name}.{$name}"));
-		ActiveRecord::normalizeAliases($model, $criteria, $this->name);
 		$criteria['join'][] = $this->buildJoin($base, $model);
 	}
 
