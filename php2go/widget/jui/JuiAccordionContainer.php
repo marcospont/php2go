@@ -71,6 +71,7 @@ class JuiAccordionContainer extends JuiElement
 
 	public function getDefaultParams() {
 		return array(
+			'autoHeight' => false,
 			'header' => '> h3',
 			'navigation' => true
 		);

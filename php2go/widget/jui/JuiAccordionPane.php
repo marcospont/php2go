@@ -9,7 +9,7 @@ class JuiAccordionPane extends JuiElement
 	}
 
 	public function init() {
-		echo '<h3><a href="#' . $this->getId() . '">' . $this->view->escape($this->title) . '</a></h3>';
+		echo '<h3><a href="#' . $this->getId() . '" title="' . $this->title . '">' . $this->view->escape($this->title) . '</a></h3>';
 		echo '<div' . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 

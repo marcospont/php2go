@@ -2,9 +2,10 @@
 
 class ViewHelperPagination extends ViewHelper
 {
-	public function pagination(Paginator $paginator, $view) {		
-		$this->view->renderPartial($view, array(
+	public function pagination(Paginator $paginator, $view, array $data=array()) {
+		$data = array_merge($data, array(
 			'pages' => $paginator->getPages()
 		));
+		$this->view->renderPartial($view, $data);
 	}
 }

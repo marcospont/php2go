@@ -132,8 +132,8 @@ abstract class SearchModel extends FormModel
 			if (!is_array($attrs))
 				throw new Exception(__(PHP2GO_LANG_DOMAIN, 'Invalid filter specification.'));
 			// validate name
-			if (!isset($attrs['name']))
-				$attrs['name'] = $name;
+			if (!isset($attrs['column']))
+				$attrs['column'] = $name;
 			// validate type
 			if (!isset($attrs['interval']))
 				$attrs['interval'] = false;
@@ -169,7 +169,7 @@ abstract class SearchModel extends FormModel
 				}
 			}
 			// validate callbacks
-			foreach (array('callback', 'nameCallback', 'valueCallback') as $attr) {
+			foreach (array('callback', 'columnCallback', 'valueCallback') as $attr) {
 				if (isset($attrs[$attr]) && !is_callable($attrs[$attr]))
 					throw new Exception(__(PHP2GO_LANG_DOMAIN, 'Invalid callback on "%s" property of filter "%s".', array($attr, $name)));
 			}
@@ -182,6 +182,7 @@ abstract class SearchModel extends FormModel
 		$locale = Php2Go::app()->getLocale();
 		foreach ($this->filters as $name => $data) {
 			if (isset($data['value'])) {
+				$column = $data['column'];
 				if ($data['interval']) {
 					// interval filters
 					if (is_array($data['value'])) {
@@ -220,7 +221,7 @@ abstract class SearchModel extends FormModel
 								$start = $this->db->quote($start);
 								$end = $this->db->quote($end);
 							}
-							$filter[] = $this->resolveNameCallback($data, $name) . ' between ' . $start . ' and ' . $end;
+							$filter[] = $this->resolveColumnCallback($data, $column) . ' between ' . $start . ' and ' . $end;
 						}
 					}
 				} else {
@@ -259,7 +260,7 @@ abstract class SearchModel extends FormModel
 							$value .= '%';
 						if ($data['type'] != 'integer' && $data['type'] != 'decimal')
 							$value = $this->db->quote($value);
-						$filter[] = $this->resolveNameCallback($data, $name) . $this->resolveOperator($operator) . $value;
+						$filter[] = $this->resolveColumnCallback($data, $column) . $this->resolveOperator($operator) . $value;
 					}
 				}
 			}
@@ -285,9 +286,9 @@ abstract class SearchModel extends FormModel
 		}
 	}
 
-	protected function resolveNameCallback(array $options, $name) {
-		if (isset($options['nameCallback']))
-			return call_user_func($options['nameCallback'], $name);
+	protected function resolveColumnCallback(array $options, $name) {
+		if (isset($options['columnCallback']))
+			return call_user_func($options['columnCallback'], $name);
 		return $name;
 	}
 

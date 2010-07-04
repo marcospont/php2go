@@ -365,7 +365,7 @@ abstract class ActiveRecord extends Model
 			}
 			$result = !$this->hasErrors();
 			foreach ($this->associations as $relation => $model) {
-				if (!$model->validate())
+				if ($model !== null && !$model->validate())
 					$result = false;
 			}
 			foreach ($this->collections as $relation => $models) {
@@ -386,7 +386,7 @@ abstract class ActiveRecord extends Model
 		if (!empty($this->errors))
 			return true;
 		foreach ($this->associations as $name => $model) {
-			if ($model->hasErrors())
+			if ($model !== null && $model->hasErrors())
 				return true;
 		}
 		foreach ($this->collections as $name => $models) {
@@ -403,12 +403,14 @@ abstract class ActiveRecord extends Model
 		if (!isset($errors[0]))
 			$errors[0] = array();
 		foreach ($this->associations as $relation => $model) {
-			$assocErrors = $model->getErrors();
-			foreach ($assocErrors as $name => $data) {
-				if ($name === 0)
-					$errors[0] = array_merge($errors[0], $data);
-				else
-					$errors[$relation . '.' . $name] = $data;
+			if ($model !== null) {
+				$assocErrors = $model->getErrors();
+				foreach ($assocErrors as $name => $data) {
+					if ($name === 0)
+						$errors[0] = array_merge($errors[0], $data);
+					else
+						$errors[$relation . '.' . $name] = $data;
+				}
 			}
 		}
 		foreach ($this->collections as $relation => $models) {
