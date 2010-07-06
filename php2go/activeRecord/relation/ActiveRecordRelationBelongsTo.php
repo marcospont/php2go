@@ -28,7 +28,6 @@ class ActiveRecordRelationBelongsTo extends ActiveRecordRelation
 				$base->{$this->options['foreignKey']} = $model->getPrimaryKey();
 				return true;
 			} else {
-				$base->addErrors(array($this->name, $model->getErrors()));
 				return false;
 			}
 		}

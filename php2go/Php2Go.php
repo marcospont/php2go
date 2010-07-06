@@ -38,6 +38,7 @@ final class Php2Go
 		'ActiveRecordBehavior' => '/activeRecord/ActiveRecordBehavior.php',
 		'ActiveRecordFormatter' => '/activeRecord/ActiveRecordFormatter.php',
 		'ActiveRecordRelation' => '/activeRecord/ActiveRecordRelation.php',
+		'ActiveRecordRelationCollection' => '/activeRecord/relation/ActiveRecordRelationCollection.php',
 		'Authenticator' => '/auth/Authenticator.php',
 		'AuthenticatorAdapter' => '/auth/AuthenticatorAdapter.php',
 		'AuthorizationFilter' => '/auth/AuthorizationFilter.php',

@@ -32,19 +32,23 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 			$model = ActiveRecord::model($this->options['class']);
 			$currKeys = $dao->findPairs($model->getTableName(), $model->getMetaData()->primaryKey, sprintf('%s = ?', $this->options['foreignKey']), array($base->getPrimaryKey()));
 			foreach ($models as $instance) {
-				if (!$instance->isNew() && isset($currKeys[$instance->getPrimaryKey()]))
-					unset($currKeys[$instance->getPrimaryKey()]);
-				if (!$instance->save()) {
-					if ($instance->hasErrors())
-						$base->addErrors(array($this->name => $instance->getErrors()));
-					return false;
+				if ($instance->isNew())
+					$instance->{$this->options['foreignKey']} = $base->getPrimaryKey();
+				if (!$instance->isNew()) {
+					$pk = $instance->getPrimaryKey();
+					if (is_array($pk))
+						$pk = implode('-', $pk);
+					if (isset($currKeys[$pk]))
+						unset($currKeys[$pk]);
 				}
+				if (!$instance->save())
+					return false;
 			}
 			if (!empty($currKeys)) {
-				$deleteKeys = array_map(array($dao->getAdapter(), 'quote'), array_values($currKeys));
-				$toDelete = $model->findAll(array('condition' => sprintf('%s in (%s)', $model->getMetaData()->primaryKey, implode(',', $deleteKeys)), 'lazy' => true));
-				foreach ($toDelete as $model) {
-					if (!$model->delete())
+				foreach ($currKeys as $key) {
+					$key = explode('-', $key);
+					$toDelete = $model->findByPK((sizeof($key) == 1 ? $key[0] : $key));
+					if (!$toDelete->delete())
 						return false;
 				}
 			}

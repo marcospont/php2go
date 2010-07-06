@@ -29,5 +29,9 @@ return array(
 	array(
 		'label' => 'Active Record',
 		'url' => 'sandbox/person'
+	),
+	array(
+		'label' => 'Search',
+		'url' => 'sandbox/search'
 	)
 );

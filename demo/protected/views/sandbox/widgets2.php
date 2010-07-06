@@ -68,7 +68,7 @@
 	<?=$this->widget('JuiDatePicker', array('name' => 'date', 'attrs' => array('size' => 20)))?><br/><br/>
 	<!-- masked input -->
 	<?=$this->formLabel('masked', 'Masked Input')?><br/>
-	<?=$this->widget('MaskedInput', array('name' => 'masked', 'mask' => '(99) 9999-9999'))?><br/><br/>
+	<?=$this->formText('masked', null, array('mask' => '(99) 9999-9999'))?><br/><br/>
 	<!-- password meter -->
 	<?=$this->formLabel('password', 'Password')?><br/>
 	<?=$this->formPassword('password')?>

@@ -32,6 +32,14 @@ class View extends Component
 		return parent::__get($name);
 	}
 
+	public function __set($name, $value) {
+		if (property_exists($this, $name))
+			return parent::__set($name, $value);
+		if (!isset($this->__context))
+			$this->__context = new stdClass();
+		$this->__context->{$name} = $value;
+	}
+
 	public function __isset($name) {
 		if ($this->__context && isset($this->__context->{$name}))
 			return true;

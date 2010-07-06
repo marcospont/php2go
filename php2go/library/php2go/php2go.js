@@ -1,4 +1,4 @@
-;(function($) {
+ ;(function($) {
 	var csrfTokenName;
 	var csrfTokenValue;
 	var php2go = {
@@ -21,10 +21,15 @@
 				$(document.createElement('input')).attr({name: csrfTokenName, value: csrfTokenValue, type: 'hidden'}).appendTo($(form));
 		},
 		post: function(sender, url, params) {
-			var form = $(sender).parents('form');
+			var act, form = $(sender).parents('form:first');
 			if (form.length == 0) {
 				form = $('<form method="post" style="display:none;"></form>').appendTo($(sender).parent());
 				(url != '') && (form.attr('action', url));
+			} else {
+				if (url != '') {
+					act = form.attr('action');
+					form.attr('action', url);
+				}
 			}
 			var inputs = [], params = params || {};
 			if (csrfTokenName && csrfTokenValue)
@@ -34,6 +39,8 @@
 			});
 			form.data('submitter', sender);
 			form.trigger('submit');
+			if (act)
+				form.attr('action', act);
 			$.each(inputs, function() {
 				this.remove();
 			});

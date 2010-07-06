@@ -82,12 +82,13 @@ class ViewHelperModel extends ViewHelper
 	public function errorSummary(Model $model, $headerTemplate='<p>%s</p>', $headerText=null) {
 		$items = array();
 		$errors = ($model instanceof ActiveRecord ? $model->getAllErrors() : $model->getErrors());
-		foreach ($errors as $attr => $errors) {
+		foreach ($errors as $attr => $messages) {
 			if ($attr === 0) {
-				foreach ($errors as $error)
-					$items[] = '<p>' . $this->view->escape($error) . '</p>';
+				foreach ($messages as $message)
+					$items[] = '<p>' . $this->view->escape($message) . '</p>';
 			} else {
-				$items[] = '<p>' . $this->view->escape($errors[0]) . '</p>';
+				foreach ($messages as $message)
+					$items[] = '<p>' . $this->view->escape($message) . '</p>';
 			}
 		}
 		if (!empty($items)) {

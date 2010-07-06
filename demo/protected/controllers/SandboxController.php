@@ -65,6 +65,32 @@ class SandboxController extends Controller
 		$this->render('widgets2');
 	}
 
+	public function actionSearch() {
+		$results = null;
+		$search = new PersonSearch();
+		$request = $this->getRequest();
+		$cache = $this->app->getCache();
+		if (($post = $request->getPost('personSearch'))) {
+			$search->import($post);
+			if (($condition = $search->process())) {
+				$data = array($post, $condition);
+				if (($key = $request->getQuery('filter')) === null)
+					$key = md5(serialize($data));
+				$cache->save($data, $key);
+				$this->redirect(array('search', 'filter' => $key));
+			}
+		} elseif (($key = $request->getQuery('filter')) && ($data = $cache->load($key))) {
+			list($post, $condition) = $data;
+			$search->import($post);
+			$results = Person::model()->findAll($condition);
+		}
+		$this->render('search', array(
+			'search' => $search,
+			'countries' => Country::model()->findPairs('name', array('order' => 'name')),
+			'results' => $results
+		));
+	}
+
 	public function actionGetClients() {
 		$request = $this->getRequest();
 		if (($q = $request->getQuery('q'))) {

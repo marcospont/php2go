@@ -225,7 +225,7 @@ final class Util
 	public static function evaluateExpression($expression, $data=array(), $context=null) {
 		if (is_string($expression)) {
 			extract($data);
-			return eval('return ' . $expression . ';');
+			return eval('return (' . $expression . ');');
 		} else {
 			if ($context)
 				$data[] = $context;

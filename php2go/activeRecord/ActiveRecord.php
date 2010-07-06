@@ -33,7 +33,7 @@ abstract class ActiveRecord extends Model
 	public function __construct($scenario='insert') {
 		parent::__construct();
 		$this->registerEvents(array(
-			'onLoad',
+			'onLoad', 'onException',
 			'onBeforeSave', 'onAfterSave',
 			'onBeforeInsert', 'onAfterInsert',
 			'onBeforeUpdate', 'onAfterUpdate',
@@ -258,7 +258,7 @@ abstract class ActiveRecord extends Model
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The class "%s" does not have relation "%s"', array(get_class($this), $name)));
 		if ($this->isNew()) {
 			if ($relation->isCollection())
-				return ($this->collections[$name] = new ArrayObject());
+				return ($this->collections[$name] = new ActiveRecordRelationCollection(array(), $this, $relation));
 			else
 				return ($this->associations[$name] = null);
 		}
@@ -266,18 +266,18 @@ abstract class ActiveRecord extends Model
 		if ($relation->isCollection()) {
 			if ($criteria === null) {
 				if (!empty($data))
-					$this->collections[$name] = $this->createRelationCollection($name, $data, true);
+					$this->collections[$name] = $this->createRelationCollection($relation, $data, true);
 				else
-					$this->collections[$name] = new ArrayObject();
+					$this->collections[$name] = new ActiveRecordRelationCollection(array(), $this, $relation);
 				return $this->collections[$name];
 			} else {
-				return (!empty($data) ? $this->createRelationCollection($name, $data, true) : new ArrayObject());
+				return (!empty($data) ? $this->createRelationCollection($relation, $data, true) : new ActiveRecordRelationCollection(array(), $this, $relation));
 			}
 		} else {
 			if ($criteria !== null)
 				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The relation "%s" can not use criteria when loading.', array($name)));
 			if (!empty($data))
-				$this->associations[$name] = $this->createRelationInstance($name, $data, true);
+				$this->associations[$name] = $this->createRelationInstance($name, $data, false, true);
 			else
 				$this->associations[$name] = null;
 			return $this->associations[$name];
@@ -311,11 +311,10 @@ abstract class ActiveRecord extends Model
 				$class = $relation->getClass();
 				if (!is_array($value))
 					throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" relation value must be an array', array($name)));
-				$this->collections[$name] = new ArrayObject();
-				foreach ($value as $idx => $record) {
+				$this->collections[$name] = new ActiveRecordRelationCollection(array(), $this, $relation);
+				foreach ($value as $record) {
 					if (!$record instanceof $class)
 						throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" relation value must be an array of "%s" instances', array($name, $class)));
-					$record->setNamePrefix($this->getNamePrefix() . '[' . $name . '][' . $idx . ']');
 					$this->collections[$name][] = $record;
 				}
 				break;
@@ -323,7 +322,7 @@ abstract class ActiveRecord extends Model
 				$class = $relation->getClass();
 				if (!is_array($value))
 					throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" relation value must be an array', array($name)));
-				$this->collections[$name] = new ArrayObject($value);
+				$this->collections[$name] = new ActiveRecordRelationCollection($value, $this, $relation);
 				break;
 		}
 	}
@@ -331,7 +330,7 @@ abstract class ActiveRecord extends Model
 	public function import(array $attrs=array()) {
 		foreach ($attrs as $name => $value) {
 			if (!$this->setAttribute($name, $value)) {
-				if (isset($this->relations[$name])) {
+				if (isset($this->relations[$name]) && is_array($value)) {
 					switch ($this->relations[$name]->getType()) {
 						case ActiveRecord::BELONGS_TO :
 							$this->getRelation($name)->import($value);
@@ -341,13 +340,21 @@ abstract class ActiveRecord extends Model
 							if ($relation)
 								$relation->import($value);
 							else
-								$this->associations[$name] = $this->createRelationInstance($name, $value);
+								$this->associations[$name] = $this->createRelationInstance($name, $value, false);
 							break;
 						case ActiveRecord::HAS_MANY :
-							$this->collections[$name] = $this->createRelationCollection($name, $value);
+							$relation = $this->getRelation($name);
+							$value = array_values($value);
+							foreach ($value as $i => $record) {
+								if (isset($relation[$i]))
+									$relation[$i]->import($record);
+								else
+									$relation[$i] = $this->createRelationInstance($name, $record, true);
+							}
 							break;
 						case ActiveRecord::HAS_AND_BELONGS_TO_MANY :
-							$this->collections[$name] = new ArrayObject($value);
+							$value = array_values($value);
+							$this->collections[$name] = new ActiveRecordRelationCollection($value, $this, $this->relations[$name]);
 							break;
 					}
 				}
@@ -537,6 +544,7 @@ abstract class ActiveRecord extends Model
 			return true;
 		} catch (DbException $e) {
 			$db->rollback();
+			$this->raiseEvent('onException', new ExceptionEvent($this, $e));
 			throw $e;
 		}
 	}
@@ -595,7 +603,8 @@ abstract class ActiveRecord extends Model
 			return true;
 		} catch (DbException $e) {
 			$db->rollback();
-			throw $e;
+			if ($this->raiseEvent('onException', new ExceptionEvent($this, $e)))
+				throw $e;
 		}
 	}
 
@@ -642,7 +651,8 @@ abstract class ActiveRecord extends Model
 			return true;
 		} catch (DbException $e) {
 			$db->rollback();
-			throw $e;
+			if ($this->raiseEvent('onException', new ExceptionEvent($this, $e)))
+				throw $e;
 		}
  	}
 
@@ -680,7 +690,8 @@ abstract class ActiveRecord extends Model
 			return true;
 		} catch (DbException $e) {
 			$db->rollback();
-			throw $e;
+			if ($this->raiseEvent('onException', new ExceptionEvent($this, $e)))
+				throw $e;
 		}
   	}
 
@@ -857,7 +868,7 @@ abstract class ActiveRecord extends Model
 			$instance->loadAttributes($attrs);
 			foreach ($assoc as $name => $attrs) {
 				if (count($attrs) != count(array_filter($attrs, 'is_null')))
-					$instance->associations[$name] = $instance->createRelationInstance($name, $attrs, true);
+					$instance->associations[$name] = $instance->createRelationInstance($name, $attrs, false, true);
 				else
 					$instance->associations[$name] = null;
 			}
@@ -866,19 +877,23 @@ abstract class ActiveRecord extends Model
 		return null;
 	}
 
-	protected function createRelationCollection($name, array $data, $isUpdate=false) {
-		$collection = new ArrayObject();
-		foreach ($data as $i => $attrs)
-			$collection[] = $this->createRelationInstance($name, $attrs, $isUpdate, $i);
+	protected function createRelationCollection(ActiveRecordRelation $relation, array $data, $isUpdate=false) {
+		$collection = new ActiveRecordRelationCollection(array(), $this, $relation);
+		foreach ($data as $attrs)
+			$collection[] = $this->createRelationInstance($relation->getName(), $attrs, true, $isUpdate);
 		return $collection;
 	}
 
-	protected function createRelationInstance($name, array $attrs, $isUpdate=false, $index=null) {
+	protected function createRelationInstance($name, array $attrs, $isCollection, $isUpdate=false) {
 		$class = $this->relations[$name]->getClass();
 		$model = ActiveRecord::model($class);
 		$instance = new $class(($isUpdate || $this->containsPK($model, $attrs) ? 'update' : 'insert'));
-		$instance->loadAttributes($attrs);
-		$instance->setNamePrefix($this->getNamePrefix() . '[' . $name . ']' . ($index !== null ? '[' . $index . ']' : ''));
+		if ($isUpdate)
+			$instance->loadAttributes($attrs);
+		else
+			$instance->import($attrs);
+		if (!$isCollection)
+			$instance->setNamePrefix($this->getNamePrefix() . '[' . $name . ']');
 		return $instance;
 	}
 
