@@ -1,6 +1,5 @@
-<div class="ui-helper-clearfix">
-	<?=$this->menuRender()?>
-</div>
+<?=$this->menuRender()?>
+<div style="clear:both;"></div>
 <?$this->beginScript('domReady')?>
 $(".menu li").each(function(){
 	$(this).hover(function(){

@@ -145,11 +145,15 @@ abstract class Model extends Component implements ArrayAccess, IteratorAggregate
 	}
 
 	public function addGlobalError($error) {
+		if (!isset($this->errors[0]))
+			$this->errors[0] = array();
 		if (!in_array($error, $this->errors[0]))
 			$this->errors[0][] = $error;
 	}
 
 	public function addGlobalErrors(array $errors) {
+		if (!isset($this->errors[0]))
+			$this->errors[0] = array();
 		foreach ($errors as $error) {
 			if (!in_array($error, $this->errors[0]))
 				$this->errors[0][] = $error;
