@@ -128,6 +128,7 @@ final class Php2Go
 		'ValidatorEmail' => '/validator/ValidatorEmail.php',
 		'ValidatorInline' => '/validator/ValidatorInline.php',
 		'ValidatorLength' => '/validator/ValidatorLength.php',
+		'ValidatorNoWhitespace' => '/validator/ValidatorNoWhitespace.php',
 		'ValidatorNumber' => '/validator/ValidatorNumber.php',
 		'ValidatorRegex' => '/validator/ValidatorRegex.php',
 		'ValidatorRequired' => '/validator/ValidatorRequired.php',

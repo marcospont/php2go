@@ -1,9 +1,9 @@
 <?php
 
-class ActiveRecordRelationHasAndBelongsToMany extends ActiveRecordRelationHasMany 
+class ActiveRecordRelationHasAndBelongsToMany extends ActiveRecordRelationHasMany
 {
 	protected $requiredOptions = array('class', 'join');
-	
+
 	public function validateOptions() {
 		parent::validateOptions();
 		$matches = array();
@@ -15,7 +15,7 @@ class ActiveRecordRelationHasAndBelongsToMany extends ActiveRecordRelationHasMan
 			$this->options['foreignKey'] = $matches[3];
 		}
 	}
-	
+
 	public function save(ActiveRecord $base, $keys) {
 		if (!empty($keys) && count($keys) > 0) {
 			$dao = DAO::instance();
@@ -31,7 +31,7 @@ class ActiveRecordRelationHasAndBelongsToMany extends ActiveRecordRelationHasMan
 		}
 		return true;
 	}
-	
+
 	public function delete(ActiveRecord $base) {
 		$dao = DAO::instance();
 		try {
@@ -41,19 +41,20 @@ class ActiveRecordRelationHasAndBelongsToMany extends ActiveRecordRelationHasMan
 			return false;
 		}
 	}
-	
+
 	protected function buildCriteria(array $criteria) {
 		$model = ActiveRecord::model($this->options['class']);
+		$tableName = $model->getTableName();
 		$fields = array();
-		if (!isset($criteria['fields'])) {			
-			foreach ($model->getAtributeNames() as $name)
-				$fields[] = sprintf("%s.%s", $this->name, $name);
+		if (!isset($criteria['fields'])) {
+			foreach ($model->getAttributeNames() as $name)
+				$fields[] = sprintf("%s.%s", $tableName, $name);
 		}
 		$join = sprintf(
-				'inner join %s %s on %s.%s = %s.%s',
-				$model->getTableName(), $this->name,
-				$this->options['joinTable'], $this->options['foreignKey'],
-				$this->name, $model->getMetaData()->primaryKey
+				'inner join %s on %s.%s = %s.%s',
+				$this->options['joinTable'],
+				$tableName, $model->getMetaData()->primaryKey,
+				$this->options['joinTable'], $this->options['foreignKey']
 		);
 		$condition = sprintf('%s.%s = ?', $this->options['joinTable'], $this->options['joinKey']);
 		if (!isset($criteria['fields']))
@@ -71,5 +72,5 @@ class ActiveRecordRelationHasAndBelongsToMany extends ActiveRecordRelationHasMan
 			$criteria['condition'][] = $condition;
 		}
 		return $criteria;
-	}	
+	}
 }

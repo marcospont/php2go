@@ -4,6 +4,7 @@ abstract class ActiveRecord extends Model
 {
 	const TIMESTAMP = 'timestamp';
 	const UPLOAD = 'upload';
+	const PASSWORD = 'password';
 	const BELONGS_TO = 'belongsTo';
 	const HAS_ONE = 'hasOne';
 	const HAS_MANY = 'hasMany';
@@ -370,19 +371,21 @@ abstract class ActiveRecord extends Model
 			foreach ($this->getValidators() as $validator) {
 				$validator->validateModel($this, $attrs);
 			}
-			$result = !$this->hasErrors();
+			$result = empty($this->errors);
 			foreach ($this->associations as $relation => $model) {
 				if ($model !== null && !$model->validate())
 					$result = false;
 			}
 			foreach ($this->collections as $relation => $models) {
-				foreach ($models as $model) {
-					if (!$model->validate())
-						$result = false;
+				if ($this->relations[$relation]->getType() == ActiveRecord::HAS_MANY) {
+					foreach ($models as $model) {
+						if (!$model->validate())
+							$result = false;
+					}
 				}
 			}
 			$this->raiseEvent('onAfterValidate', new Event($this));
-			return $result;
+			return ($result && empty($this->errors));
 		}
 		return false;
 	}
@@ -392,14 +395,16 @@ abstract class ActiveRecord extends Model
 			return (!empty($this->errors[$attr]));
 		if (!empty($this->errors))
 			return true;
-		foreach ($this->associations as $name => $model) {
+		foreach ($this->associations as $relation => $model) {
 			if ($model !== null && $model->hasErrors())
 				return true;
 		}
-		foreach ($this->collections as $name => $models) {
-			foreach ($models as $model) {
-				if ($model->hasErrors())
-					return true;
+		foreach ($this->collections as $relation => $models) {
+			if ($this->relations[$relation]->getType() == ActiveRecord::HAS_MANY) {
+				foreach ($models as $model) {
+					if ($model->hasErrors())
+						return true;
+				}
 			}
 		}
 		return false;
@@ -421,13 +426,15 @@ abstract class ActiveRecord extends Model
 			}
 		}
 		foreach ($this->collections as $relation => $models) {
-			foreach ($models as $idx => $model) {
-				$collectionErrors = $model->getErrors();
-				foreach ($collectionErrors as $name => $data) {
-					if ($name === 0)
-						$errors[0] = array_merge($errors[0], $data);
-					else
-						$errors[$relation . '.' . $idx . '.' . $name] = $data;
+			if ($this->relations[$relation]->getType() == ActiveRecord::HAS_MANY) {
+				foreach ($models as $idx => $model) {
+					$collectionErrors = $model->getErrors();
+					foreach ($collectionErrors as $name => $data) {
+						if ($name === 0)
+							$errors[0] = array_merge($errors[0], $data);
+						else
+							$errors[$relation . '.' . $idx . '.' . $name] = $data;
+					}
 				}
 			}
 		}
@@ -707,6 +714,7 @@ abstract class ActiveRecord extends Model
 		switch ($class) {
 			case self::TIMESTAMP :
 			case self::UPLOAD :
+			case self::PASSWORD :
 				Php2Go::import('php2go.activeRecord.behavior.*');
 				$class = 'ActiveRecordBehavior' . Inflector::camelize($class);
 				break;

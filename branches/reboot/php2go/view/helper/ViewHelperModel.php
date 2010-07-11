@@ -38,7 +38,7 @@ class ViewHelperModel extends ViewHelper
 	public function password(Model $model, $attr, array $attrs=array()) {
 		$name = $this->defineName($model, $attr, $attrs);
 		$attrs['error'] = $model->hasErrors($attr);
-		return $this->form->password($name, null, $attrs);
+		return $this->form->password($name, $model->{$attr}, $attrs);
 	}
 
 	public function hidden(Model $model, $attr, array $attrs=array()) {
@@ -62,13 +62,13 @@ class ViewHelperModel extends ViewHelper
 	public function checkBoxGroup(Model $model, $attr, array $options, array $attrs=array(), array $labelAttrs=array()) {
 		$name = $this->defineName($model, $attr, $attrs);
 		$attrs['error'] = $model->hasErrors($attr);
-		return $this->form->checkBoxGroup($name, $model->{$attr}, $options, $attrs, $labelAttrs);
+		return $this->form->checkBoxGroup($name, Util::consumeArray($attrs, 'value', array()), $options, $attrs, $labelAttrs);
 	}
 
 	public function radioGroup(Model $model, $attr, array $options, array $attrs=array(), array $labelAttrs=array()) {
 		$name = $this->defineName($model, $attr, $attrs);
 		$attrs['error'] = $model->hasErrors($attr);
-		return $this->form->radioGroup($name, $model->{$attr}, $options, $attrs, $labelAttrs);
+		return $this->form->radioGroup($name, Util::consumeArray($attrs, 'value', array()), $options, $attrs, $labelAttrs);
 	}
 
 	public function select(Model $model, $attr, array $options=array(), array $attrs=array()) {
@@ -76,7 +76,7 @@ class ViewHelperModel extends ViewHelper
 		if (!array_key_exists('disableEmpty', $attrs) && $model->isAttributeRequired($attr))
 			$attrs['disableEmpty'] = true;
 		$attrs['error'] = $model->hasErrors($attr);
-		return $this->form->select($name, $model->{$attr}, $options, $attrs);
+		return $this->form->select($name, Util::consumeArray($attrs, 'value', $model->{$attr}), $options, $attrs);
 	}
 
 	public function errorSummary(Model $model, $headerTemplate='<p>%s</p>', $headerText=null) {

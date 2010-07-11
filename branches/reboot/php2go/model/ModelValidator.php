@@ -13,6 +13,7 @@ abstract class ModelValidator
 		'in' => 'ValidatorChoice',
 		'integer' => array('ValidatorDataType', 'dataType'),
 		'length' => 'ValidatorLength',
+		'noWhitespace' => 'ValidatorNoWhitespace',
 		'number' => 'ValidatorNumber',
 		'regex' => 'ValidatorRegex',
 		'required' => 'ValidatorRequired',
