@@ -10,7 +10,7 @@ class ValidatorRequired extends Validator
 	}
 
 	public function validate($value) {
-		if (Util::isEmpty($value)) {
+		if (Util::isEmpty($value, true)) {
 			$this->setError($this->resolveMessage());
 			return false;
 		}

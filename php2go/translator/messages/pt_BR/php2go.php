@@ -129,7 +129,7 @@ return array(
 	'Invalid filter type: "%s".' => '',
 	'Invalid filters specification.' => '',
 	'Invalid format of "%s" option of the "%s" relation. Correct format is "table(column,column)".' => '',
-	'Invalid format: "%s"' => '',
+	'Invalid format type: "%s"' => '',
 	'Invalid height: "%s".' => '',
 	'Invalid helper options.' => '',
 	'Invalid http-equiv specification.' => '',
@@ -309,6 +309,7 @@ return array(
 	'Value must have at least {min} characters.' => 'Valor deve possuir no mínimo {min} caracteres.',
 	'Value must have until {max} characters.' => 'Valor deve possuir no máximo {max} caracteres.',
 	'Value must have {length} characters.' => 'Valor deve possuir {length} caracteres.',
+	'Value must not contain whitespace characters.' => 'Valor não deve possuir espaços.',
 	'View path "%s" is not a valid directory.' => '',
 	'Warning' => '',
 	'Weak' => 'Fraca',
@@ -329,6 +330,7 @@ return array(
 	'less than a minute' => 'menos de 1 minuto',
 	'over %s years' => 'mais de %s anos',
 	'{attribute} "{value}" has already been taken.' => '{attribute} "{value}" já está em uso.',
+	'{attribute} contains an invalid value.' => '{attribute} contém um valor inválido.',
 	'{attribute} is not a valid CNPJ.' => '{attribute} não é um CNPJ válido.',
 	'{attribute} is not a valid CPF.' => '{attribute} não é um CPF válido.',
 	'{attribute} is not a valid URL.' => '{attribute} não é uma URL válida.',
@@ -354,5 +356,6 @@ return array(
 	'{attribute} must have at least {min} characters.' => '{attribute} deve ter ao menos {min} caracteres.',
 	'{attribute} must have until {max} characters.' => '{attribute} deve ter até {max} caracteres.',
 	'{attribute} must have {length} characters.' => '{attribute} deve ter {length} caracteres.',
-	'{attribute} must not be equal to {peer}.' => '{attribute} deve ser diferente de {peer}.'
+	'{attribute} must not be equal to {peer}.' => '{attribute} deve ser diferente de {peer}.',
+	'{attribute} must not contain whitespace characters.' => '{attribute} não deve conter espaços.'
 );

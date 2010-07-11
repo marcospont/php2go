@@ -57,7 +57,7 @@ final class Util
 	}
 
 	public static function isEmpty($value, $trim=false) {
-		return ($value === null || $value === array() || $value === '' || ($trim && is_scalar($value) && trim($value) === ''));
+		return ($value === null || $value === array() || $value === '' || ($trim && is_string($value) && trim($value) === ''));
 	}
 
 	public static function ifEmpty($value, $fallback=null) {

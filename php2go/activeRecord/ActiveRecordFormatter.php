@@ -33,7 +33,7 @@ class ActiveRecordFormatter extends Component
 			if (!$this->model->hasAttribute($attr))
 				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" does not have the "%s" attribute.', array(get_class($this->model), $attr)));
 			if (!in_array($type, self::$formatTypes))
-				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid format: "%s"', array($type)));
+				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid format type: "%s"', array($type)));
 			$this->formats[$attr] = $type;
 		}
 	}
@@ -48,13 +48,13 @@ class ActiveRecordFormatter extends Component
 
 	public function formatGet($name, $value) {
 		if (!isset($this->formatErrors[$name]))
-			return $this->{'format' . ucfirst($this->formats[$name])}($value);
+			return $this->{$this->formats[$name] . 'Get'}($name, $value);
 		return $value;
 	}
 
 	public function formatSet($name, $value) {
 		try {
-			$value = $this->{'parse' . ucfirst($this->formats[$name])}($value);
+			$value = $this->{$this->formats[$name] . 'Set'}($name, $value);
 			unset($this->formatErrors[$name]);
 		} catch (Exception $e) {
 			$this->formatErrors[$name] = Util::buildMessage($this->messages[$this->formats[$name]], array('attribute' => $this->model->getAttributeLabel($name)));
@@ -62,53 +62,53 @@ class ActiveRecordFormatter extends Component
 		return $value;
 	}
 
-	protected function formatInteger($value) {
+	protected function integerGet($name, $value) {
 		if (preg_match('/^-?[0-9]+$/', $value))
 			return LocaleNumberFormatter::formatInteger($value);
 		return $value;
 	}
 
-	protected function parseInteger($value) {
+	protected function integerSet($name, $value) {
 		return LocaleNumber::getInteger($value);
 	}
 
-	protected function formatDecimal($value) {
+	protected function decimalGet($name, $value) {
 		if (preg_match('/^-?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/', $value))
 			return LocaleNumberFormatter::format($value);
 		return $value;
 	}
 
-	protected function parseDecimal($value) {
+	protected function decimalSet($name, $value) {
 		return LocaleNumber::getNumber($value);
 	}
 
-	protected function formatDate($value) {
+	protected function dateGet($name, $value) {
 		if (preg_match('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/', $value))
 			return new LocaleDate($value);
 		return $value;
 	}
 
-	protected function parseDate($value) {
+	protected function dateSet($name, $value) {
 		return date('Y-m-d', DateTimeParser::parseIso($value, $this->locale->getDateInputFormat()));
 	}
 
-	protected function formatDateTime($value) {
+	protected function dateTimeGet($name, $value) {
 		if (preg_match('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}\:[0-9]{2}\:[0-9]{2}$/', $value))
 			return new LocaleDateTime($value);
 		return $value;
 	}
 
-	protected function parseDateTime($value) {
+	protected function dateTimeSet($name, $value) {
 		return date('Y-m-d H:i:s', DateTimeParser::parseIso($value, $this->locale->getDateTimeInputFormat()));
 	}
 
-	protected function formatTime($value) {
+	protected function timeGet($name, $value) {
 		if (preg_match('/^[0-9]{2}\:[0-9]{2}\:[0-9]{2}$/', $value))
 			return DateTimeFormatter::formatIso($value, $this->locale->getTimeInputFormat());
 		return $value;
 	}
 
-	protected function parseTime($value) {
+	protected function timeSet($name, $value) {
 		return date('H:i:s', DateTimeParser::parseIso($value, $this->locale->getTimeInputFormat()));
 	}
 }
