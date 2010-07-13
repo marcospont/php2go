@@ -89,10 +89,10 @@ class JuiUploader extends JuiElement
 	}
 
 	public function run() {
-		$this->render('uploader');
 		$this->view->jQuery()->addCallById($this->getId(),
 			'uploader', array($this->getSetupParams())
 		);
+		$this->render('uploader');
 	}
 
 	protected function getSetupParams() {

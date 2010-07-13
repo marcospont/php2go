@@ -81,16 +81,9 @@ class TinyMce extends WidgetInput
 			$this->view->head()->addLibrary('tinymce-gz');
 		else
 			$this->view->head()->addLibrary('tinymce');
-	}
-
-	public function run() {
 		$this->applySettings();
 		$this->applyTemplate();
 		$this->applyCustomParams();
-		if ($this->hasModel())
-			echo $this->view->model()->textarea($this->model, $this->modelAttr, $this->attrs);
-		else
-			echo $this->view->form()->textarea($this->name, $this->value, $this->attrs);
 		if ($this->compression) {
 			$this->view->head()->addScript('tinyMCE_GZ.init(' . Js::encode(array(
 				'plugins' => (isset($this->params['plugins']) ? $this->params['plugins'] : ''),
@@ -103,6 +96,13 @@ class TinyMce extends WidgetInput
 		$this->view->jQuery()->addCallById($this->getId(),
 			'tinymce', array($this->params)
 		);
+	}
+
+	public function run() {
+		if ($this->hasModel())
+			echo $this->view->model()->textarea($this->model, $this->modelAttr, $this->attrs);
+		else
+			echo $this->view->form()->textarea($this->name, $this->value, $this->attrs);
 	}
 
 	public function applySettings() {

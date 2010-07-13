@@ -45,16 +45,6 @@ class JuiTitlePane extends JuiElement
 	}
 
 	public function init() {
-		echo '<div' . $this->renderAttrs() . '>';
-		echo '<div class="ui-pane-title ui-widget-header ui-corner-all">';
-		if ($this->params['collapsible'])
-			echo '<span class="ui-icon ' . ($this->params['collapsed'] ? $this->params['collapsedIcon'] : $this->params['expandedIcon']) . '"></span>';
-		echo $this->view->escape($this->params['title']);
-		echo '</div><div class="ui-pane-content">' . PHP_EOL;
-	}
-
-	public function run() {
-		echo '</div></div>' . PHP_EOL;
 		if ($this->params['collapsible']) {
 			if ($this->params['collapsed'])
 				$this->view->jQuery()->addCall("#{$this->getId()} .ui-pane-content", 'hide');
@@ -75,6 +65,16 @@ class JuiTitlePane extends JuiElement
 			$resizable = new JuiResizable($this->view, $this->parent);
 			$resizable->resizable("#{$this->getId()}", (is_array($this->resizable) ? $this->resizable : array()));
 		}
+		echo '<div' . $this->renderAttrs() . '>';
+		echo '<div class="ui-pane-title ui-widget-header ui-corner-all">';
+		if ($this->params['collapsible'])
+			echo '<span class="ui-icon ' . ($this->params['collapsed'] ? $this->params['collapsedIcon'] : $this->params['expandedIcon']) . '"></span>';
+		echo $this->view->escape($this->params['title']);
+		echo '</div><div class="ui-pane-content">' . PHP_EOL;
+	}
+
+	public function run() {
+		echo '</div></div>' . PHP_EOL;
 	}
 
 	protected function renderAttrs() {

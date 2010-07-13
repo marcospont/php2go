@@ -45,13 +45,13 @@ class JuiSelectable extends JuiElement
 	}
 
 	public function init() {
+		$this->view->jQuery()->addCallById($this->getId(),
+			'selectable', array($this->getSetupParams())
+		);
 		echo '<' . $this->tagName . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</' . $this->tagName . '>' . PHP_EOL;
-		$this->view->jQuery()->addCallById($this->getId(),
-			'selectable', array($this->getSetupParams())
-		);
 	}
 }

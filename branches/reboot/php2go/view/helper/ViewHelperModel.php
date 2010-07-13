@@ -68,7 +68,7 @@ class ViewHelperModel extends ViewHelper
 	public function radioGroup(Model $model, $attr, array $options, array $attrs=array(), array $labelAttrs=array()) {
 		$name = $this->defineName($model, $attr, $attrs);
 		$attrs['error'] = $model->hasErrors($attr);
-		return $this->form->radioGroup($name, Util::consumeArray($attrs, 'value', array()), $options, $attrs, $labelAttrs);
+		return $this->form->radioGroup($name, $model->{$attr}, $options, $attrs, $labelAttrs);
 	}
 
 	public function select(Model $model, $attr, array $options=array(), array $attrs=array()) {

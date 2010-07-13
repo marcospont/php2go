@@ -117,14 +117,14 @@ class JuiSortable extends JuiElement
 	}
 
 	public function init() {
+		$this->view->jQuery()->addCallById($this->getId(),
+			'sortable', array($this->getSetupParams())
+		);
 		echo '<' . $this->tagName . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</' . $this->tagName . '>' . PHP_EOL;
-		$this->view->jQuery()->addCallById($this->getId(),
-			'sortable', array($this->getSetupParams())
-		);
 	}
 
 	protected function getDefaultParams() {

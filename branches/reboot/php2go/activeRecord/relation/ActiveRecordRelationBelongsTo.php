@@ -24,8 +24,10 @@ class ActiveRecordRelationBelongsTo extends ActiveRecordRelation
 
 	public function save(ActiveRecord $base, $model) {
 		if ($model instanceof ActiveRecord) {
+			$wasNew = $model->isNew();
 			if ($model->save()) {
-				$base->{$this->options['foreignKey']} = $model->getPrimaryKey();
+				if ($wasNew)
+					$base->{$this->options['foreignKey']} = $model->getPrimaryKey();
 				return true;
 			} else {
 				return false;
