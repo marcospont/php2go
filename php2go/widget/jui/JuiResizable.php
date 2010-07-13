@@ -90,14 +90,14 @@ class JuiResizable extends JuiElement
 	}
 
 	public function init() {
+		$this->view->jQuery()->addCallById($this->getId(),
+			'resizable', array($this->getSetupParams())
+		);
 		echo '<' . $this->tagName . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</' . $this->tagName . '>' . PHP_EOL;
-		$this->view->jQuery()->addCallById($this->getId(),
-			'resizable', array($this->getSetupParams())
-		);
 	}
 
 	public function resizable($selector, array $options=array()) {

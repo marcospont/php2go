@@ -59,14 +59,14 @@ class JuiAccordionContainer extends JuiElement
 	}
 
 	public function init() {
+		$this->view->jQuery()->addCallById($this->getId(),
+			'accordion', array($this->getSetupParams())
+		);
 		echo '<div' . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</div>' . PHP_EOL;
-		$this->view->jQuery()->addCallById($this->getId(),
-			'accordion', array($this->getSetupParams())
-		);
 	}
 
 	public function getDefaultParams() {

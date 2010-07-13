@@ -33,7 +33,7 @@ class ViewHelperScriptBuffer extends ViewHelper
 		$type = $this->captureType;
 		$this->captureLock = false;
 		$this->captureType = null;
-		$this->append(ob_get_clean(), $type);
+		$this->append(trim(ob_get_clean()), $type);
 	}
 
 	public function toString() {

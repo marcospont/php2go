@@ -123,6 +123,9 @@ class AutoComplete extends WidgetInput
 	}
 
 	public function run() {
+		$this->view->jQuery()->addCallById($this->getId(),
+			'autocomplete', array($this->dataOrUrl, (!empty($this->params) ? $this->params : Js::emptyObject()))
+		);
 		if ($this->hasModel()) {
 			if ($this->textArea)
 				echo $this->view->model()->textArea($this->model, $this->modelAttr, $this->attrs);
@@ -134,8 +137,5 @@ class AutoComplete extends WidgetInput
 			else
 				echo $this->view->form()->text($this->name, '', $this->attrs);
 		}
-		$this->view->jQuery()->addCallById($this->getId(),
-			'autocomplete', array($this->dataOrUrl, (!empty($this->params) ? $this->params : Js::emptyObject()))
-		);
 	}
 }

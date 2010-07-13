@@ -122,14 +122,14 @@ class JuiDraggable extends JuiElement
 	}
 
 	public function init() {
+		$this->view->jQuery()->addCall("#{$this->getId()} {$this->items}",
+			'draggable', array($this->getSetupParams())
+		);
 		echo '<div' . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</div>' . PHP_EOL;
-		$this->view->jQuery()->addCall("#{$this->getId()} {$this->items}",
-			'draggable', array($this->getSetupParams())
-		);
 	}
 
 	public function draggable($selector, array $options=array()) {

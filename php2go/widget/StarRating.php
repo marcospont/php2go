@@ -87,6 +87,9 @@ class StarRating extends WidgetInput
 
 	public function run() {
 		if (!empty($this->options)) {
+			$this->view->jQuery()->addCallById($this->getId(),
+				'stars', array((!empty($this->params) ? $this->params : Js::emptyObject()))
+			);
 			echo '<div' . $this->renderAttrs() . '>';
 			$name = ($this->hasModel() ? $this->getNameByModelAttr($this->model, $this->modelAttr) : $this->name);
 			$value = ($this->hasModel() ? $this->model->{$this->modelAttr} : $this->value);
@@ -94,9 +97,6 @@ class StarRating extends WidgetInput
 				echo $this->view->form()->radio($name, $optValue, ($optValue == $value), array('title' => $optTitle));
 			}
 			echo '</div>' . PHP_EOL;
-			$this->view->jQuery()->addCallById($this->getId(),
-				'stars', array((!empty($this->params) ? $this->params : Js::emptyObject()))
-			);
 		}
 	}
 

@@ -138,9 +138,9 @@ class ImageCropper extends WidgetElement
 	}
 
 	public function run() {
-		echo $this->view->html()->tag('img', $this->attrs);
 		$this->view->jQuery()->addCallById($this->getId(),
 			'Jcrop', array((!empty($this->params) ? $this->params : Js::emptyObject()))
 		);
+		echo $this->view->html()->tag('img', $this->attrs);
 	}
 }

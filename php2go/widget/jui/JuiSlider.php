@@ -45,13 +45,13 @@ class JuiSlider extends JuiElement
 	}
 
 	public function init() {
+		$this->view->jQuery()->addCallById($this->getId(),
+			'slider', array($this->getSetupParams())
+		);
 		echo '<div' . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</div>' . PHP_EOL;
-		$this->view->jQuery()->addCallById($this->getId(),
-			'slider', array($this->getSetupParams())
-		);
 	}
 }

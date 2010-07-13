@@ -39,12 +39,12 @@ class SWFObject extends WidgetElement
 	}
 
 	public function init() {
+		$this->renderEmbed();
 		echo '<div id="' . $this->getId() . '">' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</div>';
-		$this->renderEmbed();
 	}
 
 	public function renderEmbed() {
@@ -61,6 +61,6 @@ class SWFObject extends WidgetElement
 			(!empty($this->params) ? Js::encode($this->params) : Js::emptyObject()) . ', ' .
 			(!empty($this->attrs) ? Js::encode($this->attrs) : Js::emptyObject()) . ', ' .
 			(isset($this->callback) ? Js::callback($this->callback) : 'null') . ');';
-		$this->view->scriptBuffer()->add($result);
+		$this->view->scriptBuffer()->add($result, 'domReady');
 	}
 }

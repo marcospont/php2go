@@ -49,6 +49,9 @@ class JuiSliderInput extends JuiInput
 		parent::init();
 		$this->addJsListener('start', "$(\"#{$this->getId()}-slider\").slider('value', $('#{$this->getId()}').val());");
 		$this->addJsListener('slide', "$(\"#{$this->getId()}\").val(ui.value);");
+		$this->view->jQuery()->addCallById($this->getId() . '-slider',
+			'slider', array($this->getSetupParams())
+		);
 	}
 
 	public function run() {
@@ -57,8 +60,5 @@ class JuiSliderInput extends JuiInput
 			echo $this->view->model()->hidden($this->model, $this->modelAttr, array('id' => $this->getId()));
 		else
 			echo $this->view->form()->hidden($this->name, $this->value, array('id' => $this->getId()));
-		$this->view->jQuery()->addCallById($this->getId() . '-slider',
-			'slider', array($this->getSetupParams())
-		);
 	}
 }

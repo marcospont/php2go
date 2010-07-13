@@ -99,6 +99,8 @@ abstract class ActiveRecord extends Model
 			if (isset($this->attributes[$name]) && $this->attributes[$name] !== null)
 				$this->modified[$name] = array($this->attributes[$name], null);
 			unset($this->attributes[$name]);
+			if (($relName = $this->getBelongsTo($name)) && isset($this->associations[$relName]))
+				unset($this->associations[$relName]);
 		} elseif (isset($this->associations[$name])) {
 			unset($this->associations[$name]);
 		} elseif (isset($this->collections[$name])) {
@@ -232,6 +234,8 @@ abstract class ActiveRecord extends Model
 				else
 					$this->attributes[$name] = $value;
 				$this->modified[$name] = array($current, $this->attributes[$name]);
+				if (($relName = $this->getBelongsTo($name)) && isset($this->associations[$relName]))
+					unset($this->associations[$relName]);
 			}
 			return true;
 		}
@@ -911,6 +915,14 @@ abstract class ActiveRecord extends Model
 		$criteria = $this->createPKCriteria();
 		return $dao->update($table, $attrs, implode(' and ', (array)$criteria['condition']), $criteria['bind']);
  	}
+
+	private function getBelongsTo($attr) {
+		foreach ($this->relations as $name => $relation) {
+			if ($relation->getType() == ActiveRecord::BELONGS_TO && $relation->getOption('foreignKey') == $attr)
+				return $name;
+		}
+		return null;
+	}
 
 	private function saveBelongsTo() {
 		foreach ($this->relations as $name => $relation) {
