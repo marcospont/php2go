@@ -73,8 +73,6 @@ class ViewHelperModel extends ViewHelper
 
 	public function select(Model $model, $attr, array $options=array(), array $attrs=array()) {
 		$name = $this->defineName($model, $attr, $attrs);
-		if (!array_key_exists('disableEmpty', $attrs) && $model->isAttributeRequired($attr))
-			$attrs['disableEmpty'] = true;
 		$attrs['error'] = $model->hasErrors($attr);
 		return $this->form->select($name, Util::consumeArray($attrs, 'value', $model->{$attr}), $options, $attrs);
 	}
