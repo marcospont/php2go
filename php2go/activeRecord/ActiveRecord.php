@@ -753,7 +753,7 @@ abstract class ActiveRecord extends Model
  			}
 			$criteria['fields'] = array();
 			foreach ($this->getAttributeNames() as $name)
-				$criteria['fields'][] = sprintf("%s.%s as %s", $this->tableName, $name, $db->quote("{$this->tableName}.{$name}"));
+				$criteria['fields'][] = sprintf("%s.%s", $this->tableName, $name);
 			$pattern = '/(^|[^\.]|\s)\b(' . implode('|', $this->getAttributeNames()) . ')\b/i';
 			foreach ($criteria as $key => $value) {
 				if ($key != 'distinct' && $key != 'limit' && $key != 'offset') {

@@ -46,9 +46,10 @@ class ActiveRecordRelationBelongsTo extends ActiveRecordRelation
 	}
 
 	protected function buildJoin(ActiveRecord $base, ActiveRecord $model) {
+		$join = (isset($this->options['required']) && $this->options['required'] === false ? 'left join' : 'inner join');
 		return sprintf(
-			"inner join %s on %s.%s = %s.%s",
-			($this->name != $model->getTableName() ? "{$model->getTableName()} as {$this->name}" : $this->name),
+			"%s %s on %s.%s = %s.%s",
+			$join, ($this->name != $model->getTableName() ? "{$model->getTableName()} as {$this->name}" : $this->name),
 			$base->getTableName(), $this->options['foreignKey'],
 			$this->name, $model->getMetaData()->primaryKey
 		);
