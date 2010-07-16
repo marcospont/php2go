@@ -470,12 +470,12 @@ abstract class ActiveRecord extends Model
 		return $this->query($this->createPKCriteria($value));
 	}
 
-	public function findPairs($display=null, $criteria=null, array $bind=array()) {
+	public function findPairs($display=null, $criteria=null, array $bind=array(), $key=null) {
 		$criteria = $this->createCriteria($criteria, $bind);
 		if (@$criteria['lazy'] !== true)
 			$this->mergeAssociations($criteria);
 		$bind = Util::consumeArray($criteria, 'bind', array());
-		return DAO::instance()->findPairs($this->getTableName(), $display, $criteria, $bind);
+		return DAO::instance()->findPairs($this->getTableName(), $display, $criteria, $bind, $key);
 	}
 
 	public function count($criteria=null, array $bind=array()) {

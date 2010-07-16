@@ -4,6 +4,7 @@ class Authenticator extends Component
 {
 	const ADAPTER_DB = 'db';
 
+	private static $defaultUserClass = 'UserContainer';
 	protected $adapter;
 	protected $valid = false;
 	protected $user;
@@ -13,6 +14,7 @@ class Authenticator extends Component
 	protected $rememberParamValue = 1;
 	protected $rememberSeconds;
 	protected $returnUriSessionKey = 'returnUri';
+	protected $userClass;
 	protected $userSessionKey = 'user';
 	protected $autoRegenerateId = true;
 	protected $successRoute;
@@ -21,11 +23,14 @@ class Authenticator extends Component
 	protected $loginRoute;
 
 	public function __construct() {
+		$this->registerEvents(array('onAuthenticationRequired', 'onAuthenticate', 'onError', 'onLogout'));
+		Php2Go::app()->addEventListener('onEndRequest', array($this, 'saveUser'));
+	}
+
+	public function init() {
 		$this->user = $this->restoreUser();
 		if ($this->user)
 			$this->valid = true;
-		$this->registerEvents(array('onAuthenticationRequired', 'onAuthenticate', 'onError', 'onLogout'));
-		Php2Go::app()->addEventListener('onEndRequest', array($this, 'saveUser'));
 	}
 
 	public function getAdapter() {
@@ -101,6 +106,14 @@ class Authenticator extends Component
 		$this->userSessionKey = $key;
 	}
 
+	public function getUserClass() {
+		return $this->userClass;
+	}
+
+	public function setUserClass($userClass) {
+		$this->userClass = $userClass;
+	}
+
 	public function getAutoRegenerateId() {
 		return $this->autoRegenerateId;
 	}
@@ -153,7 +166,7 @@ class Authenticator extends Component
 					if ($this->autoRegenerateId)
 						Session::regenerateId();
 				}
-				$this->user = new UserContainer($username, (is_array($properties) ? $properties : array()));
+				$this->user = $this->createUser($username, (is_array($properties) ? $properties : array()));
 				$this->user->loginTime = microtime(true);
 				$this->valid = true;
 				$this->raiseEvent('onAuthenticate');
@@ -222,7 +235,7 @@ class Authenticator extends Component
 	protected function restoreUser() {
 		$data = Php2Go::app()->getSession()->get($this->userSessionKey);
 		if ($data)
-			return new UserContainer($data['name'], $data['properties']);
+			return $this->createUser($data['name'], $data['properties']);
 		return null;
 	}
 
@@ -233,6 +246,20 @@ class Authenticator extends Component
 
 	protected function destroyUser() {
 		Php2Go::app()->getSession()->remove($this->userSessionKey);
+	}
+
+	protected function createUser($username, array $properties=array()) {
+		if (isset($this->userClass)) {
+			$config = array(
+				'class' => $this->userClass,
+				'parent' => self::$defaultUserClass
+			);
+		} else {
+			$config = array(
+				'class' => self::$defaultUserClass
+			);
+		}
+		return Php2Go::newInstance($config, $username, $properties);
 	}
 
 	protected function parseCredentials() {

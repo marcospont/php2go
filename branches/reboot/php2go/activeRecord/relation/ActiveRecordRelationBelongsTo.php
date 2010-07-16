@@ -46,12 +46,15 @@ class ActiveRecordRelationBelongsTo extends ActiveRecordRelation
 	}
 
 	protected function buildJoin(ActiveRecord $base, ActiveRecord $model) {
-		$join = (isset($this->options['required']) && $this->options['required'] === false ? 'left join' : 'inner join');
+		$joinType = (isset($this->options['required']) && $this->options['required'] === false ? 'left join' : 'inner join');
+		$joinKey = (isset($this->options['joinKey']) ? $this->options['joinKey'] : $model->getMetaData()->primaryKey);
+		$joinCondition = (isset($this->options['joinCondition']) ? ' and ' . $this->options['joinCondition'] : '');
 		return sprintf(
-			"%s %s on %s.%s = %s.%s",
-			$join, ($this->name != $model->getTableName() ? "{$model->getTableName()} as {$this->name}" : $this->name),
+			"%s %s on (%s.%s = %s.%s%s)",
+			$joinType, ($this->name != $model->getTableName() ? "{$model->getTableName()} as {$this->name}" : $this->name),
 			$base->getTableName(), $this->options['foreignKey'],
-			$this->name, $model->getMetaData()->primaryKey
+			$this->name, $joinKey,
+			$joinCondition
 		);
 	}
 }

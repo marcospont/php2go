@@ -40,26 +40,35 @@ final class DAO
 		}
  	}
 
-	public function find($table, $criteria=null, array $bind=array(), $all=false) {
+	public function find($table, $criteria=null, array $bind=array()) {
 		$criteria = $this->normalizeCriteria($criteria);
 		$query = $this->getCommandBuilder()->buildFind($table, $criteria);
 		return $this->adapter->fetchRow($query, $bind);
 	}
 
-	public function findPairs($table, $display=null, $criteria=null, array $bind=array()) {
+	public function findCell($table, $col, $criteria=null, array $bind=array()) {
+		$criteria = $this->normalizeCriteria($criteria);
+		$criteria['fields'] = $col;
+		$row = $this->find($table, $criteria, $bind);
+		return ($row && isset($row[$col]) ? $row[$col] : null);
+	}
+
+	public function findPairs($table, $display=null, $criteria=null, array $bind=array(), $key=null) {
 		$adapter = $this->getAdapter();
-		$key = $adapter->getMetaData($table)->primaryKey;
-		if (is_array($key)) {
-			$keys = $key;
-			$key = array();
-			for ($i=0,$l=sizeof($keys); $i<$l; $i++) {
-				$key[] = sprintf('%s.%s', $table, $keys[$i]);
-				if ($i < ($l-1))
-					$key[] = $adapter->quote('-');
+		if ($key === null) {
+			$key = $adapter->getMetaData($table)->primaryKey;
+			if (is_array($key)) {
+				$keys = $key;
+				$key = array();
+				for ($i=0,$l=sizeof($keys); $i<$l; $i++) {
+					$key[] = sprintf('%s.%s', $table, $keys[$i]);
+					if ($i < ($l-1))
+						$key[] = $adapter->quote('-');
+				}
+				$key = $adapter->concat($key);
+			} else {
+				$key = sprintf('%s.%s', $table, $key);
 			}
-			$key = $adapter->concat($key);
-		} else {
-			$key = sprintf('%s.%s', $table, $key);
 		}
 		if (is_array($display)) {
 			$cols = $display;
