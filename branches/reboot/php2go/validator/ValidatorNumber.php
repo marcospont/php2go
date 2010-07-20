@@ -7,7 +7,7 @@ class ValidatorNumber extends Validator
 	protected $min;
 	protected $max;
 	protected $localized = false;
-	
+
 	public function __construct() {
 		$this->defaultMessage = __(PHP2GO_LANG_DOMAIN, 'Value is not a valid number.');
 		$this->defaultMessages = array(
@@ -22,9 +22,9 @@ class ValidatorNumber extends Validator
 			'notUnsigned' => __(PHP2GO_LANG_DOMAIN, '{attribute} must be a positive number.'),
 			'tooSmall' => __(PHP2GO_LANG_DOMAIN, '{attribute} must be greater or equal than {min}.'),
 			'tooBig' => __(PHP2GO_LANG_DOMAIN, '{attribute} must be less or equal than {max}.')
-		);		
+		);
 	}
-	
+
 	public function validate($value) {
 		$value = (string)$value;
 		if ($this->integer) {
@@ -51,20 +51,24 @@ class ValidatorNumber extends Validator
 			$this->setError($this->resolveMessage('tooBig'), array('max' => $this->max));
 			return false;
 		}
-		return true;	
+		return true;
 	}
-	
+
 	protected function validateModelAttribute(Model $model, $attr) {
 		$value = (string)$model->{$attr};
 		if ($this->allowEmpty && Util::isEmpty($value))
 			return;
-		$localized = ($this->localized || ($model instanceof ActiveRecord && in_array($model->getAttributeFormat($attr), array('integer', 'float'))));
+		$localized = ($this->localized || ($model instanceof ActiveRecord && in_array($model->getAttributeFormat($attr), array('integer', 'decimal'))));
 		if ($this->integer) {
-			if (($localized && !LocaleNumber::isInteger($value)) || (!$this->localized && !preg_match('/^-?[0-9]+$/', $value)))
+			if (($localized && !LocaleNumber::isInteger($value)) || (!$this->localized && !preg_match('/^-?[0-9]+$/', $value))) {
 				$this->addModelError($model, $attr, $this->resolveModelMessage('notInteger'));
+				return;
+			}
 		} else {
-			if (($localized && !LocaleNumber::isNumber($value)) || (!$this->localized && !preg_match('/^-?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/', $value)))
-				$this->addModelError($model, $attr, $this->resolveModelMessage('notNumber'));			
+			if (($localized && !LocaleNumber::isNumber($value)) || (!$this->localized && !preg_match('/^-?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/', $value))) {
+				$this->addModelError($model, $attr, $this->resolveModelMessage('notNumber'));
+				return;
+			}
 		}
 		$value = ($localized ? LocaleNumber::getFloat($value) : floatval($value));
 		if ($this->unsigned && $value < 0)
