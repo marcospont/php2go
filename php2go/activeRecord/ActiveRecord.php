@@ -233,7 +233,10 @@ abstract class ActiveRecord extends Model
 					$this->attributes[$name] = $this->formatter->formatSet($name, $value);
 				else
 					$this->attributes[$name] = $value;
-				$this->modified[$name] = array($current, $this->attributes[$name]);
+				if (!isset($this->modified[$name]))
+					$this->modified[$name] = array($current, $this->attributes[$name]);
+				else
+					$this->modified[$name][1] = $this->attributes[$name];
 				if (($relName = $this->getBelongsTo($name)) && isset($this->associations[$relName]))
 					unset($this->associations[$relName]);
 			}

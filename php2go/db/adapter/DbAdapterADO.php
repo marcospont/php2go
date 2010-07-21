@@ -86,7 +86,7 @@ class DbAdapterADO extends DbAdapter
 				'name' => $column->name,
 				'position' => $i++,
 				'type' => $column->type,
-				'default' => (!!$column->has_default ? $column->default_value : null),
+				'default' => (isset($column->has_default) && $column->has_default ? $column->default_value : null),
 				'nullable' => !$column->not_null,
 				'binary' => !!$column->binary,
 				'unsigned' => !!$column->unsigned,
