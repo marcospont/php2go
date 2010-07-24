@@ -174,7 +174,7 @@ return array(
 	'Invalid theme: "%s".' => '',
 	'Invalid translator adapter configuration.' => '',
 	'Invalid translator domain.' => '',
-	'Invalid username or password.' => '',
+	'Invalid username or password.' => 'Nome de usuário ou senha inválidos.',
 	'Invalid value.' => '',
 	'Invalid width: "%s".' => '',
 	'It was not possible to change PHP include path.' => '',

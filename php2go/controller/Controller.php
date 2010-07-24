@@ -2,11 +2,12 @@
 
 class Controller extends Component
 {
-	public $defaultAction = 'index';
 	protected $id;
 	protected $app;
 	protected $module = null;
+	protected $defaultAction = 'index';
 	protected $action;
+	protected $defaultLayout;
 	protected $view;
 	protected $viewPath;
 	protected $filterChain;
@@ -62,6 +63,10 @@ class Controller extends Component
 	public function getUser() {
 		$auth = $this->app->getAuthenticator();
 		return ($auth->getValid() ? $auth->getUser() : null);
+	}
+
+	public function getDefaultLayout() {
+		return $this->defaultLayout;
 	}
 
 	public function getView() {
