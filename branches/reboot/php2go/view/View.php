@@ -317,14 +317,18 @@ class View extends Component
 	private function getLayoutFile() {
 		$owner = $this->app;
 		if ($this->layout === null) {
-			// module default layout
-			if (($module = $this->controller->getModule()) !== null)
-				$this->layout = $module->getDefaultLayout();
-			if ($this->layout !== null) {
-				$owner = $module;
-			} else {
-				// app default layout
-				$this->layout = $this->app->getDefaultLayout();
+			// controller default layout
+			$this->layout = $this->controller->getDefaultLayout();
+			if ($this->layout === null) {
+				// module default layout
+				if (($module = $this->controller->getModule()) !== null)
+					$this->layout = $module->getDefaultLayout();
+				if ($this->layout !== null) {
+					$owner = $module;
+				} else {
+					// app default layout
+					$this->layout = $this->app->getDefaultLayout();
+				}
 			}
 		}
 		// disabled layout
