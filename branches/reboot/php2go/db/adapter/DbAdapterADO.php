@@ -1,6 +1,7 @@
 <?php
 
 require_once PHP2GO_PATH . '/vendor/adodb/adodb.inc.php';
+require_once PHP2GO_PATH . '/vendor/adodb/adodb-lib.inc.php';
 require_once PHP2GO_PATH . '/vendor/adodb/adodb-exceptions.inc.php';
 
 Php2Go::import('php2go.db.commandBuilder.DbCommandBuilderADO');
@@ -246,6 +247,17 @@ class DbAdapterADO extends DbAdapter
 			}
 			$rs->close();
 			return $result;
+		} catch (ADODB_Exception $e) {
+			throw new DbException($e->getMessage(), $e->getCode());
+		}
+	}
+
+	public function count($query, array $bind=array()) {
+		$this->connect();
+		try {
+			if ($this->stmt)
+				$this->stmt->close();
+			return _adodb_getcount($this->driver, $query, $bind);
 		} catch (ADODB_Exception $e) {
 			throw new DbException($e->getMessage(), $e->getCode());
 		}

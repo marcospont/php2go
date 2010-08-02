@@ -197,7 +197,7 @@ class View extends Component
 			$output = $this->renderFile($viewFile, $data);
 			if ($return)
 				return $output;
-			echo $output;
+			$this->controller->getResponse()->appendBody($output);
 		} else {
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The view "%s" is not available for the controller "%s".', array($viewName, $this->controller->getId())));
 		}

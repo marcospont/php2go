@@ -15,9 +15,11 @@ abstract class PaginatorAdapter implements Countable
 			return new PaginatorAdapterIterator($data, $options);
 		if ($data instanceof IteratorAggregate)
 			return new PaginatorAdapterIterator($data->getIterator(), $options);
+		if (is_string($data))
+			return new PaginatorAdapterSql($data, $options);
 		$type = (is_object($data) ? get_class($data) : gettype($data));
-		throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'No paginator adapter available for "%s".', array($type)));			
+		throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'No paginator adapter available for "%s".', array($type)));
 	}
-	
+
 	abstract public function getItems($offset, $pageSize);
 }
