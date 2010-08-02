@@ -171,33 +171,27 @@ class View extends Component
 			return $this->controller->createUrl($url, $params, false, $ampersand);
 	}
 
-	public function render($viewName, $data=null, $return=false) {
+	public function render($viewName, $data=null) {
 		if (($viewFile = $this->getViewFile($viewName)) !== false) {
 			$output = $this->renderFile($viewFile, $data);
 			if (($layoutFile = $this->getLayoutFile()))
 				$output = $this->renderFile($layoutFile, array('content' => $output . PHP_EOL));
-			if ($return)
-				return $output;
-			$this->controller->getResponse()->appendBody($output);
+			return $output;
 		} else {
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The view "%s" is not available for the controller "%s".', array($viewName, $this->controller->getId())));
 		}
 	}
 
-	public function renderText($text, $return=false) {
+	public function renderText($text) {
 		if (($layoutFile = $this->getLayoutFile()))
 			$text = $this->renderFile($layoutFile, array('content' => $text . PHP_EOL));
-		if ($return)
-			return $text;
-		$this->controller->getResponse()->appendBody($text);
+		return $text;
 	}
 
-	public function renderPartial($viewName, $data=null, $return=false) {
+	public function renderPartial($viewName, $data=null) {
 		if (($viewFile = $this->getViewFile($viewName)) !== false) {
 			$output = $this->renderFile($viewFile, $data);
-			if ($return)
-				return $output;
-			$this->controller->getResponse()->appendBody($output);
+			return $output;
 		} else {
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The view "%s" is not available for the controller "%s".', array($viewName, $this->controller->getId())));
 		}

@@ -163,15 +163,18 @@ class Controller extends Component
 	}
 
 	public function render($view, $data=null) {
-		$this->view->render($view, $data);
+		$this->getResponse()->appendBody($this->view->render($view, $data));
 	}
 
 	public function renderText($text) {
-		$this->view->renderText($text);
+		$this->getResponse()->appendBody($this->view->renderText($text));
 	}
 
-	public function renderPartial($view, $data=null, $return=false, $processOutput=false) {
-		return $this->view->renderPartial($view, $data, $return, $processOutput);
+	public function renderPartial($view, $data=null, $return=false) {
+		if ($return)
+			return $this->view->renderPartial($view, $data);
+		else
+			$this->getResponse()->appendBody($this->view->renderPartial($view, $data));
 	}
 
 	public function renderJson($json, array $options=array()) {
