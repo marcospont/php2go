@@ -984,7 +984,7 @@ abstract class ActiveRecord extends Model
 						case ActiveRecord::HAS_ONE :
 						case ActiveRecord::HAS_MANY :
 						case ActiveRecord::HAS_AND_BELONGS_TO_MANY :
-							$class = Inflector::camelize('ActiveRecordRelation' . $type);
+							$class = Inflector::camelize('ActiveRecordRelation' . ucfirst($type));
 							$this->relations[$name] = new $class($name, $relation);
 							break;
 						default :
