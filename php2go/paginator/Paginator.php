@@ -163,7 +163,7 @@ class Paginator extends Component implements Countable, IteratorAggregate
 		if ($size < 1)
 			$size = 1;
 		$count = count($this->adapter);
-		if ($size > $count)
+		if ($count && $size > $count)
 			$size = $count;
 		return $size;
 	}
