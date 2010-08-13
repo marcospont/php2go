@@ -133,9 +133,9 @@ class AutoComplete extends WidgetInput
 				echo $this->view->model()->text($this->model, $this->modelAttr, $this->attrs);
 		} else {
 			if ($this->textArea)
-				echo $this->view->form()->textArea($this->name, '', $this->attrs);
+				echo $this->view->form()->textArea($this->name, $this->value, $this->attrs);
 			else
-				echo $this->view->form()->text($this->name, '', $this->attrs);
+				echo $this->view->form()->text($this->name, $this->value, $this->attrs);
 		}
 	}
 }

@@ -169,6 +169,8 @@ final class Util
 	public static function buildPathInfo(array $params, $equal='=', $ampersand='&', $key=null) {
 		$pairs = array();
 		foreach ($params as $k => $v) {
+			if ($v === null)
+				continue;
 			if ($key !== null)
 				$k = $key . '[' . $k . ']';
 			if (is_array($v))

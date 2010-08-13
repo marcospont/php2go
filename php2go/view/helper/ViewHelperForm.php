@@ -134,7 +134,7 @@ class ViewHelperForm extends ViewHelper
 	public function checkBox($name, $checked=false, array $attrs=array()) {
 		$value = Util::consumeArray($attrs, 'checkedValue', '1');
 		if (!@$attrs['disabled'] && !strstr($name, '[]'))
-			$uncheck = $this->hidden($name, Util::consumeArray($attrs, 'uncheckedValue', '0'));
+			$uncheck = $this->hidden($name, Util::consumeArray($attrs, 'uncheckedValue', '0'), array('defineId' => false));
 		else
 			$uncheck = '';
 		return $uncheck . $this->input('checkbox', $name, $value, array_merge($attrs, array('checked' => $checked)));

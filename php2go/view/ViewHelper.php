@@ -52,8 +52,8 @@ abstract class ViewHelper extends Component
 	}
 
 	protected function defineId(array &$attrs, $namespace=null) {
-		if (!isset($attrs['id'])) {
-			if (isset($attrs['name']) && @$attrs['type'] != 'hidden')
+		if (!isset($attrs['id']) && @$attrs['defineId'] !== false) {
+			if (isset($attrs['name']))
 				$attrs['id'] = $this->getIdByName($attrs['name']);
 			elseif ($namespace !== null)
 				$attrs['id'] = Util::id($namespace);

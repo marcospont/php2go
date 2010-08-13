@@ -38,6 +38,7 @@ class ViewHelperJui extends ViewHelper
 	protected function setupButton(&$attrs, $type) {
 		$this->defineId($attrs, 'JuiButton');
 		$this->view->jQuery()->addCallById($attrs['id'], 'button', array(array(
+			'disabled' => (@$attrs['disabled'] === true),
 			'icons' => array(
 				'primary' => Util::consumeArray($attrs, 'primaryIcon'),
 				'secondary' => Util::consumeArray($attrs, 'secondaryIcon')
