@@ -100,7 +100,11 @@ class ViewHelperMenu extends ViewHelper
 			$result .= '<li' . $this->renderAttrs($attrs) . '>' . $this->renderItem($item) . '</li>';
 		}
 		if ($result != '') {
-			$attrs = (isset($options['class']) ? array('class' => $options['class']) : array());
+			$attrs = array();
+			if (isset($options['id']))
+				$attrs['id'] = $options['id'];
+			if (isset($options['class']))
+				$attrs['class'] = $options['class'];
 			return '<ul' . $this->renderAttrs($attrs) . '>' . $result . '</ul>';
 		}
 		return $result;
@@ -135,7 +139,13 @@ class ViewHelperMenu extends ViewHelper
 					continue;
 			}
 			if ($depth > $prevDepth) {
-				$attrs = (isset($options['class']) && $depth == 0 ? array('class' => $options['class']) : array());
+				$attrs = array();
+				if ($depth == 0) {
+					if (isset($options['id']))
+						$attrs['id'] = $options['id'];
+					if (isset($options['class']))
+						$attrs['class'] = $options['class'];
+				}
 				$result .= '<ul' . $this->renderAttrs($attrs) . '>';
 			} elseif ($prevDepth > $depth) {
 				for ($i=$prevDepth; $i>$depth; $i--)

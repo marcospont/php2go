@@ -15,7 +15,8 @@ class ActiveRecordRelationHasOne extends ActiveRecordRelationBelongsTo
 				DAO::instance()->delete($model->getTableName(), sprintf('%s = ?', $model->getMetaData()->primaryKey), array($base->getPrimaryKey()));
 				$this->options['mustDelete'] = false;
 			}
-			$model->setPrimaryKey($base->{$this->options['foreignKey']});
+			if ($model->isNew())
+				$model->setPrimaryKey($base->getPrimaryKey());
 			if (!$model->save())
 				return false;
 		}
