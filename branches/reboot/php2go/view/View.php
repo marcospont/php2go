@@ -67,12 +67,16 @@ class View extends Component
 		return $this->controller;
 	}
 
-	public function getUser() {
-		return $this->app->getAuthenticator()->getUser();
-	}
-
 	public function getLayout() {
 		return $this->layout;
+	}
+
+	public function getRequest() {
+		return $this->app->getRequest();
+	}
+
+	public function getUser() {
+		return $this->app->getAuthenticator()->getUser();
 	}
 
 	public function disableLayout() {

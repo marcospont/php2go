@@ -36,7 +36,7 @@ class DbAdapterADO extends DbAdapter
 					$connFunc = ($this->options['persistent'] ? 'pconnect' : 'connect');
 					$this->driver->{$connFunc}($this->options['host'], $this->options['user'], $this->options['pass'], $this->options['base']);
 				}
-				if (isset($options['debug']) && $options['debug']) {
+				if (isset($this->options['debug']) && $this->options['debug']) {
 					define('ADODB_OUTP', 'adoLog');
 					$this->driver->debug = 1;
 				}
