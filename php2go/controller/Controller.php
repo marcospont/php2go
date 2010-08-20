@@ -3,6 +3,7 @@
 class Controller extends Component
 {
 	protected $id;
+	protected $title;
 	protected $app;
 	protected $module = null;
 	protected $defaultAction = 'index';
@@ -26,6 +27,10 @@ class Controller extends Component
 
 	public function getUniqueId() {
 		return ($this->module ? $this->module->getId() . DS . $this->id : $this->id);
+	}
+
+	public function getTitle() {
+		return $this->title;
 	}
 
 	public function getApp() {
