@@ -352,7 +352,10 @@ abstract class ActiveRecord extends Model
 							break;
 						case ActiveRecord::HAS_MANY :
 							$relation = $this->getRelation($name);
-							$value = array_values($value);
+							for ($i=count($relation)-1; $i>=0; $i--) {
+								if (!isset($value[$i]))
+									unset($relation[$i]);
+							}
 							foreach ($value as $i => $record) {
 								if (isset($relation[$i]))
 									$relation[$i]->import($record);
@@ -423,7 +426,7 @@ abstract class ActiveRecord extends Model
 			$errors[0] = array();
 		foreach ($this->associations as $relation => $model) {
 			if ($model !== null) {
-				$assocErrors = $model->getErrors();
+				$assocErrors = $model->getAllErrors();
 				foreach ($assocErrors as $name => $data) {
 					if ($name === 0)
 						$errors[0] = array_merge($errors[0], $data);
@@ -435,7 +438,7 @@ abstract class ActiveRecord extends Model
 		foreach ($this->collections as $relation => $models) {
 			if ($this->relations[$relation]->getType() == ActiveRecord::HAS_MANY) {
 				foreach ($models as $idx => $model) {
-					$collectionErrors = $model->getErrors();
+					$collectionErrors = $model->getAllErrors();
 					foreach ($collectionErrors as $name => $data) {
 						if ($name === 0)
 							$errors[0] = array_merge($errors[0], $data);
