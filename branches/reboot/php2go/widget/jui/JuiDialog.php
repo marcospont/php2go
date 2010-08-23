@@ -112,19 +112,19 @@ class JuiDialog extends JuiElement
 	}
 
 	public function init() {
-		if (isset($this->trigger)) {
-			$this->view->jQuery()->addCallById($this->trigger, 'click', array(Js::callback(
-				"$(\"#{$this->getId()}\").dialog(\"open\");"
-			)));
-		}
-		$this->view->jQuery()->addCallById($this->getId(),
-			'dialog', array($this->getSetupParams())
-		);
 		echo '<div' . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		echo '</div>' . PHP_EOL;
+		$this->view->jQuery()->addCallById($this->getId(),
+			'dialog', array($this->getSetupParams())
+		);
+		if (isset($this->trigger)) {
+			$this->view->jQuery()->addCallById($this->trigger, 'click', array(Js::callback(
+				"$(\"#{$this->getId()}\").dialog(\"open\");"
+			)));
+		}
 	}
 
 	protected function getDefaultParams() {
