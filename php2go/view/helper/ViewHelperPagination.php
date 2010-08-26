@@ -6,6 +6,6 @@ class ViewHelperPagination extends ViewHelper
 		$data = array_merge($data, array(
 			'pages' => $paginator->getPages()
 		));
-		$this->view->renderPartial($view, $data);
+		echo $this->view->renderPartial($view, $data);
 	}
 }
