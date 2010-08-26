@@ -88,7 +88,7 @@ class ActiveRecordBehaviorUpload extends ActiveRecordBehavior
 				$file->saveAs($savePath . DS . $this->generateFileName($file), $options['saveMode']);
 			else
 				$file->saveTo($savePath, $options['saveMode']);
-			if ($file->getName() !== $options['previousFileName'] && is_file($savePath . DS . $options['previousFileName']))
+			if (isset($options['previousFileName']) && $file->getName() !== $options['previousFileName'] && is_file($savePath . DS . $options['previousFileName']))
 				@unlink($savePath . DS . $options['previousFileName']);
 			return true;
 		} catch (UploadFileException $e) {
