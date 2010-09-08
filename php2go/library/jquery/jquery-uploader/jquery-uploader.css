@@ -1,3 +1,5 @@
+.ui-uploader { position:relative; }
+
 /* swf container */
 .ui-uploader-container { overflow: hidden; position: absolute; z-index: 9999; }
 
@@ -6,7 +8,7 @@
 
 /* header */
 .ui-uploader-header { margin: 0.2em; padding: 0.2em 0.5em; }
-.ui-uploader-header th, .ui-uploader-body td, .ui-uploader-footer td { padding: 0.1em; text-align: left; white-space: nowrap; }
+.ui-uploader-header th, .ui-uploader-body td, .ui-uploader-footer td { padding: 0.1em !important; text-align: left; white-space: nowrap; line-height: 1; }
 
 /* body */
 .ui-uploader-body { margin: 0 0.5em; padding: 0.5em 0; border-left: 0 !important; border-right: 0 !important; overflow: auto; overflow-x: hidden; position:relative; }
@@ -22,7 +24,7 @@
 .ui-uploader-header .status, .ui-uploader-body .status, .ui-uploader-footer .status { width: 25%; }
 .ui-uploader-body a { text-decoration: none !important; }
 .ui-uploader-body td.status div.bar { height: 8px; }
-.ui-uploader-body td.status a.remove { background: transparent url(images/bin.png) 0 50% no-repeat; display: block; margin-left: 16px; width: 16px; }
-.ui-uploader-body td.status a.error { background: transparent url(images/error.png) 0 50% no-repeat; display: block; margin-left: 16px; width: 16px; }
-.ui-uploader-body td.status a.success { background: transparent url(images/success.png) 0 50% no-repeat; display: block; margin-left: 16px; width: 16px; }
+.ui-uploader-body td.status a.remove { background: transparent url(images/bin.png) 0 50% no-repeat; display: block; margin-left: 16px; width: 16px; height: 16px; }
+.ui-uploader-body td.status a.error { background: transparent url(images/error.png) 0 50% no-repeat; display: block; margin-left: 16px; width: 16px; height: 16px; }
+.ui-uploader-body td.status a.success { background: transparent url(images/success.png) 0 50% no-repeat; display: block; margin-left: 16px; width: 16px; height: 16px; }
 

@@ -9,6 +9,7 @@ class NavigationItem extends NavigationContainer
 	protected $url;
 	protected $params = array();
 	protected $target;
+	protected $roles;
 	protected $order;
 	protected $active = false;
 	protected $visible = true;
@@ -112,6 +113,19 @@ class NavigationItem extends NavigationContainer
 	public function setTarget($target) {
 		$this->target = ($target !== null ? (string)$target : $target);
 		return $this;
+	}
+
+	public function getRoles() {
+		return $this->roles;
+	}
+
+	public function setRoles($roles) {
+		if (is_string($roles))
+			$this->roles = explode(',', $roles);
+		elseif (is_array($roles))
+			$this->roles = array_values($roles);
+		else
+			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Roles must be an array or comma separated string.'));
 	}
 
 	public function getOrder() {

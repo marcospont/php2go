@@ -206,11 +206,28 @@ class ViewHelperMenu extends ViewHelper
 		$result = true;
 		if (!$item->isVisible(false))
 			$result = false;
+		elseif (!$this->acceptRoles($item))
+			$result = false;
 		if ($result && $deep) {
 			$parent = $item->getParent();
 			if ($parent instanceof NavigationItem)
 				$result = $this->accept($parent, true);
 		}
 		return $result;
+	}
+
+	private function acceptRoles(NavigationItem $item) {
+		$itemRoles = $item->getRoles();
+		if (!empty($itemRoles)) {
+			$userRole = $this->view->getUser()->role;
+			if ($userRole !== null) {
+				foreach ($itemRoles as $role) {
+					if ($role == $userRole)
+						return true;
+				}
+				return false;
+			}
+		}
+		return true;
 	}
 }

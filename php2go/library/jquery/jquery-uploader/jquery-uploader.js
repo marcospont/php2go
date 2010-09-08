@@ -81,13 +81,16 @@
 			this.el.bind('onUploadSuccess', function(event, file, serverData, response) {
 				try {
 					var serverData = $.parseJSON(serverData);
-					if (serverData.success || serverData === 1 || serverData === true) {
+					if (serverData.success || serverData == 1 || serverData === true) {
 						renderSuccess(self, file.id, $.sprintf($.uploader.messages.success, file.name));
+						self.el.trigger('onResponseSuccess', [file]);
 					} else {
 						renderError(self, file.id, serverData.message);
+						self.el.trigger('onResponseError', [file]);
 					}
 				} catch(e) {
 					renderError(self, file.id, serverData);
+					self.el.trigger('onResponseError', [file]);
 				}
 			});
 			this.el.bind('onQueueComplete', function(event) {
@@ -172,6 +175,7 @@
 	function convertParams(el, params) {
 		var addBtn = el.find('.add');
 		var params = $.extend({}, defaults, params);
+		php2go.csrfAugment(params.params);
 		params['upload_url'] = params.uploadUrl || '';
 		params['file_post_name'] = params.fileParamName || 'Filedata';
 		params['post_params'] = params.params || null;
@@ -196,7 +200,7 @@
 		var btn = uploader.el.find('.add');
 		var swf = uploader.el.find('.ui-uploader-container');
 		var offset = btn.offset();
-		swf.css('left', offset.left).css('top', offset.top).width(btn.width()).height(btn.height());
+		swf.css('left', btn[0].offsetLeft).css('top', btn[0].offsetTop).width(btn.width()).height(btn.height());
 	}
 
 	function toggleBtn(uploader, selector, enabled) {

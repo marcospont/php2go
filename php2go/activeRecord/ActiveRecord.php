@@ -98,7 +98,7 @@ abstract class ActiveRecord extends Model
 		if ($this->getMetaData()->hasColumn($name)) {
 			if (isset($this->attributes[$name]) && $this->attributes[$name] !== null)
 				$this->modified[$name] = array($this->attributes[$name], null);
-			unset($this->attributes[$name]);
+			$this->attributes[$name] = null;
 			if (($relName = $this->getBelongsTo($name)) && isset($this->associations[$relName]))
 				unset($this->associations[$relName]);
 		} elseif (isset($this->associations[$name])) {
@@ -510,60 +510,63 @@ abstract class ActiveRecord extends Model
 		return $this->saveAttributes(array($name));
 	}
 
-	public function saveAttributes(array $attrs=array()) {
+	public function saveAttributes(array $attrs=array(), $validate=false) {
 		if ($this->new)
 			throw new DbException(__(PHP2GO_LANG_DOMAIN, 'This active record cannot be updated on the database because it is new.'));
-		$values = array();
-		if (Util::isMap($attrs)) {
-			foreach ($attrs as $name => $value)
-				$this->setAttribute($name, $value);
-			$values[$name] = $this->attributes[$name];
-		} else {
-			foreach ($attrs as $name) {
-				if (isset($this->attributes[$name]))
-					$values[$name] = $this->attributes[$name];
+		if (!$validate || $this->validate()) {
+			$values = array();
+			if (Util::isMap($attrs)) {
+				foreach ($attrs as $name => $value)
+					$this->setAttribute($name, $value);
+				$values[$name] = $this->attributes[$name];
+			} else {
+				foreach ($attrs as $name) {
+					//if (isset($this->attributes[$name]))
+						$values[$name] = $this->attributes[$name];
+				}
+			}
+			$db = DAO::instance()->getAdapter();
+			$db->beginTransaction();
+			try {
+				if (!empty($this->modified)) {
+					$modified = $this->modified;
+					if (!$this->raiseEvent('onBeforeSave', new Event($this))) {
+						$db->rollback();
+						return false;
+					}
+					if (!$this->raiseEvent('onBeforeUpdate', new Event($this))) {
+						$db->rollback();
+						return false;
+					}
+					if ($this->modified != $modified) {
+						foreach (array_keys(array_diff_key($this->modified, $modified)) as $name)
+							$values[$name] = $this->{$name};
+					}
+					if ($this->pk == null)
+						$this->pk = $this->getPrimaryKey();
+					if (!$this->updateByPK($values)) {
+						$db->rollback();
+						return false;
+					}
+					if (!$this->raiseEvent('onAfterUpdate', new Event($this))) {
+						$db->rollback();
+						return false;
+					}
+					if (!$this->raiseEvent('onAfterSave', new Event($this))) {
+						$db->rollback();
+						return false;
+					}
+					$this->modified = array();
+					$db->commit();
+				}
+				return true;
+			} catch (DbException $e) {
+				$db->rollback();
+				$this->raiseEvent('onException', new ExceptionEvent($this, $e));
+				throw $e;
 			}
 		}
-		$db = DAO::instance()->getAdapter();
-		$db->beginTransaction();
-		try {
-			if (!empty($this->modified)) {
-				$modified = $this->modified;
-				if (!$this->raiseEvent('onBeforeSave', new Event($this))) {
-					$db->rollback();
-					return false;
-				}
-				if (!$this->raiseEvent('onBeforeUpdate', new Event($this))) {
-					$db->rollback();
-					return false;
-				}
-				if ($this->modified != $modified) {
-					foreach (array_keys(array_diff_key($this->modified, $modified)) as $name)
-						$values[$name] = $this->{$name};
-				}
-				if ($this->pk == null)
-					$this->pk = $this->getPrimaryKey();
-				if (!$this->updateByPK($values)) {
-					$db->rollback();
-					return false;
-				}
-				if (!$this->raiseEvent('onAfterUpdate', new Event($this))) {
-					$db->rollback();
-					return false;
-				}
-				if (!$this->raiseEvent('onAfterSave', new Event($this))) {
-					$db->rollback();
-					return false;
-				}
-				$this->modified = array();
-				$db->commit();
-			}
-			return true;
-		} catch (DbException $e) {
-			$db->rollback();
-			$this->raiseEvent('onException', new ExceptionEvent($this, $e));
-			throw $e;
-		}
+		return false;
 	}
 
 	public function insert() {
@@ -760,13 +763,6 @@ abstract class ActiveRecord extends Model
 			$criteria['fields'] = array();
 			foreach ($this->getAttributeNames() as $name)
 				$criteria['fields'][] = sprintf("%s.%s", $this->tableName, $name);
-			$pattern = '/(^|[^\.]|\s)\b(' . implode('|', $this->getAttributeNames()) . ')\b/i';
-			foreach ($criteria as $key => $value) {
-				if ($key != 'distinct' && $key != 'limit' && $key != 'offset') {
-					foreach ($value as $idx => $item)
-						$criteria[$key][$idx] = preg_replace($pattern, "$1{$this->getTableName()}.$2", $item);
-				}
-			}
 			foreach ($this->relations as $name => $relation) {
 				if (!$relation->isCollection())
 					$relation->merge($this, $criteria);

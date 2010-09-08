@@ -15,7 +15,7 @@ class ContentWrapper extends WidgetCapture
 	}
 
 	public function capture($content) {
-		$this->view->renderPartial($this->layout, array(
+		echo $this->view->renderPartial($this->layout, array(
 			'content' => $content
 		));
 	}

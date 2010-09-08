@@ -158,7 +158,10 @@ class Authenticator extends Component
 		$credentials = $this->parseCredentials();
 		if ($credentials) {
 			extract($credentials);
-			if ($properties = $this->getAdapter()->authenticate($username, $password)) {
+			if (empty($username) || empty($password)) {
+				$this->raiseEvent('onError');
+				throw new AuthenticatorException(__(PHP2GO_LANG_DOMAIN, 'Invalid username or password.'));
+			} elseif ($properties = $this->getAdapter()->authenticate($username, $password)) {
 				if ($remember) {
 					Session::remember($this->rememberSeconds);
 				} else {
@@ -267,7 +270,7 @@ class Authenticator extends Component
 		$username = $req->getPost($this->usernameParam);
 		$password = $req->getPost($this->passwordParam);
 		$remember = $req->getPost($this->rememberParam);
-		if ($username && $password) {
+		if ($username !== null && $password !== null) {
 			return array(
 				'username' => $username,
 				'password' => $password,

@@ -20,6 +20,12 @@
 			if ($(form).is('form') && $(form).attr('method').toLowerCase() == 'post' && !form.elements[csrfTokenName])
 				$(document.createElement('input')).attr({name: csrfTokenName, value: csrfTokenValue, type: 'hidden'}).appendTo($(form));
 		},
+		csrfAugment: function(obj) {
+			if (csrfTokenName && csrfTokenValue) {
+				obj = obj || {};
+				obj[csrfTokenName] = csrfTokenValue;
+			}
+		},
 		post: function(sender, url, params) {
 			var act, form = $(sender).parents('form:first');
 			if (form.length == 0) {

@@ -23,16 +23,27 @@ class ActiveRecordBehaviorPassword extends ActiveRecordBehavior
 	}
 
 	public function onLoad(Event $event) {
-		foreach (array_keys($this->attrs) as $attr)
+		foreach (array_keys($this->attrs) as $attr) {
+			$this->attrs[$attr]['value'] = $this->owner->{$attr};
 			$this->owner->{$attr} = null;
+		}
 	}
 
 	public function onBeforeSave(Event $event) {
 		foreach ($this->attrs as $attr => $options) {
 			$value = $this->owner->{$attr};
-			if (!Util::isEmpty($value) && isset($options['hashFunction']))
-				$this->owner->{$attr} = $options['hashFunction']($value);
+			if (!Util::isEmpty($value)) {
+				if (isset($options['hashFunction']))
+					$this->owner->{$attr} = $options['hashFunction']($value);
+			} else {
+				$this->owner->{$attr} = @$this->attrs[$attr]['value'];
+			}
 		}
 		return true;
+	}
+
+	public function onAfterSave(Event $event) {
+		foreach (array_keys($this->attrs) as $attr)
+			$this->owner->{$attr} = null;
 	}
 }
