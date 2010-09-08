@@ -95,6 +95,11 @@ class JuiUploader extends JuiElement
 		$this->render('uploader');
 	}
 
+	protected function renderAttrs() {
+		$this->attrs['class'] = 'ui-uploader' . (isset($this->attrs['class']) ? ' ' . implode(' ', (array)$this->attrs['class']) : '');
+		return parent::renderAttrs();
+	}
+
 	protected function getSetupParams() {
 		if (!isset($this->params['params']))
 			$this->params['params'] = array();

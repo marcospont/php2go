@@ -3,11 +3,11 @@
 class AuthorizationFilter extends ActionFilter
 {
 	protected $rules = array();
-	
+
 	public function __construct(array $rules=array()) {
 		$this->loadRules($rules);
 	}
-	
+
 	protected function loadRules(array $rules) {
 		foreach ($rules as $i => $item) {
 			if (is_array($item) && isset($item[0]))
@@ -16,7 +16,7 @@ class AuthorizationFilter extends ActionFilter
 				throw new Exception(__(PHP2GO_LANG_DOMAIN, 'Invalid authorization rule on index %d.', array($i)));
 		}
 	}
-	
+
 	protected function preFilter(ActionFilterChain $chain) {
 		$app = Php2Go::app();
 		$request = $app->getRequest();
@@ -24,7 +24,7 @@ class AuthorizationFilter extends ActionFilter
 		$method = strtolower($request->getMethod());
 		$ip = $request->getUserAddress();
 		foreach ($this->rules as $rule) {
-			$allow = $rule->validate($authenticator, $chain->controller, $chain->action, $ip, $method);			
+			$allow = $rule->validate($authenticator, $chain->controller, $chain->action, $ip, $method);
 			if ($allow < 0) {
 				$this->authorizationDenied($authenticator, $rule);
 				return false;
@@ -34,18 +34,18 @@ class AuthorizationFilter extends ActionFilter
 		}
 		return true;
 	}
-	
+
 	protected function authorizationDenied(Authenticator $authenticator, AuthorizationFilterRule $rule) {
 		if (!$authenticator->getValid())
 			$authenticator->raiseEvent('onAuthenticationRequired');
-		throw new AuthorizationException($rule->resolveMessage());
+		throw new AuthorizationFilterException($rule);
 	}
 }
 
 class AuthorizationFilterException extends AuthorizationException
 {
 	public $rule;
-	
+
 	public function __construct(AuthorizationFilterRule $rule) {
 		parent::__construct($rule->resolveMessage());
 		$this->rule = $rule;
@@ -55,21 +55,21 @@ class AuthorizationFilterException extends AuthorizationException
 class AuthorizationFilterRule
 {
 	protected $allow;
-	
+
 	protected $actions = array();
-	
+
 	protected $users = array();
-	
+
 	protected $roles = array();
-	
+
 	protected $ips = array();
-	
+
 	protected $methods = array();
-	
+
 	protected $expression = null;
-	
+
 	protected $message = null;
-	
+
 	public static function factory($options) {
 		if (!is_array($options) || !isset($options[0]))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid authorization rule specification.'));
@@ -90,7 +90,7 @@ class AuthorizationFilterRule
 		foreach ($options as $k => $v) {
 			switch ($k) {
 				case 'actions' :
-				case 'methods' :					
+				case 'methods' :
 				case 'users' :
 				case 'roles' :
 				case 'ips' :
@@ -105,7 +105,7 @@ class AuthorizationFilterRule
 		}
 		return $rule;
 	}
-	
+
 	public function validate(Authenticator $auth, Controller $controller, Action $action, $ip, $method) {
 		if ($this->actionMatches($action) &&
 			$this->userMatches($auth) &&
@@ -118,17 +118,17 @@ class AuthorizationFilterRule
 		}
 		return 0;
 	}
-	
+
 	public function resolveMessage() {
 		if ($this->message !== null)
 			return $this->message;
 		return __(PHP2GO_LANG_DOMAIN, 'You are not authorized to perform this action.');
 	}
-	
+
 	protected function actionMatches(Action $action) {
 		return (empty($this->actions) || in_array($action->getId(), $this->actions));
 	}
-	
+
 	protected function userMatches($auth) {
 		if (!empty($this->users)) {
 			foreach ($this->users as $user) {
@@ -139,14 +139,14 @@ class AuthorizationFilterRule
 				elseif ($user == '@' && $auth->getValid())
 					return true;
 				elseif ($auth->getValid() && strcasecmp($user, $auth->getUser()->getName()))
-					return true;				
+					return true;
 			}
 			return false;
 		}
 		return true;
 	}
-	
-	protected function roleMatches($auth) {		
+
+	protected function roleMatches($auth) {
 		if (!empty($this->roles) && $auth->getValid()) {
 			$userRole = $auth->getUser()->role;
 			if ($userRole !== null) {
@@ -159,7 +159,7 @@ class AuthorizationFilterRule
 		}
 		return true;
 	}
-	
+
 	protected function ipMatches($ip) {
 		if (!empty($this->ips)) {
 			foreach ($this->ips as $rule) {
@@ -170,11 +170,11 @@ class AuthorizationFilterRule
 		}
 		return true;
 	}
-	
+
 	protected function methodMatches($method) {
 		return (empty($this->methods) || in_array($method, $this->methods));
 	}
-	
+
 	protected function expressionMatches($auth) {
 		return (!$this->expression || Util::evaluateExpression($this->expression, array('user' => $auth->getUser())));
 	}

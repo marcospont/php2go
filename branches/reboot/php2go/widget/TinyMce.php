@@ -23,7 +23,7 @@ class TinyMce extends WidgetInput
 	protected $compression = true;
 	protected $width = self::DEFAULT_WIDTH;
 	protected $height = self::DEFAULT_HEIGHT;
-	protected $template = 'simple';
+	protected $template = 'advanced';
 	protected $contentCss;
 	protected $plugins = array();
 	protected $readOnly = false;
@@ -137,7 +137,7 @@ class TinyMce extends WidgetInput
 				$this->params['theme_advanced_statusbar_location'] = 'bottom';
 				$this->params['theme_advanced_buttons1'] = 'save,newdocument,print,|,cut,copy,paste,pastetext,pasteword,|,search,replace,|,undo,redo,|,removeformat,cleanup,|,spellchecker,|,visualaid,visualchars,|,' . ($hasContentCss ? 'ltr,rtl,|,' : '') . 'code,preview,fullscreen';
 				$this->params['theme_advanced_buttons2'] = ($hasContentCss ? 'styleselect,' : '') . 'formatselect,fontselect,fontsizeselect,|,forecolor,backcolor,|,bold,italic,underline,strikethrough,|,sub,sup' . (!$hasContentCss ? ',|,ltr,rtl' : '');
-				$this->params['theme_advanced_buttons3'] = 'justifyleft,justifycenter,justifyright,justifyfull,|,bullist,nulist,|,indent,outdent,|,hr,advhr,nonbreaking,blockquote,|,link,unlink,anchor,|,image,media,emotions,charmap,|,insertdate,inserttime,|,template';
+				$this->params['theme_advanced_buttons3'] = 'justifyleft,justifycenter,justifyright,justifyfull,|,bullist,numlist,|,indent,outdent,|,hr,advhr,nonbreaking,blockquote,|,link,unlink,anchor,|,image,media,emotions,charmap,|,insertdate,inserttime,|,template';
 				$this->params['theme_advanced_resizing'] = true;
 				$this->params['theme_advanced_resize_horizontal'] = true;
 				$this->params['tabfocus_elements'] = ':prev,:next';
@@ -158,7 +158,7 @@ class TinyMce extends WidgetInput
 				$this->params['theme_advanced_statusbar_location'] = 'bottom';
 				$this->params['theme_advanced_buttons1'] = 'save,newdocument,print,|,cut,copy,paste,pastetext,pasteword,|,search,replace,|,undo,redo,|,removeformat,cleanup,|,spellchecker,|,visualaid,visualchars,|,' . ($hasContentCss ? 'ltr,rtl,|,' : '') . 'code,preview,fullscreen';
 				$this->params['theme_advanced_buttons2'] = ($hasContentCss ? 'styleselect,' : '') . 'formatselect,fontselect,fontsizeselect,|,forecolor,backcolor,|,bold,italic,underline,strikethrough,|,sub,sup' . (!$hasContentCss ? ',|,ltr,rtl' : '');
-				$this->params['theme_advanced_buttons3'] = 'justifyleft,justifycenter,justifyright,justifyfull,|,bullist,nulist,|,indent,outdent,|,hr,advhr,nonbreaking,blockquote,|,link,unlink,anchor,|,image,media,emotions,charmap,|,insertdate,inserttime,|,template';
+				$this->params['theme_advanced_buttons3'] = 'justifyleft,justifycenter,justifyright,justifyfull,|,bullist,numlist,|,indent,outdent,|,hr,advhr,nonbreaking,blockquote,|,link,unlink,anchor,|,image,media,emotions,charmap,|,insertdate,inserttime,|,template';
 				$this->params['theme_advanced_buttons4'] = 'cite,abbr,acronym,|,tablecontrols,|,insertlayer,moveforward,movebackward,absolute,|,styleprops,del,ins,attribs';
 				$this->params['theme_advanced_resizing'] = true;
 				$this->params['theme_advanced_resize_horizontal'] = true;

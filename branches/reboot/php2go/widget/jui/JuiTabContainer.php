@@ -62,15 +62,15 @@ class JuiTabContainer extends JuiElement
 	}
 
 	public function init() {
-		$this->view->jQuery()->addCallById($this->getId(),
-			'tabs', array($this->getSetupParams())
-		);
 		echo '<div' . $this->renderAttrs() . '>' . PHP_EOL;
 	}
 
 	public function run() {
 		$this->renderTabs();
 		echo '</div>' . PHP_EOL;
+		$this->view->jQuery()->addCallById($this->getId(),
+			'tabs', array($this->getSetupParams())
+		);
 	}
 
 	protected function renderTabs() {
