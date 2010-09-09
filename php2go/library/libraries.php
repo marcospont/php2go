@@ -39,6 +39,15 @@ return array(
 			'jquery'
 		)
 	),
+	'jquery-blockui' => array(
+		'assetPath' => $path . '/jquery',
+		'files' => array(
+			'jquery.blockui.js'
+		),
+		'dependencies' => array(
+			'jquery'
+		)
+	),
 	'jquery-jcrop' => array(
 		'assetPath' => $path . '/jquery/jquery-jcrop',
 		'publishAll' => true,
@@ -122,6 +131,7 @@ return array(
 		'dependencies' => array(
 			'jquery',
 			'jquery-sprintf',
+			'php2go',
 			'swfobject'
 		)
 	),

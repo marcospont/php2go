@@ -157,6 +157,10 @@ class View extends Component
 		return htmlspecialchars($value, ENT_QUOTES, Php2Go::app()->getCharset());
 	}
 
+	public function ifEmpty($value, $fallback) {
+		return (empty($value) ? $fallback : $value);
+	}
+
 	public function url($url=null, array $params=array(), $absolute=false, $ampersand='&') {
 		if (is_array($url)) {
 			$tmp = (isset($url[0]) ? array_shift($url) : '');

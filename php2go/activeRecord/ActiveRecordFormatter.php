@@ -17,7 +17,7 @@ class ActiveRecordFormatter extends Component
 			'integer' => __(PHP2GO_LANG_DOMAIN, '{attribute} is not a valid integer number.'),
 			'decimal' => __(PHP2GO_LANG_DOMAIN, '{attribute} is not a valid decimal number.'),
 			'date' => __(PHP2GO_LANG_DOMAIN, '{attribute} is not a valid date.'),
-			'datetime' => __(PHP2GO_LANG_DOMAIN, '{attribute} is not a valid datetime.'),
+			'dateTime' => __(PHP2GO_LANG_DOMAIN, '{attribute} is not a valid datetime.'),
 			'time' => __(PHP2GO_LANG_DOMAIN, '{attribute} is not a valid time.')
 		);
 		$this->model = $model;
