@@ -26,6 +26,14 @@ class ViewHelperModel extends ViewHelper
 	public function text(Model $model, $attr, array $attrs=array()) {
 		$name = $this->defineName($model, $attr, $attrs);
 		$attrs['error'] = $model->hasErrors($attr);
+		if (!isset($attrs['maxlength'])) {
+			foreach ($model->getValidators($attr) as $validator) {
+				if ($validator instanceof ValidatorLength && ($maxLength = $validator->getMaxLength())) {
+					$attrs['maxlength'] = $maxLength;
+					break;
+				}
+			}
+		}
 		return $this->form->text($name, $model->{$attr}, $attrs);
 	}
 
@@ -38,6 +46,14 @@ class ViewHelperModel extends ViewHelper
 	public function password(Model $model, $attr, array $attrs=array()) {
 		$name = $this->defineName($model, $attr, $attrs);
 		$attrs['error'] = $model->hasErrors($attr);
+		if (!isset($attrs['maxlength'])) {
+			foreach ($model->getValidators($attr) as $validator) {
+				if ($validator instanceof ValidatorLength && ($maxLength = $validator->getMaxLength())) {
+					$attrs['maxlength'] = $maxLength;
+					break;
+				}
+			}
+		}
 		return $this->form->password($name, $model->{$attr}, $attrs);
 	}
 
@@ -77,7 +93,7 @@ class ViewHelperModel extends ViewHelper
 		return $this->form->select($name, Util::consumeArray($attrs, 'value', $model->{$attr}), $options, $attrs);
 	}
 
-	public function errorSummary(Model $model, $headerTemplate='<p>%s</p>', $headerText=null) {
+	public function errorSummary(Model $model, $headerTemplate='<p>%s</p>', $headerText=null, $breakOnFirst=false) {
 		$items = array();
 		$errors = ($model instanceof ActiveRecord ? $model->getAllErrors() : $model->getErrors());
 		foreach ($errors as $attr => $messages) {
@@ -85,8 +101,11 @@ class ViewHelperModel extends ViewHelper
 				foreach ($messages as $message)
 					$items[] = '<p>' . $this->view->escape($message) . '</p>';
 			} else {
-				foreach ($messages as $message)
+				foreach ($messages as $message) {
 					$items[] = '<p>' . $this->view->escape($message) . '</p>';
+					if ($breakOnFirst)
+						break;
+				}
 			}
 		}
 		if (!empty($items)) {

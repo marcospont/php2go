@@ -89,6 +89,13 @@ abstract class Model extends Component implements ArrayAccess, IteratorAggregate
 		}
 	}
 
+	public function unsetAttributes(array $attrs=array()) {
+		if (empty($attrs))
+			$attrs = $this->getAttributeNames();
+		foreach ($attrs as $attr)
+			$this->{$attr} = null;
+	}
+
 	public function isAttributeRequired($attr) {
 		foreach ($this->getValidators($attr) as $validator) {
 			if ($validator instanceof ValidatorRequired)

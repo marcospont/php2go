@@ -178,7 +178,7 @@ class Request extends Component
 		if (!$this->pathInfo) {
 			$baseUrl = $this->getBaseUrl();
 			$scriptUrl = $this->getScriptUrl();
-			$requestUri = $this->getRequestUri();
+			$requestUri = urldecode($this->getRequestUri());
 			if (strpos($requestUri, $scriptUrl) === 0)
 				$pathInfo = substr($requestUri, strlen($scriptUrl));
 			elseif ($baseUrl === '' || strpos($requestUri, $baseUrl) === 0)

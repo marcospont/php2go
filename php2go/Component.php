@@ -55,17 +55,45 @@ class Component
 			return ($this->{$getter}() !== null);
 		if ($this->hasEventListener($name))
 			return true;
+		if (!empty($this->behaviors)) {
+			if (isset($this->behaviors[$name]))
+				return true;
+			foreach ($this->behaviors as $behavior) {
+				if ($behavior->isEnabled() && property_exists($behavior, $name))
+					return true;
+			}
+		}
 		return false;
 	}
 
 	public function __unset($name) {
 		$setter = 'set' . $name;
-		if (method_exists($this, $setter))
+		if (method_exists($this, $setter)) {
 			$this->{$setter}(null);
-		if ($this->hasEvent($name))
+		} elseif ($this->hasEvent($name)) {
 			unset($this->listeners[strtolower($name)]);
-		if (method_exists($this, 'get' . $name))
-			throw new ComponentException(__(PHP2GO_LANG_DOMAIN, 'Property "%s.%s" is read only.', array(get_class($this), $name)));
+		} else {
+			if (!empty($this->behaviors)) {
+				if (isset($this->behaviors[$name])) {
+					$this->detachBehavior($name);
+					return;
+				}
+				foreach ($this->behaviors as $behavior) {
+					if ($behavior->isEnabled()) {
+						if (property_exists($behavior, $name)) {
+							$behavior->{$name} = null;
+							return;
+						} elseif (method_exists($behavior, 'set' . $name)) {
+							$behavior->{'set' . $name}(null);
+							return;
+						}
+					}
+				}
+			}
+			if (method_exists($this, 'get' . $name)) {
+				throw new ComponentException(__(PHP2GO_LANG_DOMAIN, 'Property "%s.%s" is read only.', array(get_class($this), $name)));
+			}
+		}
 	}
 
 	public function __call($name, $args) {
@@ -75,6 +103,8 @@ class Component
 					return call_user_func_array(array($behavior, $name), $args);
 			}
 		}
+		if (class_exists('Closure', false) && $this->{$name} instanceof Closure)
+			return call_user_func_array($this->{$name}, $args);
 		throw new BadMethodCallException(__(PHP2GO_LANG_DOMAIN, 'Component "%s" does not have the method "%s".', array(get_class($this), $name)));
 	}
 
@@ -212,11 +242,11 @@ class Component
 		}
 		return null;
 	}
-	
+
 	protected function resolveBehavior($class) {
 		return $class;
 	}
-	
+
 	protected function registerEvents($evts) {
 		$evts = (is_string($evts) ? preg_split('/[\s,]+/', $attrs, -1, PREG_SPLIT_NO_EMPTY) : $evts);
 		if (is_array($evts)) {
