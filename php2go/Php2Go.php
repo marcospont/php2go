@@ -53,6 +53,9 @@ final class Php2Go
 		'OutputCache' => '/cache/OutputCache.php',
 		'PageCache' => '/cache/PageCache.php',
 		'Config' => '/config/Config.php',
+		'ConsoleApplication' => '/console/ConsoleApplication.php',
+		'ConsoleCommand' => '/console/ConsoleCommand.php',
+		'ConsoleRunner' => '/console/ConsoleRunner.php',
 		'Controller' => '/controller/Controller.php',
 		'DateTimeFormatter' => '/datetime/DateTimeFormatter.php',
 		'DateTimeParser' => '/datetime/DateTimeParser.php',
@@ -343,22 +346,6 @@ final class Php2Go
 		return Util::buildMessage($translated, $params);
 	}
 
-	public static function createApplication($options) {
-		if ($options instanceof Config)
-			$options = $options->toArray();
-		elseif (!is_array($options))
-			throw new InvalidArgumentException('Invalid application config. An array or Config instance must be provided.');
-		$class = Util::consumeArray($options, 'class');
-		if ($class) {
-			$reflection = new ReflectionClass($class);
-			if (!$reflection->isSubclassOf('Application'))
-				throw new InvalidArgumentException('The "class" option must contain a child class of "Application".');
-		} else {
-			throw new InvalidArgumentException('The "class" option is missing.');
-		}
-		return new $class($options);
-	}
-
 	public static function createWebApplication($options) {
 		if ($options instanceof Config)
 			$options = $options->toArray();
@@ -371,6 +358,22 @@ final class Php2Go
 				throw new InvalidArgumentException('The "class" option must contain a child class of "WebApplication".');
 		} else {
 			$class = 'WebApplication';
+		}
+		return new $class($options);
+	}
+
+	public static function createConsoleApplication($options) {
+		if ($options instanceof Config)
+			$options = $options->toArray();
+		elseif (!is_array($options))
+			throw new InvalidArgumentException('Invalid application config. An array or Config instance must be provided.');
+		$class = Util::consumeArray($options, 'class');
+		if ($class) {
+			$reflection = new ReflectionClass($class);
+			if (!$reflection->isSubclassOf('ConsoleApplication'))
+				throw new InvalidArgumentException('The "class" option must contain a child class of "ConsoleApplication".');
+		} else {
+			$class = 'ConsoleApplication';
 		}
 		return new $class($options);
 	}
