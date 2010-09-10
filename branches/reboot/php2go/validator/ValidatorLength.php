@@ -20,6 +20,14 @@ class ValidatorLength extends Validator
 		);
 	}
 
+	public function getMaxLength() {
+		if ($this->max !== null)
+			return $this->max;
+		if ($this->length !== null)
+			return $this->length;
+		return null;
+	}
+
 	protected function validateOptions() {
 		if ($this->length === null && $this->min === null && $this->max === null)
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid %s specification.', array(__CLASS__)));
