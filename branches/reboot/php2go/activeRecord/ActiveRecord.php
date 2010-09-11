@@ -227,7 +227,10 @@ abstract class ActiveRecord extends Model
 		if ($value === '')
 			$value = null;
 		if (array_key_exists($name, $this->attributes)) {
-			if ($value !== $this->{$name}) {
+			$storedValue = $this->{$name};
+			if (is_object($storedValue))
+				$storedValue = (string)$storedValue;
+			if ($value !== $storedValue) {
 				$current = $this->attributes[$name];
 				if (isset($this->formatter->formats[$name]))
 					$this->attributes[$name] = $this->formatter->formatSet($name, $value);
