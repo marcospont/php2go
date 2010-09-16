@@ -99,6 +99,17 @@ return array(
 			'jquery'
 		)
 	),
+	'jquery-tooltip' => array(
+		'assetPath' => $path . '/jquery/jquery-tooltip',
+		'files' => array(
+			'jquery.tooltip.css',
+			'jquery.tooltip.min.js'
+		),
+		'dependencies' => array(
+			'jquery',
+			'jquery-bgiframe'
+		)
+	),
 	'jquery-ui' => array(
 		'assetPath' => $path . '/jquery/jquery-ui',
 		'files' => array(
