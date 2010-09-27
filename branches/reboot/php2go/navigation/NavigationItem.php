@@ -71,7 +71,7 @@ class NavigationItem extends NavigationContainer
 					$this->href = $this->url;
 				elseif (is_file($app->getRootPath() . DS . trim($this->url, '/')))
 					$this->href = $app->getBaseUrl() . '/' . trim($url, '/');
-				elseif (strpos($this->url, $app->getBaseUrl()) === 0)
+				elseif (@strpos($this->url, $app->getBaseUrl()) === 0)
 					$this->href = $this->url;
 				else
 					$this->href = $app->createUrl($this->url, $this->params);

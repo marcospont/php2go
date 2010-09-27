@@ -129,7 +129,9 @@ class JuiDialog extends JuiElement
 
 	protected function getDefaultParams() {
 		return array(
-			'autoOpen' => false
+			'autoOpen' => false,
+			'modal' => true,
+			'zIndex' => 10000
 		);
 	}
 }

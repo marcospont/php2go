@@ -47,8 +47,11 @@ class ActiveRecordBehaviorUpload extends ActiveRecordBehavior
 	public function onImport(Event $event) {
 		$key = '%s[%s]';
 		$mgr = new UploadManager();
-		foreach (array_keys($this->attrs) as $name)
-			$this->owner->{$name} = $mgr->getFile(sprintf($key, $this->owner->getNamePrefix(), $name));
+		foreach (array_keys($this->attrs) as $name) {
+			$file = $mgr->getFile(sprintf($key, $this->owner->getNamePrefix(), $name));
+			if ($file && $file->uploaded)
+				$this->owner->{$name} = $file;
+		}
 	}
 
 	public function onBeforeInsert(Event $event) {

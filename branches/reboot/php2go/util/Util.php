@@ -79,24 +79,24 @@ final class Util
 	}
 
 	public static function isUTF8($str) {
-		for ($i = 0; $i < strlen($string); $i++) {
-        	if (ord($string[$i]) < 0x80) // 0bbbbbbb
+		for ($i = 0; $i < strlen($str); $i++) {
+        	if (ord($str[$i]) < 0x80) // 0bbbbbbb
         		continue;
-        	elseif ((ord($string[$i]) & 0xE0) == 0xC0) // 110bbbbb
+        	elseif ((ord($str[$i]) & 0xE0) == 0xC0) // 110bbbbb
         		$n = 1;
-        	elseif ((ord($string[$i]) & 0xF0) == 0xE0) // 1110bbbb
+        	elseif ((ord($str[$i]) & 0xF0) == 0xE0) // 1110bbbb
         		$n = 2;
-        	elseif ((ord($string[$i]) & 0xF8) == 0xF0) // 11110bbb
+        	elseif ((ord($str[$i]) & 0xF8) == 0xF0) // 11110bbb
         		$n = 3;
-        	elseif ((ord($string[$i]) & 0xFC) == 0xF8) // 111110bb
+        	elseif ((ord($str[$i]) & 0xFC) == 0xF8) // 111110bb
         		$n = 4;
-        	elseif ((ord($string[$i]) & 0xFE) == 0xFC) // 1111110b
+        	elseif ((ord($str[$i]) & 0xFE) == 0xFC) // 1111110b
         		$n = 5;
         	else // does not match any model
         		return false;
         	// n bytes matching 10bbbbbb follow?
         	for ($j=0; $j<$n; $j++) {
-				if ((++$i == strlen($string)) || ((ord($string[$i]) & 0xC0) != 0x80))
+				if ((++$i == strlen($str)) || ((ord($str[$i]) & 0xC0) != 0x80))
 					return false;
 			}
 		}
