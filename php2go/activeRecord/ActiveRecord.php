@@ -28,6 +28,8 @@ abstract class ActiveRecord extends Model
 	public static function model($class=__CLASS__) {
 		if (!isset(self::$models[$class]))
 			self::$models[$class] = new $class(null);
+		else
+			self::$models[$class]->resetScopes();
 		return self::$models[$class];
 	}
 
@@ -816,7 +818,13 @@ abstract class ActiveRecord extends Model
 				$pkCriteria['condition'][] = "{$this->tableName}.{$pk[$i]} = ?";
 			$pkCriteria['bind'] = $value;
 		}
-		return $pkCriteria;
+		if (!empty($this->criteria)) {
+			$source = $this->criteria;
+			$this->mergeCriteria($source, $pkCriteria);
+			return $source;
+		} else {
+			return $pkCriteria;
+		}
 	}
 
 	protected function createAttributesCriteria(array $attributes, $criteria=null, array $bind=array(), $all=false) {

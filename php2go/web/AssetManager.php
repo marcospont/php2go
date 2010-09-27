@@ -67,10 +67,8 @@ class AssetManager extends Component
 				$targetDir = $this->basePath . DS . $dir;
 				$targetFile = $targetDir . DS . $file;
 				if (@filemtime($targetFile) < @filemtime($src) || $force) {
-					if (!is_dir($targetDir)) {
-						mkdir($targetDir);
-						@chmod($targetDir, 0666);
-					}
+					if (!is_dir($targetDir))
+						mkdir($targetDir, 0777);
 					copy($src, $targetFile);
 				}
 				return ($this->published[$path] = $this->baseUrl . '/' . $dir . '/' . $file);

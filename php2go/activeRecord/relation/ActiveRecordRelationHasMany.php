@@ -27,30 +27,32 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 	}
 
 	public function save(ActiveRecord $base, $models) {
-		$dao = DAO::instance();
-		$model = ActiveRecord::model($this->options['class']);
-		$currKeys = $dao->findPairs($model->getTableName(), $model->getMetaData()->primaryKey, sprintf('%s = ?', $this->options['foreignKey']), array($base->getPrimaryKey()));
-		if (!empty($models) && count($models) > 0) {
-			foreach ($models as $instance) {
-				if ($instance->isNew())
-					$instance->{$this->options['foreignKey']} = $base->getPrimaryKey();
-				if (!$instance->isNew()) {
-					$pk = $instance->getPrimaryKey();
-					if (is_array($pk))
-						$pk = implode('-', $pk);
-					if (isset($currKeys[$pk]))
-						unset($currKeys[$pk]);
+		if ($models instanceof ActiveRecordRelationCollection) {
+			$dao = DAO::instance();
+			$model = ActiveRecord::model($this->options['class']);
+			$currKeys = $dao->findPairs($model->getTableName(), $model->getMetaData()->primaryKey, sprintf('%s = ?', $this->options['foreignKey']), array($base->getPrimaryKey()));
+			if (count($models) > 0) {
+				foreach ($models as $instance) {
+					if ($instance->isNew())
+						$instance->{$this->options['foreignKey']} = $base->getPrimaryKey();
+					if (!$instance->isNew()) {
+						$pk = $instance->getPrimaryKey();
+						if (is_array($pk))
+							$pk = implode('-', $pk);
+						if (isset($currKeys[$pk]))
+							unset($currKeys[$pk]);
+					}
+					if (!$instance->save())
+						return false;
 				}
-				if (!$instance->save())
-					return false;
 			}
-		}
-		if (!empty($currKeys)) {
-			foreach ($currKeys as $key) {
-				$key = explode('-', $key);
-				$toDelete = $model->findByPK((sizeof($key) == 1 ? $key[0] : $key));
-				if (!$toDelete->delete())
-					return false;
+			if (!empty($currKeys)) {
+				foreach ($currKeys as $key) {
+					$key = explode('-', $key);
+					$toDelete = $model->findByPK((sizeof($key) == 1 ? $key[0] : $key));
+					if (!$toDelete->delete())
+						return false;
+				}
 			}
 		}
 		return true;
