@@ -115,7 +115,7 @@ class TinyMce extends WidgetInput
 		if ($this->contentCss)
 			$this->params['content_css'] = $this->contentCss;
 		$this->params['readonly'] = $this->readOnly;
-		$this->params['relative_urls'] = true;
+		$this->params['relative_urls'] = false;
 	}
 
 	public function applyTemplate() {

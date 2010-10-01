@@ -3,7 +3,7 @@
 class ViewHelperHead extends ViewHelper
 {
 	protected $title = array();
-	protected $titleSeparator = ' / ';
+	protected $titleSeparator = ' - ';
 	protected $meta = array();
 	protected $libraries = array();
 	protected $scriptFiles = array();
@@ -70,6 +70,15 @@ class ViewHelperHead extends ViewHelper
 		$attrs['value'] = $value;
 		$this->meta[] = $attrs;
 		return $this;
+	}
+
+	public function appendMeta($name, $value, $type='name') {
+		foreach ($this->meta as &$meta) {
+			if ($meta['type'] == $type && $meta['name'] == $name) {
+				$meta['value'] .= $value;
+				break;
+			}
+		}
 	}
 
 	public function setHttpEquiv($httpEquiv) {

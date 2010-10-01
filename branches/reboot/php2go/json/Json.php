@@ -9,6 +9,9 @@ class Json
 
 	public static function encode($value, array $options=array()) {
 		$expressions = array();
+		$ensureUTF8 = !!@$options['ensureUTF8'];
+		if ($ensureUTF8)
+			$value = self::ensureUTF8($value);
 		$findExpressions = !!@$options['findExpressions'];
 		if ($findExpressions)
 			$value = self::findExpressions($value, $expressions);
@@ -52,6 +55,20 @@ class Json
 
 	public static function expression($expression) {
 		return new JsonExpression($expression);
+	}
+
+	public static function ensureUTF8($value, $key=null) {
+		if (is_array($value)) {
+			array_walk($value, array(__CLASS__, 'ensureUTF8'));
+			return $value;
+		} elseif (is_object($value)) {
+			foreach ($value as $k => $v)
+				$value->{$k} = self::ensureUTF8($v);
+			return $value;
+		} elseif (is_string($value)) {
+			return utf8_encode($value);
+		}
+		return $value;
 	}
 
 	private static function findExpressions(&$value, &$expressions, $currentKey=null) {

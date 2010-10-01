@@ -62,7 +62,7 @@ class Request extends Component
 			$this->cookies = new CookieCollection();
 		if ($param === null)
 			return $this->cookies;
-		return $this->cookies->itemAt($param, $fallback);
+		return $this->cookies->get($param, $fallback);
 	}
 
 	public function getServer($param=null, $fallback=null) {

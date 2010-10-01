@@ -133,6 +133,7 @@ final class Php2Go
 		'ValidatorLength' => '/validator/ValidatorLength.php',
 		'ValidatorNoWhitespace' => '/validator/ValidatorNoWhitespace.php',
 		'ValidatorNumber' => '/validator/ValidatorNumber.php',
+		'ValidatorReCaptcha' => '/validator/ValidatorReCaptcha.php',
 		'ValidatorRegex' => '/validator/ValidatorRegex.php',
 		'ValidatorRequired' => '/validator/ValidatorRequired.php',
 		'ValidatorUnique' => '/validator/ValidatorUnique.php',

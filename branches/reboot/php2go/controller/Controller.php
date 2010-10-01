@@ -171,8 +171,11 @@ class Controller extends Component
 		$this->getResponse()->appendBody($this->view->render($view, $data));
 	}
 
-	public function renderText($text) {
-		$this->getResponse()->appendBody($this->view->renderText($text));
+	public function renderText($text, $layout=true) {
+		if ($layout)
+			$this->getResponse()->appendBody($this->view->renderText($text));
+		else
+			$this->getResponse()->appendBody($text);
 	}
 
 	public function renderPartial($view, $data=null, $return=false) {
