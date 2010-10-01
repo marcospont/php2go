@@ -15,6 +15,7 @@ abstract class ModelValidator
 		'length' => 'ValidatorLength',
 		'noWhitespace' => 'ValidatorNoWhitespace',
 		'number' => 'ValidatorNumber',
+		'reCaptcha' => 'ValidatorReCaptcha',
 		'regex' => 'ValidatorRegex',
 		'required' => 'ValidatorRequired',
 		'time' => array('ValidatorDataType', 'dataType'),
