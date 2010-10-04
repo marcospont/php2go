@@ -237,8 +237,11 @@ class ViewHelperHead extends ViewHelper
 	}
 
 	public function addLink(array $attrs=array()) {
-		if (!empty($attrs))
+		if (!empty($attrs)) {
+			if (isset($attrs['href']))
+				$attrs['href'] = $this->view->url($attrs['href']);
 			$this->links[] = $attrs;
+		}
 		return $this;
 	}
 
