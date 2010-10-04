@@ -28,10 +28,18 @@ class ErrorHandler
 	public function handle(Event $event) {
 		if ($this->discardOutput)
 			while(@ob_get_clean());
+		$logger = Php2Go::app()->getLogger();
 		if ($event instanceof ExceptionEvent) {
+			$logger->err($event->exception->getMessage() . ' (' . basename($event->exception->getFile()) . ':' . $event->exception->getLine() . ')');
 			$event->handled = true;
 			$this->handleException($event);
 		} elseif ($event instanceof ErrorEvent) {
+			if ($event->code == E_NOTICE || $event->code == E_USER_NOTICE || $event->code == E_STRICT)
+				$logger->notice($event->message . ' (' . basename($event->file) . ':' . $event->line . ')');
+			elseif ($event->code == E_WARNING || $event->code == E_USER_WARNING)
+				$logger->warn($event->message . ' (' . basename($event->file) . ':' . $event->line . ')');
+			else
+				$logger->err($event->message . ' (' . basename($event->file) . ':' . $event->line . ')');
 			$event->handled = true;
 			$this->handleError($event);
 		}
@@ -51,7 +59,7 @@ class ErrorHandler
 			$this->error = $data = array(
 				'code' => ($exception instanceof HttpException ? $exception->statusCode : 500),
 				'type' => get_class($exception),
-				'message' => $exception->getMessage(),
+				'message' => ($exception instanceof HttpException || PHP2GO_DEBUG_MODE ? $exception->getMessage() : ''),
 				'file' => ($j !== null ? $trace[$j]['file'] : null),
 				'line' => ($j !== null ? $trace[$j]['line'] : null),
 				'trace' => $exception->getTraceAsString(),

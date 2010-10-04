@@ -109,10 +109,10 @@ class ViewHelperModel extends ViewHelper
 			}
 		}
 		if (!empty($items)) {
-			if ($headerText === null)
+			if ($headerText === null && $headerText !== false)
 				$headerText = __(PHP2GO_LANG_DOMAIN, 'The following errors were found:');
 			return
-				sprintf($headerTemplate, $headerText) .
+				($headerText !== false ? sprintf($headerTemplate, $headerText) : '') .
 				implode('', $items) . PHP_EOL;
 		}
 		return '';
