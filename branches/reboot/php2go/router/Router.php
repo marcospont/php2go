@@ -2,7 +2,6 @@
 
 class Router extends Component
 {
-	protected $baseUrl;
 	public $appendParams = true;
 	public $showScriptFile = true;
 	protected $suffix;
@@ -13,14 +12,11 @@ class Router extends Component
 	}
 
 	public function getBaseUrl($absolute=false) {
-		if (!$this->baseUrl) {
-			$request = Php2Go::app()->getRequest();
-			if ($this->showScriptFile)
-				$this->baseUrl = $request->getScriptUrl($absolute);
-			else
-				$this->baseUrl = $request->getBaseUrl($absolute);
-		}
-		return $this->baseUrl;
+		$request = Php2Go::app()->getRequest();
+		if ($this->showScriptFile)
+			return $request->getScriptUrl($absolute);
+		else
+			return $request->getBaseUrl($absolute);
 	}
 
 	public function setSuffix($suffix) {
