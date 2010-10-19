@@ -145,7 +145,9 @@ abstract class ActiveRecord extends Model
 		return $this->modified;
 	}
 
-	public function isModified() {
+	public function isModified($attr=null) {
+		if ($attr !== null)
+			return (array_key_exists($attr, $this->modified));
 		return (!empty($this->modified));
 	}
 

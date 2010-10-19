@@ -27,12 +27,12 @@
 			}
 		},
 		post: function(sender, url, params) {
-			var act, form = $(sender).parents('form:first');
+			var act, form = ($(sender).is('form') ? $(sender) : $(sender).parents('form:first'));
 			if (form.length == 0) {
 				form = $('<form method="post" style="display:none;"></form>').appendTo($(sender).parent());
 				(url != '') && (form.attr('action', url));
 			} else {
-				if (url != '') {
+				if (url) {
 					act = form.attr('action');
 					form.attr('action', url);
 				}
