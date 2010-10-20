@@ -87,7 +87,12 @@ class AddThis extends WidgetElement
 				if ($service['id'] == 'separator') {
 					echo '<span class="addthis_separator">' . $this->toolboxSeparator . '</span>';
 				} else {
-					echo '<a class="addthis_button_' . $service['id'] . '"' . (isset($service['title']) ? ' title="' . $service['title'] . '"' : '') . '>';
+					echo '<a class="addthis_button_' . $service['id'] . '"' .
+						(isset($service['title']) ? ' title="' . $service['title'] . '"' : '') .
+						(isset($this->shareOptions['url']) ? ' addthis:url="' . $this->shareOptions['url'] . '"' : '') .
+						(isset($this->shareOptions['title']) ? ' addthis:title="' . $this->shareOptions['title'] . '"' : '') .
+						(isset($this->shareOptions['description']) ? ' addthis:description="' . $this->shareOptions['description'] . '"' : '') .
+					'>';
 					if (isset($service['image']))
 						echo $this->view->html()->image($service['image']);
 					if (isset($service['label']))
