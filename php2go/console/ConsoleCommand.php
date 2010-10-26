@@ -19,7 +19,7 @@ abstract class ConsoleCommand extends Component
 	}
 
 	public function getHelp() {
-		return __(PHP2GO_LANG_DOMAIN, 'Usage:') . ' ' . $this->getCommandRunner()->getScriptName() . ' ' . $this->name;
+		return __(PHP2GO_LANG_DOMAIN, 'Usage:') . ' ' . $this->getCommandRunner()->getScriptName() . ' ' . $this->id;
 	}
 
 	abstract public function run(array $args);

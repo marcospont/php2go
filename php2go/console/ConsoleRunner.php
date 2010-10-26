@@ -2,14 +2,20 @@
 
 class ConsoleRunner extends Component
 {
+	protected $app;
 	protected $scriptName;
 	protected $args = array();
 	protected $commands = array();
 
 	public function __construct() {
 		$args = $_SERVER['argv'];
+		$this->app = Php2Go::app();
 		$this->scriptName = array_shift($args);
 		$this->args = $args;
+	}
+
+	public function getApp() {
+		return $this->app;
 	}
 
 	public function getScriptName() {
