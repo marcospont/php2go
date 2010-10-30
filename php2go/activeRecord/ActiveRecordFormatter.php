@@ -9,6 +9,7 @@ class ActiveRecordFormatter extends Component
 	protected $messages = array();
 	protected $model;
 	protected $formats = array();
+	protected $formatOptions = array();
 	protected $formatErrors = array();
 
 	public function __construct(ActiveRecord $model) {
@@ -32,9 +33,17 @@ class ActiveRecordFormatter extends Component
 		foreach ($formats as $attr => $type) {
 			if (!$this->model->hasAttribute($attr))
 				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The "%s" does not have the "%s" attribute.', array(get_class($this->model), $attr)));
-			if (!in_array($type, self::$formatTypes))
-				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid format type: "%s"', array($type)));
+			if (is_array($type) && isset($type[0])) {
+				$tmp = array_shift($type);
+				$options = $type;
+				$type = $tmp;
+			} elseif (is_string($type)) {
+				$options = array();
+			}
+			if (!isset($type) || !in_array($type, self::$formatTypes))
+				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid format specification for "%s"', array($attr)));
 			$this->formats[$attr] = $type;
+			$this->formatOptions[$attr] = $options;
 		}
 	}
 
@@ -73,8 +82,11 @@ class ActiveRecordFormatter extends Component
 	}
 
 	protected function decimalGet($name, $value) {
-		if (preg_match('/^-?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/', $value))
+		if (preg_match('/^-?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/', $value)) {
+			if (isset($this->formatOptions[$name]['precision']))
+				return LocaleNumberFormatter::format($value, null, $this->formatOptions[$name]['precision']);
 			return LocaleNumberFormatter::format($value);
+		}
 		return $value;
 	}
 
