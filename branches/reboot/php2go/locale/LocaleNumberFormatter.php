@@ -3,15 +3,15 @@
 abstract class LocaleNumberFormatter
 {
 	private static $formats = array();
-	
+
 	public static function formatInteger($value) {
 		return self::format($value, 0);
 	}
-	
+
 	public static function formatFloat($value) {
 		return self::format($value);
 	}
-	
+
 	public static function format($value, $format=null, $precision=null) {
 		if ($format === null) {
 			$locale = Php2Go::app()->getLocale();
@@ -24,21 +24,25 @@ abstract class LocaleNumberFormatter
 		} elseif (is_int($format) && $format >= 0 && $format <= 30) {
 			$precision = $format;
 			$locale = Php2Go::app()->getLocale();
-			$format = $locale->getDecimalFormat();			
+			$format = $locale->getDecimalFormat();
 		} else {
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid number format.'));
 		}
 		if (strpos($format, '0') === false)
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid number format.'));
+		$format = self::parseFormat($format, $locale);
 		if ($precision !== null) {
-			if (is_numeric($precision) && $precision >= 0 && $precision <= 0)
+			if (is_numeric($precision) && $precision >= 0 && $precision <= 30) {
 				$value = round($value, $precision);
-			else
+				if ($precision > $format['precision'])
+					$format['precision'] = $precision;
+			} else {
 				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid precision.'));
-		}		
-		return self::formatNumber($value, self::parseFormat($format, $locale), $locale);		
+			}
+		}
+		return self::formatNumber($value, $format, $locale);
 	}
-	
+
 	private static function formatNumber($value, array $format, Locale $locale) {
 		$symbols = $locale->getNumberSymbols();
 		$negative = ($value < 0);
@@ -69,9 +73,9 @@ abstract class LocaleNumberFormatter
 			$number = $format['negativePrefix']. $integer . $decimal . $format['negativeSuffix'];
 		else
 			$number = $format['positivePrefix'] . $integer . $decimal . $format['positiveSuffix'];
-		return strtr($number, array('%' => $symbols['percentSign'], '‰' => $symbols['perMille']));		
+		return strtr($number, array('%' => $symbols['percentSign'], '‰' => $symbols['perMille']));
 	}
-	
+
 	private static function parseFormat($format, Locale $locale) {
 		if (isset(self::$formats[$format]))
 			return self::$formats[$format];
@@ -128,5 +132,5 @@ abstract class LocaleNumberFormatter
 			$result['groupSize1'] = $result['groupSize2'] = 0;
 		}
 		return self::$formats[$format] = $result;
-	}	
+	}
 }
