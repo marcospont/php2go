@@ -47,12 +47,25 @@ class ViewHelperSearch extends ViewHelper
 		$name = $this->defineName($model, $attr, $attrs);
 		$value = $model->{$attr};
 		$surround = Util::consumeArray($options, 'surround', '%s&nbsp;%s');
+		// start field
 		$startAttrs = array_merge($attrs, array('error' => $model->hasErrors($attr . '[start]')));
+		if (@$startAttrs['mask'] == 'date') {
+			ob_start();
+			$this->view->widget('JuiDatePicker', array('name' => $name . '[start]', 'value' => (is_array($value) ? $value['start'] : null), 'attrs' => $startAttrs));
+			$start = ob_get_clean();
+		} else {
+			$start = $this->form->text($name . '[start]', (is_array($value) ? $value['start'] : null), $startAttrs);
+		}
+		// end field
 		$endAttrs = array_merge($attrs, array('error' => $model->hasErrors($attr . '[end]')));
-		return sprintf($surround,
-			$this->form->text($name . '[start]', (is_array($value) ? $value['start'] : null), $startAttrs),
-			$this->form->text($name . '[end]', (is_array($value) ? $value['end'] : null), $endAttrs)
-		);
+		if (@$endAttrs['mask'] == 'date') {
+			ob_start();
+			$this->view->widget('JuiDatePicker', array('name' => $name . '[end]', 'value' => (is_array($value) ? $value['end'] : null), 'attrs' => $endAttrs));
+			$end = ob_get_clean();
+		} else {
+			$this->form->text($name . '[end]', (is_array($value) ? $value['end'] : null), $endAttrs);
+		}
+		return sprintf($surround, $start, $end);
 	}
 
 	public function selectInterval(SearchModel $model, $attr, array $startOpts=array(), array $endOpts=array(), array $attrs=array(), array $options=array()) {
