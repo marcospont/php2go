@@ -198,7 +198,7 @@ class View extends Component
 		}
 	}
 
-	public function renderFile($file, $data=null) {
+	public function renderFile($file, $data=null, Widget $widget=null) {
 		$widgetCount = count($this->widgetStack);
 		// save context
 		$context = $this->__context;
@@ -207,8 +207,8 @@ class View extends Component
 		ob_start();
 		ob_implicit_flush(false);
 		// use widget's or internal context
-		if ($this->widget)
-			$this->widget->renderInternal($file);
+		if ($widget !== null)
+			$widget->renderInternal($file);
 		else
 			$this->renderInternal($file);
 		// restore context

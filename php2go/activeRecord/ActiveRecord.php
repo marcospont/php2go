@@ -55,8 +55,12 @@ abstract class ActiveRecord extends Model
 		parent::init();
 		if ($this->getScenario() == 'insert') {
 			foreach ($this->getMetaData()->columns as $name => $column) {
-				if ($column->default !== null)
-					$this->setAttribute($name, $column->default);
+				if ($column->default !== null) {
+					if (isset($this->formatter->formats[$name]))
+						$this->setAttribute($name, $this->formatter->formatGet($name, $column->default));
+					else
+						$this->setAttribute($name, $column->default);
+				}
 			}
 		}
 	}

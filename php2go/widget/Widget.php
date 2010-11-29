@@ -78,7 +78,7 @@ abstract class Widget extends ViewHelper
 
 	protected function render($viewName, $data=null, $return=false) {
 		if (($viewFile = $this->getViewFile($viewName)) !== false) {
-			$output = $this->view->renderFile($viewFile, $data);
+			$output = $this->view->renderFile($viewFile, $data, $this);
 			if ($return)
 				return $output;
 			echo $output . PHP_EOL;

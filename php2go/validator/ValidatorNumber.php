@@ -60,12 +60,12 @@ class ValidatorNumber extends Validator
 			return;
 		$localized = ($this->localized || ($model instanceof ActiveRecord && in_array($model->getAttributeFormat($attr), array('integer', 'decimal'))));
 		if ($this->integer) {
-			if (($localized && !LocaleNumber::isInteger($value)) || (!$this->localized && !preg_match('/^-?[0-9]+$/', $value))) {
+			if (($localized && !LocaleNumber::isInteger($value)) || (!$localized && !preg_match('/^-?[0-9]+$/', $value))) {
 				$this->addModelError($model, $attr, $this->resolveModelMessage('notInteger'));
 				return;
 			}
 		} else {
-			if (($localized && !LocaleNumber::isNumber($value)) || (!$this->localized && !preg_match('/^-?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/', $value))) {
+			if (($localized && !LocaleNumber::isNumber($value)) || (!$localized && !preg_match('/^-?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/', $value))) {
 				$this->addModelError($model, $attr, $this->resolveModelMessage('notNumber'));
 				return;
 			}
