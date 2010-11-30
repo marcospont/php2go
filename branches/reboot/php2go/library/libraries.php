@@ -78,6 +78,17 @@ return array(
 			'jquery'
 		)
 	),
+	'jquery-prettyPhoto' => array(
+		'assetPath' => $path . '/jquery/jquery-prettyPhoto',
+		'publishAll' => true,
+		'files' => array(
+			'jquery.prettyPhoto.js',
+			'jquery.prettyPhoto.css'
+		),
+		'dependencies' => array(
+			'jquery'
+		)
+	),
 	'jquery-sprintf' => array(
 		'assetPath' => $path . '/jquery',
 		'files' => array(
