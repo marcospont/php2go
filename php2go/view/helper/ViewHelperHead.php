@@ -79,6 +79,7 @@ class ViewHelperHead extends ViewHelper
 				break;
 			}
 		}
+		return $this;
 	}
 
 	public function setHttpEquiv($httpEquiv) {
