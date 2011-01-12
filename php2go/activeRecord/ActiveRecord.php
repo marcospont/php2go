@@ -72,6 +72,8 @@ abstract class ActiveRecord extends Model
 			return null;
 		elseif (isset($this->relations[$name]))
 			return $this->getRelation($name);
+		elseif (property_exists($this, $name) && isset($this->formatter->formats[$name]))
+			return $this->formatter->formatGet($name);
 		return parent::__get($name);
 	}
 
@@ -215,7 +217,7 @@ abstract class ActiveRecord extends Model
 	}
 
 	public function hasAttribute($name) {
-		return $this->getMetaData()->hasColumn($name);
+		return ($this->getMetaData()->hasColumn($name) || property_exists($this, $name));
 	}
 
 	public function getAttribute($name, $format=true) {
@@ -263,6 +265,8 @@ abstract class ActiveRecord extends Model
 			}
 			return true;
 		}
+		if (property_exists($this, $name) && !array_key_exists($name, $this->relations) && isset($this->formatter->formats[$name]))
+			$this->{$name} = $this->formatter->formatSet($name, $value);
 		return false;
 	}
 
@@ -380,6 +384,8 @@ abstract class ActiveRecord extends Model
 							break;
 					}
 				}
+				if (property_exists($this, $name) && !isset($this->relations[$name]))
+					$this->{$name} = $value;
 			}
 		}
 		$this->raiseEvent('onImport', new Event($this));

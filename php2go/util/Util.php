@@ -107,6 +107,22 @@ final class Util
 		return sprintf('%x', crc32($value . strval($salt)));
 	}
 
+	public static function randomString($length, $upper=true, $digits=true) {
+		$length = max(1, $length);
+		$start = ($digits ? 48 : 65);
+		$end = 122;
+		$result = '';
+		while (strlen($result) < $length) {
+			$random = mt_rand($start, $end);
+			if (($digits && $random >= 48 && $random <= 57) ||
+				($upper && $random >= 65 && $random <= 90) ||
+				($random >= 97 && $random <= 122)) {
+				$result .= chr($random);
+			}
+		}
+		return $result;
+	}
+
 	public static function fromByteString($byteStr, $fallback=null) {
 		$matches = array();
 		if (preg_match('/[0-9\.]+([kmgtpezy]b?|b)$/i', $byteStr, $matches)) {

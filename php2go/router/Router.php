@@ -40,13 +40,10 @@ class Router extends Component
 	}
 
 	public function parseUrl(Request $request) {
-		$pathInfo = urldecode($request->getPathInfo());
-		if (!empty($pathInfo)) {
-			$pathInfo = '/' . $pathInfo;
-			foreach ($this->rules as $rule) {
-				if (($result = $rule->parse($pathInfo)) !== false)
-					return $result;
-			}
+		$pathInfo = '/' . urldecode($request->getPathInfo());
+		foreach ($this->rules as $rule) {
+			if (($result = $rule->parse($pathInfo)) !== false)
+				return $result;
 		}
 		return $pathInfo;
 	}
@@ -64,7 +61,7 @@ class Router extends Component
 		}
 		foreach ($this->rules as $rule) {
 			if (($url = $rule->create($route, $params, $ampersand))) {
-				return $this->getBaseUrl($absolute) . '/' . $url . $anchor;
+				return ($rule->hasHost ? $url . $anchor : $this->getBaseUrl($absolute) . '/' . $url . $anchor);
 			}
 		}
 		return $this->buildUrl($route, $params, $absolute, $ampersand) . $anchor;

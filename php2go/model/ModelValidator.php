@@ -10,6 +10,7 @@ abstract class ModelValidator
 		'datetime' => array('ValidatorDataType', 'dataType'),
 		'decimal' => array('ValidatorDataType', 'dataType'),
 		'email' => 'ValidatorEmail',
+		'exists' => 'ValidatorExists',
 		'in' => 'ValidatorChoice',
 		'integer' => array('ValidatorDataType', 'dataType'),
 		'length' => 'ValidatorLength',

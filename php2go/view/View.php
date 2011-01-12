@@ -155,16 +155,17 @@ class View extends Component
 	}
 
 	public function url($url=null, array $params=array(), $absolute=false, $ampersand='&') {
+		$noQuery = preg_replace('/\?.*/', '', $url);
 		if (is_array($url)) {
 			$tmp = (isset($url[0]) ? array_shift($url) : '');
 			$params = $url;
 			$url = $tmp;
 		} elseif (strpos($url, '://') !== false || strpos($url, 'javascript:') === 0 || strpos($url, 'mailto:') === 0 || strpos($url, '#') === 0) {
 			return $url;
-		} elseif (is_file($this->app->getRootPath() . DS . ltrim($url, '/'))) {
-			return $this->app->getBaseUrl() . '/' . ltrim($url, '/');
+		} elseif (is_file($this->app->getRootPath() . DS . ltrim($noQuery, '/'))) {
+			return $this->app->getBaseUrl($absolute) . '/' . ltrim($noQuery, '/');
 		} elseif (@strpos($url, $this->app->getBaseUrl()) === 0) {
-			return $url;
+			return ($absolute ? $this->app->getRequest()->getHost() : '') . $url;
 		}
 		if ($absolute)
 			return $this->controller->createAbsoluteUrl($url, $params, $ampersand);
@@ -304,9 +305,9 @@ class View extends Component
 
 	private function getViewFile($viewName) {
 		$controllerPath = $this->controller->getViewPath();
-		$module = $this->controller->getModule();
-		$ownerPath = ($module ? $module->getViewPath() : $this->app->getViewPath());
-		return $this->resolveViewFile($viewName, $controllerPath, $ownerPath);
+		$basePath = $this->app->getViewPath();
+		$modulePath = ($this->controller->getModule() !== null ? $this->controller->getModule()->getViewPath() : null);
+		return $this->resolveViewFile($viewName, $controllerPath, $basePath, $modulePath);
 	}
 
 	private function getLayoutFile() {
@@ -332,17 +333,24 @@ class View extends Component
 		return $this->resolveViewFile($this->layout, $owner->getLayoutPath(), $owner->getViewPath());
 	}
 
-	private function resolveViewFile($viewName, $viewPath, $basePath) {
+	private function resolveViewFile($viewName, $viewPath, $basePath, $modulePath=null) {
 		if (!empty($viewName)) {
 			$extension = '.php';
-			if ($viewName[0] == '/')
-				$viewFile = $basePath . $viewName . $extension;
-			elseif (strpos($viewName, '.'))
+			if ($viewName[0] == '/') {
+				$viewFile = $basePath . DS . $viewName . $extension;
+				if (is_file($viewFile))
+					return $this->app->getTranslator()->translatePath($viewFile);
+				if ($modulePath && is_file($modulePath . DS . $viewName . $extension))
+					return $this->app->getTranslator()->translatePath($modulePath . DS . $viewName . $extension);
+			} elseif (strpos($viewName, '.')) {
 				$viewFile = Php2Go::getPathAlias($viewName) . $extension;
-			else
+				if (is_file($viewFile))
+					return $this->app->getTranslator()->translatePath($viewFile);
+			} else {
 				$viewFile = $viewPath . DS . $viewName . $extension;
-			if (is_file($viewFile))
-				return $this->app->getTranslator()->translatePath($viewFile);
+				if (is_file($viewFile))
+					return $this->app->getTranslator()->translatePath($viewFile);
+			}
 		}
 		return false;
 	}

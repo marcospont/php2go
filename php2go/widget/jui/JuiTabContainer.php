@@ -81,7 +81,7 @@ class JuiTabContainer extends JuiElement
 				$nav .= "\t" . '<li><a href="' . $pane->url . '" title="' . $pane->label . '"><span>' . $this->view->escape($pane->label) . '</span></a></li>' . PHP_EOL;
 			} else {
 				$nav .= "\t" . '<li><a href="#' . $pane->id  . '" title="' . $pane->label . '"><span>' . $this->view->escape($pane->label) . '</span></a></li>' . PHP_EOL;
-				$tabs .= '<div' . $pane->renderAttrs() . '>' . PHP_EOL  . $pane->content . PHP_EOL . '</div>' . PHP_EOL;
+				$tabs .= '<div' . $pane->renderAttrs() . '>' . PHP_EOL  . $pane->getContent() . PHP_EOL . '</div>' . PHP_EOL;
 			}
 		}
 		$nav .= '</ul>' . PHP_EOL;
