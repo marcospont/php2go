@@ -129,6 +129,7 @@ final class Php2Go
 		'ValidatorCpf' => '/validator/ValidatorCpf.php',
 		'ValidatorDataType' => '/validator/ValidatorDataType.php',
 		'ValidatorEmail' => '/validator/ValidatorEmail.php',
+		'ValidatorExists' => '/validator/ValidatorExists.php',
 		'ValidatorInline' => '/validator/ValidatorInline.php',
 		'ValidatorLength' => '/validator/ValidatorLength.php',
 		'ValidatorNoWhitespace' => '/validator/ValidatorNoWhitespace.php',

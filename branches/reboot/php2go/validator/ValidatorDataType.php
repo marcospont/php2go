@@ -2,7 +2,7 @@
 
 class ValidatorDataType extends Validator
 {
-	private static $dataTypes = array('integer', 'decimal', 'date', 'dateTime', 'time');
+	private static $dataTypes = array('integer', 'decimal', 'date', 'datetime', 'time');
 	protected $dataType;
 	protected $format;
 	protected $localized = false;

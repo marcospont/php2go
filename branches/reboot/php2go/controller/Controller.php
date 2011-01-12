@@ -26,7 +26,7 @@ class Controller extends Component
 	}
 
 	public function getUniqueId() {
-		return ($this->module ? $this->module->getId() . DS . $this->id : $this->id);
+		return ($this->module ? $this->module->getId() . '/' . $this->id : $this->id);
 	}
 
 	public function getTitle() {
@@ -202,7 +202,7 @@ class Controller extends Component
 			$route = $this->getRoute();
 			$params = array_merge($_GET, $params);
 		} elseif (strpos($route, '/') === false) {
-			$route = $this->id . '/' . $route;
+			$route = $this->getUniqueId() . '/' . $route;
 		} elseif ($route[0] !== '/' && $this->module) {
 			$route = $this->module->getId() . '/' . $route;
 		}

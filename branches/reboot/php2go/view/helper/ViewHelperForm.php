@@ -91,6 +91,7 @@ class ViewHelperForm extends ViewHelper
 	}
 
 	public function text($name, $value=null, array $attrs=array()) {
+		// mask attribute
 		if (($mask = Util::consumeArray($attrs, 'mask'))) {
 			$attrs['name'] = $name;
 			$this->defineId($attrs);

@@ -22,6 +22,7 @@ class RouterRule
 	private $defaults = array();
 	private $requirements = array();
 	private $partial = false;
+	public $hasHost = false;
 	private $suffix;
 
 	public function __construct(Router $router, $template, $route) {
@@ -75,6 +76,11 @@ class RouterRule
 			}
 		}
 		$url = strtr($this->template, $trans);
+		if ($this->hasHost) {
+			$host = Php2Go::app()->getRequest()->getHost();
+			if (strpos($url, $host) === 0)
+				$url = substr($url, strlen($host));
+		}
 		if (!empty($params)) {
 			if ($this->partial || $this->router->appendParams) {
 				$url .= '/' . Util::buildPathInfo($params, '/', '/');
@@ -98,9 +104,19 @@ class RouterRule
 				if ($part[0] == ':')
 					$this->routeRefs[substr($part, 1)] = $part;
 			}
+			// extract host info
+			$m = array();
+			if (preg_match('#^(https?://[^/]+/?)#', $this->template, $m)) {
+				$this->hasHost = true;
+				$host = rtrim($m[1], '/');
+				$template = str_replace($m[1], '', $this->template);
+
+			} else {
+				$template = $this->template;
+			}
 			// build regex
 			$regexParts = array();
-			$parts = explode('/', $this->template);
+			$parts = explode('/', $template);
 			foreach ($parts as $part) {
 				$q = null;
 				$m = array();
@@ -109,7 +125,7 @@ class RouterRule
 				if ($param && preg_match('/^:([^:]+)$/', $part, $m)) {
 					if (!isset($this->routeRefs[$m[1]]) && array_key_exists($m[1], $this->defaults))
 						$q = '?';
-					$regex = (isset($this->requirements[$m[1]]) ? $this->requirements[$m[1]] : (isset(self::$defaultRequirements[$m[1]]) ? self::$defaultRequirements[$m[1]] : '[^\/]+'));
+					$regex = (isset($this->requirements[$m[1]]) ? trim($this->requirements[$m[1]], '()') : (isset(self::$defaultRequirements[$m[1]]) ? self::$defaultRequirements[$m[1]] : '[^\/]+'));
 					$regexParts[] = '(?:/(?P<' . $m[1] . '>' . $regex . ')' . $q . ')' . $q;
 					if (isset($this->routeRefs[$m[1]]))
 						$routeRegexParts[$this->routeRefs[$m[1]]] = '(?P<' . $m[1]  . '>' . $regex . ')';
@@ -130,7 +146,7 @@ class RouterRule
 						$before = preg_quote($before, '#');
 						if (!isset($this->routeRefs[$name]) && array_key_exists($name, $this->defaults))
 							$q = '?';
-						$regex = (isset($this->requirements[$name]) ? $this->requirements[$name] : (isset(self::$defaultRequirements[$name]) ? self::$defaultRequirements[$name] : '[^\/]+'));
+						$regex = (isset($this->requirements[$name]) ? trim($this->requirements[$name], '()') : (isset(self::$defaultRequirements[$name]) ? self::$defaultRequirements[$name] : '[^\/]+'));
 						$regexParts[] = '(?:' . $before . '(?P<' . $name . '>' . $regex . ')' . $q . $after . ')' . $q;
 						if (isset($this->routeRefs[$name]))
 							$routeRegexParts[$this->routeRefs[$name]] = '(?P<' . $name . '>' . $regex . ')';
@@ -144,7 +160,7 @@ class RouterRule
 					$regexParts[] = '/' . $part;
 				}
 			}
-			$this->regex = implode('', $regexParts);
+			$this->regex = ($this->hasHost ? $host : '') . implode('', $regexParts);
 			// build route regex
 			if (!empty($this->routeRefs))
 				$this->routeRegex = '#^' . strtr($this->route, $routeRegexParts) . '$#';
@@ -153,6 +169,8 @@ class RouterRule
 
 	private function match($pathInfo) {
 		$matches = array();
+		if ($this->hasHost)
+			$pathInfo = Php2Go::app()->getRequest()->getHost() . $pathInfo;
 		if (preg_match('#^' . $this->regex . '$#', $pathInfo, $matches)) {
 			// collect route references
 			$routeTrans = array();
@@ -187,7 +205,8 @@ class RouterRule
 
 	private function parseSuffix(&$url) {
 		$matches = array();
-		if (preg_match('/\.[a-z]+$/', $url, $matches)) {
+		$tmp = preg_replace('#https?://[^/]+#', '', $url);
+		if (preg_match('/\.[a-z]+$/', $tmp, $matches)) {
 			$url = substr($url, 0, -strlen($matches[0]));
 			return $matches[0];
 		}
