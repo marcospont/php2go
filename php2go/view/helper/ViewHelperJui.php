@@ -35,6 +35,12 @@ class ViewHelperJui extends ViewHelper
 		return $this->button($label, $attrs);
 	}
 
+	public function popupButton($url, $label, array $options=array(), array $attrs=array()) {
+		$this->defineId($attrs, 'JuiButton');
+		$this->view->html()->event($attrs['id'], 'click', $this->view->popup($url, $options));
+		return $this->button($label, $attrs);
+	}
+
 	protected function setupButton(&$attrs, $type) {
 		$this->defineId($attrs, 'JuiButton');
 		$this->view->jQuery()->addCallById($attrs['id'], 'button', array(array(

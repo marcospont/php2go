@@ -48,6 +48,15 @@ return array(
 			'jquery'
 		)
 	),
+	'jquery-gmap' => array(
+		'assetPath' => $path . '/jquery',
+		'files' => array(
+			'jquery.gmap.js'
+		),
+		'dependencies' => array(
+			'jquery'
+		)
+	),
 	'jquery-jcrop' => array(
 		'assetPath' => $path . '/jquery/jquery-jcrop',
 		'publishAll' => true,
