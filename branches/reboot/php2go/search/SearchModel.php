@@ -200,7 +200,7 @@ abstract class SearchModel extends FormModel
 						}
 						if (!Util::isEmpty($end)) {
 							try {
-								$end = $this->formatValue($data['type'], $end);
+								$end = $this->formatValue($data['type'], $end, array('isEnd' => true));
 							} catch (Exception $e) {
 								$this->addError($name, Util::buildMessage($this->messages[$data['type']], array('attribute' => $this->getAttributeLabel($name . '[end]'))));
 								continue;
@@ -268,7 +268,7 @@ abstract class SearchModel extends FormModel
 		return implode(' and ', $filter);
 	}
 
-	protected function formatValue($type, $value) {
+	protected function formatValue($type, $value, array $options=array()) {
 		switch ($type) {
 			case 'integer' :
 				return LocaleNumber::getInteger($value);
@@ -278,7 +278,13 @@ abstract class SearchModel extends FormModel
 			case 'date' :
 				return date('Y-m-d', DateTimeParser::parseIso($value, $this->locale->getDateInputFormat()));
 			case 'datetime' :
-				return date('Y-m-d H:i:s', DateTimeParser::parseIso($value, $this->locale->getDateTimeInputFormat()));
+				try {
+					return date('Y-m-d H:i:s', DateTimeParser::parseIso($value, $this->locale->getDateTimeInputFormat()));
+				}
+				// if datetime format fails, try date format appending the time
+				catch (DateTimeParserException $e) {
+					return date('Y-m-d', DateTimeParser::parseIso($value, $this->locale->getDateInputFormat())) . (isset($options['isEnd']) ? ' 23:59:59' : ' 00:00:00');
+				}
 			case 'time' :
 				return date('H:i:s', DateTimeParser::parseIso($value, $this->locale->getTimeInputFormat()));
 			default :

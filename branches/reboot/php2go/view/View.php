@@ -304,50 +304,57 @@ class View extends Component
 	}
 
 	private function getViewFile($viewName) {
-		$controllerPath = $this->controller->getViewPath();
-		$basePath = $this->app->getViewPath();
-		$modulePath = ($this->controller->getModule() !== null ? $this->controller->getModule()->getViewPath() : null);
-		return $this->resolveViewFile($viewName, $controllerPath, $basePath, $modulePath);
+		$localPath = $this->controller->getViewPath();
+		$globalPath = $this->app->getViewPath();
+		$altPath = ($this->controller->getModule() !== null ? $this->controller->getModule()->getViewPath() : null);
+		return $this->resolveViewFile($viewName, $localPath, $globalPath, $altPath);
 	}
 
 	private function getLayoutFile() {
 		$owner = $this->app;
+		$module = $this->controller->getModule();
+		if ($module !== null) {
+			$localPath = $module->getLayoutPath();
+			$globalPath = $this->app->getLayoutPath();
+			$altPath = $this->app->getViewPath();
+		} else {
+			$localPath = $this->app->getLayoutPath();
+			$globalPath = $this->app->getViewPath();
+			$altPath = null;
+		}
 		if ($this->layout === null) {
 			// controller default layout
 			$this->layout = $this->controller->getDefaultLayout();
 			if ($this->layout === null) {
 				// module default layout
-				if (($module = $this->controller->getModule()) !== null)
+				if ($module !== null)
 					$this->layout = $module->getDefaultLayout();
-				if ($this->layout !== null) {
-					$owner = $module;
-				} else {
-					// app default layout
+				// app default layout
+				if ($this->layout === null)
 					$this->layout = $this->app->getDefaultLayout();
-				}
 			}
 		}
 		// disabled layout
 		if ($this->layout === false)
 			return false;
-		return $this->resolveViewFile($this->layout, $owner->getLayoutPath(), $owner->getViewPath());
+		return $this->resolveViewFile($this->layout, $localPath, $globalPath, $altPath);
 	}
 
-	private function resolveViewFile($viewName, $viewPath, $basePath, $modulePath=null) {
+	private function resolveViewFile($viewName, $localPath, $globalPath, $altPath=null) {
 		if (!empty($viewName)) {
 			$extension = '.php';
 			if ($viewName[0] == '/') {
-				$viewFile = $basePath . DS . $viewName . $extension;
+				$viewFile = $globalPath . DS . substr($viewName, 1) . $extension;
 				if (is_file($viewFile))
 					return $this->app->getTranslator()->translatePath($viewFile);
-				if ($modulePath && is_file($modulePath . DS . $viewName . $extension))
-					return $this->app->getTranslator()->translatePath($modulePath . DS . $viewName . $extension);
+				if ($altPath && is_file($altPath . DS . substr($viewName, 1) . $extension))
+					return $this->app->getTranslator()->translatePath($altPath . DS . substr($viewName, 1) . $extension);
 			} elseif (strpos($viewName, '.')) {
 				$viewFile = Php2Go::getPathAlias($viewName) . $extension;
 				if (is_file($viewFile))
 					return $this->app->getTranslator()->translatePath($viewFile);
 			} else {
-				$viewFile = $viewPath . DS . $viewName . $extension;
+				$viewFile = $localPath . DS . $viewName . $extension;
 				if (is_file($viewFile))
 					return $this->app->getTranslator()->translatePath($viewFile);
 			}

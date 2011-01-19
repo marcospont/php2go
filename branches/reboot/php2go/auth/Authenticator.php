@@ -154,6 +154,14 @@ class Authenticator extends Component
 		$this->logoutRoute = ltrim($route, '/');
 	}
 
+	public function getReturnUri() {
+		return Php2Go::app()->getSession()->get($this->returnUriSessionKey);
+	}
+
+	public function setReturnUri($uri) {
+		Php2Go::app()->getSession()->set($this->returnUriSessionKey, $uri);
+	}
+
 	public function authenticate() {
 		$credentials = $this->parseCredentials();
 		if ($credentials) {
@@ -178,6 +186,13 @@ class Authenticator extends Component
 				throw new AuthenticatorException(__(PHP2GO_LANG_DOMAIN, 'Invalid username or password.'));
 			}
 		}
+	}
+
+	public function login($username, array $properties) {
+		$this->user = $this->createUser($username, (is_array($properties) ? $properties : array()));
+		$this->user->loginTime = microtime(true);
+		$this->valid = true;
+		$this->raiseEvent('onAuthenticate');
 	}
 
 	public function logout() {
