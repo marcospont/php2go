@@ -10,7 +10,7 @@ class WebApplication extends Application
 	protected $defaultController = 'site';
 	protected $controllerClasses = array();
 	protected $controller;
-	protected $csrfValidation = false;
+	protected $csrfValidation = array();
 	private $rootUrl;
 	private $libraries = array();
 
@@ -18,7 +18,7 @@ class WebApplication extends Application
 		parent::__construct($options);
 		$this->libraries = array_merge(include(Php2Go::getPathAlias('php2go.library.libraries') . '.php'), $this->libraries);
 		$this->registerEvents(array('onBeforeControllerAction', 'onAfterControllerAction'));
-		if ($this->csrfValidation)
+		if (@$this->csrfValidation['enabled'])
 			$this->addEventListener('onBeginRequest', array('Csrf', 'validate'));
 		$this->addEventListener('onBeforeControllerAction', array($this, 'checkPageCache'));
 		$this->addEventListener('onException', array($this, 'cancelPageCache'));
@@ -142,7 +142,17 @@ class WebApplication extends Application
 	}
 
 	public function setCsrfValidation($validation) {
-		$this->csrfValidation = (bool)$validation;
+		if (is_bool($validation)) {
+			$this->csrfValidation = array(
+				'enabled' => $validation,
+				'exceptions' => array()
+			);
+		} elseif (Util::isMap($validation) && isset($validation['enabled'])) {
+			$this->csrfValidation = array(
+				'enabled' => !!$validation['enabled'],
+				'exceptions' => (is_array(@$validation['exceptions']) ? $validation['exceptions'] : array())
+			);
+		}
 	}
 
 	public function getAssetManager() {
