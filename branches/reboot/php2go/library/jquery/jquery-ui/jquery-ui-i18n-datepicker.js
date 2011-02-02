@@ -41,6 +41,26 @@ $.datepicker.regional['ar'] = {
 	showMonthAfterYear: false,
 	yearSuffix: ''
 };
+/* Algerian Arabic Translation for jQuery UI date picker plugin. (can be used for Tunisia)*/
+/* Mohamed Cherif BOUCHELAGHEM -- cherifbouchelaghem@yahoo.fr */
+$.datepicker.regional['ar-DZ'] = {
+  closeText: 'إغلاق',
+  prevText: '&#x3c;السابق',
+  nextText: 'التالي&#x3e;',
+  currentText: 'اليوم',
+  monthNames: ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+  'جويلية', 'أوت', 'سبتمبر','أكتوبر', 'نوفمبر', 'ديسمبر'],
+  monthNamesShort: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+  dayNames: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+  dayNamesShort: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+  dayNamesMin: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+  weekHeader: 'أسبوع',
+  dateFormat: 'dd/mm/yy',
+  firstDay: 6,
+  isRTL: true,
+  showMonthAfterYear: false,
+  yearSuffix: ''
+};
 /* Azerbaijani (UTF-8) initialisation for the jQuery UI date picker plugin. */
 /* Written by Jamil Najafov (necefov33@gmail.com). */
 $.datepicker.regional['az'] = {
@@ -231,6 +251,27 @@ $.datepicker.regional['el'] = {
 	showMonthAfterYear: false,
 	yearSuffix: ''
 };
+/* English/Australia initialisation for the jQuery UI date picker plugin. */
+/* Based on the en-GB initialisation. */
+$.datepicker.regional['en-AU'] = {
+  closeText: 'Done',
+  prevText: 'Prev',
+  nextText: 'Next',
+  currentText: 'Today',
+  monthNames: ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'],
+  monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  dayNamesMin: ['Su','Mo','Tu','We','Th','Fr','Sa'],
+  weekHeader: 'Wk',
+  dateFormat: 'dd/mm/yy',
+  firstDay: 1,
+  isRTL: false,
+  showMonthAfterYear: false,
+  yearSuffix: ''
+};	
 /* English/UK initialisation for the jQuery UI date picker plugin. */
 /* Written by Stuart. */
 $.datepicker.regional['en-GB'] = {
@@ -251,6 +292,27 @@ $.datepicker.regional['en-GB'] = {
 	isRTL: false,
 	showMonthAfterYear: false,
 	yearSuffix: ''
+};
+/* English/New Zealand initialisation for the jQuery UI date picker plugin. */
+/* Based on the en-GB initialisation. */
+$.datepicker.regional['en-NZ'] = {
+  closeText: 'Done',
+  prevText: 'Prev',
+  nextText: 'Next',
+  currentText: 'Today',
+  monthNames: ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'],
+  monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  dayNamesMin: ['Su','Mo','Tu','We','Th','Fr','Sa'],
+  weekHeader: 'Wk',
+  dateFormat: 'dd/mm/yy',
+  firstDay: 1,
+  isRTL: false,
+  showMonthAfterYear: false,
+  yearSuffix: ''
 };
 /* Esperanto initialisation for the jQuery UI date picker plugin. */
 /* Written by Olivier M. (olivierweb@ifrance.com). */
@@ -711,6 +773,27 @@ $.datepicker.regional['lv'] = {
 	isRTL: false,
 	showMonthAfterYear: false,
 	yearSuffix: ''
+};
+/* Malayalam (UTF-8) initialisation for the jQuery UI date picker plugin. */
+/* Written by Saji Nediyanchath (saji89@gmail.com). */
+$.datepicker.regional['ml'] = {
+  closeText: 'ശരി',
+  prevText: 'മുന്നത്തെ',  
+  nextText: 'അടുത്തത് ',
+  currentText: 'ഇന്ന്',
+  monthNames: ['ജനുവരി','ഫെബ്രുവരി','മാര്‍ച്ച്','ഏപ്രില്‍','മേയ്','ജൂണ്‍',
+  'ജൂലൈ','ആഗസ്റ്റ്','സെപ്റ്റംബര്‍','ഒക്ടോബര്‍','നവംബര്‍','ഡിസംബര്‍'],
+  monthNamesShort: ['ജനു', 'ഫെബ്', 'മാര്‍', 'ഏപ്രി', 'മേയ്', 'ജൂണ്‍',
+  'ജൂലാ', 'ആഗ', 'സെപ്', 'ഒക്ടോ', 'നവം', 'ഡിസ'],
+  dayNames: ['ഞായര്‍', 'തിങ്കള്‍', 'ചൊവ്വ', 'ബുധന്‍', 'വ്യാഴം', 'വെള്ളി', 'ശനി'],
+  dayNamesShort: ['ഞായ', 'തിങ്ക', 'ചൊവ്വ', 'ബുധ', 'വ്യാഴം', 'വെള്ളി', 'ശനി'],
+  dayNamesMin: ['ഞാ','തി','ചൊ','ബു','വ്യാ','വെ','ശ'],
+  weekHeader: 'ആ',
+  dateFormat: 'dd/mm/yy',
+  firstDay: 1,
+  isRTL: false,
+  showMonthAfterYear: false,
+  yearSuffix: ''
 };
 /* Malaysian initialisation for the jQuery UI date picker plugin. */
 /* Written by Mohd Nawawi Mohamad Jamili (nawawi@ronggeng.net). */
