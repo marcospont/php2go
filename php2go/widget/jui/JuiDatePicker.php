@@ -4,12 +4,12 @@ class JuiDatePicker extends JuiInput
 {
 	private static $localeSet = false;
 	private static $locales = array(
-		'af', 'ar', 'az', 'bg', 'bs', 'ca', 'cs', 'da', 'de_CH',
-		'de', 'el', 'en_GB', 'eo', 'es', 'et', 'eu', 'fa',
-		'fi', 'fo', 'fr_CH', 'fr', 'gl', 'he', 'hr', 'hu',
-		'hy', 'id', 'is', 'it', 'ja', 'kk', 'ko', 'lt', 'lv',
-		'ms', 'nl_BE', 'nl', 'no', 'pl', 'pt_BR', 'pt', 'ro',
-		'ru', 'sk', 'sl', 'sq', 'sr_SR', 'sr', 'sv', 'ta',
+		'af', 'ar', 'ar_DZ', 'az', 'bg', 'bs', 'ca', 'cs', 'da',
+		'de_CH', 'de', 'el', 'en_AU', 'en_GB', 'en_NZ', 'eo', 'es',
+		'et', 'eu', 'fa', 'fi', 'fo', 'fr_CH', 'fr', 'gl', 'he',
+		'hr', 'hu', 'hy', 'id', 'is', 'it', 'ja', 'kk', 'ko', 'lt',
+		'lv', 'ml', 'ms', 'nl_BE', 'nl', 'no', 'pl', 'pt_BR', 'pt',
+		'ro', 'ru', 'sk', 'sl', 'sq', 'sr_SR', 'sr', 'sv', 'ta',
 		'th', 'tr', 'uk', 'vi', 'zh_CN', 'zh_HK', 'zh_TW'
 	);
 
