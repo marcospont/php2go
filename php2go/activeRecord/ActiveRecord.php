@@ -279,12 +279,8 @@ abstract class ActiveRecord extends Model
 		}
 		if (!($relation = @$this->relations[$name]))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'The class "%s" does not have relation "%s"', array(get_class($this), $name)));
-		if ($this->isNew()) {
-			if ($relation->isCollection())
-				return ($this->collections[$name] = new ActiveRecordRelationCollection(array(), $this, $relation));
-			else
-				return ($this->associations[$name] = null);
-		}
+		if ($this->isNew() && $relation->isCollection())
+			return ($this->collections[$name] = new ActiveRecordRelationCollection(array(), $this, $relation));
 		$data = $relation->find($this, $criteria, $bind);
 		if ($relation->isCollection()) {
 			if ($criteria === null) {
