@@ -20,7 +20,7 @@ class ActiveRecordRelationBelongsTo extends ActiveRecordRelation
 		if (!isset(self::$cache[$key])) {
 			$joinKey = (isset($this->options['joinKey']) ? $this->options['joinKey'] : $model->getMetaData()->primaryKey);
 			$joinCondition = (isset($this->options['joinCondition']) ? ' and ' . $this->options['joinCondition'] : '');
-			self::$cache[$key] = DAO::instance()->find($model->getTableName(), sprintf('%s = ?', $joinKey) . $joinCondition, array($base->{$this->options['foreignKey']}));
+			self::$cache[$key] = DAO::instance()->find(($this->name != $model->getTableName() ? "{$model->getTableName()} as {$this->name}" : $this->name), sprintf('%s = ?', $joinKey) . $joinCondition, array($base->{$this->options['foreignKey']}));
 		}
 		return self::$cache[$key];
 	}
