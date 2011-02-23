@@ -131,7 +131,7 @@ class UploadFile extends Component
 			$dir = realpath(dirname($path));
 			$file = basename($path);
 			if (!is_dir($dir) || !is_writable($dir))
-				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, '"%s" is not a writeable directory.', array($dir)));
+				throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, '"%s" is not a writeable directory.', array($path)));
 			if (!@move_uploaded_file($this->tempPath, $path))
 				throw new UploadFileException(__(PHP2GO_LANG_DOMAIN, 'File "%s" could not be saved.', array($this->name)));
 			chmod($path, $mode);
