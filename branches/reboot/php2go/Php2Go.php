@@ -242,8 +242,12 @@ final class Php2Go
 				exit(1);
 			}
 		}
-		trigger_error(__(PHP2GO_LANG_DOMAIN, 'The class or interface "%s" was not found.', array($class)), E_USER_ERROR);
-		exit(1);
+		// only trigger error if this is the last autoloader running
+		$funcs = spl_autoload_functions();
+		if ($funcs[sizeof($funcs)-1] == array('Php2Go', 'autoload')) {
+			trigger_error(__(PHP2GO_LANG_DOMAIN, 'The class or interface "%s" was not found.', array($class)), E_USER_ERROR);
+			exit(1);
+		}
 	}
 
 	protected static function loadClass($class) {
