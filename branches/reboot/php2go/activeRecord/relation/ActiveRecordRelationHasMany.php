@@ -13,7 +13,7 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 			$criteria = array();
 		$criteria = $this->buildCriteria($criteria);
 		$bind[] = $base->getPrimaryKey();
-		foreach (array('condition', 'order', 'limit', 'offset') as $item) {
+		foreach (array('join', 'condition', 'order', 'limit', 'offset') as $item) {
 			if (isset($this->options[$item])) {
 				if (isset($criteria[$item]))
 					$criteria[$item] = array_merge($criteria[$item], (array)$this->options[$item]);
