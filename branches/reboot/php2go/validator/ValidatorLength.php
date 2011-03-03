@@ -5,6 +5,7 @@ class ValidatorLength extends Validator
 	protected $length;
 	protected $min;
 	protected $max;
+	protected $filter;
 	protected $encoding = false;
 
 	public function __construct() {
@@ -34,6 +35,8 @@ class ValidatorLength extends Validator
 	}
 
 	public function validate($value) {
+		if (is_callable($this->filter))
+			$value = call_user_func($this->filter, $value);
 		if ($this->encoding !== false && function_exists('mb_strlen'))
 			$length = mb_strlen($value);
 		else
@@ -55,6 +58,8 @@ class ValidatorLength extends Validator
 
 	protected function validateModelAttribute(Model $model, $attr) {
 		$value = (string)$model->{$attr};
+		if (is_callable($this->filter))
+			$value = call_user_func($this->filter, $value);
 		if ($this->allowEmpty && Util::isEmpty($value))
 			return;
 		if ($this->encoding !== false && function_exists('mb_strlen'))
@@ -64,7 +69,7 @@ class ValidatorLength extends Validator
 		if ($this->min !== null && $length < $this->min)
 			$this->addModelError($model, $attr, $this->resolveModelMessage('tooShort'), array('min' => $this->min));
 		elseif ($this->max !== null && $length > $this->max)
-			$this->addModelError($model, $attr, $this->resolveModelMessage('tooLong'), array('max' => $this->max));
+			$this->addModelError($model, $attr, $this->resolveModelMessage('tooLong'), array('max' => $length));
 		elseif ($this->length !== null && $length !== $this->length)
 			$this->addModelError($model, $attr, $this->resolveModelMessage('wrongLength'), array('length' => $this->length));
 	}
