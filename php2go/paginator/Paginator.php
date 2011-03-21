@@ -205,7 +205,7 @@ class Paginator extends Component implements Countable, IteratorAggregate
 		$pages->lastPageInRange = max($pages->pageRange);
 		$pages->itemCount = $this->getItemCount();
 		$pages->totalItemCount = $this->getTotalItemCount();
-		$pages->firstItemNumber = (($pageNumber - 1) * $pages->itemCount) + 1;
+		$pages->firstItemNumber = (($pageNumber - 1) * $pages->pageSize) + 1;
 		$pages->lastItemNumber = ($pages->firstItemNumber + $pages->itemCount - 1);
 		return $pages;
 	}
