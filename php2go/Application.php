@@ -172,7 +172,7 @@ abstract class Application extends Module
 		} else {
 			throw new Exception(__(PHP2GO_LANG_DOMAIN, 'The "%s" component is not registered.', array($id)));
 		}
-		$config['options'] = Util::consumeArray($this->componentOptions, $id, array());
+		$config['options'] = (isset($this->componentOptions[$id]) ? $this->componentOptions[$id] : array());
 		return Php2Go::newInstance($config);
 	}
 
