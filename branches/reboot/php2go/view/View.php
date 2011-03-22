@@ -82,7 +82,6 @@ class View extends Component
 	}
 
 	public function setHelperPaths(array $paths) {
-
 		foreach ($paths as $prefix => $alias)
 			if (is_int($prefix))
 				$this->addHelperPath($alias);
