@@ -5,12 +5,14 @@ class Response extends Component
 	protected $status = 200;
 	protected $headers = array();
 	protected $rawHeaders = array();
+	protected $compression = false;
 	protected $body = '';
 	public $isRedirect = false;
 	public $isError = false;
 	public $isException = false;
 
 	public function __construct() {
+		$this->compression = (@strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false);
 		$this->setContentType('text/html; charset=' . Php2Go::app()->getCharset());
 	}
 
@@ -75,6 +77,14 @@ class Response extends Component
 	public function clearRawHeaders() {
 		$this->rawHeaders = array();
 		return $this;
+	}
+
+	public function getCompression() {
+		return $this->compression;
+	}
+
+	public function setCompression($compression) {
+		$this->compression = !!$compression;
 	}
 
 	public function addCookie(Cookie $cookie) {
@@ -177,10 +187,25 @@ class Response extends Component
 	}
 
 	public function sendBody() {
-		echo $this->body;
+		if ($this->compression) {
+			$body = preg_replace(
+	            array(
+	                '/(\x20{2,})/',   // extra-white spaces
+	                '/\t/',           // tab
+	                '/\n\r/'          // blank lines
+	            ),
+	            array(' ', '', ''),
+	            $this->body
+	        );
+			echo gzencode($this->body, 9);
+		} else {
+			echo $this->body;
+		}
 	}
 
 	public function sendResponse() {
+		if ($this->compression)
+			$this->addHeader('Content-Encoding', 'gzip');
 		$this->sendHeaders();
 		if (!$this->isRedirect)
 			$this->sendBody();
