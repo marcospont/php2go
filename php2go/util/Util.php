@@ -40,6 +40,27 @@ final class Util
 		}
 	}
 
+	public static function setArrayPath(array &$array, $path, $value, $separator='.') {
+		$parts = explode($separator, $path);
+		if (sizeof($parts) == 1) {
+			$array[$path] = $value;
+		} else {
+			$i = 0;
+			$base =& $array;
+			$size = sizeof($parts);
+			while ($i < $size) {
+				if ($i < ($size - 1)) {
+					if (!array_key_exists($parts[$i], $base) || !is_array($base[$parts[$i]]))
+						$base[$parts[$i]] = array();
+					$base =& $base[$parts[$i]];
+				} else {
+					$base[$parts[$i]] = $value;
+				}
+				$i++;
+			}
+		}
+	}
+
 	public static function mergeArray($a, $b) {
 		foreach($b as $k => $v) {
 			if (is_integer($k))

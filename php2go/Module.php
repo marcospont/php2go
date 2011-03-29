@@ -7,7 +7,7 @@ abstract class Module extends Component
 	protected $componentClasses = array();
 	protected $componentOptions = array();
 	protected $components = array();
-	protected $options = array();
+	public $options = array();
 
 	public function __construct($id, array $options=array()) {
 		$this->id = $id;
@@ -23,8 +23,8 @@ abstract class Module extends Component
 		return Util::findArrayPath($this->options, $path, '.', $default);
 	}
 
-	public function setOption($name, $value) {
-		$this->options[$name] = $value;
+	public function setOption($path, $value) {
+		Util::setArrayPath($this->options, $path, $value, '.');
 	}
 
 	public function getId() {
