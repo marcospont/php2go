@@ -12,7 +12,7 @@ class Response extends Component
 	public $isException = false;
 
 	public function __construct() {
-		$this->compression = (@strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false);
+		$this->compression = (@strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false/* && !Php2Go::app()->getRequest()->isAjax()*/);
 		$this->setContentType('text/html; charset=' . Php2Go::app()->getCharset());
 	}
 
@@ -30,7 +30,7 @@ class Response extends Component
 		$value = (string)$value;
 		if ($replace) {
 			foreach ($this->headers as $key => $header) {
-				if ($header['name'] == $key)
+				if ($header['name'] == $name)
 					unset($this->headers[$key]);
 			}
 		}
@@ -205,7 +205,7 @@ class Response extends Component
 
 	public function sendResponse() {
 		if ($this->compression)
-			$this->addHeader('Content-Encoding', 'gzip');
+			$this->addHeader('Content-Encoding', 'gzip', true);
 		$this->sendHeaders();
 		if (!$this->isRedirect)
 			$this->sendBody();
