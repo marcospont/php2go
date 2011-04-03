@@ -4,11 +4,16 @@ abstract class Model extends Component implements ArrayAccess, IteratorAggregate
 {
 	private $namePrefix;
 	protected $scenario;
-	protected $validators;
+	protected $validators = null;
 	protected $errors = array();
 
 	public function __construct() {
 		$this->registerEvents(array('onImport', 'onBeforeValidate', 'onAfterValidate'));
+	}
+
+	public function __destruct() {
+		$this->validators = null;
+		parent::__destruct();
 	}
 
 	public function init() {

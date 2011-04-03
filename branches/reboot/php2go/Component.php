@@ -6,6 +6,12 @@ class Component
 	private $listeners = array();
 	private $behaviors = array();
 
+	public function __destruct() {
+		$this->events = array();
+		$this->listeners = array();
+		$this->behaviors = array();
+	}
+
 	public function __get($name) {
 		$getter = 'get' . $name;
 		if (method_exists($this, $getter))
