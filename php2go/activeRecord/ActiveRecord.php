@@ -51,6 +51,19 @@ abstract class ActiveRecord extends Model
 		}
 	}
 
+	public function __destruct() {
+		$this->formatter = null;
+		foreach ($this->associations as $id => $obj) {
+			if ($obj instanceof ActiveRecord)
+				$obj->__destruct();
+		}
+		foreach ($this->collections as $id => $collection) {
+			foreach ($collection as $obj)
+				$obj->__destruct();
+		}
+		parent::__destruct();
+	}
+
 	public function init() {
 		parent::init();
 		if ($this->getScenario() == 'insert') {
