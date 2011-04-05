@@ -74,7 +74,8 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 	}
 
 	protected function buildCriteria(array $criteria) {
-		$condition = sprintf('%s = ?', $this->options['foreignKey']);
+		$model = ActiveRecord::model($this->options['class']);
+		$condition = sprintf('%s.%s = ?', $model->getTableName(), $this->options['foreignKey']);
 		if (!isset($criteria['condition'])) {
 			$criteria['condition'] = array($condition);
 		} else {
