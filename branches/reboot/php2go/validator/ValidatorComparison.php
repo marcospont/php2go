@@ -57,6 +57,8 @@ class ValidatorComparison extends Validator
 			$peer = $peerLabel = $this->peer;
 			$peerLocalized = $this->localized;
 		}
+		if ($this->allowEmpty && Util::isEmpty($peer))
+			return;
 		$localized = ($this->localized || ($model instanceof ActiveRecord && $model->getAttributeFormat($attr) == $this->dataType));
 		if (!$this->compare($value, $peer, $localized, $peerLocalized))
 			$this->addModelError($model, $attr, $this->resolveModelMessage($this->operator), array('peer' => $peerLabel));
