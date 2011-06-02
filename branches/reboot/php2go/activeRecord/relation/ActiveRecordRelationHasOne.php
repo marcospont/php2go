@@ -18,7 +18,7 @@ class ActiveRecordRelationHasOne extends ActiveRecordRelationBelongsTo
 				$this->options['mustDelete'] = false;
 			}
 			if ($model->isNew())
-				$model->{$this->options['foreignKey']} = $base->getPrimaryKey();
+				$model->{$model->getMetaData()->primaryKey} = $base->getPrimaryKey();
 			if (!$model->save())
 				return false;
 		}

@@ -249,7 +249,7 @@ abstract class SearchModel extends FormModel
 						continue;
 					// build filter
 					if (isset($data['callback'])) {
-						$result = call_user_func($data['callback'], $value);
+						$result = call_user_func($data['callback'], $value, (isset($operator) ? $operator : null));
 						if (!Util::isEmpty($result))
 							$filter[] = $result;
 					} else {
