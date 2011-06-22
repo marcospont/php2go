@@ -37,10 +37,10 @@ class ViewHelperGoogleAnalytics extends ViewHelper
 						foreach ($value as $item) {
 							if (is_array($item)) {
 								foreach ($item as &$entry)
-									$entry = Json::encode(utf8_encode($entry));
+									$entry = Json::encode((is_string($entry) ? utf8_encode($entry) : $entry));
 								$buf[] = '_gaq.push(["' . $inst . '_' . $method . '", ' . join(',', $item) . ']);';
 							} else {
-								$buf[] = '_gaq.push(["' . $inst . '_' . $method . '", ' . Json::encode(utf8_encode($item)) . ']);';
+								$buf[] = '_gaq.push(["' . $inst . '_' . $method . '", ' . Json::encode((is_string($item) ? utf8_encode($item) : $item)) . ']);';
 							}
 						}
 					} else {
