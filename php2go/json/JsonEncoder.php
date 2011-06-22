@@ -5,16 +5,16 @@ class JsonEncoder
 	private $options = array();
 	private $visited = array();
 	public static $classNameProp = '__className';
-	
+
 	protected function __construct(array $options=array()) {
-		$this->options = $options;	
+		$this->options = $options;
 	}
-	
+
 	public static function encode($value, array $options=array()) {
 		$encoder = new self($options);
 		return $encoder->encodeValue($value);
 	}
-	
+
 	protected function encodeValue($value) {
 		if (is_object($value))
 			return $this->encodeObject($value);
@@ -22,7 +22,7 @@ class JsonEncoder
 			return $this->encodeArray($value);
 		return $this->encodeData($value);
 	}
-	
+
 	protected function encodeObject(&$object) {
 		if (!!$this->options['recursionCheck']) {
 			if ($this->wasVisited($object)) {
@@ -43,17 +43,17 @@ class JsonEncoder
 		}
 		return '{"' . self::$classNameProp . '":"' . get_class($object) . '"' . $props . '}';
 	}
-	
+
 	protected function wasVisited(&$object) {
 		return (in_array($object, $this->visited, true));
-	}	
-	
+	}
+
 	protected function encodeArray(&$array) {
 		$props = array();
 		if (!empty($array) && Util::isMap($array)) {
 			foreach ($array as $key => $value) {
 				$key = (string)$key;
-				$props[] = $this->encodeString($key) . ':' . $this->encodeValue($value);				
+				$props[] = $this->encodeString($key) . ':' . $this->encodeValue($value);
 			}
 			return '{' . implode(',', $props) . '}';
 		} else {
@@ -62,7 +62,7 @@ class JsonEncoder
 			return '[' . implode(',', $props) . ']';
 		}
 	}
-	
+
 	protected function encodeData(&$value) {
 		if (is_int($value) || is_float($value)) {
 			$value = (string)$value;
@@ -74,16 +74,16 @@ class JsonEncoder
 		}
 		return 'null';
 	}
-	
+
 	protected function encodeString(&$string) {
         $search = array('\\', "\n", "\t", "\r", "\b", "\f", '"', '/');
         $replace = array('\\\\', '\\n', '\\t', '\\r', '\\b', '\\f', '\"', '\\/');
         $string = str_replace($search, $replace, $string);
         $string = str_replace(array(chr(0x08), chr(0x0C)), array('\b', '\f'), $string);
         $string = self::encodeUnicodeString($string);
-        return '"' . $string . '"';		
+        return '"' . $string . '"';
 	}
-	
+
 	public static function encodeUnicodeString($string) {
         $strlen_var = strlen($string);
         $ascii = '';
@@ -99,7 +99,7 @@ class JsonEncoder
                     // see http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
                     $char = pack('C*', $ord_var_c, ord($string[$i + 1]));
                     $i += 1;
-                    $utf16 = self::_utf82utf16($char);
+                    $utf16 = self::utf82utf16($char);
                     $ascii .= sprintf('\u%04s', bin2hex($utf16));
                     break;
                 case (($ord_var_c & 0xF0) == 0xE0) :
@@ -150,9 +150,9 @@ class JsonEncoder
                     break;
             }
         }
-        return $ascii;		
+        return $ascii;
 	}
-	
+
 	protected static function utf82utf16($utf8) {
         if (function_exists('mb_convert_encoding'))
             return mb_convert_encoding($utf8, 'UTF-16', 'UTF-8');
@@ -170,6 +170,6 @@ class JsonEncoder
                 // see: http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
                 return chr((0xF0 & (ord($utf8{0}) << 4)) | (0x0F & (ord($utf8{1}) >> 2))) . chr((0xC0 & (ord($utf8{1}) << 6)) | (0x7F & ord($utf8{2})));
         }
-        return '';		
+        return '';
 	}
 }

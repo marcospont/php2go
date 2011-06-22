@@ -36,10 +36,11 @@ class ViewHelperGoogleAnalytics extends ViewHelper
 							$value = array($value);
 						foreach ($value as $item) {
 							if (is_array($item)) {
-								array_walk($item, array('JsonEncoder', 'encode'));
+								foreach ($item as &$entry)
+									$entry = Json::encode(utf8_encode($entry));
 								$buf[] = '_gaq.push(["' . $inst . '_' . $method . '", ' . join(',', $item) . ']);';
 							} else {
-								$buf[] = '_gaq.push(["' . $inst . '_' . $method . '", ' . JsonEncoder::encode($item) . ']);';
+								$buf[] = '_gaq.push(["' . $inst . '_' . $method . '", ' . Json::encode(utf8_encode($item)) . ']);';
 							}
 						}
 					} else {
