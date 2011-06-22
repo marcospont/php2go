@@ -154,15 +154,14 @@ class View extends Component
 	}
 
 	public function url($url=null, array $params=array(), $absolute=false, $ampersand='&') {
-		$noQuery = preg_replace('/\?.*/', '', $url);
 		if (is_array($url)) {
 			$tmp = (isset($url[0]) ? array_shift($url) : '');
 			$params = $url;
 			$url = $tmp;
 		} elseif (strpos($url, '://') !== false || strpos($url, 'javascript:') === 0 || strpos($url, 'mailto:') === 0 || strpos($url, '#') === 0) {
 			return $url;
-		} elseif (is_file($this->app->getRootPath() . DS . ltrim($noQuery, '/'))) {
-			return $this->app->getBaseUrl($absolute) . '/' . ltrim($noQuery, '/');
+		} elseif (is_file($this->app->getRootPath() . DS . ltrim(preg_replace('/\?.*/', '', $url), '/'))) {
+			return $this->app->getBaseUrl($absolute) . '/' . ltrim($url, '/');
 		} elseif (@strpos($url, $this->app->getBaseUrl()) === 0) {
 			return ($absolute ? $this->app->getRequest()->getHost() : '') . $url;
 		}
