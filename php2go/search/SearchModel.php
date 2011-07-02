@@ -181,6 +181,9 @@ abstract class SearchModel extends FormModel
 		$filter = array();
 		$locale = Php2Go::app()->getLocale();
 		foreach ($this->filters as $name => $data) {
+			// skip non-query filters
+			if (isset($data['query']) && $data['query'] == false)
+				continue;
 			if (isset($data['value'])) {
 				$column = $data['column'];
 				if ($data['interval']) {
