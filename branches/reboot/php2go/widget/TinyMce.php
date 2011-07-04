@@ -8,13 +8,14 @@ class TinyMce extends WidgetInput
 	private static $locales = array(
 	    'ar', 'az', 'be', 'bg', 'bn', 'br', 'bs', 'ca',
 	    'ch', 'cs', 'cy', 'da', 'de', 'dv', 'el', 'en',
-	    'es', 'et', 'eu', 'fa', 'fi', 'fr', 'fr_LU', 'gl',
-	    'gu', 'he', 'hi', 'hr', 'hu', 'hy', 'ia', 'id',
-	    'ii', 'is', 'it', 'ja', 'ka', 'kl', 'ko', 'lt',
-	    'lv', 'mk', 'ml', 'mn', 'ms', 'nb', 'nl', 'nn',
-	    'no', 'pl', 'ps', 'pt', 'ro', 'ru', 'se', 'si',
-	    'sk', 'sl', 'sq', 'sr', 'sv', 'ta', 'te', 'th',
-	    'tr', 'tt', 'uk', 'ur', 'vi', 'zh', 'zu'
+	    'eo', 'es', 'et', 'eu', 'fa', 'fi', 'fr', 'fr_LU',
+	    'gl', 'gu', 'he', 'hi', 'hr', 'hu', 'hy', 'ia',
+	    'id', 'ii', 'is', 'it', 'ja', 'ka', 'kl', 'km',
+	    'ko', 'lt', 'lv', 'mk', 'ml', 'mn', 'ms', 'my',
+	    'nb', 'nl', 'nn', 'no', 'pl', 'ps', 'pt', 'ro',
+	    'ru', 'se', 'si', 'sk', 'sl', 'sq', 'sr', 'sv',
+	    'ta', 'te', 'th', 'tn', 'tr', 'tt', 'uk', 'ur',
+	    'vi', 'zh', 'zh_CN', 'zh_TW', 'zu'
 	);
 	private static $localeAliases = array(
 		'fr_LU' => 'lb'
@@ -178,14 +179,20 @@ class TinyMce extends WidgetInput
 
 	protected function getLocale() {
 		if ($this->locale === null) {
-			$locale = substr(Php2Go::app()->getLocale(), 0, 2);
-	 		if (in_array($locale, self::$locales)) {
-	 			if (isset(self::$localeAliases[$locale]))
-	 				$this->locale = self::$localeAliases[$locale];
+			$locale = Php2Go::app()->getLocale();
+			$language = substr($locale, 0, 2);
+	 		if (in_array($language, self::$locales)) {
+	 			if (isset(self::$localeAliases[$language]))
+	 				$this->locale = self::$localeAliases[$language];
 	 			else
-	 				$this->locale = $locale;
+ 					$this->locale = $language;
+	 		} elseif (in_array($locale, self::$locales)) {
+				if (isset($locale, self::$localeAliases))
+					$this->locale = self::$localeAliases[$locale];
+				else
+					$this->locale = strtolower(str_replace('_', '-', $locale));
 	 		} else {
-	 			$this->locale = 'en';
+ 				$this->locale = 'en';
 	 		}
 		}
 		return $this->locale;
