@@ -126,7 +126,7 @@ class TinyMce extends WidgetInput
 					$this->plugins, array(
 						'advhr', 'advimage', 'advlink', 'contextmenu', 'directionality', 'emotions', 'fullscreen',
 						'inlinepopups', 'insertdatetime', 'layer', 'media', 'nonbreaking', 'noneditable',
-						'paste', 'preview', 'print', 'safari', 'save', 'searchreplace', 'spellchecker', 'style',
+						'paste', 'preview', 'print', 'save', 'searchreplace', 'spellchecker', 'style',
 						'tabfocus', 'template', 'visualchars'
 					)
 				));
@@ -147,7 +147,7 @@ class TinyMce extends WidgetInput
 					$this->plugins, array(
 						'advhr', 'advimage', 'advlink', 'contextmenu', 'directionality', 'emotions', 'fullscreen',
 						'inlinepopups', 'insertdatetime', 'layer', 'media', 'nonbreaking', 'noneditable',
-						'paste', 'preview', 'print', 'safari', 'save', 'searchreplace', 'spellchecker', 'style',
+						'paste', 'preview', 'print', 'save', 'searchreplace', 'spellchecker', 'style',
 						'tabfocus', 'table', 'template', 'visualchars', 'xhtmlxtras'
 					)
 				));
