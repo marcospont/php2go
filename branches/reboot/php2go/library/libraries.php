@@ -51,7 +51,7 @@ return array(
 	'jquery-gmap' => array(
 		'assetPath' => $path . '/jquery',
 		'files' => array(
-			'jquery.gmap.js'
+			'jquery.gmap.min.js'
 		),
 		'dependencies' => array(
 			'jquery'
