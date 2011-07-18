@@ -12,7 +12,7 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 		elseif (!is_array($criteria))
 			$criteria = array();
 		$criteria = $this->buildCriteria($criteria);
-		$bind[] = $base->getPrimaryKey();
+		$bind[] = $base->getSavedPrimaryKey();
 		foreach (array('join', 'condition', 'order', 'limit', 'offset') as $item) {
 			if (isset($this->options[$item])) {
 				if (isset($criteria[$item]))
@@ -30,13 +30,13 @@ class ActiveRecordRelationHasMany extends ActiveRecordRelation
 		if ($models instanceof ActiveRecordRelationCollection) {
 			$dao = DAO::instance();
 			$model = ActiveRecord::model($this->options['class']);
-			$currKeys = $dao->findPairs($model->getTableName(), $model->getMetaData()->primaryKey, sprintf('%s = ?', $this->options['foreignKey']), array($base->getPrimaryKey()));
+			$currKeys = $dao->findPairs($model->getTableName(), $model->getMetaData()->primaryKey, sprintf('%s = ?', $this->options['foreignKey']), array($base->getSavedPrimaryKey()));
 			if (count($models) > 0) {
 				foreach ($models as $instance) {
 					if ($instance->isNew())
 						$instance->{$this->options['foreignKey']} = $base->getPrimaryKey();
 					if (!$instance->isNew()) {
-						$pk = $instance->getPrimaryKey();
+						$pk = $instance->getSavedPrimaryKey();
 						if (is_array($pk))
 							$pk = implode('-', $pk);
 						if (isset($currKeys[$pk]))
