@@ -742,9 +742,13 @@ abstract class ActiveRecord extends Model
   	}
 
   	public function refresh() {
-  		if (!$this->new && ($model = $this->findByPK($this->getPrimaryKey())) !== null) {
-  			$this->loadAttributes($model->getAttributes());
-  			return true;
+  		if (!$this->new) {
+  			$pk = ($this->pk !== null ? $this->pk : $this->getPrimaryKey());
+  			$model = $this->findByPK($pk);
+  			if ($model !== null) {
+  				$this->loadAttributes($model->getAttributes());
+  				return true;
+  			}
   		}
   		return false;
   	}
@@ -830,7 +834,7 @@ abstract class ActiveRecord extends Model
 		$pkCriteria = array();
 		$pk = $this->getMetaData()->primaryKey;
 		if ($value === null)
-			$value = $this->getPrimaryKey();
+			$value = $this->pk;
 		if (is_string($pk)) {
 			$pkCriteria['condition'] = "{$this->tableName}.{$pk} = ?";
 			$pkCriteria['bind'] = array($value);
