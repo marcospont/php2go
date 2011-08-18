@@ -65,10 +65,21 @@ class ViewHelperHead extends ViewHelper
 	public function addMeta($name, $value, $type='name', array $attrs=array()) {
 		if (!in_array($type, array('name', 'http-equiv')))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid meta type: "%s".', array($type)));
-		$attrs['type'] = $type;
-		$attrs['name'] = $name;
-		$attrs['value'] = $value;
-		$this->meta[] = $attrs;
+		foreach ($this->meta as &$meta) {
+			if ($meta['type'] == $type && $meta['name'] == $name) {
+				$meta = array_merge($attrs, array(
+					'type' => $type,
+					'name' => $name,
+					'value' => $value
+				));
+				return $this;
+			}
+		}
+		$this->meta[] = array_merge($attrs, array(
+			'type' => $type,
+			'name' => $name,
+			'value' => $value
+		));
 		return $this;
 	}
 

@@ -100,6 +100,7 @@ class ErrorHandler
 		include $this->getView($view, $data['code']);
 		$app = Php2Go::app();
 		$app->getResponse()
+				->setCompression(false)
 				->setStatus(500)
 				->setContentType('text/html; charset=' . $app->getCharset())
 				->setBody(ob_get_clean())

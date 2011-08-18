@@ -16,7 +16,7 @@ final class Php2Go
 	private static $app;
 	private static $translator;
 	private static $includePaths;
-	private static $imports = array();
+	public static $imports = array();
 	private static $aliases = array(
 		'php2go' => PHP2GO_PATH
 	);

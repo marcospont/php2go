@@ -85,6 +85,7 @@ class Response extends Component
 
 	public function setCompression($compression) {
 		$this->compression = !!$compression;
+		return $this;
 	}
 
 	public function addCookie(Cookie $cookie) {
