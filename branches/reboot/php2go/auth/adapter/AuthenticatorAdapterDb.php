@@ -43,7 +43,7 @@ class AuthenticatorAdapterDb extends AuthenticatorAdapter
 	}
 
 	public function setPasswordFunction($function) {
-		if (!is_callable($function))
+		if (!empty($function) && !is_callable($function))
 			throw new InvalidArgumentException(__(PHP2GO_LANG_DOMAIN, 'Invalid password function.'));
 		$this->passwordFunction = $function;
 	}
@@ -87,7 +87,7 @@ class AuthenticatorAdapterDb extends AuthenticatorAdapter
 	private function executeQuery($query, $username, $password) {
 		$params = array_merge(array(
 			$username,
-			($this->passwordFunction !== null ? call_user_func($this->passwordFunction, $password) : $password)
+			(!empty($this->passwordFunction) ? call_user_func($this->passwordFunction, $password) : $password)
 		), $this->extraParams);
 		$stmt = $this->db->execute($query, $params);
 		if ($stmt->rowCount() == 1)
