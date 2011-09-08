@@ -346,7 +346,7 @@ class AutoCompleteField extends EditableField
 				if (preg_match("/~[^~]+~/", $value))
 					$this->dataSource[$name] = $this->_Form->resolveVariables($value);
 			}
-			if (!$this->_Form->isPosted())
+			if (!$this->_Form->isPosted() && !$this->options['ajax'])
 				$this->_getChoices();
 		}
 		// search and print choices, responding to an AJAX request

@@ -452,7 +452,7 @@ class FileUpload extends PHP2Go
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_TOO_BIG');
 			return FALSE;
 		}
-		else if (!empty($this->allowedFileExtensions) && !empty($fileData['extension']) && !in_array($fileData['extension'], $this->allowedFileExtensions)) {
+		else if (!empty($this->allowedFileExtensions) && !empty($fileData['extension']) && !in_array(strtolower($fileData['extension']), $this->allowedFileExtensions)) {
 			$fileData['error'] = PHP2Go::getLangVal('ERR_UPLOAD_INVALID_TYPE', $fileData['extension']);
 			return FALSE;
 		}
