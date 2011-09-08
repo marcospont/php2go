@@ -139,7 +139,7 @@ class FileSystem extends PHP2Go
 		$fileAttr['groupId']		= filegroup($path);
 		$fileAttr['isFile']			= is_file($path);
 		$fileAttr['isDir']			= is_dir($path);
-		$fileAttr['isLink']			= is_link($path);
+		$fileAttr['isLink']			= (is_link($path) || (System::isWindows() && substr($path, -4) == '.lnk'));
 		$fileAttr['isReadable']		= is_readable($path);
 		$fileAttr['isWriteable']	= is_writeable($path);
 		$fileAttr['isExecutable']	= (!System::isWindows() && is_executable($path));
