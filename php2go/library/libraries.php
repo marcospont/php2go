@@ -166,6 +166,15 @@ return array(
 			'swfobject'
 		)
 	),
+	'jquery-xdomainajax' => array(
+		'assetPath' => $path . '/jquery',
+		'files' => array(
+			'jquery.xdomainajax.js'
+		),
+		'dependencies' => array(
+			'jquery'
+		)
+	),
 	'php2go' => array(
 		'assetPath' => $path . '/php2go',
 		'files' => array(
