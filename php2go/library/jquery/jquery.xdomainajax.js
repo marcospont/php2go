@@ -54,13 +54,15 @@ jQuery.ajax = (function(_ajax){
                 return function(data) {
                     
                     if (_success) {
-                        // Fake XHR callback.
-                        _success.call(this, {
-                            responseText: data.results[0]
-                                // YQL screws with <script>s
-                                // Get rid of them
-                                .replace(/<script[^>]+?\/>|<script(.|\s)*?\/script>/gi, '')
-                        }, 'success');
+                    	try {
+	                        // Fake XHR callback.
+	                        _success.call(this, {
+	                            responseText: data.results[0]
+	                                // YQL screws with <script>s
+	                                // Get rid of them
+	                                .replace(/<script[^>]+?\/>|<script(.|\s)*?\/script>/gi, '')
+	                        }, 'success');
+                    	} catch (e) {}
                     }
                     
                 };
