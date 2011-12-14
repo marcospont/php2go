@@ -34,11 +34,11 @@ class ValidatorUnique extends Validator
 			return;
 		$modelName = ($this->modelName !== null ? Php2Go::import($this->modelName) : get_class($model));
 		$attrName = ($this->attrName !== null ? $this->attrName : $attr);
-		$finder = ActiveRecord::model($modelName);
+		$finder = ActiveRecord::model($modelName);		
 		$metaData = $finder->getMetaData();
 		if (!isset($metaData->columns[$attrName]))
 			throw new Exception(__(PHP2GO_LANG_DOMAIN, 'Column {column} does not exist in table {table}', array('column' => $attrName, 'table' => $finder->getTableName())));
-		$condition = ($this->caseSensitive ? "{$attrName} = ?" : "lower({$attrName}) = lower(?)") . ($this->condition !== null ? ' and ' . $this->condition : '');
+		$condition = ($this->caseSensitive ? "{$finder->tableName}.{$attrName} = ?" : "lower({$finder->tableName}.{$attrName}) = lower(?)") . ($this->condition !== null ? ' and ' . $this->condition : '');
 		$conditionVars = $this->conditionVars;
 		array_unshift($conditionVars, $value);
 		if (!$model instanceof ActiveRecord || $model->isNew() || $model->getTableName() != $finder->getTableName()) {
