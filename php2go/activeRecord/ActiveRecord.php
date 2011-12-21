@@ -86,7 +86,7 @@ abstract class ActiveRecord extends Model
 		elseif (isset($this->relations[$name]))
 			return $this->getRelation($name);
 		elseif (property_exists($this, $name) && isset($this->formatter->formats[$name]))
-			return $this->formatter->formatGet($name);
+			return $this->formatter->formatGet($name, $this->{$name});
 		return parent::__get($name);
 	}
 
