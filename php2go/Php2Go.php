@@ -70,6 +70,7 @@ final class Php2Go
 		'DbStatement' => '/db/DbStatement.php',
 		'DbTable' => '/db/DbTable.php',
 		'DirectoryUtil' => '/file/DirectoryUtil.php',
+		'FeedWriter' => '/feed/FeedWriter.php',
 		'FileUtil' => '/file/FileUtil.php',
 		'Filter' => '/filter/Filter.php',
 		'FilterAlpha' => '/filter/FilterAlpha.php',
